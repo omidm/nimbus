@@ -42,13 +42,15 @@
 
 #include "scheduler/version_manager.h"
 
-#define DEFAULT_COLLAPSE_RATE 20;
+#define DEFAULT_SNAP_SHOT_RATE 20;
 
 using namespace nimbus; // NOLINT
 
 VersionManager::VersionManager() {
   ldo_map_p_ = NULL;
   snap_shot_pending_ = false;
+  non_sterile_counter_ = 0;
+  snap_shot_rate_ = DEFAULT_SNAP_SHOT_RATE;
 }
 
 VersionManager::~VersionManager() {
@@ -56,6 +58,10 @@ VersionManager::~VersionManager() {
   for (; it != index_.end(); ++it) {
     delete it->second;
   }
+}
+
+void VersionManager::set_snap_shot_rate(size_t rate) {
+  snap_shot_rate_ = rate;
 }
 
 bool VersionManager::AddJobEntry(JobEntry *job) {
@@ -135,12 +141,11 @@ bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
 
   DetectVersionedJob(job);
 
-  static size_t rate = DEFAULT_COLLAPSE_RATE;
-
   if (!job->sterile()) {
-    if (--rate == 0) {
+    boost::unique_lock<boost::recursive_mutex> lock(snap_shot_mutex_);
+    if (++non_sterile_counter_ == snap_shot_rate_) {
       GetSnapShot();
-      rate = DEFAULT_COLLAPSE_RATE;
+      non_sterile_counter_ = 0;
     }
   }
 

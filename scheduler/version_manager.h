@@ -71,6 +71,8 @@ class VersionManager {
     VersionManager();
     virtual ~VersionManager();
 
+    void set_snap_shot_rate(size_t rate);
+
     bool AddJobEntry(JobEntry *job);
 
     size_t GetJobsNeedDataVersion(
@@ -95,6 +97,8 @@ class VersionManager {
     Log log_;
     Index index_;
     bool snap_shot_pending_;
+    size_t snap_shot_rate_;
+    size_t non_sterile_counter_;
     IDSet<job_id_t> snap_shot_;
     ParentMap parent_map_;
     ChildCounter child_counter_;
