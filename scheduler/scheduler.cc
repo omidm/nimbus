@@ -101,7 +101,7 @@ void Scheduler::Run() {
   SetupLoadBalancer();
   SetupJobAssigner();
   SetupJobDoneBouncer();
-  // SetupCleaner();
+  SetupCleaner();
   // SetupUserInterface();
 
   SchedulerCoreProcessor();
