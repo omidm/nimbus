@@ -304,8 +304,8 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
 
   JobEntry *job;
   if (job_manager_->GetJobEntry(job_id, job)) {
-    job_manager_->NotifyJobDone(job);
     load_balancer_->NotifyJobDone(job);
+    job_manager_->NotifyJobDone(job);
   }
 }
 
