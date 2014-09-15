@@ -11,12 +11,12 @@ def break_line(line):
 def cal_color(e1, e2, e3, e4, e5):
 	if e1 + e2 > 0:
 		return "green"
+	if e5 > 0:
+		return "#dd1c77"
 	if e3 > 0:
 		return "red"
 	if e4 > 0:
 		return "yellow"
-	if e5 > 0:
-		return "#dd1c77"
 	return "white"
 
 
@@ -32,9 +32,6 @@ for rank in range(1, N+1):
 	line = f.readline()
 	
 	last_timestamp, _, _, _, _, _ = break_line(line)
-	while last_timestamp <= 100:
-		line = f.readline()
-		last_timestamp, _, _, _, _, _ = break_line(line)
 	last_timestamp -= 1e-6
 	last_record = 0, 0, 0, 0, 0
 	history_color = "white"
@@ -48,9 +45,12 @@ for rank in range(1, N+1):
 			assert last_timestamp != timestamp
 			plt.fill_between(
 				[last_timestamp - start_ts if start_ts else last_timestamp,
-				timestamp - start_ts if start_ts else last_timestamp],
+				timestamp - start_ts if start_ts else timestamp],
 				[rank-1]*2, [rank]*2,
 				facecolor=history_color, edgecolor=history_color) 
 			last_timestamp = timestamp
 			history_color = plot_color
+plt.title("Nimbus running on 8 workers, each with 8 threads, scale 256, 64 app partitions, first 3 iterations.")
+plt.xlabel("time(s)")
+plt.ylabel("worker id")
 plt.show()

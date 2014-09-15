@@ -1,0 +1,5 @@
+These scripts are for processing MPI logs.
+adjust_timedrifting.py will try to adjust the timestamp to make sure all the processors share the same clock.
+make_all_figure.py will generate a visualization of the execution.
+print_summary.py will generate a summary of the execution time.
+--Hang Qu
