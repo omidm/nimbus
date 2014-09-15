@@ -77,6 +77,16 @@ Graph<JobEntry, job_id_t>* JobManager::job_graph_p() {
   return &job_graph_;
 }
 
+bool JobManager::AddJobEntryToJobGraph(job_id_t job_id, JobEntry *job) {
+  boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
+  return job_graph_.AddVertex(job_id, job);
+}
+
+bool JobManager::RemoveJobEntryFromJobGraph(job_id_t job_id) {
+  boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
+  return job_graph_.RemoveVertex(job_id);
+}
+
 JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
                                          const job_id_t& job_id,
                                          const IDSet<logical_data_id_t>& read_set,
@@ -99,7 +109,7 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
                         sterile,
                         params);
 
-  if (!job_graph_.AddVertex(job_id, job)) {
+  if (!AddJobEntryToJobGraph(job_id, job)) {
     dbg(DBG_SCHED, "Filling possible future job (id: %lu) in job manager.\n", job_id);
     delete job;
     GetJobEntry(job_id, job);
@@ -123,13 +133,15 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
   }
 
   if (!AddJobEntryIncomingEdges(job)) {
-    job_graph_.RemoveVertex(job_id);
+    RemoveJobEntryFromJobGraph(job_id);
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     exit(-1);
     return NULL;
   }
+
   ReceiveMetaBeforeSetDepthVersioningDependency(job);
+
   PassMetaBeforeSetDepthVersioningDependency(job);
 
   version_manager_.AddJobEntry(job);
@@ -146,7 +158,7 @@ JobEntry* JobManager::AddExplicitCopyJobEntry() {
 JobEntry* JobManager::AddKernelJobEntry() {
   JobEntry* job = new KernelJobEntry();
 
-  if (!job_graph_.AddVertex(NIMBUS_KERNEL_JOB_ID, job)) {
+  if (!AddJobEntryToJobGraph(NIMBUS_KERNEL_JOB_ID, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add kernel job in job manager.\n");
     exit(-1);
@@ -160,7 +172,7 @@ JobEntry* JobManager::AddKernelJobEntry() {
 JobEntry* JobManager::AddMainJobEntry(const job_id_t& job_id) {
   JobEntry* job = new MainJobEntry(job_id);
 
-  if (!job_graph_.AddVertex(job_id, job)) {
+  if (!AddJobEntryToJobGraph(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     exit(-1);
@@ -168,7 +180,7 @@ JobEntry* JobManager::AddMainJobEntry(const job_id_t& job_id) {
   }
 
   if (!AddJobEntryIncomingEdges(job)) {
-    job_graph_.RemoveVertex(job_id);
+    RemoveJobEntryFromJobGraph(job_id);
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     exit(-1);
@@ -187,8 +199,7 @@ JobEntry* JobManager::AddMainJobEntry(const job_id_t& job_id) {
 JobEntry* JobManager::AddCreateDataJobEntry(const job_id_t& job_id) {
   JobEntry* job = new CreateDataJobEntry(job_id);
 
-  boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
-  if (!job_graph_.AddVertex(job_id, job)) {
+  if (!AddJobEntryToJobGraph(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     exit(-1);
@@ -201,8 +212,7 @@ JobEntry* JobManager::AddCreateDataJobEntry(const job_id_t& job_id) {
 JobEntry* JobManager::AddLocalCopyJobEntry(const job_id_t& job_id) {
   JobEntry* job = new LocalCopyJobEntry(job_id);
 
-  boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
-  if (!job_graph_.AddVertex(job_id, job)) {
+  if (!AddJobEntryToJobGraph(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     exit(-1);
@@ -215,8 +225,7 @@ JobEntry* JobManager::AddLocalCopyJobEntry(const job_id_t& job_id) {
 JobEntry* JobManager::AddRemoteCopySendJobEntry(const job_id_t& job_id) {
   JobEntry* job = new RemoteCopySendJobEntry(job_id);
 
-  boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
-  if (!job_graph_.AddVertex(job_id, job)) {
+  if (!AddJobEntryToJobGraph(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     exit(-1);
@@ -229,8 +238,7 @@ JobEntry* JobManager::AddRemoteCopySendJobEntry(const job_id_t& job_id) {
 JobEntry* JobManager::AddRemoteCopyReceiveJobEntry(const job_id_t& job_id) {
   JobEntry* job = new RemoteCopyReceiveJobEntry(job_id);
 
-  boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
-  if (!job_graph_.AddVertex(job_id, job)) {
+  if (!AddJobEntryToJobGraph(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     exit(-1);
@@ -243,8 +251,7 @@ JobEntry* JobManager::AddRemoteCopyReceiveJobEntry(const job_id_t& job_id) {
 JobEntry* JobManager::AddFutureJobEntry(const job_id_t& job_id) {
   JobEntry* job = new FutureJobEntry(job_id);
 
-  boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
-  if (!job_graph_.AddVertex(job_id, job)) {
+  if (!AddJobEntryToJobGraph(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager as future job.\n", job_id);
     exit(-1);
@@ -254,11 +261,22 @@ JobEntry* JobManager::AddFutureJobEntry(const job_id_t& job_id) {
   return job;
 }
 
-bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
+Edge<JobEntry, job_id_t>* JobManager::AddEdgeToJobGraph(job_id_t from, job_id_t to) {
+  boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
   Edge<JobEntry, job_id_t> *edge;
-  JobEntry *j;
+  if (job_graph_.AddEdge(from, to, &edge)) {
+    return edge;
+  } else {
+    return NULL;
+  }
+}
 
-  if (job_graph_.AddEdge(job->parent_job_id(), job->job_id(), &edge)) {
+bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
+  JobEntry *j;
+  Edge<JobEntry, job_id_t> *edge;
+
+  edge = AddEdgeToJobGraph(job->parent_job_id(), job->job_id());
+  if (edge != NULL) {
     j = edge->start_vertex()->entry();
     assert(j->versioned());
   } else {
@@ -273,12 +291,14 @@ bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
       continue;
     }
 
-    if (job_graph_.AddEdge(*it, job->job_id(), &edge)) {
+    edge = AddEdgeToJobGraph(*it, job->job_id());
+    if (edge != NULL) {
       j = edge->start_vertex()->entry();
     } else {
       dbg(DBG_SCHED, "Adding possible future job (id: %lu) in job manager.\n", *it);
       AddFutureJobEntry(*it);
-      if (!job_graph_.AddEdge(*it, job->job_id())) {
+      edge = AddEdgeToJobGraph(*it, job->job_id());
+      if (edge == NULL) {
         return false;
       }
     }
@@ -287,12 +307,16 @@ bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
   return true;
 }
 
+bool JobManager::GetJobGraphVertex(job_id_t job_id, Vertex<JobEntry, job_id_t> **vertex) {
+  boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
+  return job_graph_.GetVertex(job_id, vertex);
+}
 
 void JobManager::ReceiveMetaBeforeSetDepthVersioningDependency(JobEntry* job) {
   job_depth_t depth = NIMBUS_INIT_JOB_DEPTH;
   job_id_t job_id = job->job_id();
   Vertex<JobEntry, job_id_t>* vertex;
-  job_graph_.GetVertex(job_id, &vertex);
+  GetJobGraphVertex(job_id, &vertex);
   typename Edge<JobEntry, job_id_t>::Iter it;
   for (it = vertex->incoming_edges()->begin(); it != vertex->incoming_edges()->end(); ++it) {
     JobEntry *j = it->second->start_vertex()->entry();
@@ -315,7 +339,7 @@ void JobManager::PassMetaBeforeSetDepthVersioningDependency(JobEntry* job) {
   if (job->IsReadyForCompleteVersioning()) {
     job_id_t job_id = job->job_id();
     Vertex<JobEntry, job_id_t>* vertex;
-    job_graph_.GetVertex(job_id, &vertex);
+    GetJobGraphVertex(job_id, &vertex);
     typename Edge<JobEntry, job_id_t>::Iter it;
     for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
       JobEntry *j = it->second->end_vertex()->entry();
@@ -349,23 +373,7 @@ bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
 }
 
 bool JobManager::RemoveJobEntry(JobEntry* job) {
-  if (job_graph_.RemoveVertex(job->job_id())) {
-    if (job->parent_job_id() != NIMBUS_KERNEL_JOB_ID ||
-        job->job_name() == NIMBUS_MAIN_JOB_NAME) {
-      version_manager_.RemoveJobEntry(job);
-    }
-    delete job;
-    return true;
-  } else {
-    return false;
-  }
-}
-
-bool JobManager::RemoveJobEntry(job_id_t job_id) {
-  JobEntry* job;
-  if (GetJobEntry(job_id, job)) {
-    assert(job_id == job->job_id());
-    job_graph_.RemoveVertex(job_id);
+  if (RemoveJobEntryFromJobGraph(job->job_id())) {
     if (job->parent_job_id() != NIMBUS_KERNEL_JOB_ID ||
         job->job_name() == NIMBUS_MAIN_JOB_NAME) {
       version_manager_.RemoveJobEntry(job);
@@ -422,7 +430,7 @@ size_t JobManager::RemoveObsoleteJobEntries(size_t max_to_remove) {
 
   JobEntryList jobs_to_remove;
   {
-    boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
+    boost::unique_lock<boost::mutex> lock(jobs_done_mutex_);
     for (size_t i = 0; (i < max_to_remove) && (i < jobs_done_.size()); ++i) {
       jobs_to_remove.push_back(jobs_done_.front());
       jobs_done_.pop_front();
@@ -461,10 +469,7 @@ void JobManager::NotifyJobAssignment(JobEntry *job) {
   if (job->sterile()) {
     job_id_t job_id = job->job_id();
     Vertex<JobEntry, job_id_t>* vertex;
-    {
-      boost::unique_lock<boost::mutex> job_graph_lock(job_graph_mutex_);
-      job_graph_.GetVertex(job_id, &vertex);
-    }
+    GetJobGraphVertex(job_id, &vertex);
     typename Edge<JobEntry, job_id_t>::Iter it;
     for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
       JobEntry *j = it->second->end_vertex()->entry();
@@ -484,15 +489,9 @@ void JobManager::NotifyJobDone(JobEntry *job) {
   // Initialy let the version manager know that the job is done.
   version_manager_.NotifyJobDone(job);
 
-  // Put the job in the list for removal.
-  {
-    boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
-    jobs_done_.push_back(job);
-  }
-
   if (!job->sterile()) {
     Vertex<JobEntry, job_id_t>* vertex;
-    job_graph_.GetVertex(job_id, &vertex);
+    GetJobGraphVertex(job_id, &vertex);
     typename Edge<JobEntry, job_id_t>::Iter it;
     for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
       JobEntry *j = it->second->end_vertex()->entry();
@@ -501,6 +500,12 @@ void JobManager::NotifyJobDone(JobEntry *job) {
         jobs_ready_to_assign_[j->job_id()] = j;
       }
     }
+  }
+
+  // After traversing the out going endges then put in the dueue for removal.
+  {
+    boost::unique_lock<boost::mutex> lock(jobs_done_mutex_);
+    jobs_done_.push_back(job);
   }
 }
 
@@ -527,6 +532,7 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
 bool JobManager::AllJobsAreDone() {
   bool all_done = true;
 
+  boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
   typename Vertex<JobEntry, job_id_t>::Iter iter = job_graph_.begin();
   for (; iter != job_graph_.end(); ++iter) {
     JobEntry* job = iter->second->entry();

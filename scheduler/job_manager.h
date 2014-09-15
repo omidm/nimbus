@@ -111,8 +111,6 @@ class JobManager {
 
     bool RemoveJobEntry(JobEntry* job);
 
-    bool RemoveJobEntry(job_id_t job_id);
-
     size_t NumJobsReadyToAssign();
 
     size_t GetJobsReadyToAssign(JobEntryList* list, size_t max_num);
@@ -155,6 +153,14 @@ class JobManager {
     JobEntryMap jobs_ready_to_assign_;
     JobEntryMap jobs_pending_to_assign_;
     boost::recursive_mutex job_queue_mutex_;
+
+    bool AddJobEntryToJobGraph(job_id_t job_id, JobEntry *job);
+
+    bool RemoveJobEntryFromJobGraph(job_id_t job_id);
+
+    bool GetJobGraphVertex(job_id_t job_id, Vertex<JobEntry, job_id_t> **vertex);
+
+    Edge<JobEntry, job_id_t>* AddEdgeToJobGraph(job_id_t from, job_id_t to);
 };
 
 }  // namespace nimbus
