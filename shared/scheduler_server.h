@@ -131,6 +131,7 @@ class SchedulerServer {
 
   boost::asio::io_service* io_service_;
   tcp::acceptor* acceptor_;
+  Log log_;
 
   /** Create server socket, set up networking and state. */
   virtual bool Initialize();

@@ -60,7 +60,9 @@
 
 using boost::asio::ip::tcp;
 
-#define SCHEDULER_CLIENT_BUFSIZE 40960000
+#define CLIENT_TCP_SEND_BUF_SIZE 134217728  // 128MB
+#define CLIENT_TCP_RECEIVE_BUF_SIZE 134217728  // 128MB
+#define CLIENT_BUF_SIZE 40960000
 
 namespace nimbus {
 
@@ -80,8 +82,8 @@ SchedulerClient::~SchedulerClient() {
 bool SchedulerClient::Initialize() {
   io_service_ = new boost::asio::io_service();
   socket_ = new tcp::socket(*io_service_);
-  read_buffer_ = new char[SCHEDULER_CLIENT_BUFSIZE];;
-  max_read_buffer_length_ = SCHEDULER_CLIENT_BUFSIZE;
+  read_buffer_ = new char[CLIENT_BUF_SIZE];;
+  max_read_buffer_length_ = CLIENT_BUF_SIZE;
   existing_bytes_ = 0;
   return true;
 }
@@ -201,7 +203,7 @@ void SchedulerClient::HandleRead(const boost::system::error_code& error,
   if (remaining == max_read_buffer_length_) {
     std::string err_msg = "ERROR: ";
     err_msg += "scheduler client buffer is full with incomplete command. ";
-    err_msg += "You need to increase the SCHEDULER_CLIENT_BUFSIZE in scheduler_client.cc.\n";
+    err_msg += "You need to increase the CLIENT_BUF_SIZE in scheduler_client.cc.\n";
     dbg(DBG_ERROR, "%s\n.", err_msg.c_str());
     exit(-1);
   }
@@ -250,6 +252,13 @@ void SchedulerClient::CreateNewConnections() {
   tcp::resolver::iterator iterator = resolver.resolve(query);
   boost::system::error_code error = boost::asio::error::host_not_found;
   socket_->connect(*iterator, error);
+  // Set the tcp send and receive buf size.
+  // Note: you may have to increase the OS limits first.
+  // Look at the nimbus/scripts/configure_tcp.sh for help.
+  boost::asio::socket_base::send_buffer_size s_option(CLIENT_TCP_SEND_BUF_SIZE);
+  boost::asio::socket_base::receive_buffer_size r_option(CLIENT_TCP_RECEIVE_BUF_SIZE);
+  socket_->set_option(s_option);
+  socket_->set_option(r_option);
   boost::asio::async_read(*socket_,
                           boost::asio::buffer(read_buffer_,
                                               max_read_buffer_length_),

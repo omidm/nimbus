@@ -49,10 +49,11 @@
 #include <iostream>  // NOLINT
 #include "shared/dbg.h"
 
+#define SERVER_TCP_SEND_BUF_SIZE 10485760  // 10MB
+#define SERVER_TCP_RECEIVE_BUF_SIZE 10485760  // 10MB
 
 using boost::asio::ip::tcp;
 
-#define BUF_SIZE 102400
 namespace nimbus {
 
 SchedulerServer::SchedulerServer(port_t port_no)
@@ -136,8 +137,13 @@ void SchedulerServer::SendCommand(SchedulerWorker* worker,
   // dbg(DBG_NET, "Sending command %s.\n", command->ToString().c_str());
   boost::system::error_code ignored_error;
   // Why are we IGNORING ERRORS!??!?!?
+  log_.StartTimer();
   boost::asio::write(*(connection->socket()), boost::asio::buffer(msg),
                      boost::asio::transfer_all(), ignored_error);
+  log_.StopTimer();
+  // std::cout<< "size: " << msg.size() << std::endl;
+  if (log_.timer() > 0.0001)
+    std::cout<< "send: " << log_.timer() << std::endl;
 }
 
 void SchedulerServer::SendCommands(SchedulerWorker* worker,
@@ -182,6 +188,13 @@ void SchedulerServer::HandleAccept(SchedulerServerConnection* connection,
   if (!error) {
     dbg(DBG_NET, "Scheduler accepted new connection.\n");
     SchedulerWorker* worker =  AddWorker(connection);
+    // Set the tcp send and receive buf size.
+    // Note: you may have to increase the OS limits first.
+    // Look at the nimbus/scripts/configure_tcp.sh for help.
+    boost::asio::socket_base::send_buffer_size s_option(SERVER_TCP_SEND_BUF_SIZE);
+    boost::asio::socket_base::receive_buffer_size r_option(SERVER_TCP_RECEIVE_BUF_SIZE);
+    connection->socket()->set_option(s_option);
+    connection->socket()->set_option(r_option);
     ListenForNewConnections();
     boost::asio::async_read(*(worker->connection()->socket()),
                             boost::asio::buffer(worker->read_buffer(),
