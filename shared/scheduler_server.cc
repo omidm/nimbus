@@ -124,9 +124,6 @@ bool SchedulerServer::ReceiveJobDoneCommands(JobDoneCommandList* storage,
 
 void SchedulerServer::SendCommand(SchedulerWorker* worker,
                                   SchedulerCommand* command) {
-  boost::mutex::scoped_lock lock(send_command_mutex_);
-  SchedulerServerConnection* connection = worker->connection();
-
   std::string data = command->ToNetworkData();
   SchedulerCommand::length_field_t len;
   len = htonl((uint32_t)data.length() + sizeof(len));
@@ -134,16 +131,17 @@ void SchedulerServer::SendCommand(SchedulerWorker* worker,
   msg.append((const char*)&len, sizeof(len));
   msg.append(data.c_str(), data.length());
 
-  // dbg(DBG_NET, "Sending command %s.\n", command->ToString().c_str());
+  boost::mutex::scoped_lock lock(send_command_mutex_);
+  SchedulerServerConnection* connection = worker->connection();
   boost::system::error_code ignored_error;
   // Why are we IGNORING ERRORS!??!?!?
   log_.StartTimer();
   boost::asio::write(*(connection->socket()), boost::asio::buffer(msg),
                      boost::asio::transfer_all(), ignored_error);
   log_.StopTimer();
-  // std::cout<< "size: " << msg.size() << std::endl;
-  if (log_.timer() > 0.0001)
+  if (log_.timer() > 0.0001) {
     std::cout<< "send: " << log_.timer() << std::endl;
+  }
 }
 
 void SchedulerServer::SendCommands(SchedulerWorker* worker,
