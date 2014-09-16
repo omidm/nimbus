@@ -2,6 +2,7 @@
 
 import sys
 import re
+import cPickle
 
 def break_blocking_log(line):
 	contents = line.split(' ')
@@ -91,6 +92,6 @@ while line:
 f.close()
 
 f = open("temp", "w")
-f.write(repr(all_dict))
+cPickle.dump(all_dict, f)
 #eval
 f.close()

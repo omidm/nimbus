@@ -3,9 +3,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+import cPickle
 
 f = open("temp", "r")
-mydict = eval(f.readline())
+mydict = cPickle.load(f)
 print "finish loading"
 job_id = 10000664772
 if "dispatch_job(new)" in mydict[job_id]:
@@ -34,18 +35,18 @@ while job_id in mydict:
 		[mydict[job_id]["r"]+const, last_timestamp+const],
 		[mydict[job_id]["worker"]-1]*2, [mydict[job_id]["worker"]]*2,
 		facecolor="green", edgecolor="green") 
-	if "calculate_dt" in mydict[job_id]["name"]:
-		iteration += 1
-		if iteration == 3:
-			break
+	# if "calculate_dt" in mydict[job_id]["name"]:
+	#	iteration += 1
+	#	if iteration == 3:
+	#		break
 	if ("loop" in mydict[job_id]["name"]) or ("projection_main" in mydict[job_id]["name"]):
 		control_t += last_timestamp - mydict[job_id]["r"]
 	else:
 		calculate_t += last_timestamp - mydict[job_id]["r"]
-	if (mydict[job_id]["name"][:23]!="Compute:projection_loop" and
-		mydict[job_id]["name"][:23]!="Compute:projection_step" and
-		mydict[job_id]["name"][:23]!="Compute:projection_redu"):
-		plt.text(mydict[job_id]["r"], mydict[job_id]["worker"]-1, mydict[job_id]["name"], rotation="vertical", fontsize=8)
+	# if (mydict[job_id]["name"][:23]!="Compute:projection_loop" and
+	#	mydict[job_id]["name"][:23]!="Compute:projection_step" and
+	#	mydict[job_id]["name"][:23]!="Compute:projection_redu"):
+		# plt.text(mydict[job_id]["r"], mydict[job_id]["worker"]-1, mydict[job_id]["name"], rotation="vertical", fontsize=8)
 	last_timestamp = mydict[job_id]["r"]
 	if "dispatch_job(new)" in mydict[job_id]:
 		plt.fill_between(
@@ -68,4 +69,4 @@ while job_id in mydict:
 	job_id = mydict[job_id]["block_id"]
 f.close()
 print "normal calculation time {} control calculation time {} resource constraint blocking {} scheduler delay/io delay {}".format(calculate_t, control_t, resource_t, scheduler_t)
-plt.savefig("first_three.png")
+plt.savefig("all.png")
