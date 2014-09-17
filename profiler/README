@@ -1,0 +1,23 @@
+To activate profiling via memory allocation interposition:
+
+1) The interposition routines must be compiled into a shared library.
+
+   cd ../cloud/src/nimbus/profiler
+
+   gcc -O3 -fPIC -I/opt/local/include -I/usr/local/include -I..  -Wall -o interpose_malloc.so -shared interpose_malloc.cc -lm -lstdc++ -L../ -lnimbus
+
+   ** Perform when setting up Amazon AMI
+
+2) When running the worker, the following environment variables should be set before the worker is launched.
+
+   export LD_LIBRARY_PATH="../../"  --> Not sure if setting this environment variable is necessary.
+   export LD_PRELOAD="../../profiler/interpose_malloc.so"
+
+   ** Add to run_worker() in ../cloud/src/test/ec2/water_multiple/utils.py 
+
+Note: After execution, the environment variables can be unset by issuing: 
+      
+      unset LD_LIBRARY_PATH
+      unset LD_PRELOAD
+
+

@@ -102,29 +102,29 @@ void JobProjectionMain::SpawnJobs(
   default_params.set_ser_data(SerializedData(default_params_str));
 
   std::vector<nimbus::Parameter> default_part_params;
-  default_part_params.resize(kAppPartNum);
-  for (int i = 0; i < kAppPartNum; ++i) {
+  default_part_params.resize(kProjAppPartNum);
+  for (int i = 0; i < kProjAppPartNum; ++i) {
     std::string default_params_str;
     SerializeParameter(
-        frame, time, dt, global_region, kRegY2W0Central[i],
+        frame, time, dt, global_region, kProjRegY2W0Central[i],
         &default_params_str);
     default_part_params[i].set_ser_data(SerializedData(default_params_str));
   }
 
-  int construct_matrix_job_num = kAppPartNum;
+  int construct_matrix_job_num = kProjAppPartNum;
   std::vector<nimbus::job_id_t> construct_matrix_job_ids;
   GetNewJobID(&construct_matrix_job_ids, construct_matrix_job_num);
 
-  int local_initialize_job_num = kAppPartNum;
+  int local_initialize_job_num = kProjAppPartNum;
   std::vector<nimbus::job_id_t> local_initialize_job_ids;
   GetNewJobID(&local_initialize_job_ids, local_initialize_job_num);
 
-  int calculate_boundary_condition_part_one_job_num = kAppPartNum;
+  int calculate_boundary_condition_part_one_job_num = kProjAppPartNum;
   std::vector<nimbus::job_id_t> calculate_boundary_condition_part_one_job_ids;
   GetNewJobID(&calculate_boundary_condition_part_one_job_ids,
               calculate_boundary_condition_part_one_job_num);
 
-  int calculate_boundary_condition_part_two_job_num = kAppPartNum;
+  int calculate_boundary_condition_part_two_job_num = kProjAppPartNum;
   std::vector<nimbus::job_id_t> calculate_boundary_condition_part_two_job_ids;
   GetNewJobID(&calculate_boundary_condition_part_two_job_ids,
               calculate_boundary_condition_part_two_job_num);
@@ -133,25 +133,25 @@ void JobProjectionMain::SpawnJobs(
        index < calculate_boundary_condition_part_one_job_num;
        ++index) {
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index],
+    LoadLogicalIdsInSet(this, &read, kProjRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kProjRegY2W1Outer[index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index],
+    LoadLogicalIdsInSet(this, &read, kProjRegY2W0Central[index],
                         APP_U_INTERFACE, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index],
+    LoadLogicalIdsInSet(this, &write, kProjRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kProjRegY2W1CentralWGB[index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index], APP_U_INTERFACE, NULL);
+    LoadLogicalIdsInSet(this, &write, kProjRegY2W0Central[index], APP_U_INTERFACE, NULL);
 
     job_query.StageJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
                        calculate_boundary_condition_part_one_job_ids[index],
                        read, write,
                        default_part_params[index], true);
     job_query.Hint(calculate_boundary_condition_part_one_job_ids[index],
-                   kRegY2W3Central[index]);
+                   kProjRegY2W3Central[index]);
   }
   job_query.CommitStagedJobs();
 
@@ -159,17 +159,17 @@ void JobProjectionMain::SpawnJobs(
        index < calculate_boundary_condition_part_two_job_num;
        ++index) {
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index],
+    LoadLogicalIdsInSet(this, &read, kProjRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kProjRegY2W1Outer[index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index], APP_U_INTERFACE, NULL);
+    LoadLogicalIdsInSet(this, &read, kProjRegY2W0Central[index], APP_U_INTERFACE, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index],
+    LoadLogicalIdsInSet(this, &write, kProjRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kProjRegY2W1CentralWGB[index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index],
+    LoadLogicalIdsInSet(this, &write, kProjRegY2W0Central[index],
                         APP_U_INTERFACE, NULL);
 
     job_query.StageJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,
@@ -177,24 +177,24 @@ void JobProjectionMain::SpawnJobs(
                        read, write,
                        default_part_params[index], true);
     job_query.Hint(calculate_boundary_condition_part_two_job_ids[index],
-                   kRegY2W3Central[index]);
+                   kProjRegY2W3Central[index]);
   }
   job_query.CommitStagedJobs();
 
   // Construct matrix.
   for (int index = 0; index < construct_matrix_job_num; ++index) {
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index],
+    LoadLogicalIdsInSet(this, &read, kProjRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kProjRegY2W1Outer[index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index], APP_U_INTERFACE, NULL);
+    LoadLogicalIdsInSet(this, &read, kProjRegY2W0Central[index], APP_U_INTERFACE, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index],
+    LoadLogicalIdsInSet(this, &write, kProjRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kProjRegY2W1CentralWGB[index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index],
+    LoadLogicalIdsInSet(this, &write, kProjRegY2W0Central[index],
                         APP_U_INTERFACE, APP_MATRIX_A,
                         APP_VECTOR_B, APP_PROJECTION_LOCAL_TOLERANCE,
                         APP_INDEX_M2C, APP_INDEX_C2M,
@@ -205,7 +205,7 @@ void JobProjectionMain::SpawnJobs(
                        construct_matrix_job_ids[index],
                        read, write,
                        default_part_params[index], true);
-    job_query.Hint(construct_matrix_job_ids[index], kRegY2W3Central[index]);
+    job_query.Hint(construct_matrix_job_ids[index], kProjRegY2W3Central[index]);
   }
   job_query.CommitStagedJobs();
 
@@ -230,27 +230,27 @@ void JobProjectionMain::SpawnJobs(
   // Local initialize.
   for (int index = 0; index < local_initialize_job_num; ++index) {
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index],
+    LoadLogicalIdsInSet(this, &read, kProjRegY2W0Central[index],
                         APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                         APP_INDEX_M2C,
                         APP_INDEX_C2M,
                         APP_VECTOR_B,
                         APP_MATRIX_A, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index], APP_PRESSURE,
+    LoadLogicalIdsInSet(this, &read, kProjRegY2W1Outer[index], APP_PRESSURE,
                         NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index],
+    LoadLogicalIdsInSet(this, &write, kProjRegY2W0Central[index],
                         APP_VECTOR_B, APP_PROJECTION_LOCAL_RESIDUAL, APP_MATRIX_C,
                         APP_VECTOR_TEMP, APP_VECTOR_Z,
                         APP_VECTOR_PRESSURE,
                         NULL);
-    LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index],
+    LoadLogicalIdsInSet(this, &write, kProjRegY2W1CentralWGB[index],
                         APP_VECTOR_P_META_FORMAT, NULL);
     job_query.StageJob(PROJECTION_LOCAL_INITIALIZE,
                        local_initialize_job_ids[index],
                        read, write,
                        default_part_params[index], true);
-    job_query.Hint(local_initialize_job_ids[index], kRegY2W3Central[index]);
+    job_query.Hint(local_initialize_job_ids[index], kProjRegY2W3Central[index]);
   }
   job_query.CommitStagedJobs();
 
