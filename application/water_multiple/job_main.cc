@@ -112,8 +112,8 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_POS_PARTICLES,
-                        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
-                        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+                        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[i], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
     LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, APP_PSI_N, NULL);
 
     write.clear();
@@ -141,16 +141,16 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
    */
   for (int i = 0; i < extrapolate_phi_job_num; ++i) {
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i], APP_PHI,
+    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_PHI,
                         APP_FACE_VEL, NULL);
 
     write.clear();
     LoadLogicalIdsInSet(this, &write,
-                        kRegY2W8CentralWGB[i], APP_PHI, NULL);
+                        kRegY2W3CentralWGB[i], APP_PHI, NULL);
 
     nimbus::Parameter phi_params;
     std::string phi_str;
-    SerializeParameter(frame, time, dt, kDefaultRegion, kRegY2W8Central[i], &phi_str);
+    SerializeParameter(frame, time, dt, kDefaultRegion, kRegY2W3Central[i], &phi_str);
     phi_params.set_ser_data(SerializedData(phi_str));
 
     job_query.StageJob(EXTRAPOLATE_PHI,
@@ -167,13 +167,13 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
    */
   for (int i = 0; i < make_signed_distance_job_num; ++i) {
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegY2W7Outer[i], APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL_GHOST,
                         APP_FACE_VEL, NULL);
     LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, APP_PSI_N, NULL);
 
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegY2W7CentralWGB[i], APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[i], APP_PSI_D, APP_PSI_N,  NULL);
 
     std::string make_signed_distance_str;
@@ -199,8 +199,8 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
                         APP_PSI_N, NULL);
     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_POS_PARTICLES,
                         APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
-                        APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
-                        NULL);
+                        APP_NEG_REM_PARTICLES, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[i], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_POS_PARTICLES,
                         APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
@@ -225,16 +225,16 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
    */
   for (int i = 0; i < extrapolate_phi_2_job_num; ++i) {
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i], APP_PHI,
+    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_PHI,
                         APP_FACE_VEL, NULL);
 
     write.clear();
     LoadLogicalIdsInSet(this, &write,
-                        kRegY2W8CentralWGB[i], APP_PHI, NULL);
+                        kRegY2W3CentralWGB[i], APP_PHI, NULL);
 
     nimbus::Parameter phi_params;
     std::string phi_str;
-    SerializeParameter(frame, time, dt, kDefaultRegion, kRegY2W8Central[i], &phi_str);
+    SerializeParameter(frame, time, dt, kDefaultRegion, kRegY2W3Central[i], &phi_str);
     phi_params.set_ser_data(SerializedData(phi_str));
 
     job_query.StageJob(EXTRAPOLATE_PHI,
@@ -252,11 +252,11 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
   /*
   for (int i = 0; i < extrapolate_v_job_num; ++i) {
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i],
+    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i],
                         APP_FACE_VEL, APP_PHI, NULL);
 
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegY2W8Central[i],
+    LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i],
                         APP_FACE_VEL, NULL);
 
     nimbus::Parameter v_params;
@@ -281,8 +281,8 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
                         APP_PSI_N, NULL);
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
                         APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
-                        APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
-                        NULL);
+                        APP_NEG_REM_PARTICLES, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW3Central[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
     write.clear();
 
     nimbus::Parameter temp_params;
@@ -305,8 +305,8 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
                           APP_PSI_N, NULL);
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_POS_PARTICLES,
                           APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
-                          APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
-                          NULL);
+                          APP_NEG_REM_PARTICLES, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[i], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
       write.clear();
 
       nimbus::Parameter temp_params;

@@ -40,6 +40,8 @@
  */
 
 #include <pthread.h>
+#include <cstdio>
+#include <ctime>
 #include <map>
 #include <vector>
 
@@ -60,6 +62,7 @@ CacheManager::CacheManager() {
     pool_ = new Pool();
     pthread_mutex_init(&cache_lock, NULL);
     pthread_cond_init(&cache_cond, NULL);
+    alloc_log = fopen("cache_objects.txt", "w");
 }
 
 void CacheManager::DoSetUpWrite(CacheVar* cache_var,
@@ -103,6 +106,7 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
         CacheTable *ct = new CacheTable(cache::VAR);
         (*pool_)[prototype.id()] = ct;
         cv = prototype.CreateNew(region);
+        PrintTimeStamp(sizeof(*cv));
         assert(cv != NULL);
         ct->AddEntry(region, cv);
     } else {
@@ -110,6 +114,7 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
         cv = ct->GetClosestAvailable(region, read_set, access);
         if (cv == NULL) {
             cv = prototype.CreateNew(region);
+            PrintTimeStamp(sizeof(*cv));
             assert(cv != NULL);
             ct->AddEntry(region, cv);
         }
@@ -166,6 +171,7 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
         CacheTable *ct = new CacheTable(cache::STRUCT);
         (*pool_)[prototype.id()] = ct;
         cs = prototype.CreateNew(region);
+        PrintTimeStamp(sizeof(*cs));
         assert(cs != NULL);
         ct->AddEntry(region, cs);
     } else {
@@ -173,6 +179,7 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
         cs = ct->GetClosestAvailable(region, var_type, read_sets, access);
         if (cs == NULL) {
             cs = prototype.CreateNew(region);
+            PrintTimeStamp(sizeof(*cs));
             assert(cs != NULL);
             ct->AddEntry(region, cs);
         }
@@ -275,4 +282,12 @@ void CacheManager::PrintProfile(std::stringstream* output) {
   }
   *output << "-----------" << std::endl;
 }
+
+  void CacheManager::PrintTimeStamp(uint64_t size) {
+  struct timespec t;
+  clock_gettime(CLOCK_REALTIME, &t);
+  double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
+  fprintf(alloc_log, "%f : %lu\n", time_sum, size);
+}
+
 }  // namespace nimbus

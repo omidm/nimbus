@@ -44,6 +44,7 @@
 
 #include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/physbam_utils.h"
+#include "application/water_multiple/water_app.h"
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"
 #include "application/water_multiple/water_sources.h"
@@ -101,6 +102,16 @@ void JobStepParticles::Execute(nimbus::Parameter params,
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in step particles job.\n");
+
+  WaterApp *app = dynamic_cast<WaterApp * >(application());
+
+  {
+    std::stringstream msg;
+    msg << "Step Particles: Number of particles at start = " << NumParticles(*example);
+    msg << "\nStep Particles: Number of removed particles at start = " << NumRemovedParticles(*example);
+    app->translator_log->WriteToFile(msg.str());
+  }
+
   {
     application::ScopeTimer scope_timer(name());
     //nimbus::Timer timer(std::string("step_particle_") + id().ToNetworkData());
@@ -122,6 +133,14 @@ void JobStepParticles::Execute(nimbus::Parameter params,
 
   *thread_queue_hook() = NULL;
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
+
+  {
+    std::stringstream msg;
+    msg << "Step Particles: Number of particles at end = " << NumParticles(*example);
+    msg << "\nStep Particles: Number of removed particles at end = " << NumRemovedParticles(*example);
+    app->translator_log->WriteToFile(msg.str());
+  }
+
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 

@@ -92,12 +92,16 @@ namespace nimbus {
 
     pthread_mutex_lock(&mutex_);
     if (ProfilerMalloc::IsMapInclude()) {
+      alloc_ += size;
       ProfilerMalloc::InsertAllocPointer(ptr, size);
+      // pthread_mutex_unlock(&mutex_);
+      ProfilerMalloc::IncreaseAlloc(ptr, size);
       pthread_mutex_unlock(&mutex_);
-      ProfilerMalloc::IncreaseAlloc(size);
     } else {
       pthread_mutex_unlock(&mutex_);
     }
+
+    // printf("[ANDREW DEBUG] Alloc: %zd\n", size);
 
     return ptr;
   }
@@ -130,9 +134,11 @@ namespace nimbus {
     pthread_mutex_lock(&mutex_);
     size_t size = ProfilerMalloc::AllocSize(ptr);
     if (size > 0) {
+      alloc_ -= size;
       ProfilerMalloc::DeleteAllocPointer(ptr);
+      // pthread_mutex_unlock(&mutex_);
+      ProfilerMalloc::DecreaseAlloc(ptr, size);
       pthread_mutex_unlock(&mutex_);
-      ProfilerMalloc::DecreaseAlloc(size);
     } else {
       pthread_mutex_unlock(&mutex_);
     }
@@ -154,15 +160,19 @@ namespace nimbus {
     map_include_ = true;
   }
 
-  uint64_t ProfilerMalloc::CurrentAlloc() {
+  size_t ProfilerMalloc::CurrentAlloc() {
     return alloc_;
   }
 
-  void ProfilerMalloc::IncreaseAlloc(size_t size) {
+  void ProfilerMalloc::IncreaseAlloc(void *ptr, size_t size) {
     pthread_t tid = pthread_self();
     /* Statistics are only maintained for threads that have been registered with the profiler. */
     if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
       ThreadAllocState& state = (*thread_alloc_map_)[tid];
+      state.num_allocs++;
+      // printf("Ptr: %p, Curr Alloc: %zd, New Alloc: %zd, Sum: %zd\n", ptr,
+      //       state.curr_alloc, size, state.curr_alloc + size);
+      assert(state.curr_alloc + size >= size);
       state.curr_alloc +=size;
       if (state.curr_alloc > state.max_alloc) {
         state.max_alloc = state.curr_alloc;
@@ -170,10 +180,14 @@ namespace nimbus {
     }
   }
 
-  void ProfilerMalloc::DecreaseAlloc(size_t size) {
+  void ProfilerMalloc::DecreaseAlloc(void *ptr, size_t size) {
     pthread_t tid = pthread_self();
     if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
       ThreadAllocState& state = (*thread_alloc_map_)[tid];
+      state.num_frees++;
+      // printf("Ptr: %p, Curr Alloc: %zd, Delete Alloc: %zd, Sum: %zd\n", ptr,
+      //       state.curr_alloc, size, state.curr_alloc - size);
+      assert(state.curr_alloc - size <= state.curr_alloc);
       state.curr_alloc -=size;
     }
   }
@@ -182,6 +196,12 @@ namespace nimbus {
     /* Lock should be held prior to call. */
     map_include_ = false;
     if (alloc_map_ != NULL) {
+      /*
+      if (alloc_map_->find(ptr) != alloc_map_->end()) {
+        printf("*****[ANDREW DEBUG] pointer existed with size: %zd, inserting %zd\n",
+               (*alloc_map_)[ptr], size);
+      }
+      */
       (*alloc_map_)[ptr] = size;
     }
     map_include_ = true;
@@ -198,6 +218,7 @@ namespace nimbus {
     /* Lock should be held prior to call. */
     if (alloc_map_ != NULL && alloc_map_->find(ptr) != alloc_map_->end()) {
       size_t size = (*alloc_map_)[ptr];
+      assert(size >= 0);
       return size;
     } else {
       return 0;
@@ -223,6 +244,26 @@ namespace nimbus {
     if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
       ThreadAllocState& state = (*thread_alloc_map_)[tid];
       return state.curr_alloc;
+    } else {
+      return 0;
+    }
+  }
+
+  uint64_t ProfilerMalloc::NumAllocs() {
+    pthread_t tid = pthread_self();
+    if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
+      ThreadAllocState& state = (*thread_alloc_map_)[tid];
+      return state.num_allocs;
+    } else {
+      return 0;
+    }
+  }
+
+  uint64_t ProfilerMalloc::NumFrees() {
+    pthread_t tid = pthread_self();
+    if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
+      ThreadAllocState& state = (*thread_alloc_map_)[tid];
+      return state.num_frees;
     } else {
       return 0;
     }
@@ -289,8 +330,10 @@ namespace nimbus {
   void ProfilerMalloc::ResetThreadStatisticsByTid(pthread_t tid) {
     if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
       ThreadAllocState& state = (*thread_alloc_map_)[tid];
-      state.curr_alloc = 0;
+      // state.curr_alloc = 0;
       state.max_alloc = 0;
+      state.num_allocs = 0;
+      state.num_frees = 0;
     }
   }
 

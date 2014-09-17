@@ -46,6 +46,7 @@
 #include "application/water_multiple/data_names.h"
 #include "application/water_multiple/options.h"
 #include "application/water_multiple/parameters.h"
+#include "application/water_multiple/physbam_include.h"
 #include "application/water_multiple/physbam_utils.h"
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"
@@ -474,6 +475,64 @@ void DestroyExampleAndDriver(
   example = NULL;
   delete driver;
   driver = NULL;
+}
+
+int NumParticles(PhysBAM::WATER_EXAMPLE<TV> &example) {
+  typedef typename PhysBAM::PARTICLE_LEVELSET_PARTICLES<TV> ParticleBucket;
+  typedef typename PhysBAM::ARRAY<ParticleBucket*, TV_INT> ParticleArray;
+  nimbus::GeometricRegion lr = example.local_region;
+  int gw = example.number_of_ghost_cells;
+  int count = 0;
+
+  ParticleArray *positive_particles =
+    &example.particle_levelset_evolution.particle_levelset.positive_particles;
+  ParticleArray *negative_particles =
+    &example.particle_levelset_evolution.particle_levelset.negative_particles;
+  for (int x = -gw + 1; x <= lr.dx() + gw + 1; ++x) {
+    for (int y = -gw + 1; y <= lr.dy() + gw + 1; ++y) {
+      for (int z = -gw + 1; z <= lr.dz() + gw + 1; ++z) {
+        TV_INT bucket_index(x, y, z);
+        ParticleBucket* pos_bucket = (*positive_particles)(bucket_index);
+        ParticleBucket* neg_bucket = (*negative_particles)(bucket_index);
+	if (pos_bucket != NULL) {
+	  count += pos_bucket->Number();
+	}
+	if (neg_bucket != NULL) {
+	  count += neg_bucket->Number();
+	}
+      }
+    }
+  }
+  return(count);
+}
+
+int NumRemovedParticles(PhysBAM::WATER_EXAMPLE<TV> &example) {
+  typedef typename PhysBAM::PARTICLE_LEVELSET_REMOVED_PARTICLES<TV> RemovedParticleBucket;
+  typedef typename PhysBAM::ARRAY<RemovedParticleBucket*, TV_INT> RemovedParticleArray;
+  nimbus::GeometricRegion lr = example.local_region;
+  int gw = example.number_of_ghost_cells;
+  int count = 0;
+
+  RemovedParticleArray *removed_positive_particles =
+    &example.particle_levelset_evolution.particle_levelset.removed_positive_particles;
+  RemovedParticleArray *removed_negative_particles =
+    &example.particle_levelset_evolution.particle_levelset.removed_negative_particles;
+  for (int x = -gw + 1; x <= lr.dx() + gw + 1; ++x) {
+    for (int y = -gw + 1; y <= lr.dy() + gw + 1; ++y) {
+      for (int z = -gw + 1; z <= lr.dz() + gw + 1; ++z) {
+        TV_INT bucket_index(x, y, z);
+        RemovedParticleBucket* pos_bucket = (*removed_positive_particles)(bucket_index);
+        RemovedParticleBucket* neg_bucket = (*removed_negative_particles)(bucket_index);
+	if (pos_bucket != NULL) {
+	  count += pos_bucket->Number();
+	}
+	if (neg_bucket != NULL) {
+	  count += neg_bucket->Number();
+	}
+      }
+    }
+  }
+  return(count);
 }
 
 }  // namespace application

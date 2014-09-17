@@ -43,6 +43,7 @@
 #define NIMBUS_WORKER_CACHE_MANAGER_H_
 
 #include <pthread.h>
+#include <cstdio>
 #include <sstream>  // NOLINT
 #include <map>
 #include <vector>
@@ -153,6 +154,9 @@ class CacheManager {
         typedef std::map<cache::co_id_t,
                          CacheTable *> Pool;
         Pool *pool_;
+        FILE* alloc_log;
+
+        void PrintTimeStamp(uint64_t size);
 };  // class CacheManager
 
 }  // namespace nimbus

@@ -205,14 +205,15 @@ template<class TV> void WATER_DRIVER<TV>::
 Advance_To_Target_Time(const T target_time)
 {
     bool done=false;for(int substep=1;!done;substep++){
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:calculate_dt");
         LOG::Time("Calculate Dt");
         example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
         T dt=example.cfl*example.incompressible.CFL(example.face_velocities);dt=min(dt,example.particle_levelset_evolution.CFL(false,false));
         if(example.mpi_grid) example.mpi_grid->Synchronize_Dt(dt);
         if(time+dt>=target_time){dt=target_time-time;done=true;}
         else if(time+2*dt>=target_time){dt=.5*(target_time-time);}
-        printf("\n[CONTROL FLOW] substep=%d, dt=%f\n", substep, dt);
 
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:kinematic_evolution");
         // kinematic_update
         LOG::Time("Kinematic Evolution");
         kinematic_evolution.Set_External_Positions(example.rigid_geometry_collection.particles.X,example.rigid_geometry_collection.particles.rotation,time);
@@ -223,11 +224,13 @@ Advance_To_Target_Time(const T target_time)
             rigid_geometry.Rotation()=ROTATION<TV>::From_Rotation_Vector(dt*rigid_geometry.Twist().angular)*rigid_geometry.Rotation();rigid_geometry.Rotation().Normalize();}
         kinematic_evolution.Set_External_Positions(example.rigid_geometry_collection.particles.X,example.rigid_geometry_collection.particles.rotation,time+dt);
 
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:compute_occupied_blocks");
         LOG::Time("Compute Occupied Blocks");
         T maximum_fluid_speed=example.face_velocities.Maxabs().Max();
         T max_particle_collision_distance=example.particle_levelset_evolution.particle_levelset.max_collision_distance_factor*example.mac_grid.dX.Max();
         example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,dt*maximum_fluid_speed+2*max_particle_collision_distance+(T).5*example.mac_grid.dX.Max(),10);
 
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:adjust_phi_with_objects");
         LOG::Time("Adjust Phi With Objects");
         T_FACE_ARRAYS_SCALAR face_velocities_ghost;face_velocities_ghost.Resize(example.incompressible.grid,example.number_of_ghost_cells,false);
         example.incompressible.boundary->Fill_Ghost_Cells_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,time+dt,example.number_of_ghost_cells);
@@ -235,19 +238,23 @@ Advance_To_Target_Time(const T target_time)
         example.Adjust_Phi_With_Objects(time);
         
         //Advect Phi 3.6% (Parallelized)
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:advect_phi");
         LOG::Time("Advect Phi");
         example.phi_boundary_water.Use_Extrapolation_Mode(false);
         example.particle_levelset_evolution.Advance_Levelset(dt);
         example.phi_boundary_water.Use_Extrapolation_Mode(true);
 
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:extrapolate_phi_into_objects");
         LOG::Time("Extrapolate Phi Into Objects");
         example.Extrapolate_Phi_Into_Objects(time+dt);
         
         //Advect Particles 12.1% (Parallelized)
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:step_particles");
         LOG::Time("Step Particles");
         example.particle_levelset_evolution.particle_levelset.Euler_Step_Particles(face_velocities_ghost,dt,time,true,true,false,false);
         
         //Advect removed particles (Parallelized)
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:advect_removed_particles");
         LOG::Time("Advect Removed Particles Exchange");
         example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
         LOG::Time("Advect Removed Particles");
@@ -255,26 +262,31 @@ Advance_To_Target_Time(const T target_time)
         DOMAIN_ITERATOR_THREADED_ALPHA<WATER_DRIVER<TV>,TV>(domain,0).template Run<T,T>(*this,&WATER_DRIVER<TV>::Run,dt,time);
 
         //Advect Velocities 26% (Parallelized)
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:advect_v");
         LOG::Time("Advect V");
         example.advection_scalar.Update_Advection_Equation_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,face_velocities_ghost,*example.boundary,dt,time);
         
         //Add Forces 0%
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:apply_forces");
         LOG::Time("Forces");
         example.incompressible.Advance_One_Time_Step_Forces(example.face_velocities,dt,time,true,0,example.number_of_ghost_cells);
         kinematic_evolution.Set_External_Velocities(example.rigid_geometry_collection.particles.V,example.rigid_geometry_collection.particles.angular_velocity,time+dt,time+dt);
 
         //Modify Levelset with Particles 15% (Parallelizedish)
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:modify_levelset");
         LOG::Time("Modify Levelset");
         example.particle_levelset_evolution.particle_levelset.Exchange_Overlap_Particles();
         example.particle_levelset_evolution.Modify_Levelset_And_Particles(&face_velocities_ghost);
         //example.particle_levelset_evolution.Make_Signed_Distance(); //TODO(mlentine) Figure out why this was needed
 
         //Adjust Phi 0%
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:adjust_phi");
         LOG::Time("Adjust Phi");
         example.Adjust_Phi_With_Sources(time+dt);
         example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time+dt);
 
         //Delete Particles 12.5 (Parallelized)
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:delete_particles");
         LOG::Time("Delete Particles");
         example.particle_levelset_evolution.Delete_Particles_Outside_Grid();                                                            //0.1%
         example.particle_levelset_evolution.particle_levelset.Delete_Particles_In_Local_Maximum_Phi_Cells(1);                           //4.9%
@@ -282,6 +294,7 @@ Advance_To_Target_Time(const T target_time)
         example.particle_levelset_evolution.particle_levelset.Identify_And_Remove_Escaped_Particles(face_velocities_ghost,1.5,time+dt); //2.4%
         
         //Reincorporate Particles 0% (Parallelized)
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:reincorporate_particles");
         LOG::Time("Reincorporate Particles");
         if(example.particle_levelset_evolution.particle_levelset.use_removed_positive_particles || example.particle_levelset_evolution.particle_levelset.use_removed_negative_particles)
             example.particle_levelset_evolution.particle_levelset.Reincorporate_Removed_Particles(1,1,0,true);
@@ -292,17 +305,20 @@ Advance_To_Target_Time(const T target_time)
         {
         LOG::SCOPE *scope=0;
         if(!thread_queue) scope=new LOG::SCOPE("Project");
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:projection_calculate_boundary_condition");
         LOG::Time("Boundary Conditions");
         example.Set_Boundary_Conditions(time);
         example.incompressible.Set_Dirichlet_Boundary_Conditions(&example.particle_levelset_evolution.phi,0);
         example.projection.p*=dt;
         {
         LOG::SCOPE *scope=0;
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:projection_inner");
         if(!thread_queue) scope=new LOG::SCOPE("Implicit Part");
         example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method();
         example.incompressible.Advance_One_Time_Step_Implicit_Part(example.face_velocities,dt,time,true);
         delete scope;
         }
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:projection_wrapup");
         LOG::Time("Boundary Condition Face");
         example.projection.p*=(1/dt);
         example.incompressible.boundary->Apply_Boundary_Condition_Face(example.incompressible.grid,example.face_velocities,time+dt);
@@ -311,6 +327,7 @@ Advance_To_Target_Time(const T target_time)
         }
 
         //Extrapolate Velocity 7%
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:extrapolate_velocity");
         LOG::Time("Extrapolate Velocity");
         T_ARRAYS_SCALAR exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
         example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time+dt,8);
@@ -325,13 +342,16 @@ template<class TV> void WATER_DRIVER<TV>::
 Simulate_To_Frame(const int frame,const int tid)
 {
     while(current_frame<frame){
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:loop_frame");
         LOG::SCOPE scope("FRAME","Frame %d",current_frame+1,tid);
         kinematic_evolution.Get_Current_Kinematic_Keyframes(example.Time_At_Frame(current_frame+1)-time,time);        
         Advance_To_Target_Time(example.Time_At_Frame(current_frame+1));
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:reseed");
         LOG::Time("Reseed");
         if((current_frame-example.first_frame)%1==0){
             example.particle_levelset_evolution.Reseed_Particles(time);
             example.particle_levelset_evolution.Delete_Particles_Outside_Grid();}
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("Compute:write_output");
         LOG::Time("WriteOutputFrame");
         Write_Output_Files(++output_number);
         LOG::Time("Control");

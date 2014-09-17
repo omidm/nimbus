@@ -139,16 +139,16 @@ void JobLoopIterationPartTwo::SpawnJobs(
    */
   for (int i = 0; i < extrapolate_phi_job_num; ++i) {
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i], APP_PHI,
+    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_PHI,
                         APP_FACE_VEL, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write,
-                        kRegY2W8CentralWGB[i], APP_PHI,
+                        kRegY2W3CentralWGB[i], APP_PHI,
                         NULL);
 
     nimbus::Parameter s_extra_params;
     std::string s_extra_str;
-    SerializeParameter(frame, time, dt, global_region, kRegY2W8Central[i],
+    SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i],
                        &s_extra_str);
     s_extra_params.set_ser_data(SerializedData(s_extra_str));
     job_query.StageJob(EXTRAPOLATE_PHI, extrapolate_phi_job_ids[i],
@@ -164,10 +164,10 @@ void JobLoopIterationPartTwo::SpawnJobs(
    */
   for (int i = 0; i < extrapolation_job_num; ++i) {
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i],
+    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i],
                         APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegY2W8Central[i],
+    LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i],
                         APP_FACE_VEL, NULL);
 
     nimbus::Parameter extrapolation_params;
@@ -240,8 +240,8 @@ void JobLoopIterationPartTwo::SpawnJobs(
                           APP_PSI_N, NULL);
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_POS_PARTICLES,
                           APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
-                          APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
-                          NULL);
+                          APP_NEG_REM_PARTICLES, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[i], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
       write.clear();
       LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL,
                           APP_PHI, NULL);
@@ -271,8 +271,8 @@ void JobLoopIterationPartTwo::SpawnJobs(
                           APP_PSI_N, NULL);
       LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
                           APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
-                          APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
-                          NULL);
+                          APP_NEG_REM_PARTICLES, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegW3Central[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
       write.clear();
 
       nimbus::Parameter temp_params;
@@ -295,8 +295,8 @@ void JobLoopIterationPartTwo::SpawnJobs(
                             APP_PSI_N, NULL);
         LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_POS_PARTICLES,
                             APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
-                            APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
-                            NULL);
+                            APP_NEG_REM_PARTICLES, NULL);
+        LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[i], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
         write.clear();
 
         nimbus::Parameter temp_params;

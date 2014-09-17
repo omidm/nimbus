@@ -38,6 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include <unistd.h>
 #include <boost/functional/hash.hpp>
 #include <cstdio>
 #include <sstream>
@@ -79,6 +80,7 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
   listening_port_(listening_port),
   application_(a) {
     event_log = fopen("event_fe.txt", "w");
+    alloc_log = fopen("data_objects.txt", "w");
     log_.InitTime();
     id_ = -1;
     ip_address_ = NIMBUS_RECEIVER_KNOWN_IP;
@@ -141,6 +143,7 @@ void Worker::WorkerCoreProcessor() {
 
   JobList local_job_done_list;
   while (true) {
+    bool process_jobs = false;
     // Process command.
     SchedulerCommandList storage;
     client_->ReceiveCommands(&storage, SCHEDULER_COMMAND_GROUP_QUOTA);
@@ -152,6 +155,7 @@ void Worker::WorkerCoreProcessor() {
       dbg(DBG_WORKER_FD,
           DBG_WORKER_FD_S"Scheduler command arrives(%s).\n",
           comm->name().c_str());
+      process_jobs = true;
       ProcessSchedulerCommand(comm);
       delete comm;
     }
@@ -163,6 +167,7 @@ void Worker::WorkerCoreProcessor() {
           DBG_WORKER_FD_S"Receive-job transmission is done(job #%d)\n",
           receive_job_id);
       PrintTimeStamp("io_done %lu\n", receive_job_id);
+      process_jobs = true;
       NotifyTransmissionDone(receive_job_id);
       if (--quota <= 0) {
         break;
@@ -177,6 +182,7 @@ void Worker::WorkerCoreProcessor() {
       Job* job = local_job_done_list.front();
       local_job_done_list.pop_front();
       PrintTimeStamp("local_done %lu\n", job->id().elem());
+      process_jobs = true;
       NotifyLocalJobDone(job);
       if (local_job_done_list.empty()) {
         worker_manager_->GetLocalJobDoneList(&local_job_done_list);
@@ -184,6 +190,9 @@ void Worker::WorkerCoreProcessor() {
       if (--quota <= 0) {
         break;
       }
+    }
+    if (!process_jobs) {
+      usleep(10);
     }
   }
 }
@@ -327,6 +336,10 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
   data->set_region(*(ldo->region()));
 
   data_map_.AddMapping(data->physical_id(), data);
+  struct timespec t;
+  clock_gettime(CLOCK_REALTIME, &t);
+  double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
+  fprintf(alloc_log, "%f : %lu\n", time_sum, sizeof(*data));
 
   Job * job = new CreateDataJob();
   job->set_name("CreateData:" + cm->data_name());
@@ -710,6 +723,8 @@ void Worker::NotifyTransmissionDone(job_id_t job_id) {
         if (vertex->incoming_edges()->empty()) {
           vertex->entry()->set_state(WorkerJobEntry::READY);
           ResolveDataArray(receive_job);
+          PrintTimeStamp("dispatch_job(new) %s %lu\n",
+                         receive_job->name().c_str(), receive_job->id().elem());
           int success_flag = worker_manager_->PushJob(receive_job);
 #ifndef MUTE_LOG
           double wait_time = timer_.Stop(receive_job->id().elem());
