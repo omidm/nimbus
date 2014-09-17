@@ -1,0 +1,27 @@
+A short summary of projection inner loop:
+--Hang Qu
+
+(1) step one:
+Z = precondition(C, B) (***)
+LOCAL_RHO = sum(Z[i] * B[i])
+
+(2) reduce RHO/BETA:
+RHO = f_1(sum(LOCAL_RHO))
+BETA = f_2(RHO)
+
+(3) step two:
+P[i] = Z[i] + BETA * P[i]
+
+(3-4) exchange P
+
+(4) step three:
+TEMP = A * P (***)
+LOCAL_ALPHA = sum(P[i] * TEMP[i])
+
+(5) reduce ALPHA
+ALPHA = f_3(sum(LOCAL_ALPHA))
+
+(6) step four:
+B[i] -= ALPHA * TEMP[i]
+RESULT[i] += ALPHA * P[i]
+LOCAL_RESIDUAL = max(B[i])

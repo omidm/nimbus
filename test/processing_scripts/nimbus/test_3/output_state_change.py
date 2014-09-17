@@ -3,9 +3,6 @@
 import sys
 import operator
 
-def IsCompute(job_name):
-	return job_name[0:8] == "Compute:"
-
 def break_line(line):
 	contents = line.split(' ')
 	timestamp = float(contents[0])
@@ -13,8 +10,9 @@ def break_line(line):
 	if event in {"local_done", "io_done"}:
 		return (None, None, None, False)
 	job_name = contents[2]
-	# if not IsCompute(job_name):
-	#	return (None, None, None, False)
+	if job_name == "JOB_DONE":
+		return (None, None, None, False)
+
 	job_id = int(contents[3])
 	name_map = {"f":"fin", "r":"run", "recv_job":"recv",
 			"dispatch_job(new)":"dispatch",
