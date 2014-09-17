@@ -88,27 +88,75 @@ bool StaticLoadBalancer::SetWorkerToAssignJob(JobEntry* job) {
   assert(worker_num_ == worker_map_.size());
   assert(worker_num_ == worker_domains_.size());
 
-  GeometricRegion region;
-  bool got_region = job->GetUnionSetRegion(data_manager_, &region);
 
   worker_id_t w_id;
-  if ((!got_region) || (!job->sterile())) {
+  if (!job->sterile()) {
     w_id = worker_map_.begin()->first;
   } else {
-    WorkerDomains::iterator iter = worker_domains_.begin();
-    assert(iter != worker_domains_.end());
-    w_id = iter->first;
-    int_dimension_t vol =
-      GeometricRegion::GetIntersection(iter->second, region).GetSurfaceArea();
-    for (; iter != worker_domains_.end(); ++iter) {
-      int_dimension_t temp =
-        GeometricRegion::GetIntersection(iter->second, region).GetSurfaceArea();
-      if (vol < temp) {
-        vol = temp;
-        w_id = iter->first;
+    /*
+     * This method is weighted polling among the workers, the worker that has
+     * the highest aggregate intersect volume with each of the ldos in the
+     * union set of the job would win the job.
+     */
+    // initialize worker ranks.
+    WorkerRank worker_ranks;
+    WorkerMap::iterator wmit = worker_map_.begin();
+    for (; wmit != worker_map_.end(); ++wmit) {
+      worker_ranks[wmit->first] = 0;
+    }
+
+    IDSet<logical_data_id_t>::IDSetIter iter;
+    for (iter = job->union_set_p()->begin(); iter != job->union_set_p()->end(); ++iter) {
+      const LogicalDataObject* ldo;
+      ldo = data_manager_->FindLogicalObject(*iter);
+      WorkerRank::iterator it = worker_ranks.begin();
+      for (; it != worker_ranks.end(); ++it) {
+        GeometricRegion intersect =
+          GeometricRegion::GetIntersection(worker_domains_[it->first], *ldo->region());
+        it->second += intersect.GetSurfaceArea();
+      }
+    }
+
+    // find the worker that wins the poll.
+    WorkerRank::iterator writ = worker_ranks.begin();
+    assert(writ != worker_ranks.end());
+    w_id = writ->first;
+    int_dimension_t vol = worker_ranks[writ->first];
+    for (; writ != worker_ranks.end(); ++writ) {
+      if (vol < worker_ranks[writ->first]) {
+        vol = worker_ranks[writ->first];
+        w_id = writ->first;
       }
     }
   }
+
+  /* 
+   * If the intersect is made with only union set region not each ldo one by
+   * one the method does not work. Consider the case where there are global
+   * variables that are being read by jobs, then the region of a job becomes
+   * the entire space.
+   */
+//  GeometricRegion region;
+//  bool got_region = job->GetUnionSetRegion(data_manager_, &region);
+//
+//  worker_id_t w_id;
+//  if ((!got_region) || (!job->sterile())) {
+//    w_id = worker_map_.begin()->first;
+//  } else {
+//    WorkerDomains::iterator iter = worker_domains_.begin();
+//    assert(iter != worker_domains_.end());
+//    w_id = iter->first;
+//    int_dimension_t vol =
+//      GeometricRegion::GetIntersection(iter->second, region).GetSurfaceArea();
+//    for (; iter != worker_domains_.end(); ++iter) {
+//      int_dimension_t temp =
+//        GeometricRegion::GetIntersection(iter->second, region).GetSurfaceArea();
+//      if (vol < temp) {
+//        vol = temp;
+//        w_id = iter->first;
+//      }
+//    }
+//  }
 
   log.StopTimer();
   std::cout
