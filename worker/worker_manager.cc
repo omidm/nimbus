@@ -78,7 +78,7 @@ WorkerManager::WorkerManager() {
     fast_thread_num = 0;
   } else {
     computation_thread_num = across_job_parallism;
-    fast_thread_num = 1;
+    fast_thread_num = 0;
   }
   idle_computation_threads_ = 0;
   dispatched_computation_job_count_ = 0;
@@ -141,7 +141,6 @@ bool WorkerManager::PushJob(Job* job) {
 
 bool WorkerManager::FinishJob(Job* job) {
   pthread_mutex_lock(&local_job_done_list_lock_);
-  // TODO(print_log): a job is done.
   PrintTimeStamp("f",
                  job->name().c_str(),
                  job->id().elem());
