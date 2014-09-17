@@ -128,22 +128,22 @@ void JobProjectionLoopIteration::Execute(
     std::vector<nimbus::job_id_t> projection_job_ids;
     GetNewJobID(&projection_job_ids, projection_job_num);
 
-    int trans_job_num = kAppPartNum;
+    int trans_job_num = kProjAppPartNum;
     std::vector<nimbus::job_id_t> trans_job_ids;
     GetNewJobID(&trans_job_ids, trans_job_num);
 
-    int wrapup_job_num = kAppPartNum;
+    int wrapup_job_num = kProjAppPartNum;
     std::vector<nimbus::job_id_t> wrapup_job_ids;
     GetNewJobID(&wrapup_job_ids, wrapup_job_num);
 
     nimbus::IDSet<nimbus::logical_data_id_t> read, write;
 
     std::vector<nimbus::Parameter> default_part_params;
-    default_part_params.resize(kAppPartNum);
-    for (int i = 0; i < kAppPartNum; ++i) {
+    default_part_params.resize(kProjAppPartNum);
+    for (int i = 0; i < kProjAppPartNum; ++i) {
       std::string default_params_str;
       SerializeParameter(
-          frame, time, dt, global_region, kRegY2W0Central[i],
+          frame, time, dt, global_region, kProjRegY2W0Central[i],
           &default_params_str);
       default_part_params[i].set_ser_data(SerializedData(default_params_str));
     }
@@ -151,34 +151,34 @@ void JobProjectionLoopIteration::Execute(
     // Projection transform_pressure.
     for (int index = 0; index < trans_job_num; ++index) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Central[index],
+      LoadLogicalIdsInSet(this, &read, kProjRegY2W3Central[index],
                           APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                           APP_VECTOR_PRESSURE, APP_INDEX_M2C, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[index],
+      LoadLogicalIdsInSet(this, &write, kProjRegY2W3Central[index],
                           APP_PRESSURE, NULL);
       job_query.StageJob(PROJECTION_TRANSFORM_PRESSURE, trans_job_ids[index],
                          read, write, default_part_params[index],
                          true);
-      job_query.Hint(trans_job_ids[index], kRegY2W3Central[index]);
+      job_query.Hint(trans_job_ids[index], kProjRegY2W3Central[index]);
     }
     job_query.CommitStagedJobs();
 
     // Projection wrapup.
     for (int index = 0; index < wrapup_job_num; ++index) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[index], APP_FACE_VEL, APP_PHI,
+      LoadLogicalIdsInSet(this, &read, kProjRegY2W3Outer[index], APP_FACE_VEL, APP_PHI,
                           NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index], APP_PSI_D, APP_PSI_N,
+      LoadLogicalIdsInSet(this, &read, kProjRegY2W1Outer[index], APP_PSI_D, APP_PSI_N,
                           APP_PRESSURE, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W1Central[index], APP_U_INTERFACE, NULL);
+      LoadLogicalIdsInSet(this, &read, kProjRegY2W1Central[index], APP_U_INTERFACE, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index], APP_FACE_VEL, NULL);
-      LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index], APP_PRESSURE, NULL);
+      LoadLogicalIdsInSet(this, &write, kProjRegY2W0Central[index], APP_FACE_VEL, NULL);
+      LoadLogicalIdsInSet(this, &write, kProjRegY2W1CentralWGB[index], APP_PRESSURE, NULL);
       job_query.StageJob(PROJECTION_WRAPUP, wrapup_job_ids[index],
                          read, write, default_part_params[index],
                          true);
-      job_query.Hint(wrapup_job_ids[index], kRegY2W3Central[index]);
+      job_query.Hint(wrapup_job_ids[index], kProjRegY2W3Central[index]);
     }
     job_query.CommitStagedJobs();
     // Loop iteration part two.
@@ -207,11 +207,11 @@ void JobProjectionLoopIteration::Execute(
     default_params.set_ser_data(SerializedData(default_params_str));
 
     std::vector<nimbus::Parameter> default_part_params;
-    default_part_params.resize(kAppPartNum);
-    for (int i = 0; i < kAppPartNum; ++i) {
+    default_part_params.resize(kProjAppPartNum);
+    for (int i = 0; i < kProjAppPartNum; ++i) {
       std::string default_params_str;
       SerializeParameter(
-          frame, time, dt, global_region, kRegY2W0Central[i], iteration,
+          frame, time, dt, global_region, kProjRegY2W0Central[i], iteration,
           &default_params_str);
       default_part_params[i].set_ser_data(SerializedData(default_params_str));
     }
@@ -220,19 +220,19 @@ void JobProjectionLoopIteration::Execute(
     std::vector<nimbus::job_id_t> projection_job_ids;
     GetNewJobID(&projection_job_ids, projection_job_num);
 
-    int step_one_job_num = kAppPartNum;
+    int step_one_job_num = kProjAppPartNum;
     std::vector<nimbus::job_id_t> step_one_job_ids;
     GetNewJobID(&step_one_job_ids, step_one_job_num);
 
-    int step_two_job_num = kAppPartNum;
+    int step_two_job_num = kProjAppPartNum;
     std::vector<nimbus::job_id_t> step_two_job_ids;
     GetNewJobID(&step_two_job_ids, step_two_job_num);
 
-    int step_three_job_num = kAppPartNum;
+    int step_three_job_num = kProjAppPartNum;
     std::vector<nimbus::job_id_t> step_three_job_ids;
     GetNewJobID(&step_three_job_ids, step_three_job_num);
 
-    int step_four_job_num = kAppPartNum;
+    int step_four_job_num = kProjAppPartNum;
     std::vector<nimbus::job_id_t> step_four_job_ids;
     GetNewJobID(&step_four_job_ids, step_four_job_num);
 
@@ -242,19 +242,19 @@ void JobProjectionLoopIteration::Execute(
     for (int index = 0; index < step_one_job_num; ++index) {
       read.clear();
       LoadLogicalIdsInSet(
-          this, &read, kRegY2W0Central[index],
+          this, &read, kProjRegY2W0Central[index],
           APP_VECTOR_TEMP,
           APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
           APP_MATRIX_C, APP_VECTOR_B, APP_VECTOR_Z, NULL);
       write.clear();
       LoadLogicalIdsInSet(
-          this, &write, kRegY2W0Central[index],
+          this, &write, kProjRegY2W0Central[index],
           APP_VECTOR_TEMP,
           APP_VECTOR_Z, APP_PROJECTION_LOCAL_RHO, NULL);
       job_query.StageJob(PROJECTION_STEP_ONE, step_one_job_ids[index],
                          read, write, default_part_params[index],
                          true);
-      job_query.Hint(step_one_job_ids[index], kRegY2W0Central[index]);
+      job_query.Hint(step_one_job_ids[index], kProjRegY2W0Central[index]);
     }
     job_query.CommitStagedJobs();
 
@@ -278,30 +278,30 @@ void JobProjectionLoopIteration::Execute(
       LoadLogicalIdsInSet(
           this, &read, kRegW0Central[0], APP_PROJECTION_BETA, NULL);
       LoadLogicalIdsInSet(
-          this, &read, kRegY2W0Central[index],
+          this, &read, kProjRegY2W0Central[index],
           APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
           APP_VECTOR_Z,
           APP_VECTOR_P_META_FORMAT, APP_INDEX_C2M,
           NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index],
+      LoadLogicalIdsInSet(this, &write, kProjRegY2W0Central[index],
                           APP_VECTOR_P_META_FORMAT,
                           NULL);
       job_query.StageJob(PROJECTION_STEP_TWO, step_two_job_ids[index],
                          read, write, default_part_params[index],
                          true);
-      job_query.Hint(step_two_job_ids[index], kRegY2W0Central[index]);
+      job_query.Hint(step_two_job_ids[index], kProjRegY2W0Central[index]);
     }
     job_query.CommitStagedJobs();
 
     // STEP_THREE
     for (int index = 0; index < step_three_job_num; ++index) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index],
+      LoadLogicalIdsInSet(this, &read, kProjRegY2W1Outer[index],
                           APP_VECTOR_P_META_FORMAT,
                           NULL);
       LoadLogicalIdsInSet(
-          this, &read, kRegY2W0Central[index],
+          this, &read, kProjRegY2W0Central[index],
           APP_VECTOR_TEMP,
           APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
           APP_MATRIX_A,
@@ -309,13 +309,13 @@ void JobProjectionLoopIteration::Execute(
           NULL);
       write.clear();
       LoadLogicalIdsInSet(
-          this, &write, kRegY2W0Central[index],
+          this, &write, kProjRegY2W0Central[index],
           APP_VECTOR_TEMP,
           APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA, NULL);
       job_query.StageJob(PROJECTION_STEP_THREE, step_three_job_ids[index],
                          read, write, default_part_params[index],
                          true);
-      job_query.Hint(step_three_job_ids[index], kRegY2W0Central[index]);
+      job_query.Hint(step_three_job_ids[index], kProjRegY2W0Central[index]);
     }
     job_query.CommitStagedJobs();
 
@@ -339,7 +339,7 @@ void JobProjectionLoopIteration::Execute(
     for (int index = 0; index < step_four_job_num; ++index) {
       read.clear();
       LoadLogicalIdsInSet(
-          this, &read, kRegY2W0Central[index],
+          this, &read, kProjRegY2W0Central[index],
           APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
           APP_VECTOR_PRESSURE,
           APP_VECTOR_P_META_FORMAT, APP_INDEX_C2M,
@@ -348,12 +348,12 @@ void JobProjectionLoopIteration::Execute(
           this, &read, kRegW0Central[0], APP_PROJECTION_ALPHA, NULL);
       write.clear();
       LoadLogicalIdsInSet(
-          this, &write, kRegY2W0Central[index], APP_VECTOR_B,
+          this, &write, kProjRegY2W0Central[index], APP_VECTOR_B,
           APP_PROJECTION_LOCAL_RESIDUAL, APP_VECTOR_PRESSURE, NULL);
       job_query.StageJob(PROJECTION_STEP_FOUR, step_four_job_ids[index],
                          read, write, default_part_params[index],
                          true);
-      job_query.Hint(step_four_job_ids[index], kRegY2W0Central[index]);
+      job_query.Hint(step_four_job_ids[index], kProjRegY2W0Central[index]);
     }
     job_query.CommitStagedJobs();
 

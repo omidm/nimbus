@@ -155,8 +155,10 @@ class CacheManager {
                          CacheTable *> Pool;
         Pool *pool_;
         FILE* alloc_log;
+        FILE* block_log;
 
         void PrintTimeStamp(uint64_t size);
+        void BlockPrintTimeStamp(const char* message);
 };  // class CacheManager
 
 }  // namespace nimbus

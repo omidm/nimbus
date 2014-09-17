@@ -95,7 +95,7 @@ void JobReseedParticles::Execute(nimbus::Parameter params,
 
   WaterApp *app = dynamic_cast<WaterApp * >(application());
 
-  {
+  if (app->translator_log) {
     std::stringstream msg;
     msg << "Reseed Particles: Number of particles at start = " << NumParticles(*example);
     msg << "\nReseed Particles: Number of removed particles at start = " << NumRemovedParticles(*example);
@@ -108,7 +108,7 @@ void JobReseedParticles::Execute(nimbus::Parameter params,
     driver->ReseedParticlesImpl(this, da, dt);
   }
 
-  {
+  if (app->translator_log) {
     std::stringstream msg;
     msg << "Reseed Particles: Number of particles at end = " << NumParticles(*example);
     msg << "\nReseed Particles: Number of removed particles at end = " << NumRemovedParticles(*example);

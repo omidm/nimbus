@@ -2,65 +2,66 @@
 # C++ Class : Nimbus type : (domain), (number of partitions), (ghost width) : flags (none, include_boundary, use_scratch, single_partition)  #
 ##############################################################################################################################################
 
-DataFaceArray     : face_vel       : (40, 40, 40), (1, 2, 1), (3, 3, 3) : none
-DataFaceArray     : face_vel_ghost : (40, 40, 40), (1, 2, 1), (3, 3, 3) : include_boundary
-DataScalarArray   : phi            : (40, 40, 40), (1, 2, 1), (8, 8, 8) : include_boundary
-ScalarData        : last_unique_particle_id : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
-ScalarData        : dt : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
-DataParticleArray : pos_particles, neg_particles  : (40, 40, 40), (1, 2, 1), (3, 3, 3) : include_boundary, use_scratch
-DataParticleArray : pos_rem_particles, neg_rem_particles  : (40, 40, 40), (1, 2, 1), (3, 3, 3) : include_boundary, use_scratch
+DataFaceArray     : face_vel       : (80, 80, 80), (4, 4, 4), (3, 3, 3) : none
+DataFaceArray     : face_vel_ghost : (80, 80, 80), (4, 4, 4), (3, 3, 3) : include_boundary
+DataScalarArray   : phi            : (80, 80, 80), (4, 4, 4), (8, 8, 8) : include_boundary
+ScalarData        : last_unique_particle_id : (80, 80, 80), (4, 4, 4), (0, 0, 0) : none
+ScalarData        : dt : (80, 80, 80), (4, 4, 4), (0, 0, 0) : none
+DataParticleArray : pos_particles, neg_particles  : (80, 80, 80), (4, 4, 4), (3, 3, 3) : include_boundary, use_scratch
+DataParticleArray : pos_rem_particles, neg_rem_particles  : (80, 80, 80), (4, 4, 4), (3, 3, 3) : include_boundary, use_scratch
 
 # Group I.
 # boolean.
-DataScalarArray   : psi_d                : (40, 40, 40), (1, 2, 1), (1, 1, 1) : include_boundary
+DataScalarArray   : psi_d                : (80, 80, 80), (4, 4, 4), (1, 1, 1) : include_boundary
 # boolean.
-DataFaceArray     : psi_n                : (40, 40, 40), (1, 2, 1), (1, 1, 1) : include_boundary
+DataFaceArray     : psi_n                : (80, 80, 80), (4, 4, 4), (1, 1, 1) : include_boundary
 # float.
-DataScalarArray   : pressure             : (40, 40, 40), (1, 2, 1), (1, 1, 1) : include_boundary
+DataScalarArray   : pressure             : (80, 80, 80), (4, 4, 4), (1, 1, 1) : include_boundary
 # int.
-DataScalarArray   : filled_region_colors : (40, 40, 40), (1, 2, 1), (1, 1, 1) : include_boundary
+DataScalarArray   : filled_region_colors : (80, 80, 80), (4, 4, 4), (1, 1, 1) : include_boundary
 # float.
-DataScalarArray   : divergence           : (40, 40, 40), (1, 2, 1), (1, 1, 1) : include boundary
+DataScalarArray   : divergence           : (80, 80, 80), (4, 4, 4), (1, 1, 1) : include boundary
 # float.
-DataFaceArray     : u_interface          : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
+DataFaceArray     : u_interface          : (80, 80, 80), (4, 4, 4), (0, 0, 0) : none
 
+# The following data partitions should be changed if you want to run projection in different granularity.
 # Group II.
-DataSparseMatrix  : matrix_a             : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
-DataRawVectorNd   : vector_b             : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
-DataRawGridArray  : index_c2m            : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
-DataRawArrayM2C   : index_m2c            : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
+DataSparseMatrix  : matrix_a             : (80, 80, 80), (2, 2, 2), (0, 0, 0) : none
+DataRawVectorNd   : vector_b             : (80, 80, 80), (2, 2, 2), (0, 0, 0) : none
+DataRawGridArray  : index_c2m            : (80, 80, 80), (2, 2, 2), (0, 0, 0) : none
+DataRawArrayM2C   : index_m2c            : (80, 80, 80), (2, 2, 2), (0, 0, 0) : none
 # int
-ScalarData        : projection_local_n         : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
+ScalarData        : projection_local_n         : (80, 80, 80), (2, 2, 2), (0, 0, 0) : none
 # int
-ScalarData        : projection_interior_n      : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
+ScalarData        : projection_interior_n      : (80, 80, 80), (2, 2, 2), (0, 0, 0) : none
 
 # Group III.
 # float
-ScalarData        : projection_local_tolerance  : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
+ScalarData        : projection_local_tolerance  : (80, 80, 80), (2, 2, 2), (0, 0, 0) : none
 # float
-ScalarData        : projection_global_tolerance  : (40, 40, 40), (1, 1, 1), (0, 0, 0) : none
+ScalarData        : projection_global_tolerance  : (80, 80, 80), (1, 1, 1), (0, 0, 0) : none
 # int
-ScalarData        : projection_global_n        : (40, 40, 40), (1, 1, 1), (0, 0, 0) : none
+ScalarData        : projection_global_n        : (80, 80, 80), (1, 1, 1), (0, 0, 0) : none
 # int
-ScalarData        : projection_desired_iterations : (40, 40, 40), (1, 1, 1), (0, 0, 0) : none
+ScalarData        : projection_desired_iterations : (80, 80, 80), (1, 1, 1), (0, 0, 0) : none
 
 # Group IV.
 # double
-ScalarData        : projection_local_residual  : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
+ScalarData        : projection_local_residual  : (80, 80, 80), (2, 2, 2), (0, 0, 0) : none
 # double
-ScalarData        : projection_local_rho       : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
+ScalarData        : projection_local_rho       : (80, 80, 80), (2, 2, 2), (0, 0, 0) : none
 # double
-ScalarData        : projection_global_rho      : (40, 40, 40), (1, 1, 1), (0, 0, 0) : none
+ScalarData        : projection_global_rho      : (80, 80, 80), (1, 1, 1), (0, 0, 0) : none
 # double
-ScalarData        : projection_global_rho_old  : (40, 40, 40), (1, 1, 1), (0, 0, 0) : none
+ScalarData        : projection_global_rho_old  : (80, 80, 80), (1, 1, 1), (0, 0, 0) : none
 # double
-ScalarData        : projection_local_dot_product_for_alpha  : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
+ScalarData        : projection_local_dot_product_for_alpha  : (80, 80, 80), (2, 2, 2), (0, 0, 0) : none
 # float
-ScalarData        : projection_alpha           : (40, 40, 40), (1, 1, 1), (0, 0, 0) : none
+ScalarData        : projection_alpha           : (80, 80, 80), (1, 1, 1), (0, 0, 0) : none
 # float
-ScalarData        : projection_beta            : (40, 40, 40), (1, 1, 1), (0, 0, 0) : none
-DataSparseMatrix  : matrix_c                   : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
-DataRawVectorNd   : vector_pressure            : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
-DataRawVectorNd   : vector_z                   : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
-DataRawVectorNd   : vector_p_meta_format       : (40, 40, 40), (1, 2, 1), (1, 1, 1) : include_boundary
-DataRawVectorNd   : vector_temp                : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
+ScalarData        : projection_beta            : (80, 80, 80), (1, 1, 1), (0, 0, 0) : none
+DataSparseMatrix  : matrix_c                   : (80, 80, 80), (2, 2, 2), (0, 0, 0) : none
+DataRawVectorNd   : vector_pressure            : (80, 80, 80), (2, 2, 2), (0, 0, 0) : none
+DataRawVectorNd   : vector_z                   : (80, 80, 80), (2, 2, 2), (0, 0, 0) : none
+DataRawVectorNd   : vector_p_meta_format       : (80, 80, 80), (2, 2, 2), (1, 1, 1) : include_boundary
+DataRawVectorNd   : vector_temp                : (80, 80, 80), (2, 2, 2), (0, 0, 0) : none
