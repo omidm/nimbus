@@ -99,30 +99,34 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
   std::string jname = job->name();
   bool print_clog = false;
   bool print_cclog = false;
-  if (jname.substr(0, 7) == "Compute") {
-    print_clog = true;
-  } else if (jname.find("Copy") != std::string::npos) {
-    print_cclog = true;
-  }
-  if (print_clog) {
-    std::stringstream msg;
-    pid_t tid = syscall(SYS_gettid);
-    msg << "~~~ TID: " << tid << " App compute job start : " << jname << " " << cache_log_->GetTime(); // NOLINT
-    cache_log_->WriteToFile(msg.str());
-  }
-  if (print_cclog) {
-    std::stringstream msg;
-    pid_t tid = syscall(SYS_gettid);
-    msg << "~~~ TID: " << tid << " App copy job start : " << jname << " " << cache_log_->GetTime();
-    cache_log_->WriteToFile(msg.str());
-  }
+  if (cache_log_) {
+    if (jname.substr(0, 7) == "Compute") {
+      print_clog = true;
+    } else if (jname.find("Copy") != std::string::npos) {
+      print_cclog = true;
+    }
+    if (print_clog) {
+      std::stringstream msg;
+      pid_t tid = syscall(SYS_gettid);
+      msg << "~~~ TID: " << tid << " App compute job start : " << jname << " " <<
+        cache_log_->GetTime();
+      cache_log_->WriteToFile(msg.str());
+    }
+    if (print_cclog) {
+      std::stringstream msg;
+      pid_t tid = syscall(SYS_gettid);
+      msg << "~~~ TID: " << tid << " App copy job start : " << jname << " " <<
+        cache_log_->GetTime();
+      cache_log_->WriteToFile(msg.str());
+    }
 
-  {
-    std::stringstream msg;
-    pid_t tid = syscall(SYS_gettid);
-    msg << "*** TID " << tid << " Before Job: << " << jname << " Virtual: " << virtual_mem
-        << " Physical: " << phys_mem;
-    cache_log_->WriteToFile(msg.str());
+    {
+      std::stringstream msg;
+      pid_t tid = syscall(SYS_gettid);
+      msg << "*** TID " << tid << " Before Job: << " << jname << " Virtual: " << virtual_mem
+          << " Physical: " << phys_mem;
+      cache_log_->WriteToFile(msg.str());
+    }
   }
 
 #endif
@@ -148,38 +152,42 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
   }
   ifs.close();
 
-  if (print_clog) {
-    std::stringstream msg;
-    pid_t tid = syscall(SYS_gettid);
-    msg << "~~~ TID: " << tid << " App compute job end : " << jname << " " << cache_log_->GetTime();
-    cache_log_->WriteToFile(msg.str());
-  }
-  if (print_cclog) {
-    std::stringstream msg;
-    pid_t tid = syscall(SYS_gettid);
-    msg << "~~~ TID: " << tid << " App copy job end : " << jname << " " << cache_log_->GetTime();
-    cache_log_->WriteToFile(msg.str());
-  }
+  if (cache_log_) {
+    if (print_clog) {
+      std::stringstream msg;
+      pid_t tid = syscall(SYS_gettid);
+      msg << "~~~ TID: " << tid << " App compute job end : " << jname << " " <<
+        cache_log_->GetTime();
+      cache_log_->WriteToFile(msg.str());
+    }
+    if (print_cclog) {
+      std::stringstream msg;
+      pid_t tid = syscall(SYS_gettid);
+      msg << "~~~ TID: " << tid << " App copy job end : " << jname << " " <<
+        cache_log_->GetTime();
+      cache_log_->WriteToFile(msg.str());
+    }
 
-  {
-    std::stringstream msg;
-    pid_t tid = syscall(SYS_gettid);
-    msg << "*** TID " << tid << " After Job: << " << jname << " Virtual: " << virtual_mem <<
-           " Physical: " << phys_mem;
-    cache_log_->WriteToFile(msg.str());
-  }
+    {
+      std::stringstream msg;
+      pid_t tid = syscall(SYS_gettid);
+      msg << "*** TID " << tid << " After Job: << " << jname << " Virtual: " << virtual_mem <<
+             " Physical: " << phys_mem;
+      cache_log_->WriteToFile(msg.str());
+    }
 
-  {
-    std::stringstream msg;
-    int64_t unfreed = ProfilerMalloc::AllocCurr() - base_alloc;
-    pid_t tid = syscall(SYS_gettid);
-    msg << "*** TID: " << tid << " Job: " << jname << " Allocs: "
-        << ProfilerMalloc::NumAllocs() << " Frees: "
-        << ProfilerMalloc::NumFrees()  << " Unfreed: "
-        << unfreed
-        << " Before: " << base_alloc
-        << " After: " << ProfilerMalloc::AllocCurr();
-    cache_log_->WriteToFile(msg.str());
+    {
+      std::stringstream msg;
+      int64_t unfreed = ProfilerMalloc::AllocCurr() - base_alloc;
+      pid_t tid = syscall(SYS_gettid);
+      msg << "*** TID: " << tid << " Job: " << jname << " Allocs: "
+          << ProfilerMalloc::NumAllocs() << " Frees: "
+          << ProfilerMalloc::NumFrees()  << " Unfreed: "
+          << unfreed
+          << " Before: " << base_alloc
+          << " After: " << ProfilerMalloc::AllocCurr();
+      cache_log_->WriteToFile(msg.str());
+    }
   }
 #endif
 #ifndef MUTE_LOG

@@ -113,11 +113,11 @@ void Worker::PrintTimeStamp(const char* format, ...) {
 }
 
 void Worker::Run() {
-#ifdef CACHE_LOG
-  std::stringstream msg;
-  msg << "~~~ Worker starts : " << cache_log->GetTime();
-  cache_log->WriteToFile(msg.str());
-#endif
+  if (cache_log) {
+    std::stringstream msg;
+    msg << "~~~ Worker starts : " << cache_log->GetTime();
+    cache_log->WriteToFile(msg.str());
+  }
 
   std::cout << "Running the Worker" << std::endl;
 
@@ -433,11 +433,11 @@ void Worker::ProcessPartitionRemoveCommand(PartitionRemoveCommand* cm) {
 }
 
 void Worker::ProcessTerminateCommand(TerminateCommand* cm) {
-#ifdef CACHE_LOG
-  std::stringstream msg;
-  msg << "~~~ Completed application : " << cache_log->GetTime();
-  cache_log->WriteToFile(msg.str());
-#endif
+  if (cache_log) {
+    std::stringstream msg;
+    msg << "~~~ Completed application : " << cache_log->GetTime();
+    cache_log->WriteToFile(msg.str());
+  }
   // profiler_thread_->interrupt();
   // profiler_thread_->join();
   // ProfilerMalloc::Exit();

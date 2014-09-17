@@ -92,7 +92,8 @@ void CacheObject::MakePrototype() {
  * one.
  */
 void CacheObject::AcquireAccess(cache::CacheAccess access) {
-    assert(users_ == 0 || (access == cache::SHARED && access_ == cache::SHARED));
+    if (!(users_ == 0 || (access == cache::SHARED && access_ == cache::SHARED)))
+        exit(-1);
     access_ = access;
     users_++;
 }
@@ -104,7 +105,8 @@ void CacheObject::AcquireAccess(cache::CacheAccess access) {
  */
 void CacheObject::ReleaseAccessInternal() {
     users_--;
-    assert(users_ == 0);
+    if (users_ != 0)
+        exit(-1);
 }
 
 /**

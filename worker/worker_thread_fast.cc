@@ -75,13 +75,16 @@ void WorkerThreadFast::ProcessJob(Job* job) {
 #ifdef CACHE_LOG
   std::string jname = job->name();
   bool print_clog = false;
-  if (jname.find("Copy") != std::string::npos)
-    print_clog = true;
-  if (print_clog) {
-    std::stringstream msg;
-    pid_t tid = syscall(SYS_gettid);
-    msg << "~~~ TID: " << tid << " App copy job start : " << jname << " " << cache_log_->GetTime();
-    cache_log_->WriteToFile(msg.str());
+  if (cache_log_) {
+    if (jname.find("Copy") != std::string::npos)
+      print_clog = true;
+    if (print_clog) {
+      std::stringstream msg;
+      pid_t tid = syscall(SYS_gettid);
+      msg << "~~~ TID: " << tid << " App copy job start : " << jname << " " <<
+        cache_log_->GetTime();
+      cache_log_->WriteToFile(msg.str());
+    }
   }
 #endif
   dbg(DBG_WORKER, "[WORKER_THREAD] Execute fast job, name=%s, id=%lld. \n",
@@ -90,11 +93,14 @@ void WorkerThreadFast::ProcessJob(Job* job) {
   dbg(DBG_WORKER, "[WORKER_THREAD] Finish executing fast job, "
       "name=%s, id=%lld. \n", job->name().c_str(), job->id().elem());
 #ifdef CACHE_LOG
-  if (print_clog) {
-    std::stringstream msg;
-    pid_t tid = syscall(SYS_gettid);
-    msg << "~~~ TID: " << tid << " App copy job end : " << jname << " " << cache_log_->GetTime();
-    cache_log_->WriteToFile(msg.str());
+  if (cache_log_) {
+    if (print_clog) {
+      std::stringstream msg;
+      pid_t tid = syscall(SYS_gettid);
+      msg << "~~~ TID: " << tid << " App copy job end : " << jname << " " <<
+        cache_log_->GetTime();
+      cache_log_->WriteToFile(msg.str());
+    }
   }
 #endif
 }
