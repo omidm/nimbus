@@ -112,8 +112,8 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_POS_PARTICLES,
-                        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
-                        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+                        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[i], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
     LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, APP_PSI_N, NULL);
 
     write.clear();
@@ -199,8 +199,8 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
                         APP_PSI_N, NULL);
     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_POS_PARTICLES,
                         APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
-                        APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
-                        NULL);
+                        APP_NEG_REM_PARTICLES, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[i], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_POS_PARTICLES,
                         APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
@@ -281,8 +281,8 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
                         APP_PSI_N, NULL);
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
                         APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
-                        APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
-                        NULL);
+                        APP_NEG_REM_PARTICLES, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[i], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
     write.clear();
 
     nimbus::Parameter temp_params;
@@ -305,8 +305,8 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
                           APP_PSI_N, NULL);
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_POS_PARTICLES,
                           APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
-                          APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
-                          NULL);
+                          APP_NEG_REM_PARTICLES, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[i], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
       write.clear();
 
       nimbus::Parameter temp_params;
