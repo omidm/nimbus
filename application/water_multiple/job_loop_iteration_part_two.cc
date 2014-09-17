@@ -272,7 +272,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
       LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
                           APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
                           APP_NEG_REM_PARTICLES, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+      LoadLogicalIdsInSet(this, &read, kRegW3Central[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
       write.clear();
 
       nimbus::Parameter temp_params;
