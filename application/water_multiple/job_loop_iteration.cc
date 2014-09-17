@@ -251,21 +251,21 @@ namespace application {
      */
     for (int i = 0; i < first_extrapolate_phi_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i], APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_PHI, NULL);
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W8CentralWGB[i], APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_PHI, NULL);
 
       nimbus::Parameter s_extra_params;
       std::string s_extra_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W8Central[i], &s_extra_str);
+      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s_extra_str);
       s_extra_params.set_ser_data(SerializedData(s_extra_str));
       job_query.StageJob(EXTRAPOLATE_PHI,
           first_extrapolate_phi_job_ids[i],
           read, write,
           s_extra_params, true);
       job_query.Hint(first_extrapolate_phi_job_ids[i],
-                     kRegY2W8Central[i]);
+                     kRegY2W3Central[i]);
     }
 
     job_query.CommitStagedJobs();
@@ -282,13 +282,13 @@ namespace application {
 
       nimbus::Parameter s12_params;
       std::string s12_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W8Central[i], &s12_str);
+      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s12_str);
       s12_params.set_ser_data(SerializedData(s12_str));
       job_query.StageJob(ADVECT_PHI,
           advect_phi_job_ids[i],
           read, write,
           s12_params, true);
-      job_query.Hint(advect_phi_job_ids[i], kRegY2W8Central[i]);
+      job_query.Hint(advect_phi_job_ids[i], kRegY2W3Central[i]);
     }
 
     job_query.CommitStagedJobs();
@@ -633,7 +633,7 @@ namespace application {
                                kRegW3Central[0],
                                &modify_levelset_part_two_str);
         } else {
-            LoadLogicalIdsInSet(this, &read, kRegY2W7Outer[mj], APP_PHI, NULL);
+            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_PHI, NULL);
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_FACE_VEL_GHOST,
                     APP_FACE_VEL, NULL);
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_POS_PARTICLES,

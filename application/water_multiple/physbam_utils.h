@@ -92,6 +92,18 @@ void DestroyExampleAndDriver(
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver);
 
+/*
+ * Find out total number of (non-removed) particles in a partition, written for
+ * debugging purposes (Chinmayee).
+ */
+int NumParticles(PhysBAM::WATER_EXAMPLE<TV> &example);
+
+/*
+ * Find out total number of removed particles in a partition, written for
+ * debugging purposes (Chinmayee).
+ */
+int NumRemovedParticles(PhysBAM::WATER_EXAMPLE<TV> &example);
+
 }  // namespace application
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_UTILS_H_

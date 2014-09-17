@@ -41,6 +41,7 @@
 #ifndef NIMBUS_WORKER_WORKER_THREAD_COMPUTATION_H_
 #define NIMBUS_WORKER_WORKER_THREAD_COMPUTATION_H_
 
+#include <string>
 #include "shared/nimbus.h"
 #include "worker/thread_queue_proto.h"
 
@@ -65,10 +66,12 @@ class WorkerThreadComputation : public WorkerThread {
   // The worker thread maintains a pointer to the thread_pool so that it can
   // observe the running status of the job.
   ThreadQueueProto* thread_queue;
+
  private:
   int core_quota_;
   bool use_threading_;
   void ExecuteJob(Job* job);
+  uint64_t ParseLine(std::string line);
 };
 }  // namespace nimbus
 
