@@ -58,12 +58,12 @@ class ProfilerMalloc {
   static bool IsInit();
   static bool IsMapInclude();
   static void Initialize();
-  static void IncreaseAlloc(size_t size);
-  static void DecreaseAlloc(size_t size);
+  static void IncreaseAlloc(void *ptr, size_t size);
+  static void DecreaseAlloc(void *ptr, size_t size);
   static void InsertAllocPointer(void *ptr, size_t size);
   static void DeleteAllocPointer(void *ptr);
   static size_t AllocSize(void *ptr);
-  static uint64_t CurrentAlloc();
+  static size_t CurrentAlloc();
   static size_t AllocMax();
   static size_t AllocMaxTid(pthread_t tid);
   static size_t AllocCurr();
@@ -77,17 +77,23 @@ class ProfilerMalloc {
   static void ResetThreadStatistics();
   static void ResetThreadStatisticsByTid(pthread_t tid);
   static void RegisterThreads(std::vector<pthread_t> tids);
+  static uint64_t NumAllocs();
+  static uint64_t NumFrees();
 
  private:
   struct ThreadAllocState {
     ThreadAllocState() {
       max_alloc = 0;
       curr_alloc = 0;
+      num_allocs = 0;
+      num_frees = 0;
       on = true;
     }
-    uint64_t max_alloc;
-    uint64_t curr_alloc;
+    size_t max_alloc;
+    size_t curr_alloc;
     bool on;
+    uint64_t num_allocs;
+    uint64_t num_frees;
   };
 
  private:
