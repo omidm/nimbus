@@ -63,6 +63,7 @@ CacheManager::CacheManager() {
     pthread_mutex_init(&cache_lock, NULL);
     pthread_cond_init(&cache_cond, NULL);
     alloc_log = fopen("cache_objects.txt", "w");
+    block_log = fopen("cache_behavior.txt", "w");
 }
 
 void CacheManager::DoSetUpWrite(CacheVar* cache_var,
@@ -122,9 +123,11 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     // cv->AcquireAccess(access);
     DataArray flush, sync, diff;
     CacheObjects sync_co;
+    BlockPrintTimeStamp("enter");
     while (!cv->CheckPendingFlag(read_set, write_set)) {
       pthread_cond_wait(&cache_cond, &cache_lock);
     }
+    BlockPrintTimeStamp("leave");
     // Move here.
     cv->AcquireAccess(access);
     cv->SetUpReadWrite(read_set, write_set,
@@ -190,10 +193,12 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
                            sync_sets(num_var),
                            diff_sets(num_var);
     std::vector<CacheObjects> sync_co_sets(num_var);
+    BlockPrintTimeStamp("enter");
     // Move here.
     while (!cs->CheckPendingFlag(var_type, read_sets, write_sets)) {
       pthread_cond_wait(&cache_cond, &cache_lock);
     }
+    BlockPrintTimeStamp("leave");
     cs->AcquireAccess(access);
     cs->SetUpReadWrite(var_type, read_sets, write_sets,
                        &flush_sets, &diff_sets, &sync_sets, &sync_co_sets);
@@ -283,11 +288,18 @@ void CacheManager::PrintProfile(std::stringstream* output) {
   *output << "-----------" << std::endl;
 }
 
-  void CacheManager::PrintTimeStamp(uint64_t size) {
+void CacheManager::PrintTimeStamp(uint64_t size) {
   struct timespec t;
   clock_gettime(CLOCK_REALTIME, &t);
   double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
   fprintf(alloc_log, "%f : %lu\n", time_sum, size);
+}
+
+void CacheManager::BlockPrintTimeStamp(const char* message) {
+  struct timespec t;
+  clock_gettime(CLOCK_REALTIME, &t);
+  double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
+  fprintf(block_log, "%f : %s\n", time_sum, message);
 }
 
 }  // namespace nimbus
