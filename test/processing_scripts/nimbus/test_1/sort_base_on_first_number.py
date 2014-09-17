@@ -3,7 +3,7 @@
 import sys
 import re
 
-expr = re.compile("[^0-9\.]+")
+expr = re.compile("[^0-9\.\-]+")
 
 def get_key(line):
 	ls = re.split(expr, line)

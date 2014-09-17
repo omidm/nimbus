@@ -84,7 +84,7 @@ for rank in range(1, N+1):
 				
 		else:
 			assert false
-		if timestamp != last_timestamp:
+		if last_timestamp and timestamp != last_timestamp:
 			g.write(repr(last_timestamp))
 			g.write(" {} {} {} {} {}\n".format(*last_record))
 		last_timestamp = timestamp
