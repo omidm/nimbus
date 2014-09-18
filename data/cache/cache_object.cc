@@ -92,8 +92,10 @@ void CacheObject::MakePrototype() {
  * one.
  */
 void CacheObject::AcquireAccess(cache::CacheAccess access) {
-    if (!(users_ == 0 || (access == cache::SHARED && access_ == cache::SHARED)))
+    if (!(users_ == 0 || (access == cache::SHARED && access_ == cache::SHARED))) {
+        dbg(DBG_ERROR, "Cannot acquire cache object, it is already in use!");
         exit(-1);
+    }
     access_ = access;
     users_++;
 }
@@ -105,8 +107,10 @@ void CacheObject::AcquireAccess(cache::CacheAccess access) {
  */
 void CacheObject::ReleaseAccessInternal() {
     users_--;
-    if (users_ != 0)
+    if (users_ != 0) {
+        dbg(DBG_ERROR, "Incocistency in number of users using cache object!");
         exit(-1);
+    }
 }
 
 /**
