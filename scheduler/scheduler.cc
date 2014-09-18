@@ -143,16 +143,24 @@ void Scheduler::SchedulerCoreProcessor() {
     log_.log_StartTimer();
 
     RegisterPendingWorkers();
+
+    log_process_.StartTimer();
     ProcessQueuedSchedulerCommands();
+    log_process_.StopTimer();
+
+    log_assign_.StartTimer();
     AssignReadyJobs();
+    log_assign_.StopTimer();
+
     RemoveObsoleteJobEntries();
+
     TerminationProcedure();
 
     log_.log_StopTimer();
     if (log_.timer() >= .001) {
       char buff[LOG_MAX_BUFF_SIZE];
-      snprintf(buff, sizeof(buff), "scheduler loop: %2.5lf time: %2.2lf.",
-          log_.timer(), log_.GetTime());
+      snprintf(buff, sizeof(buff), "scheduler loop: %2.5lf p: %2.5lf a: %2.5lf time: %2.2lf.",
+          log_.timer(), log_process_.timer(), log_assign_.timer(), log_.GetTime());
       log_.log_WriteToOutputStream(std::string(buff), LOG_INFO);
     }
   }
