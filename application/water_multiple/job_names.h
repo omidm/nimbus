@@ -51,7 +51,7 @@
 #define CALCULATE_FRAME "calculate_frame"
 #define WRITE_OUTPUT "write_output"
 #define RESEED_PARTICLES "reseed_particles"
-#define JOB_BARRIER "job_barrier"
+#define BARRIER_JOB "barrier_job"
 
 #define CALCULATE_DT "calculate_dt"
 #define UPDATE_GHOST_VELOCITIES "update_ghost_velocities"
