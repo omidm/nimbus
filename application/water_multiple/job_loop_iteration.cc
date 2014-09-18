@@ -247,53 +247,6 @@ namespace application {
     job_query.CommitStagedJobs();
 
     /*
-     * Spawning first extrapolate phi stage over multiple workers.
-     */
-    for (int i = 0; i < first_extrapolate_phi_job_num; ++i) {
-      read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_PHI, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
-      write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_PHI, NULL);
-
-      nimbus::Parameter s_extra_params;
-      std::string s_extra_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s_extra_str);
-      s_extra_params.set_ser_data(SerializedData(s_extra_str));
-      job_query.StageJob(EXTRAPOLATE_PHI,
-          first_extrapolate_phi_job_ids[i],
-          read, write,
-          s_extra_params, true);
-      job_query.Hint(first_extrapolate_phi_job_ids[i],
-                     kRegY2W3Central[i]);
-    }
-
-    job_query.CommitStagedJobs();
-
-    /*
-     * Spawning advect phi stage over multiple workers
-     */
-    for(int i = 0; i < advect_phi_job_num; ++i) {
-      read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_PHI, NULL);
-      write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
-      // LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_PHI, NULL);
-
-      nimbus::Parameter s12_params;
-      std::string s12_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s12_str);
-      s12_params.set_ser_data(SerializedData(s12_str));
-      job_query.StageJob(ADVECT_PHI,
-          advect_phi_job_ids[i],
-          read, write,
-          s12_params, true);
-      job_query.Hint(advect_phi_job_ids[i], kRegY2W3Central[i]);
-    }
-
-    job_query.CommitStagedJobs();
-
-    /*
      * Spawning step particles.
      */
     for (size_t sj = 0; sj < step_particles_job_num; sj++) {
@@ -398,7 +351,95 @@ namespace application {
 
     job_query.CommitStagedJobs();
 
+    {
+      nimbus::Parameter params;
+      std::vector<nimbus::job_id_t> barrier_job_ids;
+      GetNewJobID(&barrier_job_ids, 1);
+      read.clear();
+      write.clear();
+      job_query.StageJob(BARRIER_JOB,
+                         barrier_job_ids[0],
+                         read, write,
+                         params,
+                         true, true);
+      job_query.Hint(barrier_job_ids[0], kRegW0Central[0], true);
+      job_query.CommitStagedJobs();
+    }
+
+    /*
+     * Spawning first extrapolate phi stage over multiple workers.
+     */
+    for (int i = 0; i < first_extrapolate_phi_job_num; ++i) {
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_PHI, NULL);
+
+      nimbus::Parameter s_extra_params;
+      std::string s_extra_str;
+      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s_extra_str);
+      s_extra_params.set_ser_data(SerializedData(s_extra_str));
+      job_query.StageJob(EXTRAPOLATE_PHI,
+          first_extrapolate_phi_job_ids[i],
+          read, write,
+          s_extra_params, true);
+      job_query.Hint(first_extrapolate_phi_job_ids[i],
+                     kRegY2W3Central[i]);
+    }
+
+    job_query.CommitStagedJobs();
+
+    /*
+     * Spawning advect phi stage over multiple workers
+     */
+    for(int i = 0; i < advect_phi_job_num; ++i) {
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_PHI, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
+      // LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_PHI, NULL);
+
+      nimbus::Parameter s12_params;
+      std::string s12_str;
+      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s12_str);
+      s12_params.set_ser_data(SerializedData(s12_str));
+      job_query.StageJob(ADVECT_PHI,
+          advect_phi_job_ids[i],
+          read, write,
+          s12_params, true);
+      job_query.Hint(advect_phi_job_ids[i], kRegY2W3Central[i]);
+    }
+
+    job_query.CommitStagedJobs();
+
     /* 
+     * Spawning multiple jobs for Advect V stage
+     */
+
+    for (int i = 0; i < advect_v_job_num; ++i) {
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL_GHOST, APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Central[i], APP_FACE_VEL, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, APP_PSI_N, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
+
+      nimbus::Parameter s15_params;
+      std::string s15_str;
+      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s15_str);
+      s15_params.set_ser_data(SerializedData(s15_str));
+      job_query.StageJob(ADVECT_V,
+          advect_v_job_ids[i],
+          read, write,
+          s15_params, true);
+      job_query.Hint(advect_v_job_ids[i],
+                     kRegY2W3Central[i]);
+    }
+
+    job_query.CommitStagedJobs();
+
+    /*
      * Spawning advect removed particles.
      */
 
@@ -450,31 +491,20 @@ namespace application {
 
     job_query.CommitStagedJobs();
 
-    /* 
-     * Spawning multiple jobs for Advect V stage
-     */
-
-    for (int i = 0; i < advect_v_job_num; ++i) {
+    {
+      nimbus::Parameter params;
+      std::vector<nimbus::job_id_t> barrier_job_ids;
+      GetNewJobID(&barrier_job_ids, 1);
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL_GHOST, APP_PHI, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Central[i], APP_FACE_VEL, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, APP_PSI_N, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
-
-      nimbus::Parameter s15_params;
-      std::string s15_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s15_str);
-      s15_params.set_ser_data(SerializedData(s15_str));
-      job_query.StageJob(ADVECT_V,
-          advect_v_job_ids[i],
-          read, write,
-          s15_params, true);
-      job_query.Hint(advect_v_job_ids[i],
-                     kRegY2W3Central[i]);
+      job_query.StageJob(BARRIER_JOB,
+                         barrier_job_ids[0],
+                         read, write,
+                         params,
+                         true, true);
+      job_query.Hint(barrier_job_ids[0], kRegW0Central[0], true);
+      job_query.CommitStagedJobs();
     }
-
-    job_query.CommitStagedJobs();
 
     {
       std::vector<nimbus::job_id_t> temp_job_ids;

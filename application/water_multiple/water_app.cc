@@ -274,6 +274,7 @@ namespace application {
         RegisterJob(PROJECTION_REDUCE_ALPHA,
                     new JobProjectionReduceAlpha(this));
         RegisterJob(PROJECTION_STEP_FOUR, new JobProjectionStepFour(this));
+        RegisterJob(BARRIER_JOB, new JobBarrier(this));
 
         nimbus::TranslatorPhysBAM<float>::log = translator_log;
         nimbus::TranslatorPhysBAMOld<PhysBAM::VECTOR<float, 3> >::log = translator_log;

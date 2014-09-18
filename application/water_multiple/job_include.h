@@ -58,6 +58,7 @@
 #include "application/water_multiple/job_modify_levelset_part_one.h"
 #include "application/water_multiple/job_modify_levelset_part_two.h"
 #include "application/water_multiple/job_make_signed_distance.h"
+#include "application/water_multiple/job_barrier.h"
 #include "application/water_multiple/job_names.h"
 #include "application/water_multiple/projection/job_projection_main.h"
 #include "application/water_multiple/projection/job_projection_transform_pressure.h"
