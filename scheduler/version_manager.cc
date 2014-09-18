@@ -170,7 +170,6 @@ bool VersionManager::ResolveEntireContextForJob(JobEntry *job) {
 
 bool VersionManager::CreateCheckPoint(JobEntry *job) {
   assert(!job->sterile());
-  assert(job->versioned());
 
   // Resolve entire ldo_map for job.
   ResolveEntireContextForJob(job);
