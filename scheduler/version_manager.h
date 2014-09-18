@@ -65,35 +65,28 @@ class VersionManager {
   public:
     typedef std::pair<logical_data_id_t, data_version_t> VLD;
     typedef boost::unordered_map<logical_data_id_t, VersionEntry*> Index;
-    typedef Index::iterator IndexIter;
+    typedef std::map<job_id_t, JobEntry*> ParentMap;
     typedef std::map<job_id_t, counter_t> ChildCounter;
-    typedef ChildCounter::iterator ChildCounterIter;
 
     VersionManager();
     virtual ~VersionManager();
+
+    void set_snap_shot_rate(size_t rate);
 
     bool AddJobEntry(JobEntry *job);
 
     size_t GetJobsNeedDataVersion(
         JobEntryList* list, VLD vld);
 
+    bool NotifyJobDone(JobEntry *job);
+
     bool RemoveJobEntry(JobEntry* job);
 
     bool ResolveJobDataVersions(JobEntry *job);
 
-    bool LookUpVersion(JobEntry *job,
-                       logical_data_id_t ldid,
-                       data_version_t *version);
-
     bool DefineData(
         const logical_data_id_t ldid,
         const job_id_t& job_id,
-        const job_depth_t& job_depth);
-
-    bool InsertParentLdlEntry(
-        const logical_data_id_t ldid,
-        const job_id_t& job_id,
-        const data_version_t& version,
         const job_depth_t& job_depth);
 
     bool CleanUp();
@@ -101,12 +94,38 @@ class VersionManager {
     void set_ldo_map_p(const LdoMap* ldo_map_p);
 
   private:
+    Log log_;
     Index index_;
-    bool parent_removed_;
-    IDSet<job_id_t> live_parents_;
+    bool snap_shot_pending_;
+    size_t snap_shot_rate_;
+    size_t non_sterile_counter_;
+    IDSet<job_id_t> snap_shot_;
+    ParentMap parent_map_;
     ChildCounter child_counter_;
-    boost::mutex child_counter_mutex_;
+    boost::recursive_mutex snap_shot_mutex_;
     const LdoMap* ldo_map_p_;
+
+    bool LookUpVersion(JobEntry *job,
+                       logical_data_id_t ldid,
+                       data_version_t *version);
+
+    bool ResolveEntireContextForJob(JobEntry *job);
+
+    bool CreateCheckPoint(JobEntry *job);
+
+    bool DetectNewJob(JobEntry *job);
+
+    bool DetectVersionedJob(JobEntry *job);
+
+    bool DetectDoneJob(JobEntry *job);
+
+    bool GetSnapShot();
+
+    bool InsertCheckPointLdlEntry(
+        const logical_data_id_t ldid,
+        const job_id_t& job_id,
+        const data_version_t& version,
+        const job_depth_t& job_depth);
 };
 
 }  // namespace nimbus

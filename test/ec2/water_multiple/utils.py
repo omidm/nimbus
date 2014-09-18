@@ -94,6 +94,7 @@ def run_scheduler(scheduler_ip, worker_num):
 
   scheduler_command =  'cd ' + config.EC2_NIMBUS_ROOT + config.REL_SCHEDULER_PATH + ';'
   scheduler_command += 'export DBG=error;'
+  scheduler_command += 'sudo ' + config.EC2_NIMBUS_ROOT + 'scripts/configure_tcp.sh;'
   scheduler_command += 'ulimit -c unlimited;'
   scheduler_command += './scheduler'
   scheduler_command += ' -port ' + str(config.FIRST_PORT)
@@ -113,6 +114,7 @@ def run_scheduler(scheduler_ip, worker_num):
 def run_worker(scheduler_ip, worker_ip, num):
   worker_command =  'cd ' + config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH + ';'
   worker_command += 'export DBG=error;'
+  worker_command += 'sudo ' + config.EC2_NIMBUS_ROOT + 'scripts/configure_tcp.sh;'
   worker_command += 'ulimit -c unlimited;'
   worker_command += './worker'
   worker_command += ' -port ' + str(config.FIRST_PORT + num)
@@ -261,6 +263,19 @@ def collect_output_data(scheduler_ip, worker_ips):
         config.REL_WORKER_PATH + 'core',
         config.OUTPUT_PATH + str(num) + '_core'])
 
+    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+        config.REL_WORKER_PATH + 'cache_objects.txt',
+        config.OUTPUT_PATH + str(num) + '_cache_objects.txt'])
+
+    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+        config.REL_WORKER_PATH + 'data_objects.txt',
+        config.OUTPUT_PATH + str(num) + '_data_objects.txt'])
 
 
 

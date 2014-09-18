@@ -43,6 +43,7 @@
 namespace nimbus {
 
 #define DEFAULT_MAX_JOB_TO_ASSIGN 1
+#define DEFAULT_MAX_JOB_TO_REMOVE 1
 #define DEFAULT_MIN_WORKER_TO_JOIN 2
 #define DEFAULT_JOB_ASSIGNER_THREAD_NUM 0
 #define DEFAULT_MAX_COMMAND_PROCESS_NUM 10000
@@ -58,7 +59,9 @@ Scheduler::Scheduler(port_t port) {
   listening_port_ = port;
   registered_worker_num_ = 0;
   terminate_application_flag_ = false;
+  cleaner_thread_active_ = false;
   max_job_to_assign_ = DEFAULT_MAX_JOB_TO_ASSIGN;
+  max_job_to_remove_ = DEFAULT_MAX_JOB_TO_REMOVE;
   min_worker_to_join_ = DEFAULT_MIN_WORKER_TO_JOIN;
   job_assigner_thread_num_ = DEFAULT_JOB_ASSIGNER_THREAD_NUM;
   max_command_process_num_ = DEFAULT_MAX_COMMAND_PROCESS_NUM;
@@ -98,9 +101,14 @@ void Scheduler::Run() {
   SetupLoadBalancer();
   SetupJobAssigner();
   SetupJobDoneBouncer();
+  SetupCleaner();
   // SetupUserInterface();
 
   SchedulerCoreProcessor();
+}
+
+void Scheduler::set_max_job_to_remove(size_t num) {
+  max_job_to_remove_ = num;
 }
 
 void Scheduler::set_max_job_to_assign(size_t num) {
@@ -296,8 +304,8 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
 
   JobEntry *job;
   if (job_manager_->GetJobEntry(job_id, job)) {
-    job_manager_->NotifyJobDone(job);
     load_balancer_->NotifyJobDone(job);
+    job_manager_->NotifyJobDone(job);
   }
 }
 
@@ -325,9 +333,11 @@ void Scheduler::AddMainJob() {
 }
 
 size_t Scheduler::RemoveObsoleteJobEntries() {
-  size_t count = job_manager_->RemoveObsoleteJobEntries();
+  if (cleaner_thread_active_) {
+    return 0;
+  }
 
-  return count;
+  return job_manager_->RemoveObsoleteJobEntries(max_job_to_remove_);
 }
 
 size_t Scheduler::AssignReadyJobs() {
@@ -431,6 +441,12 @@ void Scheduler::SetupJobDoneBouncer() {
       boost::bind(&Scheduler::JobDoneBouncerThread, this));
 }
 
+void Scheduler::SetupCleaner() {
+  cleaner_thread_active_ = true;
+  cleaner_thread_ = new boost::thread(
+      boost::bind(&Scheduler::CleanerThread, this));
+}
+
 void Scheduler::SetupUserInterface() {
   LoadUserCommands();
   user_interface_thread_ = new boost::thread(
@@ -457,6 +473,14 @@ void Scheduler::LoadUserCommands() {
       break;
     }
     user_command_set_.insert(word);
+  }
+}
+
+void Scheduler::CleanerThread() {
+  while (true) {
+    // TODO(omid): remove the busy loop!
+
+    size_t count = job_manager_->RemoveObsoleteJobEntries(max_job_to_remove_);
   }
 }
 

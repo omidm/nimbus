@@ -82,7 +82,7 @@ namespace nimbus {
   private:
     typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
     typedef std::map<worker_id_t, GeometricRegion> WorkerDomains;
-    typedef std::map<worker_id_t, size_t> WorkerRank;
+    typedef std::map<worker_id_t, int_dimension_t> WorkerRank;
 
     StaticLoadBalancer(const StaticLoadBalancer& other) {}
 
