@@ -163,7 +163,7 @@ bool JobAssigner::AssignJob(JobEntry *job) {
   // log_.log_StartTimer();
   job_manager_->ResolveJobDataVersions(job);
   // log_.log_StopTimer();
-  // std::cout << "versioning: " << log_.timer() << std::endl;
+  // std::cout << "versioning: " << log_.timer() << " n: " << job->job_name() << std::endl;
 
   bool prepared_data = true;
   IDSet<logical_data_id_t>::ConstIter it;

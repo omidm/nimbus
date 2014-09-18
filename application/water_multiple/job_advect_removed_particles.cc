@@ -102,7 +102,7 @@ void JobAdvectRemovedParticles::Execute(nimbus::Parameter params,
 
   WaterApp *app = dynamic_cast<WaterApp * >(application());
 
-  {
+  if (app->translator_log) {
     std::stringstream msg;
     msg << "Advect Removed Particles: Number of particles at start = " << NumParticles(*example);
     msg << "\nAdvect Removed Particles: Number of removed particles at start = " << NumRemovedParticles(*example);
@@ -117,7 +117,7 @@ void JobAdvectRemovedParticles::Execute(nimbus::Parameter params,
   *thread_queue_hook() = NULL;
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 
-  {
+  if (app->translator_log) {
     std::stringstream msg;
     msg << "Advect Removed Particles: Number of particles at end = " << NumParticles(*example);
     msg << "\nAdvect Removed Particles: Number of removed particles at end = " << NumRemovedParticles(*example);

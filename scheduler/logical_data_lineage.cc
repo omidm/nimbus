@@ -140,7 +140,7 @@ bool LogicalDataLineage::AppendLdlEntry(
   return true;
 }
 
-bool LogicalDataLineage::InsertParentLdlEntry(
+bool LogicalDataLineage::InsertCheckpointLdlEntry(
     const job_id_t& job_id,
     const data_version_t& version,
     const job_depth_t& job_depth) {
@@ -174,31 +174,22 @@ bool LogicalDataLineage::InsertParentLdlEntry(
   return true;
 }
 
-bool LogicalDataLineage::CleanChain(
-    const IDSet<job_id_t>& live_parents) {
-  if (live_parents.size() == 0) {
-    chain_.clear();
-    parents_index_.clear();
+bool LogicalDataLineage::CleanChain(const IDSet<job_id_t>& snap_shot) {
+  if (snap_shot.size() == 0) {
     return true;
   }
 
-  IDSet<job_id_t> temp = live_parents;
-
-
-  Chain::reverse_iterator it = chain_.rbegin();
-  for (; it != chain_.rend(); ++it) {
-    if (!(it->sterile())) {
-      temp.remove(it->job_id());
-      if (temp.size() == 0) {
-        break;
-      }
+  bool found = false;
+  Chain::iterator it = chain_.begin();
+  for (; it != chain_.end(); ++it) {
+    if (snap_shot.contains(it->job_id())) {
+      found = true;
+      break;
     }
   }
 
-  assert(temp.size() == 0);
-
-  chain_.erase(chain_.begin(), --(it.base()));
-
+  assert(found);
+  chain_.erase(chain_.begin(), it);
 
 //  Index::reverse_iterator iit = parents_index_.rbegin();
 //  for (; iit != parents_index_.rend(); ++iit) {

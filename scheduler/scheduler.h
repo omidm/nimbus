@@ -73,6 +73,7 @@ class Scheduler {
     virtual void Run();
 
     virtual void set_max_job_to_assign(size_t num);
+    virtual void set_max_job_to_remove(size_t num);
     virtual void set_min_worker_to_join(size_t num);
     virtual void set_job_assigner_thread_num(size_t num);
     virtual void set_max_command_process_num(size_t num);
@@ -124,10 +125,11 @@ class Scheduler {
     virtual void SetupJobManager();
     virtual void SetupLoadBalancer();
     virtual void SetupJobAssigner();
-
+    virtual void SetupCleaner();
     virtual void SetupJobDoneBouncer();
     virtual void SetupUserInterface();
 
+    virtual void CleanerThread();
     virtual void JobDoneBouncerThread();
     virtual void GetUserCommandThread();
 
@@ -142,6 +144,7 @@ class Scheduler {
     JobAssigner *job_assigner_;
     LoadBalancer *load_balancer_;
 
+    boost::thread* cleaner_thread_;
     boost::thread* user_interface_thread_;
     boost::thread* job_done_bouncer_thread_;
     boost::thread* scheduler_server_thread_;
@@ -150,9 +153,11 @@ class Scheduler {
     port_t listening_port_;
     size_t registered_worker_num_;
     bool terminate_application_flag_;
+    bool cleaner_thread_active_;
     exit_status_t terminate_application_status_;
 
     size_t max_job_to_assign_;
+    size_t max_job_to_remove_;
     size_t min_worker_to_join_;
     size_t job_assigner_thread_num_;
     size_t max_command_process_num_;

@@ -89,9 +89,9 @@ class VersionEntry {
     bool LookUpVersion(JobEntry *job,
                        data_version_t *version);
 
-    bool CleanLdl(const IDSet<job_id_t>& live_parents);
+    bool CleanLdl(const IDSet<job_id_t>& snap_shot_);
 
-    bool InsertParentLdlEntry(
+    bool InsertCheckPointLdlEntry(
         const job_id_t& job_id,
         const data_version_t& version,
         const job_depth_t& job_depth);

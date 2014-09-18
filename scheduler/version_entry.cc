@@ -77,17 +77,20 @@ VersionEntry& VersionEntry::operator= (const VersionEntry& right) {
 void VersionEntry::InitializeLdl(
     const job_id_t& job_id,
     const job_depth_t& job_depth) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   ldl_.AppendLdlEntry(job_id, NIMBUS_INIT_DATA_VERSION, job_depth, false);
 }
 
 
 
 bool VersionEntry::AddJobEntryReader(JobEntry *job) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   pending_reader_jobs_.insert(job);
   return true;
 }
 
 bool VersionEntry::AddJobEntryWriter(JobEntry *job) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   pending_writer_jobs_.insert(job);
   return true;
 }
@@ -156,7 +159,8 @@ size_t VersionEntry::GetJobsNeedVersion(
   } else {
     BucketIter it = iiter->second->begin();
     for (; it != iiter->second->end(); ++it) {
-      if (!(*it)->assigned()) {
+      if ((!(*it)->assigned()) ||
+          ((!(*it)->sterile()) && (!(*it)->done()))) {
         list->push_back(*it);
         ++count;
       }
@@ -167,32 +171,45 @@ size_t VersionEntry::GetJobsNeedVersion(
 }
 
 bool VersionEntry::RemoveJobEntry(JobEntry *job) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   assert(job->versioned());
 
   pending_reader_jobs_.erase(job);
   pending_writer_jobs_.erase(job);
 
-  data_version_t ver;
-  if (job->vmap_read()->query_entry(ldid_, &ver)) {
-    IndexIter it = index_.find(ver);
-    if (it != index_.end()) {
-      it->second->erase(job);
-      if (it->second->size() == 0) {
-        delete it->second;
-        index_.erase(it);
+  {
+    data_version_t ver;
+    if (job->vmap_read()->query_entry(ldid_, &ver)) {
+      IndexIter it = index_.find(ver);
+      if (it != index_.end()) {
+        it->second->erase(job);
+        if (it->second->size() == 0) {
+          delete it->second;
+          index_.erase(it);
+        }
       }
     }
-  } else {
-    dbg(DBG_ERROR, "Version Entry: ldid %lu is not versioned for job %lu.\n",
-        ldid_, job->job_id());
-    exit(-1);
-    return false;
+  }
+
+  if (!job->sterile()) {
+    data_version_t ver;
+    if (job->vmap_partial()->query_entry(ldid_, &ver)) {
+      IndexIter it = index_.find(ver);
+      if (it != index_.end()) {
+        it->second->erase(job);
+        if (it->second->size() == 0) {
+          delete it->second;
+          index_.erase(it);
+        }
+      }
+    }
   }
 
   return true;
 }
 
 bool VersionEntry::RemoveJobEntry(JobEntry *job, data_version_t version) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   assert(job->versioned());
 
   pending_reader_jobs_.erase(job);
@@ -223,6 +240,7 @@ bool VersionEntry::LookUpVersion(
 }
 
 bool VersionEntry::is_empty() {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   return ((index_.size() == 0) &&
           (pending_reader_jobs_.size() == 0) &&
           (pending_writer_jobs_.size() == 0));
@@ -234,6 +252,7 @@ bool CompareJobDepths(JobEntry* i, JobEntry* j) {
 }
 
 bool VersionEntry::UpdateLdl() {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   if (pending_writer_jobs_.size() == 0) {
     return true;
   }
@@ -279,18 +298,18 @@ bool VersionEntry::UpdateLdl() {
 
 
 
-bool VersionEntry::InsertParentLdlEntry(
+bool VersionEntry::InsertCheckPointLdlEntry(
     const job_id_t& job_id,
     const data_version_t& version,
     const job_depth_t& job_depth) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
-
-  return ldl_.InsertParentLdlEntry(job_id, version, job_depth);
+  return ldl_.InsertCheckpointLdlEntry(job_id, version, job_depth);
 }
 
 
-bool VersionEntry::CleanLdl(const IDSet<job_id_t>& live_parents) {
-  return ldl_.CleanChain(live_parents);
+bool VersionEntry::CleanLdl(const IDSet<job_id_t>& snap_shot) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  return ldl_.CleanChain(snap_shot);
 }
 
 

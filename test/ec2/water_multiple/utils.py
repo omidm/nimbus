@@ -94,6 +94,7 @@ def run_scheduler(scheduler_ip, worker_num):
 
   scheduler_command =  'cd ' + config.EC2_NIMBUS_ROOT + config.REL_SCHEDULER_PATH + ';'
   scheduler_command += 'export DBG=error;'
+  scheduler_command += 'sudo ' + config.EC2_NIMBUS_ROOT + 'scripts/configure_tcp.sh;'
   scheduler_command += 'ulimit -c unlimited;'
   scheduler_command += './scheduler'
   scheduler_command += ' -port ' + str(config.FIRST_PORT)
@@ -113,6 +114,7 @@ def run_scheduler(scheduler_ip, worker_num):
 def run_worker(scheduler_ip, worker_ip, num):
   worker_command =  'cd ' + config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH + ';'
   worker_command += 'export DBG=error;'
+  worker_command += 'sudo ' + config.EC2_NIMBUS_ROOT + 'scripts/configure_tcp.sh;'
   worker_command += 'ulimit -c unlimited;'
   worker_command += './worker'
   worker_command += ' -port ' + str(config.FIRST_PORT + num)
