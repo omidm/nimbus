@@ -261,6 +261,19 @@ def collect_output_data(scheduler_ip, worker_ips):
         config.REL_WORKER_PATH + 'core',
         config.OUTPUT_PATH + str(num) + '_core'])
 
+    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+        config.REL_WORKER_PATH + 'cache_objects.txt',
+        config.OUTPUT_PATH + str(num) + '_cache_objects.txt'])
+
+    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+        config.REL_WORKER_PATH + 'data_objects.txt',
+        config.OUTPUT_PATH + str(num) + '_data_objects.txt'])
 
 
 
