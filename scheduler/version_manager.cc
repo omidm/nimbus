@@ -172,6 +172,7 @@ bool VersionManager::CreateCheckPoint(JobEntry *job) {
   assert(!job->sterile());
 
   // Resolve entire ldo_map for job.
+  // Note: it only resolves the read versions, and vmap_write may be empty.
   ResolveEntireContextForJob(job);
 
   // Clear meta before set.
@@ -181,8 +182,10 @@ bool VersionManager::CreateCheckPoint(JobEntry *job) {
   LdoMap::const_iterator it;
   for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
     data_version_t version;
-    if (job->vmap_write()->query_entry(it->first, &version)) {
-    } else if (job->vmap_read()->query_entry(it->first, &version)) {
+    if (job->vmap_read()->query_entry(it->first, &version)) {
+      if (job->write_set_p()->contains(it->first)) {
+        version = version + 1;
+      }
     } else {
       dbg(DBG_ERROR, "ERROR: Version Manager: ldid %lu is not versioned for checkpoint job %lu.\n",
           it->first, job->job_id());
