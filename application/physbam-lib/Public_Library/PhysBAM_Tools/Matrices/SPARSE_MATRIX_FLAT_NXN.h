@@ -77,7 +77,10 @@ public:
     void Transpose(SPARSE_MATRIX_FLAT_NXN<T>& A_transpose) const;
     bool Is_Transpose(const SPARSE_MATRIX_FLAT_NXN<T>& A_transpose,const T tolerance) const;
     void Solve_Forward_Substitution(const VECTOR_ND<T>& b,VECTOR_ND<T>& x,const bool diagonal_is_identity=false,const bool diagonal_is_inverted=false) const;
+    void Solve_Forward_Substitution_Threaded(const VECTOR_ND<T>& b,VECTOR_ND<T>& x, const bool diagonal_is_identity,const bool diagonal_is_inverted,
+                                             int start_index, int end_index);
     void Solve_Backward_Substitution(const VECTOR_ND<T>& b,VECTOR_ND<T>& x,const bool diagonal_is_identity=false,const bool diagonal_is_inverted=false) const;
+    void Solve_Backward_Substitution_Threaded(const VECTOR_ND<T>& b,VECTOR_ND<T>& x, const bool diagonal_is_identity, const bool diagonal_is_inverted, int start_index, int end_index);
     // actually an LU saving square roots, with an inverted diagonal saving divides
     void Construct_Incomplete_Cholesky_Factorization(const bool modified_version=true,const T modified_coefficient=.97,const T zero_tolerance=1e-8,const T zero_replacement=1e-8);
     // actually an LU saving square roots, with an inverted diagonal saving divides
