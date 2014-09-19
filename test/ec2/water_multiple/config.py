@@ -37,6 +37,7 @@ LOG_FILE_NAME        = 'ec2_log.txt'
 SCHED_LOG_NAME_1     = 'log_assign_stamp'
 SCHED_LOG_NAME_2     = 'log_receive_stamp'
 SCHED_LOG_NAME_3     = 'log_before_set'
+SCHED_LOG_NAME_4     = 'log_bouncer_thread'
 WORKER_LOG_FILE_NAME = 'worker-log-'
 OUTPUT_PATH          = 'output/'
 
