@@ -63,7 +63,7 @@ namespace application {
     typedef typename PhysBAM::ARRAY<T, FaceIndex> FaceArray;
 
     // application specific parameters and constants
-    const bool kUseGlobalWrite = false;
+    const bool kUseGlobalWrite = true;
     const bool kUseCache = true;
     const int kThreadsNum = 1;
     const int kScale = 80;

@@ -46,6 +46,7 @@
 #define NIMBUS_DATA_PHYSBAM_PHYSBAM_DATA_H_
 
 #include <sstream>
+#include <string>
 
 #include "shared/cluster.h"
 #include "shared/nimbus_types.h"
