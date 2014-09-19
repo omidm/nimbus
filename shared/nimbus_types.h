@@ -55,6 +55,11 @@
 
 #define NIMBUS_KERNEL_JOB_ID (job_id_t)(0)
 
+#define JOB_ID_BATCH (job_id_t)(10000000000)
+#define LOGICAL_DATA_ID_BATCH (logical_data_id_t)(10000000000)
+#define PHYSICAL_DATA_ID_BATCH (physical_data_id_t)(10000000000)
+
+
 #define NIMBUS_KERNEL_JOB_NAME "kernel"
 #define NIMBUS_MAIN_JOB_NAME "main"
 #define NIMBUS_LOCAL_COPY_JOB_NAME "localcopy"
