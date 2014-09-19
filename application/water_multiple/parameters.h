@@ -77,7 +77,6 @@ namespace application {
     const std::string kOutputDir = "output";
     // follow physbam convenctions here, otherwise translator becomes messy
     const nimbus::GeometricRegion kDefaultRegion(1, 1, 1, kScale, kScale, kScale);
-
 } // namespace application
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_

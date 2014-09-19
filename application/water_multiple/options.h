@@ -45,7 +45,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_OPTIONS_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_OPTIONS_H_
 
-#include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/parameters.h"
 
 namespace application {
 
@@ -53,14 +53,17 @@ namespace application {
 struct InitConfig {
   int frame;
   T time;
+  T dt;
+  int rank;
   bool init_phase;
   int init_part;
   bool set_boundary_condition;
-  GeometricRegion global_region;
-  GeometricRegion local_region;
+  nimbus::GeometricRegion global_region;
+  nimbus::GeometricRegion local_region;
   bool use_cache;
   bool use_threading;
   int core_quota;
+  int projection_iteration;
 
   // TODO(quhang), global region and local region should be passed as parameters
   // in the future.
@@ -68,12 +71,15 @@ struct InitConfig {
                  local_region(1, 1, 1, 0, 0, 0) {
     frame = 0;
     time = 0;
+    dt = 0;
+    rank = 0;
     init_phase = false;
     init_part = 0;
     set_boundary_condition = true;
     use_cache = false;
     use_threading = false;
     core_quota = 1;
+    projection_iteration = 0;
   }
 };
 

@@ -111,6 +111,15 @@ WriteFromCache(const nimbus::DataArray &write_set,
         WriteFaceArray<T>(final_write_reg, shift_, write_set, data_);
 }
 
+template<class T, class TS> void CacheFaceArray<T, TS>::
+DumpData(std::string file_name) {
+    std::ofstream file(file_name.c_str());
+    int size = data_->buffer_size;
+    const char *dptr = reinterpret_cast<char * >(data_->base_pointer);
+    file.write(dptr, sizeof(T) * size);
+    file.close();
+}
+
 template class CacheFaceArray<float, float>;
 template class CacheFaceArray<bool, float>;
 

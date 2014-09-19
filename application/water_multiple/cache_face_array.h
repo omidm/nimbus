@@ -71,6 +71,8 @@ class CacheFaceArray : public nimbus::CacheVar {
             data_ = d;
         }
 
+        virtual void DumpData(std::string file_name);
+
     protected:
         explicit CacheFaceArray(const nimbus::GeometricRegion &global_reg,
                                 const nimbus::GeometricRegion &ob_reg,

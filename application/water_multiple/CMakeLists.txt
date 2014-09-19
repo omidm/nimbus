@@ -19,6 +19,9 @@ SET(NIMBUS_ROOT ${PROJECT_SOURCE_DIR}/../..)
 include_directories(${NIMBUS_ROOT})
 LINK_DIRECTORIES(${NIMBUS_ROOT})
 
+#Add flags
+add_definitions(-DDUMP_NDATA=FALSE )
+
 #Manually list your cpp and h files here - do NOT use GLOB/GLOB_RECURSE
 SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/app_utils.cc

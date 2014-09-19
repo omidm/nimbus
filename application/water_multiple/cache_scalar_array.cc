@@ -36,6 +36,7 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
+#include <fstream>
 #include <string>
 
 #include "application/water_multiple/cache_scalar_array.h"
@@ -110,6 +111,15 @@ WriteFromCache(const nimbus::DataArray &write_set,
     assert(final_write_reg.dx() > 0 && final_write_reg.dy() > 0 && final_write_reg.dz() > 0);
     Translator::template
         WriteScalarArray<T>(write_reg, shift_, write_set, data_);
+}
+
+template<class T, class TS> void CacheScalarArray<T, TS>::
+DumpData(std::string file_name) {
+    std::ofstream file(file_name.c_str());
+    TV_INT size = data_->Size();
+    const char *dptr = reinterpret_cast<char * >(data_->array.Get_Array_Pointer());
+    file.write(dptr, sizeof(T) * (size.Product()));
+    file.close();
 }
 
 template class CacheScalarArray<float, float>;

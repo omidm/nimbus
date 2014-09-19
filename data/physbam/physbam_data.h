@@ -45,10 +45,11 @@
 #ifndef NIMBUS_DATA_PHYSBAM_PHYSBAM_DATA_H_
 #define NIMBUS_DATA_PHYSBAM_PHYSBAM_DATA_H_
 
+#include <sstream>
+
 #include "shared/cluster.h"
 #include "shared/nimbus_types.h"
 #include "worker/data.h"
-#include <sstream>  // NOLINT
 
 namespace nimbus {
 
@@ -82,6 +83,8 @@ class PhysBAMData: public Data {
   virtual bool AddToTempBuffer(char* buffer, int len);
   virtual int CommitTempBuffer();
 
+  // Debug utility
+  virtual void DumpData(std::string file_name) {}
 
   // Not implemented, not clear what these interfaces mean. -pal
   virtual void duplicate(Computer source, Computer destination) {}
