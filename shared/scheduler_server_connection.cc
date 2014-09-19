@@ -53,11 +53,13 @@ SchedulerServerConnection::SchedulerServerConnection(tcp::socket* sock)
   :socket_(sock) {
   command_num_ = 0;
   existing_bytes_ = 0;
+  mutex_ = new boost::mutex();
   read_buffer_ = new char[SERVER_CON_BUF_SIZE];
 }
 
 SchedulerServerConnection::~SchedulerServerConnection() {
   // FIXME: not actually cleaning up listening thread.
+  delete mutex_;
   delete read_buffer_;
 }
 
@@ -79,6 +81,10 @@ char* SchedulerServerConnection::read_buffer() {
 
 uint32_t SchedulerServerConnection::existing_bytes() {
   return existing_bytes_;
+}
+
+boost::mutex* SchedulerServerConnection::mutex() {
+  return mutex_;
 }
 
 void SchedulerServerConnection::set_existing_bytes(uint32_t bytes) {

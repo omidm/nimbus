@@ -131,7 +131,7 @@ void SchedulerServer::SendCommand(SchedulerWorker* worker,
   msg.append((const char*)&len, sizeof(len));
   msg.append(data.c_str(), data.length());
 
-  boost::mutex::scoped_lock lock(send_command_mutex_);
+  boost::mutex::scoped_lock lock(*(worker->connection()->mutex()));
   SchedulerServerConnection* connection = worker->connection();
   boost::system::error_code ignored_error;
   // Why are we IGNORING ERRORS!??!?!?

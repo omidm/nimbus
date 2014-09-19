@@ -66,16 +66,17 @@ class SchedulerServerConnection {
 
   virtual char* read_buffer();
   virtual uint32_t existing_bytes();
-  virtual void set_existing_bytes(uint32_t bytes);
   virtual uint32_t max_read_buffer_length();
+  virtual boost::mutex* mutex();
+
+  virtual void set_existing_bytes(uint32_t bytes);
 
  private:
-  boost::asio::ip::tcp::socket* socket_;
   int command_num_;
   char* read_buffer_;
-  // How many bytes in the read buffer are valid before
-  // a read.
   uint32_t existing_bytes_;
+  boost::mutex *mutex_;
+  boost::asio::ip::tcp::socket* socket_;
 };
 
 }  // namespace nimbus
