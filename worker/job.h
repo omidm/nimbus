@@ -181,6 +181,9 @@ class Job {
     ThreadQueueProto** thread_queue_hook() {
       return thread_queue_hook_;
     }
+    virtual bool SupportMultiThread() const {
+      return false;
+    }
 
   private:
     std::map<std::string, LdoIndexCache> query_cache_;

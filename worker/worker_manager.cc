@@ -245,14 +245,7 @@ bool WorkerManager::StartWorkerThreads() {
 }
 
 bool WorkerManager::IsThreadedJob(const Job& job) {
-  return (job.name() == "Compute:advect_phi")
-      || (job.name() == "Compute:advect_v")
-      || (job.name() == "Compute:apply_forces")
-      || (job.name() == "Compute:delete_particles")
-      || (job.name() == "Compute:modify_levelset_part_one")
-      || (job.name() == "Compute:modify_levelset_part_two")
-      || (job.name() == "Compute:reincorporate_particle")
-      || (job.name() == "Compute:step_particle");
+  return job.SupportMultiThread();
 }
 
 Job* WorkerManager::FindANonThreadedJob() {
