@@ -93,6 +93,9 @@ void JobProjectionStepOne::Execute(
   pcg_temp.cg_restart_iterations = 0;
   pcg_temp.Show_Results();
 
+  init_config.use_threading = use_threading();
+  init_config.core_quota = core_quota();
+
   PhysBAM::ProjectionDriver projection_driver(
       pcg_temp, init_config, data_config);
   projection_driver.projection_data.iteration = iteration;
@@ -100,6 +103,7 @@ void JobProjectionStepOne::Execute(
 
   projection_driver.LoadFromNimbus(this, da);
 
+  *thread_queue_hook() = projection_driver.thread_queue;
   {
     application::ScopeTimer scope_timer(name());
     // Read MATRIX_C, VECTOR_B, VECTOR_Z.
@@ -107,6 +111,7 @@ void JobProjectionStepOne::Execute(
     projection_driver.DoPrecondition();
     projection_driver.CalculateLocalRho();
   }
+  *thread_queue_hook() = NULL;
 
   projection_driver.SaveToNimbus(this, da);
 

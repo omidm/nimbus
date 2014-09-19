@@ -51,7 +51,7 @@ namespace application {
             explicit JobAdvectV(nimbus::Application *app);
             virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
             virtual nimbus::Job* Clone();
-            virtual SupportMultiThread() const {
+            virtual bool SupportMultiThread() const {
               return true;
             }
     };

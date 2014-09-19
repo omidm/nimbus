@@ -49,6 +49,7 @@
 
 #include "data/physbam/translator_physbam_old.h"
 #include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/nimbus_thread_queue.h"
 #include "application/water_multiple/options.h"
 
 namespace PhysBAM {
@@ -70,6 +71,7 @@ class ProjectionDriver {
   typedef typename T_GRID::VECTOR_INT TV_INT;
   typedef application::DataConfig DataConfig;
   typedef application::InitConfig InitConfig;
+  nimbus::NimbusThreadQueue* thread_queue;
 
   ProjectionDriver(
       PCG_SPARSE<T>& pcg_input,
@@ -78,6 +80,12 @@ class ProjectionDriver {
           : pcg(pcg_input),
             init_config(init_config_input),
             data_config(data_config_input) {
+    if (init_config.use_threading) {
+      thread_queue = new
+          nimbus::NimbusThreadQueue(init_config.core_quota);
+    } else {
+      thread_queue = NULL;
+    }
     print_debug = false;
     projection_data.local_n = 0;
     projection_data.interior_n = 0;
@@ -118,6 +126,9 @@ class ProjectionDriver {
     }
     if (projection_data.matrix_index_to_cell_index) {
       delete projection_data.matrix_index_to_cell_index;
+    }
+    if (thread_queue) {
+      delete thread_queue;
     }
   }
 

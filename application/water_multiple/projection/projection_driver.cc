@@ -166,6 +166,8 @@ void ProjectionDriver::DoPrecondition() {
   VECTOR_ND<T>& b_interior = projection_data.b_interior;
   VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
   // Time consuming part.
+  // Multi-threaded introduced.
+  A.C->thread_queue = thread_queue;
   A.C->Solve_Forward_Substitution(b_interior, temp_interior, true);
   A.C->Solve_Backward_Substitution(temp_interior, z_interior, false, true);
 }
@@ -222,6 +224,7 @@ void ProjectionDriver::UpdateTempVector() {
   VECTOR_ND<T>& p = projection_data.meta_p;
   // Search vector p is used here.
   // Time consuming part.
+  A.thread_queue = thread_queue;
   A.Times(p, temp);
 }
 
