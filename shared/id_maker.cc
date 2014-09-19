@@ -122,3 +122,10 @@ bool IDMaker::GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t
   return true;
 }
 
+bool IDMaker::SchedulerProducedJobID(job_id_t job_id) {
+  static job_id_t first = JOB_ID_BATCH * NIMBUS_SCHEDULER_ID + NIMBUS_KERNEL_JOB_ID;
+  static job_id_t last  = JOB_ID_BATCH + first;
+  return ((job_id > first) && (job_id < last));
+}
+
+

@@ -60,6 +60,8 @@ class IDMaker {
     bool GetNewPhysicalDataID(std::vector<physical_data_id_t>* result, size_t req_num);
     bool GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req_num);
 
+    static bool SchedulerProducedJobID(job_id_t job_id);
+
   private:
     pthread_mutex_t lock_;
     bool initialized_;
