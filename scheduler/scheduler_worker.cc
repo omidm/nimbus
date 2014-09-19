@@ -44,8 +44,6 @@
 
 namespace nimbus {
 
-#define WORKER_BUFSIZE 4096000
-
 SchedulerWorker::SchedulerWorker(worker_id_t id,
                                  SchedulerServerConnection* conn,
                                  ApplicationGroup* app) {
@@ -54,13 +52,10 @@ SchedulerWorker::SchedulerWorker(worker_id_t id,
   application_ = app;
   is_alive_ = true;
   handshake_done_ = false;
-  existing_bytes_ = 0;
-  read_buffer_ = new char[WORKER_BUFSIZE];
 }
 
 SchedulerWorker::~SchedulerWorker() {
   delete connection_;
-  delete read_buffer_;
 }
 
 worker_id_t SchedulerWorker::worker_id() const {
@@ -105,22 +100,6 @@ void SchedulerWorker::set_handshake_done(bool flag) {
 
 void SchedulerWorker::MarkDead() {
   is_alive_ = false;
-}
-
-char* SchedulerWorker::read_buffer() {
-  return read_buffer_;
-}
-
-uint32_t SchedulerWorker::existing_bytes() {
-  return existing_bytes_;
-}
-
-void SchedulerWorker::set_existing_bytes(uint32_t bytes) {
-  existing_bytes_ = bytes;
-}
-
-uint32_t SchedulerWorker::read_buffer_length() {
-  return WORKER_BUFSIZE;
 }
 
 }  // namespace nimbus

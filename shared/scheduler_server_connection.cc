@@ -43,23 +43,24 @@
 #include "shared/scheduler_server_connection.h"
 #include "shared/dbg.h"
 
+#define SERVER_CON_BUF_SIZE 4096000
+
 using boost::asio::ip::tcp;
 
 namespace nimbus {
 
 SchedulerServerConnection::SchedulerServerConnection(tcp::socket* sock)
   :socket_(sock) {
-  read_buffer_ = new boost::asio::streambuf();
   command_num_ = 0;
+  existing_bytes_ = 0;
+  mutex_ = new boost::mutex();
+  read_buffer_ = new char[SERVER_CON_BUF_SIZE];
 }
 
 SchedulerServerConnection::~SchedulerServerConnection() {
   // FIXME: not actually cleaning up listening thread.
-}
-
-
-boost::asio::streambuf* SchedulerServerConnection::read_buffer() {
-  return read_buffer_;
+  delete mutex_;
+  delete read_buffer_;
 }
 
 tcp::socket* SchedulerServerConnection::socket() {
@@ -72,6 +73,26 @@ int SchedulerServerConnection::command_num() {
 
 void SchedulerServerConnection::set_command_num(int n) {
   command_num_ = n;
+}
+
+char* SchedulerServerConnection::read_buffer() {
+  return read_buffer_;
+}
+
+uint32_t SchedulerServerConnection::existing_bytes() {
+  return existing_bytes_;
+}
+
+boost::mutex* SchedulerServerConnection::mutex() {
+  return mutex_;
+}
+
+void SchedulerServerConnection::set_existing_bytes(uint32_t bytes) {
+  existing_bytes_ = bytes;
+}
+
+uint32_t SchedulerServerConnection::max_read_buffer_length() {
+  return SERVER_CON_BUF_SIZE;
 }
 
 }  // namespace nimbus

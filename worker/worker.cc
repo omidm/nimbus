@@ -559,6 +559,10 @@ void Worker::AddJobToGraph(Job* job) {
       // The job is already known.
       worker_job_graph_.GetVertex(before_job_id, &before_job_vertex);
     } else {
+      if (IDMaker::SchedulerProducedJobID(before_job_id)) {
+        // Local job is acknowledged locally.
+        continue;
+      }
       // The job is unknown.
       worker_job_graph_.AddVertex(before_job_id, new WorkerJobEntry());
       worker_job_graph_.GetVertex(before_job_id, &before_job_vertex);
@@ -655,7 +659,9 @@ void Worker::NotifyLocalJobDone(Job* job) {
   ClearAfterSet(vertex);
   delete vertex->entry();
   worker_job_graph_.RemoveVertex(job_id);
-  AddFinishHintSet(job_id);
+  if (!IDMaker::SchedulerProducedJobID(job_id)) {
+    AddFinishHintSet(job_id);
+  }
   // vertex->entry()->set_state(WorkerJobEntry::FINISH);
   // vertex->entry()->set_job(NULL);
   delete job;
@@ -664,6 +670,10 @@ void Worker::NotifyLocalJobDone(Job* job) {
 void Worker::NotifyJobDone(job_id_t job_id, bool final) {
   dbg(DBG_WORKER_FD,
       DBG_WORKER_FD_S"Job(#%d) is removed in the local job graph.\n", job_id);
+  if (IDMaker::SchedulerProducedJobID(job_id)) {
+    // Jobdone command for local job is not handled.
+    return;
+  }
   if (final) {
     // Job done for unknown job is not handled.
     if (!worker_job_graph_.HasVertex(job_id)) {

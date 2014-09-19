@@ -47,7 +47,7 @@ namespace nimbus {
 #define DEFAULT_MIN_WORKER_TO_JOIN 2
 #define DEFAULT_JOB_ASSIGNER_THREAD_NUM 0
 #define DEFAULT_MAX_COMMAND_PROCESS_NUM 10000
-#define DEFAULT_MAX_JOB_DONE_COMMAND_PROCESS_NUM 200
+#define DEFAULT_MAX_JOB_DONE_COMMAND_PROCESS_NUM 10000
 
 Scheduler::Scheduler(port_t port) {
   server_ = NULL;
@@ -298,13 +298,15 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   job_id_t job_id = cm->job_id().elem();
 
-  std::list<SchedulerWorker*> waiting_list;
-  after_map_->GetWorkersWaitingOnJob(job_id, &waiting_list);
+  if (!id_maker_->SchedulerProducedJobID(job_id)) {
+    std::list<SchedulerWorker*> waiting_list;
+    after_map_->GetWorkersWaitingOnJob(job_id, &waiting_list);
 
-  cm->set_final(true);
-  std::list<SchedulerWorker*>::iterator iter = waiting_list.begin();
-  for (; iter != waiting_list.end(); ++iter) {
-    server_->SendCommand(*iter, cm);
+    cm->set_final(true);
+    std::list<SchedulerWorker*>::iterator iter = waiting_list.begin();
+    for (; iter != waiting_list.end(); ++iter) {
+      server_->SendCommand(*iter, cm);
+    }
   }
 
   // AfterMap has internal locking.
@@ -508,13 +510,15 @@ void Scheduler::JobDoneBouncerThread() {
 
       after_map_->NotifyJobDone(job_id);
 
-      std::list<SchedulerWorker*> waiting_list;
-      after_map_->GetWorkersWaitingOnJob(job_id, &waiting_list);
+      if (!id_maker_->SchedulerProducedJobID(job_id)) {
+        std::list<SchedulerWorker*> waiting_list;
+        after_map_->GetWorkersWaitingOnJob(job_id, &waiting_list);
 
-      comm->set_final(false);
-      std::list<SchedulerWorker*>::iterator iter = waiting_list.begin();
-      for (; iter != waiting_list.end(); ++iter) {
-        server_->SendCommand(*iter, comm);
+        comm->set_final(false);
+        std::list<SchedulerWorker*>::iterator iter = waiting_list.begin();
+        for (; iter != waiting_list.end(); ++iter) {
+          server_->SendCommand(*iter, comm);
+        }
       }
       delete comm;
     }
@@ -524,14 +528,16 @@ void Scheduler::JobDoneBouncerThread() {
     if (after_map_->PullLateMap(late_map)) {
       AfterMap::Iter iter = late_map->begin();
       for (; iter != late_map->end(); ++iter) {
-        ID<job_id_t> job_id(iter->first);
-        JobDoneCommand comm(job_id);
-        comm.set_final(false);
+        if (!id_maker_->SchedulerProducedJobID(iter->first)) {
+          ID<job_id_t> job_id(iter->first);
+          JobDoneCommand comm(job_id);
+          comm.set_final(false);
 
-        AfterMap::Pool *pool = iter->second;
-        AfterMap::Pool::iterator it = pool->begin();
-        for (; it != pool->end(); ++it) {
-          server_->SendCommand(*it, &comm);
+          AfterMap::Pool *pool = iter->second;
+          AfterMap::Pool::iterator it = pool->begin();
+          for (; it != pool->end(); ++it) {
+            server_->SendCommand(*it, &comm);
+          }
         }
       }
 

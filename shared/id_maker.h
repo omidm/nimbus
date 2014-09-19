@@ -60,6 +60,8 @@ class IDMaker {
     bool GetNewPhysicalDataID(std::vector<physical_data_id_t>* result, size_t req_num);
     bool GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req_num);
 
+    static bool SchedulerProducedJobID(job_id_t job_id);
+
   private:
     pthread_mutex_t lock_;
     bool initialized_;
@@ -75,9 +77,6 @@ class IDMaker {
     static const physical_data_id_t PHYSICAL_DATA_ID_BATCH  = (1 << (sizeof(physical_data_id_t)*3));
     static const logical_data_id_t LOGICAL_DATA_ID_BATCH  = (1 << (sizeof(logical_data_id_t)*3));
     */
-    static const job_id_t JOB_ID_BATCH  = 10000000000;
-    static const physical_data_id_t PHYSICAL_DATA_ID_BATCH  = 10000000000;
-    static const logical_data_id_t LOGICAL_DATA_ID_BATCH  = 10000000000;
 };
 
 
