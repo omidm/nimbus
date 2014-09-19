@@ -67,7 +67,6 @@ Scheduler::Scheduler(port_t port) {
   max_command_process_num_ = DEFAULT_MAX_COMMAND_PROCESS_NUM;
   max_job_done_command_process_num_ = DEFAULT_MAX_JOB_DONE_COMMAND_PROCESS_NUM;
   log_.set_file_name("log_scheduler");
-  log_bouncer_thread_.set_file_name("log_bouncer_thread");
   log_receive_stamp_.set_file_name("log_receive_stamp");
 }
 
@@ -299,11 +298,6 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   job_id_t job_id = cm->job_id().elem();
 
-  char buff[LOG_MAX_BUFF_SIZE];
-  snprintf(buff, sizeof(buff), "%10.9f main detected id: %lu.",
-      Log::GetRawTime(), job_id);
-  log_bouncer_thread_.log_WriteToFile(std::string(buff), LOG_INFO);
-
   std::list<SchedulerWorker*> waiting_list;
   after_map_->GetWorkersWaitingOnJob(job_id, &waiting_list);
 
@@ -512,11 +506,6 @@ void Scheduler::JobDoneBouncerThread() {
       dbg(DBG_SCHED, "Bouncing job done command: %s.\n", comm->ToString().c_str());
       job_id_t job_id = comm->job_id().elem();
 
-      char buff[LOG_MAX_BUFF_SIZE];
-      snprintf(buff, sizeof(buff), "%10.9f bouncer detected id: %lu.",
-          Log::GetRawTime(), job_id);
-      log_bouncer_thread_.log_WriteToFile(std::string(buff), LOG_INFO);
-
       after_map_->NotifyJobDone(job_id);
 
       std::list<SchedulerWorker*> waiting_list;
@@ -526,10 +515,6 @@ void Scheduler::JobDoneBouncerThread() {
       std::list<SchedulerWorker*>::iterator iter = waiting_list.begin();
       for (; iter != waiting_list.end(); ++iter) {
         server_->SendCommand(*iter, comm);
-        char buf[LOG_MAX_BUFF_SIZE];
-        snprintf(buf, sizeof(buf), "%10.9f fresh id: %lu w-port: %u.",
-            Log::GetRawTime(), job_id, (*iter)->port());
-        log_bouncer_thread_.log_WriteToFile(std::string(buf), LOG_INFO);
       }
       delete comm;
     }
@@ -547,10 +532,6 @@ void Scheduler::JobDoneBouncerThread() {
         AfterMap::Pool::iterator it = pool->begin();
         for (; it != pool->end(); ++it) {
           server_->SendCommand(*it, &comm);
-          char buf[LOG_MAX_BUFF_SIZE];
-          snprintf(buf, sizeof(buf), "%10.9f late id: %lu w-port: %u.",
-              Log::GetRawTime(), job_id.elem(), (*it)->port());
-          log_bouncer_thread_.log_WriteToFile(std::string(buf), LOG_INFO);
         }
       }
 
