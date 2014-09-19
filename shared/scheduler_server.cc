@@ -190,8 +190,8 @@ void SchedulerServer::HandleAccept(SchedulerServerConnection* connection,
     connection->socket()->set_option(r_option);
     ListenForNewConnections();
     boost::asio::async_read(*(worker->connection()->socket()),
-                            boost::asio::buffer(worker->read_buffer(),
-                                                worker->read_buffer_length()),
+                            boost::asio::buffer(worker->connection()->read_buffer(),
+                                                worker->connection()->max_read_buffer_length()),
                             boost::asio::transfer_at_least(1),
                             boost::bind(&SchedulerServer::HandleRead,
                                         this,
@@ -299,8 +299,8 @@ void SchedulerServer::HandleRead(SchedulerWorker* worker,
     return;
   }
 
-  size_t real_length = bytes_transferred + worker->existing_bytes();
-  size_t len = EnqueueCommands(worker->read_buffer(), real_length);
+  size_t real_length = bytes_transferred + worker->connection()->existing_bytes();
+  size_t len = EnqueueCommands(worker->connection()->read_buffer(), real_length);
   assert(real_length >= len);
   size_t remaining = (real_length - len);
   dbg(DBG_NET,
@@ -310,10 +310,10 @@ void SchedulerServer::HandleRead(SchedulerWorker* worker,
 
   // This is the case when the buffer is full with incomplete message.
   // Then it cannot make progress anymore.
-  if (remaining == worker->read_buffer_length()) {
+  if (remaining == worker->connection()->max_read_buffer_length()) {
     std::string err_msg = "ERROR: ";
     err_msg += "scheduler server buffer is full with incomplete command. ";
-    err_msg += "You need to increase the WORKER_BUFSIZE in scheduler_worker.cc.\n";
+    err_msg += "You need to increase the SERVER_CON_BUF_SIZE in scheduler_server_connection.cc.\n";
     dbg(DBG_ERROR, "%s\n.", err_msg.c_str());
     exit(-1);
   }
@@ -322,12 +322,12 @@ void SchedulerServer::HandleRead(SchedulerWorker* worker,
   // command at its end. Copy the fragement of the command to the beginning
   // of the buffer, mark how many bytes are valid with existing_bytes.
   if (remaining > 0) {
-    char* buffer = worker->read_buffer();
+    char* buffer = worker->connection()->read_buffer();
     memmove(buffer, (buffer + len), remaining);
     char* read_start_ptr = buffer + remaining;
-    int read_buffer_length = worker->read_buffer_length() - remaining;
+    int read_buffer_length = worker->connection()->max_read_buffer_length() - remaining;
 
-    worker->set_existing_bytes(remaining);
+    worker->connection()->set_existing_bytes(remaining);
     boost::asio::async_read(*(worker->connection()->socket()),
                             boost::asio::buffer(read_start_ptr,
                                                 read_buffer_length),
@@ -338,10 +338,10 @@ void SchedulerServer::HandleRead(SchedulerWorker* worker,
                                         boost::asio::placeholders::error,
                                         boost::asio::placeholders::bytes_transferred));
   } else {
-    worker->set_existing_bytes(0);
+    worker->connection()->set_existing_bytes(0);
     boost::asio::async_read(*(worker->connection()->socket()),
-                            boost::asio::buffer(worker->read_buffer(),
-                                                worker->read_buffer_length()),
+                            boost::asio::buffer(worker->connection()->read_buffer(),
+                                                worker->connection()->max_read_buffer_length()),
                             boost::asio::transfer_at_least(1),
                             boost::bind(&SchedulerServer::HandleRead,
                                         this,

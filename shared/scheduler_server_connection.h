@@ -60,15 +60,22 @@ class SchedulerServerConnection {
   explicit SchedulerServerConnection(boost::asio::ip::tcp::socket* sock);
   virtual ~SchedulerServerConnection();
 
-  virtual boost::asio::streambuf* read_buffer();
   virtual boost::asio::ip::tcp::socket* socket();
   virtual int command_num();
   virtual void set_command_num(int n);
 
+  virtual char* read_buffer();
+  virtual uint32_t existing_bytes();
+  virtual void set_existing_bytes(uint32_t bytes);
+  virtual uint32_t max_read_buffer_length();
+
  private:
-  boost::asio::streambuf* read_buffer_;
   boost::asio::ip::tcp::socket* socket_;
   int command_num_;
+  char* read_buffer_;
+  // How many bytes in the read buffer are valid before
+  // a read.
+  uint32_t existing_bytes_;
 };
 
 }  // namespace nimbus

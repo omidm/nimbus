@@ -68,10 +68,6 @@ class SchedulerWorker {
   virtual bool handshake_done() const;
   virtual void set_handshake_done(bool flag);
   virtual void MarkDead();
-  virtual char* read_buffer();
-  virtual uint32_t existing_bytes();
-  virtual void set_existing_bytes(uint32_t bytes);
-  virtual uint32_t read_buffer_length();
 
  private:
   worker_id_t worker_id_;
@@ -81,10 +77,6 @@ class SchedulerWorker {
   ApplicationGroup* application_;
   bool is_alive_;
   bool handshake_done_;
-  char* read_buffer_;
-  // How many bytes in the read buffer are valid before
-  // a read.
-  uint32_t existing_bytes_;
 };
 
 typedef std::list<SchedulerWorker*> SchedulerWorkerList;
