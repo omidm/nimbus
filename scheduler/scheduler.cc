@@ -159,7 +159,7 @@ void Scheduler::SchedulerCoreProcessor() {
     log_.log_StopTimer();
     if (log_.timer() >= .001) {
       char buff[LOG_MAX_BUFF_SIZE];
-      snprintf(buff, sizeof(buff), "scheduler loop: %2.5lf p: %2.5lf c: %5.0u a: %2.5lf time: %2.2lf.",
+      snprintf(buff, sizeof(buff), "scheduler loop: %2.5lf p: %2.5lf c: %5.0lu a: %2.5lf time: %2.2lf.", // NOLINT
           log_.timer(), log_process_.timer(), command_num, log_assign_.timer(), log_.GetTime());
       log_.log_WriteToOutputStream(std::string(buff), LOG_INFO);
     }
