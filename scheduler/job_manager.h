@@ -56,6 +56,7 @@
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "shared/graph.h"
+#include "shared/id_maker.h"
 #include "scheduler/job_entry.h"
 #include "scheduler/after_map.h"
 #include "shared/logical_data_object.h"

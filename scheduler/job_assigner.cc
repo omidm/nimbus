@@ -416,7 +416,7 @@ bool JobAssigner::CreateDataAtWorker(SchedulerWorker* worker,
   IDSet<job_id_t> before;
 
   // Update the job table.
-  JobEntry *job = job_manager_->AddCreateDataJobEntry(j[0]);
+  // JobEntry *job = job_manager_->AddCreateDataJobEntry(j[0]);
 
   // Update data table.
   IDSet<job_id_t> list_job_read;
@@ -434,9 +434,9 @@ bool JobAssigner::CreateDataAtWorker(SchedulerWorker* worker,
   server_->SendCommand(worker, &cm);
 
   // Notify assignment to job manager.
-  job->set_assigned_worker(worker);
-  job->set_before_set(before);
-  job_manager_->NotifyJobAssignment(job);
+  // job->set_assigned_worker(worker);
+  // job->set_before_set(before);
+  // job_manager_->NotifyJobAssignment(job);
 
   *created_data = p;
 
@@ -456,12 +456,12 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   job_id_t receive_id = j[0];
   job_id_t send_id = j[1];
   IDSet<job_id_t> before;
-  JobEntry *job;
+  // JobEntry *job;
 
   // Receive part
 
   // Update the job table.
-  job = job_manager_->AddRemoteCopyReceiveJobEntry(receive_id);
+  // job = job_manager_->AddRemoteCopyReceiveJobEntry(receive_id);
 
   // Update data table.
   PhysicalData to_data_new = *to_data;
@@ -481,15 +481,15 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   server_->SendCommand(to_worker, &cm_r);
 
   // Notify assignment to job manager.
-  job->set_assigned_worker(to_worker);
-  job->set_before_set(before);
-  job_manager_->NotifyJobAssignment(job);
+  // job->set_assigned_worker(to_worker);
+  // job->set_before_set(before);
+  // job_manager_->NotifyJobAssignment(job);
 
 
   // Send Part.
 
   // Update the job table.
-  job = job_manager_->AddRemoteCopySendJobEntry(send_id);
+  // job = job_manager_->AddRemoteCopySendJobEntry(send_id);
 
   // Update data table.
   PhysicalData from_data_new = *from_data;
@@ -510,9 +510,9 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   server_->SendCommand(from_worker, &cm_s);
 
   // Notify assignment to job manager.
-  job->set_assigned_worker(from_worker);
-  job->set_before_set(before);
-  job_manager_->NotifyJobAssignment(job);
+  // job->set_assigned_worker(from_worker);
+  // job->set_before_set(before);
+  // job_manager_->NotifyJobAssignment(job);
 
 
   *from_data = from_data_new;
@@ -533,7 +533,7 @@ bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
   IDSet<job_id_t> before;
 
   // Update the job table.
-  JobEntry *job = job_manager_->AddLocalCopyJobEntry(j[0]);
+  // JobEntry *job = job_manager_->AddLocalCopyJobEntry(j[0]);
 
   // Update data table.
   PhysicalData from_data_new = *from_data;
@@ -558,9 +558,9 @@ bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
   server_->SendCommand(worker, &cm_c);
 
   // Notify assignment to job manager.
-  job->set_assigned_worker(worker);
-  job->set_before_set(before);
-  job_manager_->NotifyJobAssignment(job);
+  // job->set_assigned_worker(worker);
+  // job->set_before_set(before);
+  // job_manager_->NotifyJobAssignment(job);
 
   *from_data = from_data_new;
   *to_data = to_data_new;
