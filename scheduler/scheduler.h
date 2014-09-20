@@ -100,7 +100,7 @@ class Scheduler {
 
     virtual void TerminationProcedure();
 
-    virtual void ProcessQueuedSchedulerCommands();
+    virtual size_t ProcessQueuedSchedulerCommands();
 
     virtual void ProcessSchedulerCommand(SchedulerCommand* cm);
     virtual void ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm);
