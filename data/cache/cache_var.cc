@@ -142,22 +142,22 @@ bool CacheVar::CheckWritePendingFlag(const DataArray &write_set,
     //     return false;
     // }
     for (size_t i = 0; i < write_set.size(); ++i) {
-        Data *d = write_set.at(i);
-        if (d->pending_flag()) {
-            return false;
-        }
-        GeometricRegion dreg = d->region();
-        DMap::iterator it = data_map_.find(dreg);
-        if (it != data_map_.end()) {
-            Data *d_old = it->second;
-            if (d_old != d) {
-                if (write_back_.find(d_old) != write_back_.end()) {
-                    if (d_old->pending_flag()) {
-                        return false;
-                    }
-                }
+      Data *d = write_set.at(i);
+      if (d->pending_flag() != 0) {
+        return false;
+      }
+      GeometricRegion dreg = d->region();
+      DMap::iterator it = data_map_.find(dreg);
+      if (it != data_map_.end()) {
+        Data *d_old = it->second;
+        if (d_old != d) {
+          if (write_back_.find(d_old) != write_back_.end()) {
+            if (d_old->pending_flag() != 0) {
+              return false;
             }
+          }
         }
+      }
     }
     return true;
 }
@@ -175,14 +175,14 @@ void CacheVar::SetUpWrite(const DataArray &write_set,
     assert(flush != NULL);
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set.at(i);
-        d->set_pending_flag();
+        d->set_pending_flag(Data::WRITE);
         GeometricRegion dreg = d->region();
         DMap::iterator it = data_map_.find(dreg);
         if (it != data_map_.end()) {
             Data *d_old = it->second;
             if (d_old != d) {
                 if (write_back_.find(d_old) != write_back_.end()) {
-                    d_old->set_pending_flag();
+                    d_old->set_pending_flag(Data::WRITE);
                     flush->push_back(d_old);
                     write_back_.erase(d_old);
                     d_old->UnsetDirtyCacheObject(this);
@@ -214,11 +214,11 @@ void CacheVar::ReleaseWritePendingFlag(const DataArray &write_set,
     // unset_pending_flag();
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set.at(i);
-        d->unset_pending_flag();
+        d->unset_pending_flag(Data::WRITE);
     }
     for (size_t i = 0; i < flush.size(); ++i) {
         Data *d = flush.at(i);
-        d->unset_pending_flag();
+        d->unset_pending_flag(Data::WRITE);
     }
 }
 
@@ -303,13 +303,21 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
         d->SetUpDirtyCacheObject(this);
     }
     for (size_t i = 0; i < flush->size(); ++i) {
-        flush->at(i)->set_pending_flag();
-    }
-    for (size_t i = 0; i < diff->size(); ++i) {
-        diff->at(i)->set_pending_flag();
+      flush->at(i)->set_pending_flag(Data::WRITE);
     }
     for (size_t i = 0; i < sync->size(); ++i) {
-        sync->at(i)->set_pending_flag();
+      /* Data in the sync array may also be present in the flush array. */
+      if (sync->at(i)->pending_flag() != -1) {
+        assert(sync->at(i)->pending_flag() == 0);
+        sync->at(i)->set_pending_flag(Data::WRITE);
+      }
+    }
+    for (size_t i = 0; i < diff->size(); ++i) {
+      /* Data in the diff array may have also be present in the sync and flush
+         arrays. Only set read flag if the data was not marked in write mode. */
+      if (diff->at(i)->pending_flag() != -1) {
+        diff->at(i)->set_pending_flag(Data::READ);
+      }
     }
     for (size_t i = 0; i < sync_co->size(); ++i) {
         sync_co->at(i)->set_pending_flag();
@@ -321,39 +329,58 @@ bool CacheVar::CheckPendingFlag(const DataArray &read_set,
     if (pending_flag()) {
         return false;
     }
-    // TODO(chinmayee/quhang) some checkings are not required.
     for (size_t i = 0; i < read_set.size(); ++i) {
-        Data *d = read_set.at(i);
-        if (d->pending_flag()) {
-            return false;
-        }
-        GeometricRegion dreg = d->region();
-        DMap::iterator it = data_map_.find(dreg);
-        if (it != data_map_.end()) {
-            Data *d_old = it->second;
-            if (d_old->pending_flag()) {
-                return false;
-            }
-        }
+      Data *d = read_set.at(i);
+      if (d->pending_flag() == -1) {
+        return false;
+      }
+      GeometricRegion dreg = d->region();
+      DMap::iterator it = data_map_.find(dreg);
+      if (it == data_map_.end()) {
         if (d->dirty_cache_object()) {
-            if (d->dirty_cache_object()->pending_flag()) {
-                return false;
-            }
+          if (d->pending_flag() != 0) {
+            return false;
+          }
+          if (d->dirty_cache_object()->pending_flag()) {
+            return false;
+          }
         }
+      } else {
+        Data *d_old = it->second;
+        if (d_old != d) {
+          if (d->dirty_cache_object()) {
+            if (d->pending_flag() != 0) {
+              return false;
+            }
+            if (d->dirty_cache_object()->pending_flag()) {
+              return false;
+            }
+          }
+          if (write_back_.find(d_old) != write_back_.end()) {
+            if (d_old->pending_flag() != 0) {
+              return false;
+            }
+          }
+        }
+      }
     }
     for (size_t i = 0; i < write_set.size(); ++i) {
-        Data *d = write_set.at(i);
-        if (d->pending_flag()) {
-            return false;
-        }
-        GeometricRegion dreg = d->region();
-        DMap::iterator it = data_map_.find(dreg);
-        if (it != data_map_.end()) {
-            Data *d_old = it->second;
-            if (d_old->pending_flag()) {
-                return false;
+      Data *d = write_set.at(i);
+      if (d->pending_flag() != 0) {
+        return false;
+      }
+      GeometricRegion dreg = d->region();
+      DMap::iterator it = data_map_.find(dreg);
+      if (it != data_map_.end()) {
+        Data *d_old = it->second;
+        if (d_old != d) {
+          if (write_back_.find(d_old) != write_back_.end()) {
+            if (d_old->pending_flag() != 0) {
+              return false;
             }
+          }
         }
+      }
     }
     return true;
 }
@@ -368,13 +395,21 @@ void CacheVar::ReleasePendingFlag(DataArray *flush,
     assert(sync_co != NULL);
     // unset_pending_flag();
     for (size_t i = 0; i < flush->size(); ++i) {
-        flush->at(i)->unset_pending_flag();
-    }
-    for (size_t i = 0; i < diff->size(); ++i) {
-        diff->at(i)->unset_pending_flag();
+      flush->at(i)->unset_pending_flag(Data::WRITE);
+      assert(flush->at(i)->pending_flag() == 0);
     }
     for (size_t i = 0; i < sync->size(); ++i) {
-        sync->at(i)->unset_pending_flag();
+      /* Check for case where data in sync array is also present in flush array. */
+      assert(sync->at(i)->pending_flag() <= 0);
+      if (sync->at(i)->pending_flag() == -1) {
+        sync->at(i)->unset_pending_flag(Data::WRITE);
+      }
+    }
+    for (size_t i = 0; i < diff->size(); ++i) {
+      /* Check for case where data in diff array is also present in flush or sync array */
+      if (diff->at(i)->pending_flag() > 0) {
+        diff->at(i)->unset_pending_flag(Data::READ);
+      }
     }
     for (size_t i = 0; i < sync_co->size(); ++i) {
         sync_co->at(i)->unset_pending_flag();
