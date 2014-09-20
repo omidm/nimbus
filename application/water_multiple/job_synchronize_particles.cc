@@ -144,7 +144,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
               read_inner, array_outer,
               write, array_outer,
               kCachePLE, array_outer,
-              nimbus::cache::EXCLUSIVE);
+              nimbus::cache::SHARED);
     CacheParticleLevelsetEvolution<T> *cache_ple =
         dynamic_cast<CacheParticleLevelsetEvolution<T> *>(cache_struct);
     assert(cache_ple != NULL);

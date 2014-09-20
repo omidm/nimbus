@@ -86,6 +86,12 @@ public:
     ARRAY<IMPLICIT_OBJECT<TV>*> sources;
     LaplaceSolverWrapper laplace_solver_wrapper;
 
+    T_FACE_ARRAY t_face_dummy;
+    T_SCALAR_ARRAY t_scalar_dummy;
+    BOOL_FACE_ARRAY b_face_dummy;
+    BOOL_SCALAR_ARRAY b_scalar_dummy;
+    INT_SCALAR_ARRAY i_scalar_dummy;
+
     nimbus::TranslatorPhysBAMOld<TV> translator;
 
     ARRAY<T, TV_INT> phi_ghost_bandwidth_seven;

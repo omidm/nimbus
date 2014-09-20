@@ -180,6 +180,14 @@ public:
     a.Calculate_Acceleration_Constants();b.Calculate_Acceleration_Constants();
     long t = a.hash_code; a.hash_code = b.hash_code; b.hash_code = t;}
 
+    static void Nimbus_Copy_Arrays(ARRAY& dest,ARRAY& src)
+    {dest.array.Nimbus_Copy(src.array);
+    nimbus_copy(dest.domain, src.domain);
+    nimbus_copy(dest.counts, src.counts);
+    dest.Calculate_Acceleration_Constants();
+    src.Calculate_Acceleration_Constants();
+    dest.hash_code = src.hash_code;}
+
     void Shift_Domain_Indices(TV_INT& shift)
     {domain.min_corner+=shift;domain.max_corner+=shift;Calculate_Acceleration_Constants();}
 //#####################################################################
