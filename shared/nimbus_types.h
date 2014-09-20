@@ -44,7 +44,6 @@
 #include <string>
 #include "shared/address_book.h"
 
-#define NIMBUS_SCHEDULER_ID (worker_id_t)(0)
 
 #define NIMBUS_TERMINATE_SUCCESS (exit_status_t)(0)
 #define NIMBUS_TERMINATE_FAILURE (exit_status_t)(-1)
@@ -53,7 +52,13 @@
 #define NIMBUS_UNDEFINED_DATA_VERSION (data_version_t)(0)
 #define NIMBUS_INIT_JOB_DEPTH (job_depth_t)(0)
 
+#define NIMBUS_SCHEDULER_ID (worker_id_t)(0)
 #define NIMBUS_KERNEL_JOB_ID (job_id_t)(0)
+
+#define JOB_ID_BATCH (job_id_t)(10000000000)
+#define LOGICAL_DATA_ID_BATCH (logical_data_id_t)(10000000000)
+#define PHYSICAL_DATA_ID_BATCH (physical_data_id_t)(10000000000)
+
 
 #define NIMBUS_KERNEL_JOB_NAME "kernel"
 #define NIMBUS_MAIN_JOB_NAME "main"

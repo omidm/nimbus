@@ -282,29 +282,47 @@ Is_Transpose(const SPARSE_MATRIX_FLAT_NXN<T>& A_transpose,const T tolerance) con
 template<class T> void SPARSE_MATRIX_FLAT_NXN<T>::
 Solve_Forward_Substitution(const VECTOR_ND<T>& b,VECTOR_ND<T>& x,const bool diagonal_is_identity,const bool diagonal_is_inverted) const
 {
-    if(diagonal_is_identity) for(int i=1;i<=n;i++){
+    INT_ITERATOR_THREADED_ALPHA<SPARSE_MATRIX_FLAT_NXN<T> >(1,n,thread_queue).
+        template Run<const VECTOR_ND<T>&,VECTOR_ND<T>&,const bool,const bool>
+        (*const_cast<SPARSE_MATRIX_FLAT_NXN<T>*>(this),&SPARSE_MATRIX_FLAT_NXN<T>::Solve_Forward_Substitution_Threaded,
+         b, x, diagonal_is_identity, diagonal_is_inverted);
+}
+template<class T> void SPARSE_MATRIX_FLAT_NXN<T>::
+Solve_Forward_Substitution_Threaded(const VECTOR_ND<T>& b,VECTOR_ND<T>& x, const bool diagonal_is_identity, const bool diagonal_is_inverted,
+                                    int start_index, int end_index) {
+    if(diagonal_is_identity) for(int i=start_index;i<=end_index;i++){
         T sum=0;for(int index=offsets(i);index<diagonal_index(i);index++)sum+=A(index).a*x(A(index).j);
         x(i)=b(i)-sum;}
-    else if(!diagonal_is_inverted) for(int i=1;i<=n;i++){
+    else if(!diagonal_is_inverted) for(int i=start_index;i<=end_index;i++){
         T sum=0;for(int index=offsets(i);index<diagonal_index(i);index++)sum+=A(index).a*x(A(index).j);
         x(i)=(b(i)-sum)/A(diagonal_index(i)).a;}
-    else for(int i=1;i<=n;i++){
+    else for(int i=start_index;i<=end_index;i++){
         T sum=0;for(int index=offsets(i);index<diagonal_index(i);index++)sum+=A(index).a*x(A(index).j);
         x(i)=(b(i)-sum)*A(diagonal_index(i)).a;}
 }
+
 //#####################################################################
 // Function Solve_Backward_Substitution
 //#####################################################################
 template<class T> void SPARSE_MATRIX_FLAT_NXN<T>::
 Solve_Backward_Substitution(const VECTOR_ND<T>& b,VECTOR_ND<T>& x,const bool diagonal_is_identity,const bool diagonal_is_inverted) const
 {
-    if(diagonal_is_identity) for(int i=n;i>=1;i--){
+    INT_ITERATOR_THREADED_ALPHA<SPARSE_MATRIX_FLAT_NXN<T> >(1,n,thread_queue).
+        template Run<const VECTOR_ND<T>&,VECTOR_ND<T>&,const bool,const bool>
+        (*const_cast<SPARSE_MATRIX_FLAT_NXN<T>*>(this),&SPARSE_MATRIX_FLAT_NXN<T>::Solve_Backward_Substitution_Threaded,
+         b, x, diagonal_is_identity, diagonal_is_inverted);
+}
+template<class T> void SPARSE_MATRIX_FLAT_NXN<T>::
+Solve_Backward_Substitution_Threaded(const VECTOR_ND<T>& b,VECTOR_ND<T>& x,const bool diagonal_is_identity,const bool diagonal_is_inverted,
+                                     int start_index, int end_index)
+{
+    if(diagonal_is_identity) for(int i=end_index;i>=start_index;i--){
         T sum=0;for(int index=diagonal_index(i)+1;index<offsets(i+1);index++)sum+=A(index).a*x(A(index).j);
         x(i)=b(i)-sum;}
-    else if(!diagonal_is_inverted) for(int i=n;i>=1;i--){
+    else if(!diagonal_is_inverted) for(int i=end_index;i>=start_index;i--){
         T sum=0;for(int index=diagonal_index(i)+1;index<offsets(i+1);index++)sum+=A(index).a*x(A(index).j);
         x(i)=(b(i)-sum)/A(diagonal_index(i)).a;}
-    else for(int i=n;i>=1;i--){
+    else for(int i=end_index;i>=start_index;i--){
         T sum=0;for(int index=diagonal_index(i)+1;index<offsets(i+1);index++)sum+=A(index).a*x(A(index).j);
         x(i)=(b(i)-sum)*A(diagonal_index(i)).a;}
 }
