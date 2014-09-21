@@ -825,9 +825,9 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 
     // psi_d.
     if (cache_psi_d) {
-        BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
-        BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
-        // BOOL_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->psi_D, b_scalar_dummy);
+        // BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
+        // BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
+        BOOL_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->psi_D, b_scalar_dummy);
         nimbus::DataArray write;
         cm->ReleaseAccess(cache_psi_d);
         cache_psi_d = NULL;
@@ -835,9 +835,9 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 
     // psi_n.
     if (cache_psi_n) {
-        BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
-        BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
-        // BOOL_FACE_ARRAY::Nimbus_Copy_Arrays(projection.laplace->psi_N, b_face_dummy);
+        // BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
+        // BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
+        BOOL_FACE_ARRAY::Nimbus_Copy_Arrays(projection.laplace->psi_N, b_face_dummy);
         nimbus::DataArray write;
         cm->ReleaseAccess(cache_psi_n);
         cache_psi_n = NULL;
@@ -845,9 +845,9 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 
     // pressure.
     if (cache_pressure) {
-        T_SCALAR_ARRAY* pressure = cache_pressure->data();
-        T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection.p);
-        // T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.p, t_scalar_dummy);
+        // T_SCALAR_ARRAY* pressure = cache_pressure->data();
+        // T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection.p);
+        T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.p, t_scalar_dummy);
         cm->ReleaseAccess(cache_pressure);
 	cache_pressure = NULL;
     }
@@ -864,9 +864,9 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     }
     // divergence.
     if (cache_divergence) {
-      T_SCALAR_ARRAY* divergence = cache_divergence->data();
-      T_SCALAR_ARRAY::Exchange_Arrays(*divergence, projection.laplace->f);
-      // T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->f, t_scalar_dummy);
+      // T_SCALAR_ARRAY* divergence = cache_divergence->data();
+      // T_SCALAR_ARRAY::Exchange_Arrays(*divergence, projection.laplace->f);
+      T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->f, t_scalar_dummy);
       cm->ReleaseAccess(cache_divergence);
       cache_divergence = NULL;
     }
@@ -1306,20 +1306,20 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (cache_psi_d)
     {
         BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
-	BOOL_SCALAR_ARRAY::Exchange_Arrays(projection.laplace->psi_D, *psi_d);
+	BOOL_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->psi_D, *psi_d);
     }
 
     // psi_n.
     if (cache_psi_n)
     {
         BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
-        BOOL_FACE_ARRAY::Exchange_Arrays(projection.laplace->psi_N, *psi_n);
+        BOOL_FACE_ARRAY::Nimbus_Copy_Arrays(projection.laplace->psi_N, *psi_n);
     }
 
     // pressure.
     if (cache_pressure) {
       T_SCALAR_ARRAY* pressure = cache_pressure->data();
-      T_SCALAR_ARRAY::Exchange_Arrays(projection.p, *pressure);
+      T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.p, *pressure);
     }
     // colors.
     if (cache_colors) {
@@ -1331,7 +1331,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     // divergence.
     if (cache_divergence) {
       T_SCALAR_ARRAY* divergence = cache_divergence->data();
-      T_SCALAR_ARRAY::Exchange_Arrays(projection.laplace->f, *divergence);
+      T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->f, *divergence);
     }
 
     typedef nimbus::Data Data;

@@ -142,7 +142,7 @@ void GetAppCacheObjects(
             read, array_reg_outer_1,
             write, array_reg_outer_1,
             kCachePressure, array_reg_outer_1,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache->pressure = dynamic_cast<CacheScalarArray<T>*>(cache_var);
     assert(cache->pressure != NULL);
   }
@@ -187,7 +187,7 @@ void GetAppCacheObjects(
             read, array_reg_outer_1,
             write, array_reg_outer_1,
             kCacheDivergence, array_reg_outer_1,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache->divergence = dynamic_cast<CacheScalarArray<T>*>(cache_var);
     assert(cache->divergence != NULL);
   }
@@ -306,7 +306,7 @@ void GetAppCacheObjects(
           read, array_reg_outer_1,
           write, array_reg_outer_1,
           kCachePsiD, array_reg_outer_1,
-          nimbus::cache::EXCLUSIVE);
+          nimbus::cache::SHARED);
     cache->psi_d = dynamic_cast<CacheScalarArray<bool> *>(cache_var);
     assert(cache->psi_d != NULL);
   }
@@ -322,7 +322,7 @@ void GetAppCacheObjects(
           read, array_reg_outer_1,
           write, array_reg_outer_1,
           kCachePsiN, array_reg_outer_1,
-          nimbus::cache::EXCLUSIVE);
+          nimbus::cache::SHARED);
     cache->psi_n = dynamic_cast<CacheFaceArray<bool> *>(cache_var);
     assert(cache->psi_n != NULL);
   }
