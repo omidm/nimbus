@@ -150,7 +150,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_central,
             write, array_reg_central,
             application::kCacheSparseMatrixA, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache_matrix_a = dynamic_cast<application::CacheSparseMatrix*>(cache_var);
     assert(cache_matrix_a != NULL);
     assert(projection_data.matrix_a == NULL);
@@ -178,7 +178,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_central,
             write, array_reg_central,
             application::kCacheSparseMatrixC, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache_matrix_c = dynamic_cast<application::CacheSparseMatrix*>(cache_var);
     assert(cache_matrix_c != NULL);
     projection_data.matrix_a->C = cache_matrix_c->data();
@@ -198,7 +198,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_central,
             write, array_reg_central,
             application::kCacheArrayM2C, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache_index_m2c = dynamic_cast<application::CacheArrayM2C*>(cache_var);
     assert(cache_index_m2c != NULL);
     projection_data.matrix_index_to_cell_index = cache_index_m2c->data();
@@ -218,7 +218,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_central,
             write, array_reg_central,
             application::kCacheVectorB, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache_vector_b = dynamic_cast<application::CacheVector*>(cache_var);
     assert(cache_vector_b != NULL);
     projection_data.vector_b.n = cache_vector_b->data()->n;
@@ -415,7 +415,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_thin_outer,
             write, array_reg_thin_outer,
             application::kCacheMetaP, array_reg_thin_outer,
-            nimbus::cache::EXCLUSIVE,
+            nimbus::cache::SHARED,
             set_up_meta_p,
             &meta_p_aux_data);
     cache_meta_p = dynamic_cast<application::CacheCompressedScalarArray<T>*>(cache_var);
@@ -440,7 +440,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_central,
             write, array_reg_central,
             application::kCacheVectorZ, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache_vector_z = dynamic_cast<application::CacheVector*>(cache_var);
     assert(cache_vector_z != NULL);
     projection_data.z_interior.n = cache_vector_z->data()->n;
@@ -460,7 +460,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_central,
             write, array_reg_central,
             application::kCacheVectorTemp, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache_vector_temp = dynamic_cast<application::CacheVector*>(cache_var);
     assert(cache_vector_temp != NULL);
     projection_data.temp.n = cache_vector_temp->data()->n;
@@ -480,7 +480,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_central,
             write, array_reg_central,
             application::kCacheVectorPressure, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache_vector_pressure = dynamic_cast<application::CacheVector*>(cache_var);
     assert(cache_vector_pressure != NULL);
     projection_data.vector_pressure.n = cache_vector_pressure->data()->n;

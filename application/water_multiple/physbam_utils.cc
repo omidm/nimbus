@@ -97,7 +97,7 @@ void GetAppCacheObjects(
             read, array_reg,
             write, array_reg,
             kCacheVectorB, array_reg,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache->vector_b = dynamic_cast<CacheVector*>(cache_var);
     assert(cache->vector_b != NULL);
   }
@@ -112,7 +112,7 @@ void GetAppCacheObjects(
             read, array_reg,
             write, array_reg,
             kCacheSparseMatrixA, array_reg,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache->matrix_a = dynamic_cast<CacheSparseMatrix*>(cache_var);
     assert(cache->matrix_a != NULL);
   }
@@ -127,7 +127,7 @@ void GetAppCacheObjects(
             read, array_reg,
             write, array_reg,
             kCacheArrayM2C, array_reg,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache->index_m2c = dynamic_cast<CacheArrayM2C*>(cache_var);
     assert(cache->index_m2c != NULL);
   }
