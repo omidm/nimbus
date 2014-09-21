@@ -844,9 +844,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     // colors.
     if (cache_colors) {
       typedef typename PhysBAM::ARRAY<int, TV_INT> INT_SCALAR_ARRAY;
-      // INT_SCALAR_ARRAY* colors = cache_colors->data();
-      // INT_SCALAR_ARRAY::Exchange_Arrays(
-      //   *colors, projection.laplace->filled_region_colors);
       INT_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->filled_region_colors,
           i_scalar_dummy);
       cm->ReleaseAccess(cache_colors);

@@ -129,12 +129,12 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_thin_outer,
             write, array_reg_thin_outer,
             application::kCachePressure, array_reg_thin_outer,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache_pressure = dynamic_cast<application::CacheScalarArray<T>*>(cache_var);
     assert(cache_pressure != NULL);
     typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
     T_SCALAR_ARRAY* pressure = cache_pressure->data();
-    T_SCALAR_ARRAY::Exchange_Arrays(projection_data.pressure, *pressure);
+    T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection_data.pressure, *pressure);
     if (print_debug) dbg(APP_LOG, "[PROJECTION] LOAD PRESSURE %f seconds\n", log_timer.timer());
   }
 
@@ -516,9 +516,9 @@ void ProjectionDriver::Cache_SaveToNimbus(
   if (cache_pressure) {
     log_timer.StartTimer();
     typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
-    T_SCALAR_ARRAY* pressure = cache_pressure->data();
-    T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection_data.pressure);
-    // T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection_data.pressure, t_scalar_dummy);
+    // T_SCALAR_ARRAY* pressure = cache_pressure->data();
+    // T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection_data.pressure);
+    T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection_data.pressure, t_scalar_dummy);
     cm->ReleaseAccess(cache_pressure);
     cache_pressure = NULL;
     if (print_debug) dbg(APP_LOG, "[PROJECTION] SAVE PRESSURE %f seconds\n", log_timer.timer());
@@ -667,7 +667,7 @@ void ProjectionDriver::Cache_SaveToNimbus(
     T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
     T_SCALAR_ARRAY::Exchange_Arrays(*index_c2m, projection_data.cell_index_to_matrix_index);
     // T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
-    //    projection_data.cell_index_to_matrix_index, i_scalar_dummy);
+    //     projection_data.cell_index_to_matrix_index, i_scalar_dummy);
     cm->ReleaseAccess(cache_index_c2m);
     cache_index_c2m = NULL;
     if (print_debug) dbg(APP_LOG, "[PROJECTION] SAVE INDEX_C2M %f seconds\n", log_timer.timer());

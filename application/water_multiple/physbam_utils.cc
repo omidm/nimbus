@@ -172,7 +172,7 @@ void GetAppCacheObjects(
             read, array_reg_outer_1,
             write, array_reg_outer_1,
             kCacheColors, array_reg_outer_1,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache->color = dynamic_cast<CacheScalarArray<int>*>(cache_var);
     assert(cache->color != NULL);
   }
