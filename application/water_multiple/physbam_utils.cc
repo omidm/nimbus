@@ -353,7 +353,7 @@ void GetAppCacheObjects(
           read, array_reg_outer_3,
           write, array_reg_outer_3,
           kCachePLE, array_reg_outer_3,
-          nimbus::cache::EXCLUSIVE);
+          nimbus::cache::SHARED);
     cache->ple = dynamic_cast<CacheParticleLevelsetEvolution<T> *>(cache_struct);
     assert(cache->ple != NULL);
   }
