@@ -746,23 +746,17 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         application::GetWriteData(*job, APP_PHI, da, &write);
       // levelset
       if (cache_phi3) {
-	  T_SCALAR_ARRAY *phi3 = cache_phi3->data();
-	  T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
-	  // T_SCALAR_ARRAY::Nimbus_Copy_Arrays(particle_levelset.levelset.phi, t_scalar_dummy);
+	  T_SCALAR_ARRAY::Nimbus_Copy_Arrays(particle_levelset.levelset.phi, t_scalar_dummy);
           cm->ReleaseAccess(cache_phi3);
           cache_phi3 = NULL;
       }
       if (cache_phi7) {
-	  T_SCALAR_ARRAY *phi7 = cache_phi7->data();
-	  T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
-	  // T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_seven, t_scalar_dummy);
+	  T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_seven, t_scalar_dummy);
           cm->ReleaseAccess(cache_phi7);
           cache_phi7 = NULL;
       }
       if (cache_phi8) {
-	  T_SCALAR_ARRAY *phi8 = cache_phi8->data();
-          T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
-	  // T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_eight, t_scalar_dummy);
+	  T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_eight, t_scalar_dummy);
           cm->ReleaseAccess(cache_phi8);
           cache_phi8 = NULL;
       }
@@ -1239,20 +1233,17 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (cache_phi3)
     {
         T_SCALAR_ARRAY *phi3 = cache_phi3->data();
-        T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
-	// T_SCALAR_ARRAY::Nimbus_Copy_Arrays(particle_levelset.levelset.phi, *phi3);
+	T_SCALAR_ARRAY::Nimbus_Copy_Arrays(particle_levelset.levelset.phi, *phi3);
     }
     if (cache_phi7)
     {
         T_SCALAR_ARRAY *phi7 = cache_phi7->data();
-        T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
-	// T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_seven, *phi7); 
+	T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_seven, *phi7); 
     }
     if (cache_phi8)
     {
         T_SCALAR_ARRAY *phi8 = cache_phi8->data();
-        T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
-	// T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_eight, *phi8); 
+	T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_eight, *phi8); 
     }
 
     // last unique particle id

@@ -252,7 +252,7 @@ void GetAppCacheObjects(
             read3, array_reg_outer_3,
             write_empty, array_reg_outer_3,
             kCachePhi3, array_reg_outer_3,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
       cache->phi3 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
       assert(cache->phi3 != NULL);
     }
@@ -264,7 +264,7 @@ void GetAppCacheObjects(
             read7, array_reg_outer_7,
             write7, array_reg_outer_7,
             kCachePhi7, array_reg_outer_7,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
       cache->phi7 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
       assert(cache->phi7 != NULL);
     }
@@ -276,7 +276,7 @@ void GetAppCacheObjects(
             read8, array_reg_outer_8,
             write8, array_reg_outer_8,
             kCachePhi8, array_reg_outer_8,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
       cache->phi8 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
       assert(cache->phi8 != NULL);
     }

@@ -516,8 +516,6 @@ void ProjectionDriver::Cache_SaveToNimbus(
   if (cache_pressure) {
     log_timer.StartTimer();
     typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
-    // T_SCALAR_ARRAY* pressure = cache_pressure->data();
-    // T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection_data.pressure);
     T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection_data.pressure, t_scalar_dummy);
     cm->ReleaseAccess(cache_pressure);
     cache_pressure = NULL;
