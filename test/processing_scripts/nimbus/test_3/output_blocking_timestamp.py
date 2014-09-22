@@ -50,7 +50,7 @@ line = f.readline()
 print "Calculate the unblocking time of each computation job."
 while line:
     job_id, before_set = extract_set(line)
-    if job_id > 10000000000:
+    if job_id < 10000000000:
         line = f.readline()
         continue
     try:
