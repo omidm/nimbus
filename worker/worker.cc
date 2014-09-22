@@ -644,8 +644,10 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
 
 void Worker::NotifyLocalJobDone(Job* job) {
   Parameter params;
-  JobDoneCommand cm(job->id(), job->run_time(), job->wait_time(), job->max_alloc(), false);
-  client_->SendCommand(&cm);
+  if ((!IDMaker::SchedulerProducedJobID(job->id().elem())) || (!job->sterile())) {
+    JobDoneCommand cm(job->id(), job->run_time(), job->wait_time(), job->max_alloc(), false);
+    client_->SendCommand(&cm);
+  }
   job_id_t job_id = job->id().elem();
   // Job done for unknown job is not handled.
   if (!worker_job_graph_.HasVertex(job_id)) {
