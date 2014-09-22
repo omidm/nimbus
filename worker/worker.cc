@@ -174,9 +174,7 @@ void Worker::WorkerCoreProcessor() {
       }
     }
     // Job done processing.
-    if (local_job_done_list.empty()) {
-      worker_manager_->GetLocalJobDoneList(&local_job_done_list);
-    }
+    worker_manager_->GetLocalJobDoneList(&local_job_done_list);
     quota = 10;
     while (!local_job_done_list.empty()) {
       Job* job = local_job_done_list.front();
@@ -184,9 +182,6 @@ void Worker::WorkerCoreProcessor() {
       PrintTimeStamp("local_done %lu\n", job->id().elem());
       process_jobs = true;
       NotifyLocalJobDone(job);
-      if (local_job_done_list.empty()) {
-        worker_manager_->GetLocalJobDoneList(&local_job_done_list);
-      }
       if (--quota <= 0) {
         break;
       }

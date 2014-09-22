@@ -137,8 +137,7 @@ bool WorkerManager::FinishJob(Job* job) {
 
 bool WorkerManager::GetLocalJobDoneList(JobList* buffer) {
   pthread_mutex_lock(&local_job_done_list_lock_);
-  local_job_done_list_.swap(*buffer);
-  local_job_done_list_.clear();
+  buffer->splice(buffer->end(), local_job_done_list_);
   pthread_mutex_unlock(&local_job_done_list_lock_);
   return true;
 }
