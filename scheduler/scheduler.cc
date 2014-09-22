@@ -145,7 +145,7 @@ void Scheduler::SchedulerCoreProcessor() {
     RegisterPendingWorkers();
 
     log_process_.StartTimer();
-    ProcessQueuedSchedulerCommands();
+    size_t command_num = ProcessQueuedSchedulerCommands();
     log_process_.StopTimer();
 
     log_assign_.StartTimer();
@@ -159,14 +159,15 @@ void Scheduler::SchedulerCoreProcessor() {
     log_.log_StopTimer();
     if (log_.timer() >= .001) {
       char buff[LOG_MAX_BUFF_SIZE];
-      snprintf(buff, sizeof(buff), "scheduler loop: %2.5lf p: %2.5lf a: %2.5lf time: %2.2lf.",
-          log_.timer(), log_process_.timer(), log_assign_.timer(), log_.GetTime());
+      snprintf(buff, sizeof(buff), "scheduler loop: %2.5lf p: %2.5lf c: %5.0lu a: %2.5lf time: %2.2lf.", // NOLINT
+          log_.timer(), log_process_.timer(), command_num, log_assign_.timer(), log_.GetTime());
       log_.log_WriteToOutputStream(std::string(buff), LOG_INFO);
     }
   }
 }
 
-void Scheduler::ProcessQueuedSchedulerCommands() {
+size_t Scheduler::ProcessQueuedSchedulerCommands() {
+  size_t count = 0;
   SchedulerCommandList storage;
   if (server_->ReceiveCommands(&storage, max_command_process_num_)) {
     SchedulerCommandList::iterator iter = storage.begin();
@@ -175,8 +176,10 @@ void Scheduler::ProcessQueuedSchedulerCommands() {
       dbg(DBG_SCHED, "Processing command: %s.\n", comm->ToString().c_str());
       ProcessSchedulerCommand(comm);
       delete comm;
+      ++count;
     }
   }
+  return count;
 }
 
 void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {

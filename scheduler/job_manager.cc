@@ -559,8 +559,10 @@ void JobManager::UpdateBeforeSet(IDSet<job_id_t>* before_set) {
       } else {
         ++it;
       }
+    } else if (IDMaker::SchedulerProducedJobID(id)) {
+      ++it;
     } else {
-      // if the job is not in the table it is already done and removed.
+      // if the job is not in the table or a copy/create job it is already done and removed.
       before_set->remove(it++);
     }
   }
