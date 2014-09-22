@@ -157,10 +157,10 @@ void Scheduler::SchedulerCoreProcessor() {
     TerminationProcedure();
 
     log_.log_StopTimer();
-    if (log_.timer() >= .001) {
+    if ((log_.timer() >= .001) || (command_num > 0)) {
       char buff[LOG_MAX_BUFF_SIZE];
-      snprintf(buff, sizeof(buff), "scheduler loop: %2.5lf p: %2.5lf c: %5.0lu a: %2.5lf time: %2.2lf.", // NOLINT
-          log_.timer(), log_process_.timer(), command_num, log_assign_.timer(), log_.GetTime());
+      snprintf(buff, sizeof(buff), "%10.9lf l: %2.5lf p: %2.5lf c: %5.0lu a: %2.5lf.",
+          Log::GetRawTime(), log_.timer(), log_process_.timer(), command_num, log_assign_.timer());
       log_.log_WriteToOutputStream(std::string(buff), LOG_INFO);
     }
   }
@@ -215,9 +215,10 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
 
 void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
   char buff[LOG_MAX_BUFF_SIZE];
-  snprintf(buff, sizeof(buff), "%10.9f id: %lu n: %s.",
+
+  snprintf(buff, sizeof(buff), "%10.9f R id: %lu n: %s.",
       Log::GetRawTime(), cm->job_id().elem(), cm->job_name().c_str());
-  log_receive_stamp_.log_WriteToFile(std::string(buff), LOG_INFO);
+  log_receive_stamp_.log_WriteToFile(std::string(buff));
 
   job_manager_->AddComputeJobEntry(cm->job_name(),
                                    cm->job_id().elem(),
@@ -229,6 +230,10 @@ void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
                                    cm->future_job_id().elem(),
                                    cm->sterile(),
                                    cm->params());
+
+  snprintf(buff, sizeof(buff), "%10.9f E id: %lu n: %s.",
+      Log::GetRawTime(), cm->job_id().elem(), cm->job_name().c_str());
+  log_receive_stamp_.log_WriteToFile(std::string(buff));
 }
 
 void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
