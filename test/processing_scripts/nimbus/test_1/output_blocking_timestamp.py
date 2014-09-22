@@ -50,6 +50,9 @@ line = f.readline()
 print "Calculate the unblocking time of each computation job."
 while line:
     job_id, before_set = extract_set(line)
+    if job_id > 10000000000:
+        line = f.readline()
+        continue
     try:
         temp = [finish_dict[i_job][0] for i_job in before_set if not finish_dict[i_job][1]]
         last_compute_timestamp = max(temp) if temp else 0

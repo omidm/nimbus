@@ -42,7 +42,6 @@ for rank in range(1, N+1):
 
     last_timestamp, _, _, _, _, _, _ = break_line(line)
     last_timestamp -= 1e-6
-    history_color = "white"
     ts0, ts1, ts2, ts3, ts4, ts5, ts6 = decompose_time(0, 0, 0, 0, 0, 0)
     while line:
         timestamp, e0, e1, e2, e3, e4, e5 = break_line(line)
@@ -55,7 +54,7 @@ for rank in range(1, N+1):
         s4 += ts4 * (timestamp- last_timestamp)
         s5 += ts5 * (timestamp- last_timestamp)
         s6 += ts6 * (timestamp- last_timestamp)
-        ts0, ts1, ts2, ts3, ts4, ts5, st6 = ns0, ns1, ns2, ns3, ns4, ns5, ns6
+        ts0, ts1, ts2, ts3, ts4, ts5, ts6 = ns0, ns1, ns2, ns3, ns4, ns5, ns6
         last_timestamp = timestamp
 print s0, s1, s2, s3, s4, s5, s6
 print "copy compute cycles {} compute cycles {} worker_block_cores {} scheduler \

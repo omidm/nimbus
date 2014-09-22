@@ -17,16 +17,15 @@ sort_state_file = sys.argv[2]
 prepare_result_file = sys.argv[3]
 
 for rank in range(1, N+1):
-    print rank
-    
+    print "Preparing the data for drawing of worker#{}".format(rank)
     f = open(sort_state_file.format(rank), 'r')
     g = open(prepare_result_file.format(rank), 'w')
 
     line = f.readline()
     timestamp, _, _ = break_line(line)
     last_timestamp = timestamp - 1e-6
-    last_record = (0, 0, 0, 0, 0, 0) 
-    
+    last_record = (0, 0, 0, 0, 0, 0)
+
     ready_jobs = 0
     compute_running_jobs = 0
     non_compute_running_jobs = 0
@@ -39,31 +38,31 @@ for rank in range(1, N+1):
         timestamp, event, job_id = break_line(line)
         line = f.readline()
         if event == "recv":
+            if job_id < 10000000000:
+                continue
             blocking_set[job_id] = 1
             if job_id in blocking_log:
                 blocking_set[job_id] = blocking_log[job_id]
         elif event == "dispatch":
+            if job_id < 10000000000:
+                continue
             try:
                 del blocking_set[job_id]
             except KeyError:
-                print job_id, "not received, but dispatched"
                 break
             ready_jobs += 1
             ready_set.add(job_id)
         elif event == "run":
-            ready_jobs -= 1
-            try:
-                ready_set.remove(job_id)
-            except KeyError:
-                #ready_jobs += 1
-                print job_id, "not dispatched, but ran"
-                #del blocking_set[job_id]
-                break
-            if job_id < 10000000000 :
+            if job_id < 10000000000:
                 non_compute_running_jobs += 1
             else:
+                ready_jobs -= 1
+                try:
+                    ready_set.remove(job_id)
+                except KeyError:
+                    break
                 compute_running_jobs += 1
-            running_set.add(job_id)
+                running_set.add(job_id)
         elif event == "fin":
             # delete at the latest time.
             if job_id in blocking_log:
@@ -72,14 +71,13 @@ for rank in range(1, N+1):
                 non_compute_running_jobs -= 1
             else:
                 compute_running_jobs -= 1
-            try:
-                running_set.remove(job_id)
-            except KeyError:
-                print job_id, "not ran, but done"
-                break
+                try:
+                    running_set.remove(job_id)
+                except KeyError:
+                    break
         elif event == "unblock_io":
             if job_id in blocking_set:
-                blocking_set[job_id] = max(3, blocking_set[job_id]) 
+                blocking_set[job_id] = max(3, blocking_set[job_id])
             else:
                 if job_id in blocking_log:
                     blocking_log[job_id] = max(3, blocking_log[job_id])
@@ -87,13 +85,12 @@ for rank in range(1, N+1):
                     blocking_log[job_id] = 3
         elif event == "unblock_comp":
             if job_id in blocking_set:
-                blocking_set[job_id] = max(2, blocking_set[job_id]) 
+                blocking_set[job_id] = max(2, blocking_set[job_id])
             else:
                 if job_id in blocking_log:
                     blocking_log[job_id] = max(2, blocking_log[job_id])
                 else:
                     blocking_log[job_id] = 2
-                
         else:
             assert false
         if last_timestamp > 0 and timestamp != last_timestamp:
@@ -106,4 +103,3 @@ for rank in range(1, N+1):
                  sum([1 for i in blocking_set if blocking_set[i] == 2]),
                  sum([1 for i in blocking_set if blocking_set[i] == 3]))
     g.close()
-    

@@ -29,7 +29,7 @@ result_file = sys.argv[3]
 blockingtime_file = sys.argv[4]
 
 for rank in range(1, N+1):
-    print rank
+    print "Output state change for worker#{}".format(rank)
 
     g = open(result_file.format(rank), "w")
 
