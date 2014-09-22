@@ -116,6 +116,15 @@ bool WorkerManager::PushJob(Job* job) {
   return true;
 }
 
+bool WorkerManager::PushJobList(std::list<Job*>* job_list) {
+  pthread_mutex_lock(&computation_job_queue_lock_);
+  ready_jobs_count_ += job_list->size();
+  computation_job_list_.splice(computation_job_list_.end(), *job_list);
+  pthread_mutex_unlock(&computation_job_queue_lock_);
+  TriggerScheduling();
+  return true;
+}
+
 bool WorkerManager::FinishJob(Job* job) {
   pthread_mutex_lock(&local_job_done_list_lock_);
   PrintTimeStamp("f",

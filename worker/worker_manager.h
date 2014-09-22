@@ -73,6 +73,7 @@ class WorkerManager {
   Job* NextComputationJobToRun(WorkerThread* worker_thread);
 
   bool PushJob(Job* job);
+  bool PushJobList(std::list<Job*>* job_list);
   bool FinishJob(Job* job);
 
   bool SendCommand(SchedulerCommand* command);

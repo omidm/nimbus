@@ -608,6 +608,7 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
     assert(after_job_vertex != NULL);
     deletion_list.push_back(after_job_vertex);
   }
+  std::list<Job*> job_list;
   for (std::list<WorkerJobVertex*>::iterator iter = deletion_list.begin();
        iter != deletion_list.end();
        ++iter) {
@@ -617,29 +618,21 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
       after_job_vertex->entry()->set_state(WorkerJobEntry::READY);
       assert(after_job_vertex->entry()->get_job() != NULL);
       ResolveDataArray(after_job_vertex->entry()->get_job());
-      // TODO(print_log): dispatch a job, because a
-      // local_job_done/remote_job_done.
       Job* job = after_job_vertex->entry()->get_job();
-      // if (!(dynamic_cast<CreateDataJob*>(job) || // NOLINT
-      //     dynamic_cast<LocalCopyJob*>(job) || // NOLINT
-      //     dynamic_cast<RemoteCopySendJob*>(job) || // NOLINT
-      //     dynamic_cast<RemoteCopyReceiveJob*>(job))) { // NOLINT
-      //   // Is compute job.
       PrintTimeStamp("dispatch_job(job_done) %s %lu %lu\n",
                      job->name().c_str(),
                      job->id().elem(),
                      vertex->entry()->get_job_id());
-      // }
-      int success_flag =
-          worker_manager_->PushJob(after_job_vertex->entry()->get_job());
+      job_list.push_back(after_job_vertex->entry()->get_job());
 #ifndef MUTE_LOG
       double wait_time = timer_.Stop(after_job_vertex->entry()->get_job()->id().elem());
       after_job_vertex->entry()->get_job()->set_wait_time(wait_time);
 #endif  // MUTE_LOG
       after_job_vertex->entry()->set_job(NULL);
-      assert(success_flag);
     }
   }
+  bool success_flag = worker_manager_->PushJobList(&job_list);
+  assert(success_flag);
 }
 
 void Worker::NotifyLocalJobDone(Job* job) {
