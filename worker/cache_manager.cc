@@ -71,9 +71,11 @@ void CacheManager::DoSetUpWrite(CacheVar* cache_var,
                                 GeometricRegion &write_region) {
     DataArray flush;
     pthread_mutex_lock(&cache_lock);
+    BlockPrintTimeStamp("enter");
     while (!cache_var->CheckWritePendingFlag(write_set, write_region)) {
         pthread_cond_wait(&cache_cond, &cache_lock);
     }
+    BlockPrintTimeStamp("leave");
     cache_var->SetUpWrite(write_set, write_region, &flush);
     pthread_mutex_unlock(&cache_lock);
     cache_var->PerformSetUpWrite(write_set, write_region, flush);
@@ -230,11 +232,13 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
 void CacheManager::SyncData(Data *d) {
     CacheObject *co = NULL;
     pthread_mutex_lock(&cache_lock);
+    BlockPrintTimeStamp("enter");
     while (d->pending_flag() ||
            (d->dirty_cache_object()
             && d->dirty_cache_object()->pending_flag())) {
        pthread_cond_wait(&cache_cond, &cache_lock);
     }
+    BlockPrintTimeStamp("leave");
     co = d->dirty_cache_object();
     if (!co) {
         pthread_mutex_unlock(&cache_lock);
@@ -259,9 +263,11 @@ void CacheManager::SyncData(Data *d) {
  */
 void CacheManager::InvalidateMappings(Data *d) {
     pthread_mutex_lock(&cache_lock);
+    BlockPrintTimeStamp("enter");
     while (d->pending_flag()) {
         pthread_cond_wait(&cache_cond, &cache_lock);
     }
+    BlockPrintTimeStamp("leave");
     d->InvalidateMappings();
     pthread_mutex_unlock(&cache_lock);
 }

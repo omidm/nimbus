@@ -215,9 +215,9 @@ void WorkerManager::ScheduleComputationJobs() {
       worker_thread->next_job_to_run =
           computation_job_list_.front();
       computation_job_list_.pop_front();
-      PrintTimeStamp("i",
-                     worker_thread->next_job_to_run->name().c_str(),
-                     worker_thread->next_job_to_run->id().elem());
+      // PrintTimeStamp("i",
+      //                worker_thread->next_job_to_run->name().c_str(),
+      //                worker_thread->next_job_to_run->id().elem());
       // dbg(DBG_WORKER_BD, DBG_WORKER_BD_S"Job(name %s, #%d) dispatched.\n",
       //     worker_thread->next_job_to_run->name().c_str(),
       //     worker_thread->next_job_to_run->id().elem());
