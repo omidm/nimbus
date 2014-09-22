@@ -107,7 +107,7 @@ void CacheObject::AcquireAccess(cache::CacheAccess access) {
  */
 void CacheObject::ReleaseAccessInternal() {
     users_--;
-    if (users_ != 0) {
+    if (users_ != 0 && access_ == cache::EXCLUSIVE) {
         dbg(DBG_ERROR, "Incocistency in number of users using cache object!");
         exit(-1);
     }

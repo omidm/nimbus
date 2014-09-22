@@ -78,6 +78,14 @@ public:
     array1.array.Exchange(array2.array);
     exchange(array1.domain,array2.domain);exchange(array1.counts,array2.counts);array1.Calculate_Acceleration_Constants();array2.Calculate_Acceleration_Constants();}
 
+    static void Nimbus_Copy_Arrays(ARRAY_VIEW& dest,ARRAY_VIEW& src)
+    {STATIC_ASSERT(!IS_CONST<T>::value);
+    dest.array.Nimbus_Copy(src.array);
+    nimbus_copy(dest.domain,src.domain);
+    nimbus_copy(dest.counts,src.counts);
+    dest.Calculate_Acceleration_Constants();
+    src.Calculate_Acceleration_Constants();}
+
     ARRAY_VIEW<typename REMOVE_CONST<T>::TYPE>& Const_Cast() const // return reference to allow Exchange
     {return reinterpret_cast<ARRAY_VIEW<typename REMOVE_CONST<T>::TYPE>&>(const_cast<ARRAY_VIEW&>(*this));}
 

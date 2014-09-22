@@ -141,7 +141,7 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     cv->write_region_ = write_region;
     cv->WriteFromCache(flush, write_region_old);
     for (size_t i = 0; i < sync.size(); ++i) {
-        assert(sync_co[i]->IsAvailable(cache::EXCLUSIVE));
+        // assert(sync_co[i]->IsAvailable(cache::EXCLUSIVE));
         sync_co[i]->PullData(sync[i]);
     }
     cv->ReadToCache(diff, read_region);
@@ -211,7 +211,7 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
         DataArray &sync_t = sync_sets[t];
         CacheObjects &sync_co_t = sync_co_sets[t];
         for (size_t i = 0; i < sync_t.size(); ++i) {
-            assert(sync_co_t[i]->IsAvailable(cache::EXCLUSIVE));
+            // assert(sync_co_t[i]->IsAvailable(cache::EXCLUSIVE));
             sync_co_t[i]->PullData(sync_t[i]);
         }
     }
@@ -230,7 +230,7 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
 void CacheManager::SyncData(Data *d) {
     CacheObject *co = NULL;
     pthread_mutex_lock(&cache_lock);
-    while (d->pending_flag() ||
+    while (d->pending_flag() != 0 ||
            (d->dirty_cache_object()
             && d->dirty_cache_object()->pending_flag())) {
        pthread_cond_wait(&cache_cond, &cache_lock);
@@ -240,15 +240,15 @@ void CacheManager::SyncData(Data *d) {
         pthread_mutex_unlock(&cache_lock);
         return;
     }
-    assert(co->IsAvailable(cache::EXCLUSIVE));
-    d->set_pending_flag();
+    // assert(co->IsAvailable(cache::EXCLUSIVE));
+    d->set_pending_flag(Data::WRITE);
     co->set_pending_flag();
     d->ClearDirtyMappings();
     pthread_mutex_unlock(&cache_lock);
 
     co->PullData(d);
     pthread_mutex_lock(&cache_lock);
-    d->unset_pending_flag();
+    d->unset_pending_flag(Data::WRITE);
     co->unset_pending_flag();
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
@@ -259,7 +259,7 @@ void CacheManager::SyncData(Data *d) {
  */
 void CacheManager::InvalidateMappings(Data *d) {
     pthread_mutex_lock(&cache_lock);
-    while (d->pending_flag()) {
+    while (d->pending_flag() != 0) {
         pthread_cond_wait(&cache_cond, &cache_lock);
     }
     d->InvalidateMappings();

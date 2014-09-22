@@ -135,6 +135,12 @@ public:
 
     static void Exchange_Arrays(ARRAY& a,ARRAY& b)
     {BASE::Exchange_Arrays(a,b);BASE::Exchange_Arrays(a.u2,b.u2);a.Initialize();b.Initialize();}
+
+    static void Nimbus_Copy_Arrays(ARRAY& dest, ARRAY& src)
+    {BASE::Nimbus_Copy_Arrays(dest,src);
+    BASE::Nimbus_Copy_Arrays(dest.u2,src.u2);
+    dest.Initialize();
+    src.Initialize();}
     
     template<class RW> void Read(std::istream& input)
     {BASE::Read(input);Read_Binary<RW>(input,u2);}

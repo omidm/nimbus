@@ -287,6 +287,15 @@ namespace PhysBAM {
                     T_ARRAY_VIEW::Exchange_Arrays(a.data(i), b.data(i));
             }
 
+	    /* Rather than swap internal pointers, copy internal pointers of array a into array b. */
+	    static void Nimbus_Copy_Arrays(ARRAY& dest, ARRAY& src) {
+	        nimbus_copy(dest.domain_indices, src.domain_indices);
+		nimbus_copy(dest.base_pointer, src.base_pointer);
+		nimbus_copy(dest.buffer_size, src.buffer_size);
+		for (int i = 1; i <= dimension; i++)
+		    T_ARRAY_VIEW::Nimbus_Copy_Arrays(dest.data(i), src.data(i));
+	    }
+
             template<class T_INDICES>
                 INDIRECT_ARRAY<ARRAY, T_INDICES&> Subset(const T_INDICES& indices) {
                     return INDIRECT_ARRAY<ARRAY, T_INDICES&>(*this, indices);

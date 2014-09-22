@@ -725,8 +725,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     nimbus::CacheManager *cm = job->GetCacheManager();
     // mac velocities
     if (cache_fv) {
-        T_FACE_ARRAY *fv = cache_fv->data();
-        T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
+	T_FACE_ARRAY::Nimbus_Copy_Arrays(face_velocities, t_face_dummy);
         nimbus::DataArray write;
         cm->ReleaseAccess(cache_fv);
         cache_fv = NULL;
@@ -734,8 +733,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 
     // mac velocities ghost
     if (cache_fvg) {
-        T_FACE_ARRAY *fvg = cache_fvg->data();
-        T_FACE_ARRAY::Exchange_Arrays(*fvg, face_velocities_ghost);
+        T_FACE_ARRAY::Nimbus_Copy_Arrays(face_velocities_ghost, t_face_dummy);
         nimbus::DataArray write;
         cm->ReleaseAccess(cache_fvg);
         cache_fvg = NULL;
@@ -748,20 +746,17 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         application::GetWriteData(*job, APP_PHI, da, &write);
       // levelset
       if (cache_phi3) {
-          T_SCALAR_ARRAY *phi3 = cache_phi3->data();
-          T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
+	  T_SCALAR_ARRAY::Nimbus_Copy_Arrays(particle_levelset.levelset.phi, t_scalar_dummy);
           cm->ReleaseAccess(cache_phi3);
           cache_phi3 = NULL;
       }
       if (cache_phi7) {
-          T_SCALAR_ARRAY *phi7 = cache_phi7->data();
-          T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
+	  T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_seven, t_scalar_dummy);
           cm->ReleaseAccess(cache_phi7);
           cache_phi7 = NULL;
       }
       if (cache_phi8) {
-          T_SCALAR_ARRAY *phi8 = cache_phi8->data();
-          T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
+	  T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_eight, t_scalar_dummy);
           cm->ReleaseAccess(cache_phi8);
           cache_phi8 = NULL;
       }
@@ -820,8 +815,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 
     // psi_d.
     if (cache_psi_d) {
-        BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
-        BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
+        BOOL_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->psi_D, b_scalar_dummy);
         nimbus::DataArray write;
         cm->ReleaseAccess(cache_psi_d);
         cache_psi_d = NULL;
@@ -829,8 +823,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 
     // psi_n.
     if (cache_psi_n) {
-        BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
-        BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
+        BOOL_FACE_ARRAY::Nimbus_Copy_Arrays(projection.laplace->psi_N, b_face_dummy);
         nimbus::DataArray write;
         cm->ReleaseAccess(cache_psi_n);
         cache_psi_n = NULL;
@@ -838,24 +831,21 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 
     // pressure.
     if (cache_pressure) {
-      T_SCALAR_ARRAY* pressure = cache_pressure->data();
-      T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection.p);
-      cm->ReleaseAccess(cache_pressure);
-      cache_pressure = NULL;
+        T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.p, t_scalar_dummy);
+        cm->ReleaseAccess(cache_pressure);
+	cache_pressure = NULL;
     }
     // colors.
     if (cache_colors) {
       typedef typename PhysBAM::ARRAY<int, TV_INT> INT_SCALAR_ARRAY;
-      INT_SCALAR_ARRAY* colors = cache_colors->data();
-      INT_SCALAR_ARRAY::Exchange_Arrays(
-          *colors, projection.laplace->filled_region_colors);
+      INT_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->filled_region_colors,
+          i_scalar_dummy);
       cm->ReleaseAccess(cache_colors);
       cache_colors = NULL;
     }
     // divergence.
     if (cache_divergence) {
-      T_SCALAR_ARRAY* divergence = cache_divergence->data();
-      T_SCALAR_ARRAY::Exchange_Arrays(*divergence, projection.laplace->f);
+      T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->f, t_scalar_dummy);
       cm->ReleaseAccess(cache_divergence);
       cache_divergence = NULL;
     }
@@ -893,7 +883,9 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
       T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
       T_SCALAR_ARRAY::Exchange_Arrays(*index_c2m,
-          laplace_solver_wrapper.cell_index_to_matrix_index);
+         laplace_solver_wrapper.cell_index_to_matrix_index);
+      // T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
+      //     laplace_solver_wrapper.cell_index_to_matrix_index, i_scalar_dummy);
       cm->ReleaseAccess(cache_index_c2m);
       cache_index_c2m = NULL;
     }
@@ -1224,14 +1216,14 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (cache_fv)
     {
         T_FACE_ARRAY *fv = cache_fv->data();
-        T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
+	T_FACE_ARRAY::Nimbus_Copy_Arrays(face_velocities, *fv);
     }
 
     // mac velocities ghost
     if (cache_fvg)
     {
         T_FACE_ARRAY *fvg = cache_fvg->data();
-        T_FACE_ARRAY::Exchange_Arrays(*fvg, face_velocities_ghost);
+	T_FACE_ARRAY::Nimbus_Copy_Arrays(face_velocities_ghost, *fvg);
     }
 
     // particle leveset quantities
@@ -1241,17 +1233,17 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (cache_phi3)
     {
         T_SCALAR_ARRAY *phi3 = cache_phi3->data();
-        T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
+	T_SCALAR_ARRAY::Nimbus_Copy_Arrays(particle_levelset.levelset.phi, *phi3);
     }
     if (cache_phi7)
     {
         T_SCALAR_ARRAY *phi7 = cache_phi7->data();
-        T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
+	T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_seven, *phi7); 
     }
     if (cache_phi8)
     {
         T_SCALAR_ARRAY *phi8 = cache_phi8->data();
-        T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
+	T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_eight, *phi8); 
     }
 
     // last unique particle id
@@ -1290,32 +1282,32 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (cache_psi_d)
     {
         BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
-        BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
+	BOOL_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->psi_D, *psi_d);
     }
 
     // psi_n.
     if (cache_psi_n)
     {
         BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
-        BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
+        BOOL_FACE_ARRAY::Nimbus_Copy_Arrays(projection.laplace->psi_N, *psi_n);
     }
 
     // pressure.
     if (cache_pressure) {
       T_SCALAR_ARRAY* pressure = cache_pressure->data();
-      T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection.p);
+      T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.p, *pressure);
     }
     // colors.
     if (cache_colors) {
       typedef typename PhysBAM::ARRAY<int, TV_INT> INT_SCALAR_ARRAY;
       INT_SCALAR_ARRAY* colors = cache_colors->data();
-      INT_SCALAR_ARRAY::Exchange_Arrays(
-          *colors, projection.laplace->filled_region_colors);
+      INT_SCALAR_ARRAY::Nimbus_Copy_Arrays(
+          projection.laplace->filled_region_colors, *colors);
     }
     // divergence.
     if (cache_divergence) {
       T_SCALAR_ARRAY* divergence = cache_divergence->data();
-      T_SCALAR_ARRAY::Exchange_Arrays(*divergence, projection.laplace->f);
+      T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->f, *divergence);
     }
 
     typedef nimbus::Data Data;
