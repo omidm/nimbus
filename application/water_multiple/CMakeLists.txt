@@ -16,6 +16,9 @@ PROJECT(${PROJECT_NAME})
 #Set Nimbus root and prtobuf files directory
 SET(NIMBUS_ROOT ${PROJECT_SOURCE_DIR}/../..)
 
+# Remove all the DBG lines during compile time.
+# add_definitions(-D_NIMBUS_NO_DBG)
+
 include_directories(${NIMBUS_ROOT})
 LINK_DIRECTORIES(${NIMBUS_ROOT})
 
