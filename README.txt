@@ -56,3 +56,16 @@ Nimbus Installation Dependencies - MacOSX
   (you may need to install  MacPorts first)
   
 
+
+How to Remove DBG in compile time:
+
+1. uncomment -D_NIMBUS_NO_DBG from Makeinclude
+
+2. uncomment add_definitions(-D_NIMBUS_NO_DBG)
+   from application/water_multiple/CMakeLists.txt
+
+3. comment out ADD_DEFINITIONS (-Werror)
+   from application/physbam-lib/Scripts/CMake/Compiler_Flags.cmake
+
+4. make sure that you make clean-hard for ninmus library,
+   and make clean for rest.
