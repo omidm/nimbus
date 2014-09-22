@@ -37,5 +37,16 @@ template<class T, class ENABLE=void> struct NIMBUS_COPY_HELPER
 template<class T> void nimbus_copy(T& dest,T& src)
 {NIMBUS_COPY_HELPER<T>::Nimbus_Copy(dest,src);}
 
+template<class T, class ENABLE=void> struct NIMBUS_CLEAR_HELPER
+{
+    STATIC_ASSERT(!IS_ARRAY<T>::value);
+
+    static void Nimbus_Clear(T& a)
+    {a=0;}
+ };
+
+ template<class T> void nimbus_clear(T& a)
+ {NIMBUS_CLEAR_HELPER<T>::Nimbus_Clear(a);}
+
 }
 #endif

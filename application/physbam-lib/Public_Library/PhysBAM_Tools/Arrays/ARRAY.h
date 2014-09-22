@@ -214,6 +214,10 @@ private:
     static void nimbus_copy(T2& dest,T2& src)
     {dest=src;}
 
+    template<class T2>
+    static void nimbus_clear(T2& a)
+    {a=0;}
+
 public:
     void Exchange(ARRAY<T,ID>& other)
     {STATIC_ASSERT(!IS_CONST<T>::value); // make ARRAY_VIEW<const T> equivalent to const ARRAY_VIEW<const T>
@@ -225,11 +229,19 @@ public:
     nimbus_copy(base_pointer,src.base_pointer);
     nimbus_copy(buffer_size, src.buffer_size);}
 
+    void Nimbus_Clear() 
+    {nimbus_clear(m);
+    nimbus_clear(base_pointer);  
+    nimbus_clear(buffer_size);}
+
     static void Exchange_Arrays(ARRAY& a,ARRAY& b)
     {a.Exchange(b);}
 
     static void Nimbus_Copy_Arrays(ARRAY& dest, ARRAY& src)
     {dest.Nimbus_Copy(src);}
+
+    static void Nimbus_Clear_Array(ARRAY& a) 
+    {a.Nimbus_Clear();}
 
 //#####################################################################
 };

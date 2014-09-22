@@ -188,6 +188,12 @@ public:
     src.Calculate_Acceleration_Constants();
     dest.hash_code = src.hash_code;}
 
+    static void Nimbus_Clear_Array(ARRAY& a)
+    {a.array.Nimbus_Clear();
+    nimbus_clear(a.domain);
+    nimbus_clear(a.counts);
+    a.hash_code = 0;}
+
     void Shift_Domain_Indices(TV_INT& shift)
     {domain.min_corner+=shift;domain.max_corner+=shift;Calculate_Acceleration_Constants();}
 //#####################################################################

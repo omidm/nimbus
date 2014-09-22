@@ -86,6 +86,11 @@ public:
     dest.Calculate_Acceleration_Constants();
     src.Calculate_Acceleration_Constants();}
 
+    static void Nimbus_Clear_Array(ARRAY_VIEW& a)
+    {a.array.Nimbus_Clear();
+    nimbus_clear(a.domain);
+    nimbus_clear(a.counts);}
+
     ARRAY_VIEW<typename REMOVE_CONST<T>::TYPE>& Const_Cast() const // return reference to allow Exchange
     {return reinterpret_cast<ARRAY_VIEW<typename REMOVE_CONST<T>::TYPE>&>(const_cast<ARRAY_VIEW&>(*this));}
 
