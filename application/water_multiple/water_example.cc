@@ -865,6 +865,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       T_SCALAR_ARRAY* divergence = cache_divergence->data();
       T_SCALAR_ARRAY::Nimbus_Copy_Arrays(*divergence, projection.laplace->f);
       T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->f, t_scalar_dummy);
+      T_SCALAR_ARRAY* divergence = cache_divergence->data();
+      T_SCALAR_ARRAY::Nimbus_Copy_Arrays(*divergence, projection.laplace->f);
       cm->ReleaseAccess(cache_divergence);
       cache_divergence = NULL;
     }
@@ -902,7 +904,11 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
       T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
       T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
+<<<<<<< HEAD
 	  *index_c2m, laplace_solver_wrapper.cell_index_to_matrix_index);
+=======
+          *index_c2m, laplace_solver_wrapper.cell_index_to_matrix_index);
+>>>>>>> 59fbf72... adding double copy in saving, not completed
       T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
           laplace_solver_wrapper.cell_index_to_matrix_index, i_scalar_dummy);
       cm->ReleaseAccess(cache_index_c2m);

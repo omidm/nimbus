@@ -39,6 +39,11 @@
  */
 
 #include <shared/profiler_malloc.h>
+#ifdef __MACH__
+#include <malloc/malloc.h>
+#else
+#include <malloc.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <dlfcn.h>
@@ -47,22 +52,46 @@
 #include <string.h>
 
 namespace nimbus {
-  size_t ProfilerMalloc::alloc_ = 0;
-  ProfilerMalloc::MallocMap *ProfilerMalloc::alloc_map_ = NULL;
-  ProfilerMalloc::ThreadMap *ProfilerMalloc::thread_alloc_map_ = NULL;
-  bool ProfilerMalloc::init_ = false;
-  bool ProfilerMalloc::map_include_ = false;
-  bool ProfilerMalloc::enabled_ = false;
+  __thread size_t curr_alloc = 0;
+  __thread size_t max_alloc = 0;
+  __thread size_t base_alloc = 0;
 
-  /* Static recursive mutex initialization: 
-   *   PTHREAD_RECURSIVE_MUTEX_INITIALIZER is defined on Mac OS X 10.7 or later
-   *   PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP is defined on Linux systems only
-   */
+  void ProfilerMalloc::AddPointerToThreadLocalData(void *ptr, size_t size) {
+    curr_alloc += size;
+    if (curr_alloc > max_alloc) {
+      max_alloc = curr_alloc;
+    }
+  }
+
+  void ProfilerMalloc::RemovePointerFromThreadLocalData(void *ptr) {
 #ifdef __MACH__
-  static pthread_mutex_t mutex_ = PTHREAD_RECURSIVE_MUTEX_INITIALIZER;
+    size_t size = malloc_size(ptr);
 #else
-  static pthread_mutex_t mutex_ = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+    size_t size = malloc_usable_size(ptr);
 #endif
+    if (size < curr_alloc) {
+      curr_alloc -= size;
+    } else {
+      curr_alloc = 0;
+    }
+  }
+
+  void ProfilerMalloc::ResetBaseAlloc() {
+    base_alloc = curr_alloc;
+    max_alloc = curr_alloc;
+  }
+
+  size_t ProfilerMalloc::GetMaxAlloc() {
+    return max_alloc - base_alloc;
+  }
+
+  size_t ProfilerMalloc::GetCurrAlloc() {
+    return curr_alloc;
+  }
+
+  size_t ProfilerMalloc::GetBaseAlloc() {
+    return base_alloc;
+  }
 
   void *ProfilerMalloc::p_malloc(size_t size) {
     static void *(*mallocp)(size_t size) = NULL;
@@ -78,31 +107,7 @@ namespace nimbus {
     }
 
     ptr = mallocp(size);
-
-    pthread_mutex_lock(&mutex_);
-    if (!ProfilerMalloc::IsEnabled()) {
-      pthread_mutex_unlock(&mutex_);
-      return ptr;
-    }
-    pthread_mutex_unlock(&mutex_);
-
-    if (!ProfilerMalloc::IsEnabledTid(pthread_self())) {
-      return ptr;
-    }
-
-    pthread_mutex_lock(&mutex_);
-    if (ProfilerMalloc::IsMapInclude()) {
-      alloc_ += size;
-      ProfilerMalloc::InsertAllocPointer(ptr, size);
-      // pthread_mutex_unlock(&mutex_);
-      ProfilerMalloc::IncreaseAlloc(ptr, size);
-      pthread_mutex_unlock(&mutex_);
-    } else {
-      pthread_mutex_unlock(&mutex_);
-    }
-
-    // printf("[ANDREW DEBUG] Alloc: %zd\n", size);
-
+    ProfilerMalloc::AddPointerToThreadLocalData(ptr, size);
     return ptr;
   }
 
@@ -117,237 +122,8 @@ namespace nimbus {
         exit(1);
       }
     }
-
-    pthread_mutex_lock(&mutex_);
-    if (!ProfilerMalloc::IsEnabled()) {
-      freep(ptr);
-      pthread_mutex_unlock(&mutex_);
-      return;
-    }
-    pthread_mutex_unlock(&mutex_);
-
-    if (!ProfilerMalloc::IsEnabledTid(pthread_self())) {
-      freep(ptr);
-      return;
-    }
-
-    pthread_mutex_lock(&mutex_);
-    size_t size = ProfilerMalloc::AllocSize(ptr);
-    if (size > 0) {
-      alloc_ -= size;
-      ProfilerMalloc::DeleteAllocPointer(ptr);
-      // pthread_mutex_unlock(&mutex_);
-      ProfilerMalloc::DecreaseAlloc(ptr, size);
-      pthread_mutex_unlock(&mutex_);
-    } else {
-      pthread_mutex_unlock(&mutex_);
-    }
+    ProfilerMalloc::RemovePointerFromThreadLocalData(ptr);
     freep(ptr);
-  }
-
-  bool ProfilerMalloc::IsInit() {
-    return init_;
-  }
-
-  bool ProfilerMalloc::IsMapInclude() {
-    return map_include_;
-  }
-
-  void ProfilerMalloc::Initialize() {
-    init_ = true;
-    alloc_map_ = new MallocMap;
-    thread_alloc_map_ = new ThreadMap;
-    map_include_ = true;
-  }
-
-  size_t ProfilerMalloc::CurrentAlloc() {
-    return alloc_;
-  }
-
-  void ProfilerMalloc::IncreaseAlloc(void *ptr, size_t size) {
-    pthread_t tid = pthread_self();
-    /* Statistics are only maintained for threads that have been registered with the profiler. */
-    if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
-      ThreadAllocState& state = (*thread_alloc_map_)[tid];
-      state.num_allocs++;
-      // printf("Ptr: %p, Curr Alloc: %zd, New Alloc: %zd, Sum: %zd\n", ptr,
-      //       state.curr_alloc, size, state.curr_alloc + size);
-      assert(state.curr_alloc + size >= size);
-      state.curr_alloc +=size;
-      if (state.curr_alloc > state.max_alloc) {
-        state.max_alloc = state.curr_alloc;
-      }
-    }
-  }
-
-  void ProfilerMalloc::DecreaseAlloc(void *ptr, size_t size) {
-    pthread_t tid = pthread_self();
-    if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
-      ThreadAllocState& state = (*thread_alloc_map_)[tid];
-      state.num_frees++;
-      // printf("Ptr: %p, Curr Alloc: %zd, Delete Alloc: %zd, Sum: %zd\n", ptr,
-      //       state.curr_alloc, size, state.curr_alloc - size);
-      assert(state.curr_alloc - size <= state.curr_alloc);
-      state.curr_alloc -=size;
-    }
-  }
-
-  void ProfilerMalloc::InsertAllocPointer(void *ptr, size_t size) {
-    /* Lock should be held prior to call. */
-    map_include_ = false;
-    if (alloc_map_ != NULL) {
-      /*
-      if (alloc_map_->find(ptr) != alloc_map_->end()) {
-        printf("*****[ANDREW DEBUG] pointer existed with size: %zd, inserting %zd\n",
-               (*alloc_map_)[ptr], size);
-      }
-      */
-      (*alloc_map_)[ptr] = size;
-    }
-    map_include_ = true;
-  }
-
-  void ProfilerMalloc::DeleteAllocPointer(void *ptr) {
-    /* Lock should be held prior to call. */
-    if (alloc_map_ != NULL && alloc_map_->find(ptr) != alloc_map_->end()) {
-      alloc_map_->erase(ptr);
-    }
-  }
-
-  size_t ProfilerMalloc::AllocSize(void *ptr) {
-    /* Lock should be held prior to call. */
-    if (alloc_map_ != NULL && alloc_map_->find(ptr) != alloc_map_->end()) {
-      size_t size = (*alloc_map_)[ptr];
-      assert(size >= 0);
-      return size;
-    } else {
-      return 0;
-    }
-  }
-
-  size_t ProfilerMalloc::AllocMax() {
-    pthread_t tid = pthread_self();
-    return AllocMaxTid(tid);
-  }
-
-  size_t ProfilerMalloc::AllocMaxTid(pthread_t tid) {
-    if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
-      ThreadAllocState& state = (*thread_alloc_map_)[tid];
-      return state.max_alloc;
-    } else {
-      return 0;
-    }
-  }
-
-  size_t ProfilerMalloc::AllocCurr() {
-    pthread_t tid = pthread_self();
-    if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
-      ThreadAllocState& state = (*thread_alloc_map_)[tid];
-      return state.curr_alloc;
-    } else {
-      return 0;
-    }
-  }
-
-  uint64_t ProfilerMalloc::NumAllocs() {
-    pthread_t tid = pthread_self();
-    if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
-      ThreadAllocState& state = (*thread_alloc_map_)[tid];
-      return state.num_allocs;
-    } else {
-      return 0;
-    }
-  }
-
-  uint64_t ProfilerMalloc::NumFrees() {
-    pthread_t tid = pthread_self();
-    if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
-      ThreadAllocState& state = (*thread_alloc_map_)[tid];
-      return state.num_frees;
-    } else {
-      return 0;
-    }
-  }
-
-  /* Only the main worker thread should call exit. All other threads should have
-     terminated at this time. */
-  void ProfilerMalloc::Exit() {
-    pthread_mutex_lock(&mutex_);
-    delete thread_alloc_map_;
-    thread_alloc_map_ = NULL;
-    delete alloc_map_;
-    alloc_map_ = NULL;
-    enabled_ = false;
-    pthread_mutex_unlock(&mutex_);
-  }
-
-  /* Only the main worker thread should call enable. */
-  void ProfilerMalloc::Enable() {
-    pthread_mutex_lock(&mutex_);
-    enabled_ = true;
-    pthread_mutex_unlock(&mutex_);
-  }
-
-  void ProfilerMalloc::EnableTid(pthread_t tid) {
-    if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
-      ThreadAllocState& state = (*thread_alloc_map_)[tid];
-      state.on = true;
-    }
-  }
-
-  /* Only the main worker thread should call disable. */
-  void ProfilerMalloc::Disable() {
-    pthread_mutex_lock(&mutex_);
-    enabled_ = false;
-    pthread_mutex_unlock(&mutex_);
-  }
-
-  void ProfilerMalloc::DisableTid(pthread_t tid) {
-    if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
-      ThreadAllocState& state = (*thread_alloc_map_)[tid];
-      state.on = false;
-    }
-  }
-
-  bool ProfilerMalloc::IsEnabled() {
-    return enabled_;
-  }
-
-  bool ProfilerMalloc::IsEnabledTid(pthread_t tid) {
-    if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
-      ThreadAllocState& state = (*thread_alloc_map_)[tid];
-      return state.on;
-    } else {
-      return false;
-    }
-  }
-
-  void ProfilerMalloc::ResetThreadStatistics() {
-    pthread_t tid = pthread_self();
-    ResetThreadStatisticsByTid(tid);
-  }
-
-  void ProfilerMalloc::ResetThreadStatisticsByTid(pthread_t tid) {
-    if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
-      ThreadAllocState& state = (*thread_alloc_map_)[tid];
-      // state.curr_alloc = 0;
-      state.max_alloc = 0;
-      state.num_allocs = 0;
-      state.num_frees = 0;
-    }
-  }
-
-  /* Worker thread should register tids for threads in the thread pool. */
-  void ProfilerMalloc::RegisterThreads(std::vector<pthread_t> tids) {
-    pthread_mutex_lock(&mutex_);
-    ProfilerMalloc::Initialize();
-    assert(thread_alloc_map_ != NULL);
-    for (std::vector<pthread_t>::iterator tid = tids.begin(); tid != tids.end(); ++tid) {
-      ThreadAllocState& state = (*thread_alloc_map_)[*tid];
-      state.on = true;
-    }
-    enabled_ = true;
-    pthread_mutex_unlock(&mutex_);
   }
 
 }  // namespace nimbus
