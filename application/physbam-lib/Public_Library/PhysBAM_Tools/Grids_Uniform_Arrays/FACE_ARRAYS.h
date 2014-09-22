@@ -296,6 +296,14 @@ namespace PhysBAM {
 		    T_ARRAY_VIEW::Nimbus_Copy_Arrays(dest.data(i), src.data(i));
 	    }
 
+	    static void Nimbus_Clear_Array(ARRAY& a) {
+	      nimbus_clear(a.domain_indices);
+	      nimbus_clear(a.base_pointer);
+	      nimbus_clear(a.buffer_size);
+	      for (int i = 1; i <= dimension; i++)
+		T_ARRAY_VIEW::Nimbus_Clear_Array(a.data(i));
+	    }
+
             template<class T_INDICES>
                 INDIRECT_ARRAY<ARRAY, T_INDICES&> Subset(const T_INDICES& indices) {
                     return INDIRECT_ARRAY<ARRAY, T_INDICES&>(*this, indices);

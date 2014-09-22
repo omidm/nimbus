@@ -100,6 +100,10 @@ private:
     static void nimbus_copy(T2& dest, T2& src)
     {dest=src;}
 
+    template<class T2>
+    static void nimbus_clear(T2& a)
+    {a=0;}
+
 public:
     void Exchange(ARRAY_VIEW& other)
     {STATIC_ASSERT(!IS_CONST<T>::value); // make ARRAY_VIEW<const T> equivalent to const ARRAY_VIEW<const T>
@@ -109,6 +113,10 @@ public:
     {STATIC_ASSERT(!IS_CONST<T>::value);
     nimbus_copy(m,src.m);
     nimbus_copy(base_pointer,src.base_pointer);}
+
+    void Nimbus_Clear()
+    {nimbus_clear(m);
+    nimbus_clear(base_pointer);}
 
 //#####################################################################
 };

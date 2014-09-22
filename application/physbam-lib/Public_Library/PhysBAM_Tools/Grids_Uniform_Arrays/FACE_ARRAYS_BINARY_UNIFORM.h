@@ -141,6 +141,10 @@ public:
     BASE::Nimbus_Copy_Arrays(dest.u2,src.u2);
     dest.Initialize();
     src.Initialize();}
+
+    static void Nimbus_Clear_Array(ARRAY& a)
+    {BASE::Nimbus_Clear_Array(a);
+    BASE::Nimbus_Clear_Array(a.u2);}
     
     template<class RW> void Read(std::istream& input)
     {BASE::Read(input);Read_Binary<RW>(input,u2);}
