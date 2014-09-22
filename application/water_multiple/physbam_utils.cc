@@ -157,7 +157,7 @@ void GetAppCacheObjects(
             read, array_reg,
             write, array_reg,
             kCacheIndexC2M, array_reg,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache->index_c2m = dynamic_cast<CacheRawGridArray*>(cache_var);
     assert(cache->index_c2m != NULL);
   }
