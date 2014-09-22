@@ -216,7 +216,7 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
 void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
   char buff[LOG_MAX_BUFF_SIZE];
 
-  snprintf(buff, sizeof(buff), "%10.9f R id: %lu n: %s.",
+  snprintf(buff, sizeof(buff), "%10.9f JR id: %lu n: %s.",
       Log::GetRawTime(), cm->job_id().elem(), cm->job_name().c_str());
   log_receive_stamp_.log_WriteToFile(std::string(buff));
 
@@ -231,7 +231,7 @@ void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
                                    cm->sterile(),
                                    cm->params());
 
-  snprintf(buff, sizeof(buff), "%10.9f E id: %lu n: %s.",
+  snprintf(buff, sizeof(buff), "%10.9f JE id: %lu n: %s.",
       Log::GetRawTime(), cm->job_id().elem(), cm->job_name().c_str());
   log_receive_stamp_.log_WriteToFile(std::string(buff));
 }
@@ -306,6 +306,12 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   job_id_t job_id = cm->job_id().elem();
 
+  char buff[LOG_MAX_BUFF_SIZE];
+
+  snprintf(buff, sizeof(buff), "%10.9f DR id: %lu.",
+      Log::GetRawTime(), job_id);
+  log_receive_stamp_.log_WriteToFile(std::string(buff));
+
   if (!id_maker_->SchedulerProducedJobID(job_id)) {
     std::list<SchedulerWorker*> waiting_list;
     after_map_->GetWorkersWaitingOnJob(job_id, &waiting_list);
@@ -325,6 +331,10 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
     load_balancer_->NotifyJobDone(job);
     job_manager_->NotifyJobDone(job);
   }
+
+  snprintf(buff, sizeof(buff), "%10.9f DE id: %lu.",
+      Log::GetRawTime(), job_id);
+  log_receive_stamp_.log_WriteToFile(std::string(buff));
 }
 
 void Scheduler::ProcessTerminateCommand(TerminateCommand* cm) {
