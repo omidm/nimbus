@@ -58,19 +58,14 @@ WorkerThreadMonitor::~WorkerThreadMonitor() {
 void WorkerThreadMonitor::Run() {
   std::ofstream output("worker_state.log");
   int64_t dispatched_computation_job_count_last = 0;
-  int64_t dispatched_fast_job_count_last = 0;
 
   int64_t dispatched_computation_job_count;
-  int64_t dispatched_fast_job_count;
   int idle_computation_threads;
   int64_t ready_job_queue_length;
-  int64_t fast_job_queue_length;
 
   output << "dispatched_computation_job_count "
-      << "dispatched_fast_job_count "
       << "working_computation_thread_num "
       << "ready_job_queue_length "
-      << "fast_job_queue_length "
       << std::endl;
   // int count = 0;
   while (true) {
@@ -89,31 +84,21 @@ void WorkerThreadMonitor::Run() {
 
     dispatched_computation_job_count =
         worker_manager_->dispatched_computation_job_count_;
-    dispatched_fast_job_count =
-        worker_manager_->dispatched_fast_job_count_;
 
     idle_computation_threads = worker_manager_->idle_computation_threads_;
     ready_job_queue_length = worker_manager_->ready_jobs_count_;
-    fast_job_queue_length = worker_manager_->fast_job_list_length_;
 
     output << dispatched_computation_job_count
               - dispatched_computation_job_count_last
            << " "
-           << dispatched_fast_job_count
-              - dispatched_fast_job_count_last
-           << " "
            << worker_manager_->ActiveComputationThreads()
            << " "
            << ready_job_queue_length
-           << " "
-           << fast_job_queue_length
            << std::endl;
     output.flush();
 
     dispatched_computation_job_count_last =
         dispatched_computation_job_count;
-    dispatched_fast_job_count_last =
-        dispatched_fast_job_count;
   }
 }
 

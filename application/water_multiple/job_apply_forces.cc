@@ -72,6 +72,7 @@ void JobApplyForces::Execute(nimbus::Parameter params,
   // Threading settings.
   init_config.use_threading = use_threading();
   init_config.core_quota = core_quota();
+  init_config.use_threading = false;
 
   T dt;
   init_config.set_boundary_condition = false;

@@ -74,8 +74,6 @@ class WorkerManager {
 
   bool PushJob(Job* job);
   bool FinishJob(Job* job);
-  bool PullFastJobs(WorkerThread* worker_thread,
-                    std::list<Job*>* list_buffer);
 
   bool SendCommand(SchedulerCommand* command);
 
@@ -86,18 +84,12 @@ class WorkerManager {
 
   // Configuration for the number of threads used.
   int computation_thread_num;
-  int fast_thread_num;
 
  public:
   // TODO(quhang) Not sure if maintaining such a pointer is good or not.
   Worker* worker_;
 
  private:
-  std::string FindGroupJobName();
-  Job* FindANonThreadedJob();
-  bool IsThreadedJob(const Job& job);
-  bool DispatchJobToComputationThread(WorkerThreadComputation* worker_thread,
-                                      Job* job);
   // Thread scheduling algorithm.
   void ScheduleComputationJobs();
 
@@ -131,15 +123,8 @@ class WorkerManager {
   // Protected by local_job_done_queue_lock_.
   JobList local_job_done_list_;
 
-  pthread_mutex_t fast_job_queue_lock_;
-  pthread_cond_t fast_job_queue_any_cond_;
-  // Protected by fast_job_queue_lock_.
-  std::list<Job*> fast_job_list_;
-  int64_t fast_job_list_length_;
-
   // Measures running states of the worker.
   int64_t dispatched_computation_job_count_;
-  int64_t dispatched_fast_job_count_;
   int idle_computation_threads_;
   int64_t ready_jobs_count_;
 
