@@ -282,7 +282,7 @@ Is_Transpose(const SPARSE_MATRIX_FLAT_NXN<T>& A_transpose,const T tolerance) con
 template<class T> void SPARSE_MATRIX_FLAT_NXN<T>::
 Solve_Forward_Substitution(const VECTOR_ND<T>& b,VECTOR_ND<T>& x,const bool diagonal_is_identity,const bool diagonal_is_inverted) const
 {
-    INT_ITERATOR_THREADED_ALPHA<SPARSE_MATRIX_FLAT_NXN<T> >(1,n,thread_queue).
+    INT_ITERATOR_THREADED_ALPHA<SPARSE_MATRIX_FLAT_NXN<T> >(1,n,NULL).
         template Run<const VECTOR_ND<T>&,VECTOR_ND<T>&,const bool,const bool>
         (*const_cast<SPARSE_MATRIX_FLAT_NXN<T>*>(this),&SPARSE_MATRIX_FLAT_NXN<T>::Solve_Forward_Substitution_Threaded,
          b, x, diagonal_is_identity, diagonal_is_inverted);
@@ -307,7 +307,7 @@ Solve_Forward_Substitution_Threaded(const VECTOR_ND<T>& b,VECTOR_ND<T>& x, const
 template<class T> void SPARSE_MATRIX_FLAT_NXN<T>::
 Solve_Backward_Substitution(const VECTOR_ND<T>& b,VECTOR_ND<T>& x,const bool diagonal_is_identity,const bool diagonal_is_inverted) const
 {
-    INT_ITERATOR_THREADED_ALPHA<SPARSE_MATRIX_FLAT_NXN<T> >(1,n,thread_queue).
+    INT_ITERATOR_THREADED_ALPHA<SPARSE_MATRIX_FLAT_NXN<T> >(1,n,NULL).
         template Run<const VECTOR_ND<T>&,VECTOR_ND<T>&,const bool,const bool>
         (*const_cast<SPARSE_MATRIX_FLAT_NXN<T>*>(this),&SPARSE_MATRIX_FLAT_NXN<T>::Solve_Backward_Substitution_Threaded,
          b, x, diagonal_is_identity, diagonal_is_inverted);

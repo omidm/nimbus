@@ -54,7 +54,7 @@ class JobProjectionStepOne : public nimbus::Job {
                        const nimbus::DataArray& da);
   virtual nimbus::Job* Clone();
   virtual bool SupportMultiThread() const {
-    return true;
+    return false;
   }
 };
 
