@@ -111,7 +111,9 @@ void ProjectionDriver::LocalInitialize() {
   VECTOR_ND<T>& temp = projection_data.temp;
   VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
   // Initializes vector B and local residual.
+  // A.thread_queue = thread_queue;
   A.Times(x, temp);
+  // A.thread_queue = NULL;
   b_interior -= temp_interior;
   projection_data.local_residual = b_interior.Max_Abs();
   // Calculate matrix C.
@@ -167,9 +169,10 @@ void ProjectionDriver::DoPrecondition() {
   VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
   // Time consuming part.
   // Multi-threaded introduced.
-  A.C->thread_queue = thread_queue;
+  // A.C->thread_queue = thread_queue;
   A.C->Solve_Forward_Substitution(b_interior, temp_interior, true);
   A.C->Solve_Backward_Substitution(temp_interior, z_interior, false, true);
+  // A.C->thread_queue = NULL;
 }
 
 void ProjectionDriver::CalculateLocalRho() {
@@ -226,6 +229,7 @@ void ProjectionDriver::UpdateTempVector() {
   // Time consuming part.
   A.thread_queue = thread_queue;
   A.Times(p, temp);
+  A.thread_queue = NULL;
 }
 
 void ProjectionDriver::CalculateLocalAlpha() {
