@@ -85,7 +85,16 @@ void VersionEntry::InitializeLdl(
 
 bool VersionEntry::AddJobEntryReader(JobEntry *job) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
-  pending_reader_jobs_.insert(job);
+  if (job->sterile()) {
+    pending_reader_jobs_.insert(job);
+  } else {
+    BucketIter iter = seen_parent_jobs_.find(job);
+    if (iter == seen_parent_jobs_.end()) {
+      seen_parent_jobs_.insert(job);
+      pending_reader_jobs_.insert(job);
+    }
+  }
+
   return true;
 }
 
@@ -174,6 +183,7 @@ bool VersionEntry::RemoveJobEntry(JobEntry *job) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   assert(job->versioned());
 
+  seen_parent_jobs_.erase(job);
   pending_reader_jobs_.erase(job);
   pending_writer_jobs_.erase(job);
 
@@ -208,25 +218,6 @@ bool VersionEntry::RemoveJobEntry(JobEntry *job) {
   return true;
 }
 
-bool VersionEntry::RemoveJobEntry(JobEntry *job, data_version_t version) {
-  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
-  assert(job->versioned());
-
-  pending_reader_jobs_.erase(job);
-  pending_writer_jobs_.erase(job);
-
-  IndexIter it = index_.find(version);
-  if (it != index_.end()) {
-    it->second->erase(job);
-    if (it->second->size() == 0) {
-      delete it->second;
-      index_.erase(it);
-    }
-  }
-
-  return true;
-}
-
 bool VersionEntry::LookUpVersion(
     JobEntry *job,
     data_version_t *version) {
@@ -242,6 +233,7 @@ bool VersionEntry::LookUpVersion(
 bool VersionEntry::is_empty() {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   return ((index_.size() == 0) &&
+          (seen_parent_jobs_.size() == 0) &&
           (pending_reader_jobs_.size() == 0) &&
           (pending_writer_jobs_.size() == 0));
 }

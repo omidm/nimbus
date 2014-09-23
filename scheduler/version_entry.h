@@ -81,8 +81,6 @@ class VersionEntry {
 
     bool RemoveJobEntry(JobEntry *job);
 
-    bool RemoveJobEntry(JobEntry *job, data_version_t version);
-
     size_t GetJobsNeedVersion(
         JobEntryList* list, data_version_t version);
 
@@ -100,6 +98,7 @@ class VersionEntry {
 
   private:
     logical_data_id_t ldid_;
+    Bucket seen_parent_jobs_;
     Bucket pending_reader_jobs_;
     Bucket pending_writer_jobs_;
     Index index_;
