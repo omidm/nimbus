@@ -65,23 +65,12 @@ void VersionManager::set_snap_shot_rate(size_t rate) {
 }
 
 bool VersionManager::AddJobEntry(JobEntry *job) {
-  if (job->sterile()) {
+  {
     IDSet<logical_data_id_t>::ConstIter it;
     for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
       Index::iterator iter = index_.find(*it);
       if (iter == index_.end()) {
         dbg(DBG_ERROR, "ERROR: ldid %lu appeared in read set of %lu is not defined yet.\n",
-            *it, job->job_id());
-      } else {
-        iter->second->AddJobEntryReader(job);
-      }
-    }
-  } else {
-    LdoMap::const_iterator it;
-    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
-      Index::iterator iter = index_.find(it->first);
-      if (iter == index_.end()) {
-        dbg(DBG_ERROR, "ERROR: ldid %lu appeared in ldo_map set of %lu is not defined yet.\n",
             *it, job->job_id());
       } else {
         iter->second->AddJobEntryReader(job);
@@ -297,6 +286,15 @@ size_t VersionManager::GetJobsNeedDataVersion(
     list->clear();
     return 0;
   } else {
+    {
+      boost::unique_lock<boost::recursive_mutex> lock(snap_shot_mutex_);
+      ParentMap::iterator it = parent_map_.begin();
+      for (; it != parent_map_.end(); ++it) {
+        if (!(it->second->done())) {
+          iter->second->AddJobEntryReader(it->second);
+        }
+      }
+    }
     return iter->second->GetJobsNeedVersion(list, vld.second);
   }
 }
@@ -310,35 +308,6 @@ bool VersionManager::NotifyJobDone(JobEntry* job) {
 bool VersionManager::RemoveJobEntry(JobEntry* job) {
   assert(job->versioned());
 
-  if (job->sterile()) {
-    IDSet<logical_data_id_t>::ConstIter it;
-    for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
-      Index::iterator iter = index_.find(*it);
-      if (iter != index_.end()) {
-        iter->second->RemoveJobEntry(job);
-        if (iter->second->is_empty()) {
-          delete iter->second;
-          index_.erase(iter);
-          std::cout << "version entry got empty!!\n";
-        }
-      }
-    }
-  } else {
-    LdoMap::const_iterator it;
-    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
-      Index::iterator iter = index_.find(it->first);
-      if (iter != index_.end()) {
-        iter->second->RemoveJobEntry(job);
-        if (iter->second->is_empty()) {
-          delete iter->second;
-          index_.erase(iter);
-          std::cout << "version entry got empty!!\n";
-        }
-      }
-    }
-  }
-
-
   {
     boost::unique_lock<boost::recursive_mutex> lock(snap_shot_mutex_);
     if (snap_shot_.contains(job->job_id())) {
@@ -347,6 +316,36 @@ bool VersionManager::RemoveJobEntry(JobEntry* job) {
 
     if (!job->sterile()) {
       parent_map_.erase(job->job_id());
+    }
+  }
+
+  if (job->sterile()) {
+    IDSet<logical_data_id_t>::ConstIter it;
+    for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
+      Index::iterator iter = index_.find(*it);
+      if (iter != index_.end()) {
+        iter->second->RemoveJobEntry(job);
+        // Even empty you cannot remove, otherwise the ldl would show as undefined!
+        // if (iter->second->is_empty()) {
+        //   delete iter->second;
+        //   index_.erase(iter);
+        //   std::cout << "version entry got empty!!\n";
+        // }
+      }
+    }
+  } else {
+    LdoMap::const_iterator it;
+    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+      Index::iterator iter = index_.find(it->first);
+      if (iter != index_.end()) {
+        iter->second->RemoveJobEntry(job);
+        // Even empty you cannot remove, otherwise the ldl would show as undefined!
+        // if (iter->second->is_empty()) {
+        //   delete iter->second;
+        //   index_.erase(iter);
+        //   std::cout << "version entry got empty!!\n";
+        // }
+      }
     }
   }
 
