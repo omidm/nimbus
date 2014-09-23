@@ -668,6 +668,12 @@ void ProjectionDriver::Cache_SaveToNimbus(
     typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
     // T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
     // T_SCALAR_ARRAY::Exchange_Arrays(*index_c2m, projection_data.cell_index_to_matrix_index);
+    if (application::GetTranslatorData(job,
+        std::string(APP_VECTOR_P_META_FORMAT), da, &pdv, application::WRITE_ACCESS)) {
+      T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
+      T_SCALAR_ARRAY::Nimbus_Copy_Arrays(*index_c2m,
+          projection_data.cell_index_to_matrix_index);
+    }
     T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
         projection_data.cell_index_to_matrix_index, i_scalar_dummy);
     cm->ReleaseAccess(cache_index_c2m);

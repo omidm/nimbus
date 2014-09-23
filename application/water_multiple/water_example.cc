@@ -862,9 +862,9 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     }
     // divergence.
     if (cache_divergence) {
-      T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->f, t_scalar_dummy);
       T_SCALAR_ARRAY* divergence = cache_divergence->data();
       T_SCALAR_ARRAY::Nimbus_Copy_Arrays(*divergence, projection.laplace->f);
+      T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->f, t_scalar_dummy);
       cm->ReleaseAccess(cache_divergence);
       cache_divergence = NULL;
     }
