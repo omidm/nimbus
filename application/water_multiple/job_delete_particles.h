@@ -54,6 +54,9 @@ class JobDeleteParticles : public nimbus::Job {
         explicit JobDeleteParticles(nimbus::Application *app);
         virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
         virtual nimbus::Job* Clone();
+        virtual bool SupportMultiThread() const {
+          return true;
+        }
 };
 
 } // namespace application

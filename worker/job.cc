@@ -357,7 +357,6 @@ CacheManager* Job::GetCacheManager() const {
   return application_->cache_manager();
 }
 
-
 RemoteCopySendJob::RemoteCopySendJob(WorkerDataExchanger* da, Application *app) {
   data_exchanger_ = da;
   set_application(app);
