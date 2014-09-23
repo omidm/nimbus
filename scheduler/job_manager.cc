@@ -441,7 +441,6 @@ size_t JobManager::RemoveObsoleteJobEntries(size_t max_to_remove) {
   for (; iter != jobs_to_remove.end(); ++iter) {
     assert((*iter)->done());
     RemoveJobEntry(*iter);
-    dbg(DBG_SCHED, "removed job with id %lu from job manager.\n", (*iter)->job_id());
     ++num;
   }
 
