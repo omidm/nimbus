@@ -182,6 +182,8 @@ template<class TV> WATER_EXAMPLE<TV>::
 ~WATER_EXAMPLE()
 {
     delete &projection;
+    particle_levelset_evolution.particle_levelset.Set_Thread_Queue(NULL);
+    particle_levelset_evolution.particle_levelset.levelset.thread_queue=NULL;
     if (nimbus_thread_queue) {
       delete nimbus_thread_queue;
     }
@@ -813,6 +815,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
               }
               cache_ple->WriteImmediately(var_type, shared);
           }
+          particle_levelset_evolution.particle_levelset.Set_Thread_Queue(NULL);
+          particle_levelset_evolution.particle_levelset.levelset.thread_queue=NULL;
           cm->ReleaseAccess(cache_ple);
           cache_ple = NULL;
       }

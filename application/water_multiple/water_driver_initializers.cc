@@ -318,6 +318,8 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
     } else {
       example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
       example.incompressible.Set_Custom_Advection(example.advection_scalar);
+      example.particle_levelset_evolution.particle_levelset.Set_Thread_Queue(NULL);
+      example.particle_levelset_evolution.particle_levelset.levelset.thread_queue=NULL;
     }
 
     // example specific init
