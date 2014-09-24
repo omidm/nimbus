@@ -901,10 +901,14 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       assert(cache_index_c2m);
       typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
       T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
-      T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
-          *index_c2m, laplace_solver_wrapper.cell_index_to_matrix_index);
-      T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
-          laplace_solver_wrapper.cell_index_to_matrix_index, i_scalar_dummy);
+      T_SCALAR_ARRAY::Exchange_Arrays(
+	  *index_c2m, laplace_solver_wrapper.cell_index_to_matrix_index);
+      // if (application::GetTheOnlyData(
+      //     job, std::string(APP_INDEX_C2M), da, application::WRITE_ACCESS))
+      //   T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
+      //       *index_c2m, laplace_solver_wrapper.cell_index_to_matrix_index);
+      // T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
+      //     laplace_solver_wrapper.cell_index_to_matrix_index, i_scalar_dummy);
       cm->ReleaseAccess(cache_index_c2m);
       cache_index_c2m = NULL;
     }
@@ -1350,10 +1354,10 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     }
     // INDEX_C2M.
     if (cache_index_c2m) {
-      typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
-      T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
-      T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
-          laplace_solver_wrapper.cell_index_to_matrix_index, *index_c2m);
+      // typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
+      // T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
+      // T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
+      //     laplace_solver_wrapper.cell_index_to_matrix_index, *index_c2m);
     }
     if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
       Data* data_temp = application::GetTheOnlyData(
