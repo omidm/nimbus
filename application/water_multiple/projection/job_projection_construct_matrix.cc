@@ -60,6 +60,10 @@ nimbus::Job* JobProjectionConstructMatrix::Clone() {
 void JobProjectionConstructMatrix::Execute(
     nimbus::Parameter params,
     const nimbus::DataArray& da) {
+  // NOTE: This job does not handle initialization of index_c2m. It does not
+  // use a copy of cached index c2m, but creates a fresh copy and then updates
+  // the cached copy. If you want to change this (not create a freshed copy but
+  // edit the cached copy itself), you must reinitalize the cached copy.
   dbg(APP_LOG, "Executing PROJECTION_CONSTRUCT_MATRIX job.\n");
 
   InitConfig init_config;
