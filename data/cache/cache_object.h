@@ -152,7 +152,24 @@ class CacheObject {
           pending_flag_ = false;
         }
 
+        virtual size_t memory_size() {
+          return sizeof(*this);
+        }
+
+        uint64_t unique_id() {
+          return unique_id_;
+        }
+
+        void set_unique_id(const uint64_t unique_id) {
+          unique_id_ = unique_id;
+        }
+
+        virtual std::string name() {
+          return "cache_object";
+        }
+
     private:
+        uint64_t unique_id_;
         bool pending_flag_;
         /**
          * \brief Setter for id_ member

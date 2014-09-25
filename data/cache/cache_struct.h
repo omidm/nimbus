@@ -154,6 +154,14 @@ class CacheStruct : public CacheObject {
                         const std::vector<DataArray> &write_sets,
                         GeometricRegion write_region);
 
+        virtual size_t memory_size() {
+          return sizeof(*this);
+        }
+
+        virtual std::string name() {
+          return "cache_struct";
+        }
+
     private:
         /**
          * \brief Disallow calling constructor with no arguments

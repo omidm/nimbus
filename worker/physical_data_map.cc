@@ -45,7 +45,8 @@
 namespace nimbus {
 
 PhysicalDataMap::PhysicalDataMap() {
-    physical_data_log = fopen("physical_data.txt", "w");
+  sum_ = 0;
+  physical_data_log = fopen("physical_data.txt", "w");
 }
 
 void PhysicalDataMap::PrintTimeStamp(const char* format, ...) {
@@ -77,11 +78,13 @@ bool PhysicalDataMap::ReleaseAccess(
     physical_data_id_t physical_data_id= *i_physical_data_id;
     size_t temp_size = internal_map_[physical_data_id].first->memory_size();
     if (temp_size != internal_map_[physical_data_id].second) {
+      sum_ = sum_ + temp_size - internal_map_[physical_data_id].second;
       internal_map_[physical_data_id].second = temp_size;
       PrintTimeStamp("%s %"PRIu64" %zu\n",
                      internal_map_[physical_data_id].first->name().c_str(),
                      physical_data_id,
                      temp_size);
+      PrintTimeStamp("%zu\n", sum_);
     }
   }
   outstanding_used_data_.erase(job_id);
