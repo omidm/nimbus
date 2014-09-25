@@ -56,7 +56,12 @@ namespace nimbus {
   __thread size_t max_alloc = 0;
   __thread size_t base_alloc = 0;
 
-  void ProfilerMalloc::AddPointerToThreadLocalData(void *ptr, size_t size) {
+  void ProfilerMalloc::AddPointerToThreadLocalData(void *ptr) {
+#ifdef __MACH__
+    size_t size = malloc_size(ptr);
+#else
+    size_t size = malloc_usable_size(ptr);
+#endif
     curr_alloc += size;
     if (curr_alloc > max_alloc) {
       max_alloc = curr_alloc;
@@ -69,11 +74,7 @@ namespace nimbus {
 #else
     size_t size = malloc_usable_size(ptr);
 #endif
-    if (size < curr_alloc) {
-      curr_alloc -= size;
-    } else {
-      curr_alloc = 0;
-    }
+    curr_alloc -= size;
   }
 
   void ProfilerMalloc::ResetBaseAlloc() {
@@ -107,7 +108,7 @@ namespace nimbus {
     }
 
     ptr = mallocp(size);
-    ProfilerMalloc::AddPointerToThreadLocalData(ptr, size);
+    ProfilerMalloc::AddPointerToThreadLocalData(ptr);
     return ptr;
   }
 

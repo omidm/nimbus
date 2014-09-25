@@ -57,7 +57,7 @@ class ProfilerMalloc {
   static size_t GetBaseAlloc();
 
  private:
-  static void AddPointerToThreadLocalData(void *ptr, size_t size);
+  static void AddPointerToThreadLocalData(void *ptr);
   static void RemovePointerFromThreadLocalData(void *ptr);
 };
 
