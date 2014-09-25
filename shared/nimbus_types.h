@@ -40,10 +40,13 @@
 #ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
 #define NIMBUS_SHARED_NIMBUS_TYPES_H_
 
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif  // __STDC_FORMAT_MACROS
+
 #include <inttypes.h>
 #include <string>
 #include "shared/address_book.h"
-
 
 #define NIMBUS_TERMINATE_SUCCESS (exit_status_t)(0)
 #define NIMBUS_TERMINATE_FAILURE (exit_status_t)(-1)

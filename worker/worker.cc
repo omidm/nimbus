@@ -214,16 +214,15 @@ void Worker::ResolveDataArray(Job* job) {
         data_map_.AcquireAccess(*iter, job->id().elem(),
                                 PhysicalDataMap::READ));
   }
-  // DumpVersionInformation(job, da, &version_log_, "version_in");
-  // DumpDataHashInformation(job, da, &data_hash_log_, "hash_in");
-
   IDSet<physical_data_id_t> write = job->write_set();
   for (iter = write.begin(); iter != write.end(); iter++) {
     job->data_array.push_back(
         data_map_.AcquireAccess(*iter, job->id().elem(),
                                 PhysicalDataMap::WRITE));
   }
-  DumpDataOrderInformation(job, job->data_array, &data_hash_log_, "data_order");
+  // DumpVersionInformation(job, da, &version_log_, "version_in");
+  // DumpDataHashInformation(job, da, &data_hash_log_, "hash_in");
+  // DumpDataOrderInformation(job, job->data_array, &data_hash_log_, "data_order");
 }
 
 void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
@@ -637,6 +636,7 @@ void Worker::NotifyLocalJobDone(Job* job) {
     client_->SendCommand(&cm);
   }
   job_id_t job_id = job->id().elem();
+  data_map_.ReleaseAccess(job_id);
   // Job done for unknown job is not handled.
   if (!worker_job_graph_.HasVertex(job_id)) {
     // The job must be in the local job graph.

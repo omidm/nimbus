@@ -72,6 +72,10 @@ class PhysBAMDataWithMeta: public PhysBAMData {
   virtual bool Serialize(SerializedData* ser_data);
   virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
 
+  virtual size_t memory_size() {
+    return sizeof(*this) + size_ * sizeof(char) +  // NOLINT
+        (temp_buffer_?sizeof(*temp_buffer_):0);
+  }
   void ResetMetaData();
 
   void set_has_meta_data() { has_meta_data_ = true; }

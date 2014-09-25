@@ -89,6 +89,26 @@ class WorkerManager {
  public:
   // TODO(quhang) Not sure if maintaining such a pointer is good or not.
   Worker* worker_;
+  /*
+  static void RegisterThread(const pthread_t* child_thread,
+                             const pthread_t* parenter_thread = NULL);
+  struct ThreadStateStub {
+    size_t allocated_memory;
+    size_t freed_memory;
+    bool is_active;
+    ThreadStateStub() {
+      allocated_memory = 0;
+      freed_memory = 0;
+      is_active = false;
+    }
+  };
+  static void RegisterThreadStateStub(
+      const pthread_t* thread, const ThreadStateStub* thread_stub);
+  static void DeregisterThreadStateStub(const pthread_t* thread);
+  static pthread_key_t* thread_state_stub_key;
+  static void AllocateThreadStateStub();
+  static ThreadStateStub* DetachThreadStateStub();
+  */
 
  private:
   // Thread scheduling algorithm.

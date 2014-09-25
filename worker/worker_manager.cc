@@ -56,6 +56,11 @@ int WorkerManager::inside_job_parallism = 0;
 int WorkerManager::across_job_parallism = 0;
 
 WorkerManager::WorkerManager() {
+  /*
+  thread_state_stub_key = new pthread_key_t;
+  int success_flag = pthread_key_create(thread_state_stub_key, NULL);
+  assert(success_flag == 0);
+  */
   event_log = fopen("event_be.txt", "w");
   pthread_mutex_init(&scheduling_needed_lock_, NULL);
   pthread_cond_init(&scheduling_needed_cond_, NULL);
@@ -184,12 +189,13 @@ bool WorkerManager::LaunchThread(WorkerThread* worker_thread) {
   int error_code =
       pthread_create(&worker_thread->thread_id, NULL,
                      ThreadEntryPoint, worker_thread);
+  // WorkerManager::RegisterThread(&worker_thread->thread_id);
   assert(error_code == 0);
   return true;
 }
 
 bool WorkerManager::StartWorkerThreads() {
-  LaunchThread(new WorkerThreadMonitor(this));
+  // LaunchThread(new WorkerThreadMonitor(this));
   for (int i = 0; i < computation_thread_num; ++i) {
     LaunchThread(new WorkerThreadComputation(this));
   }
@@ -293,5 +299,29 @@ void WorkerManager::TriggerScheduling() {
   pthread_cond_signal(&scheduling_needed_cond_);
   pthread_mutex_unlock(&scheduling_needed_lock_);
 }
+
+/*
+void WorkerManager::RegisterThread(
+    const pthread_t* child_thread, const pthread_t* parenter_thread) {
+}
+
+void WorkerManager::RegisterThreadStateStub(
+    const pthread_t* thread, const ThreadStateStub* thread_stub) {
+}
+
+void WorkerManager::DeregisterThreadStateStub(const pthread_t* thread) {
+}
+
+void WorkerManager::AllocateThreadStateStub() {
+  pthread_setspecific(*thread_state_stub_key, new ThreadStateStub);
+}
+
+WorkerManager::ThreadStateStub* WorkerManager::DetachThreadStateStub() {
+  ThreadStateStub* temp =
+      static_cast<ThreadStateStub*>(pthread_getspecific(*thread_state_stub_key));
+  pthread_setspecific(*thread_state_stub_key, NULL);
+  return temp;
+}
+*/
 
 }  // namespace nimbus
