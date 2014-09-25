@@ -36,6 +36,8 @@
  * Author: Hang Qu<quhang@stanford.edu>
  */
 
+#include <PhysBAM_Tools/Arrays_Computations/ARRAY_COPY.h>
+
 #include "application/water_multiple/app_utils.h"
 
 #include "application/water_multiple/projection/data_sparse_matrix.h"
@@ -54,6 +56,9 @@ void LaplaceSolverWrapper::BindLaplaceAndInitialize(
   const int number_of_regions = 1;
   matrix_index_to_cell_index_array.Resize(number_of_regions);
   cell_index_to_matrix_index.Resize(laplace->grid.Domain_Indices(1));
+  // Intialize array since it may contain old data/ garbage when read from
+  // cache (added by Chinmayee)
+  ARRAYS_COMPUTATIONS::Fill(cell_index_to_matrix_index.array, 0);
   cell_index_to_matrix_index.hash_code = 0;
   A_array.Resize(number_of_regions);
   b_array.Resize(number_of_regions);
