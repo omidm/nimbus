@@ -46,6 +46,7 @@ WorkerProfile::WorkerProfile(worker_id_t worker_id) {
   worker_id_ = worker_id;
   ready_jobs_ = new IDSet<job_id_t>();
   blocked_jobs_ = new IDSet<job_id_t>();
+  ResetTimers();
 }
 
 WorkerProfile::~WorkerProfile() {
@@ -59,14 +60,17 @@ worker_id_t WorkerProfile::worker_id() {
 }
 
 double WorkerProfile::idle_time() {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   return idle_timer_.timer();
 }
 
 double WorkerProfile::active_time() {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   return active_timer_.timer();
 }
 
 double WorkerProfile::blocked_time() {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   return blocked_timer_.timer();
 }
 
@@ -80,30 +84,97 @@ IDSet<job_id_t>* WorkerProfile::blocked_jobs() {
 
 
 void WorkerProfile::ResetTimers() {
-  idle_timer_.Reset();
-  active_timer_.Reset();
-  blocked_timer_.Reset();
+  boost::unique_lock<boost::mutex> lock(mutex_);
+  if ((ready_jobs_->size() == 0) &&
+      (blocked_jobs_->size() == 0)) {
+    idle_timer_.Start();
+    active_timer_.Reset();
+    blocked_timer_.Reset();
+  } else if (ready_jobs_->size() == 0) {
+    idle_timer_.Reset();
+    active_timer_.Reset();
+    blocked_timer_.Start();
+  } else {
+    idle_timer_.Reset();
+    active_timer_.Start();
+    blocked_timer_.Reset();
+  }
 }
 
 void WorkerProfile::AddReadyJob(job_id_t job_id) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
+  ready_jobs_->insert(job_id);
+  blocked_jobs_->remove(job_id);
+  idle_timer_.Stop();
+  blocked_timer_.Stop();
+  active_timer_.Resume();
 }
 
 void WorkerProfile::AddBlockedJob(job_id_t job_id) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
+  blocked_jobs_->insert(job_id);
+  idle_timer_.Stop();
+  if (ready_jobs_->size() == 0) {
+    blocked_timer_.Resume();
+  }
 }
 
 void WorkerProfile::NotifyJobDone(job_id_t job_id) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
+  assert(ready_jobs_->contains(job_id));
+  ready_jobs_->remove(job_id);
+  blocked_jobs_->remove(job_id);
+  if ((ready_jobs_->size() == 0) &&
+      (blocked_jobs_->size() == 0)) {
+    idle_timer_.Resume();
+    active_timer_.Stop();
+    blocked_timer_.Stop();
+  } else if (ready_jobs_->size() == 0) {
+    active_timer_.Stop();
+    blocked_timer_.Resume();
+  }
 }
 
 std::string WorkerProfile::PrintStatus() {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   std::string rval;
   rval += "\n+++++++ Worker Status +++++++\n";
 
-  std::ostringstream ss;
-  rval += "worker_id: ";
-  ss << worker_id_;
-  rval += ss.str();
-  ss.str(std::string());
-  rval += "\n";
+  {
+    std::ostringstream ss;
+    rval += "worker_id: ";
+    ss << worker_id_;
+    rval += ss.str();
+    ss.str(std::string());
+    rval += "\n";
+  }
+
+  {
+    std::ostringstream ss;
+    rval += "idle_time: ";
+    ss << idle_time();
+    rval += ss.str();
+    ss.str(std::string());
+    rval += "\n";
+  }
+
+  {
+    std::ostringstream ss;
+    rval += "blocked_time: ";
+    ss << blocked_time();
+    rval += ss.str();
+    ss.str(std::string());
+    rval += "\n";
+  }
+
+  {
+    std::ostringstream ss;
+    rval += "active_time: ";
+    ss << active_time();
+    rval += ss.str();
+    ss.str(std::string());
+    rval += "\n";
+  }
 
   rval += "\n+++++++++++++++++++++++++++++\n";
   return rval;

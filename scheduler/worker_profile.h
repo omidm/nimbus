@@ -41,6 +41,7 @@
 #ifndef NIMBUS_SCHEDULER_WORKER_PROFILE_H_
 #define NIMBUS_SCHEDULER_WORKER_PROFILE_H_
 
+#include <boost/thread.hpp>
 #include <vector>
 #include <string>
 #include <set>
@@ -88,6 +89,8 @@ class WorkerProfile {
     Chronometer idle_timer_;
     Chronometer active_timer_;
     Chronometer blocked_timer_;
+
+    boost::mutex mutex_;
 };
 
 
