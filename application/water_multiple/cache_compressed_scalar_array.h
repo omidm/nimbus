@@ -69,6 +69,19 @@ class CacheCompressedScalarArray : public nimbus::CacheVar {
   nimbus::int_dimension_t data_length() { return data_length_; }
   void set_data_length(nimbus::int_dimension_t l) { data_length_ = l;  }
   static long CalculateHashCode(IndexType& index);
+  virtual size_t memory_size() {
+    size_t temp = sizeof(*this);
+    if (data) {
+      temp += data->memory_size();
+    }
+    if (index_data) {
+      temp += index_data->memory_size();
+    }
+    return temp;
+  }
+  virtual std::string name() {
+    return "compuressed_scalar_array";
+  }
 
  protected:
   explicit CacheCompressedScalarArray(

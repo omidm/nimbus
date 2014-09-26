@@ -63,6 +63,13 @@ class CacheArrayM2C : public nimbus::CacheVar {
     data_ = d;
   }
 
+  virtual size_t memory_size() {
+    return data ? sizeof(*this) + d->memory_size() : sizeof(*this);
+  }
+  virtual std::string name() {
+    return "index_m2c";
+  }
+
  protected:
   explicit CacheArrayM2C(const nimbus::GeometricRegion& global_reg,
                          const nimbus::GeometricRegion& ob_reg);

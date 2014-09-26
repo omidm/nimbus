@@ -69,6 +69,12 @@ class CacheScalarArray : public nimbus::CacheVar {
         void set_data(PhysBAMScalarArray *d) {
             data_ = d;
         }
+        virtual size_t memory_size() {
+          return data ? sizeof(*this) + data->memory_size() : sizeof(*this);
+        }
+        virtual std::string name() {
+          return "scalar_array";
+        }
 
     protected:
         explicit CacheScalarArray(const nimbus::GeometricRegion &global_reg,

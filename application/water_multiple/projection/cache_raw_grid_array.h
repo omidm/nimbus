@@ -62,6 +62,13 @@ class CacheRawGridArray : public nimbus::CacheVar {
     data_ = d;
   }
 
+  virtual size_t memory_size() {
+    return data ? sizeof(*this) + d->memory_size() : sizeof(*this);
+  }
+  virtual std::string name() {
+    return "index_c2m";
+  }
+
  protected:
   explicit CacheRawGridArray(const nimbus::GeometricRegion& global_reg,
                        const nimbus::GeometricRegion& ob_reg);
