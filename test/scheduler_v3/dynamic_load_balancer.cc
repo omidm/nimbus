@@ -103,7 +103,7 @@ size_t DynamicLoadBalancer::AssignReadyJobs() {
 }
 
 bool DynamicLoadBalancer::SetWorkerToAssignJob(JobEntry *job) {
-  Log log;
+  Log log(Log::NO_FILE);
   log.log_StartTimer();
 
   boost::unique_lock<boost::recursive_mutex> update_lock(update_mutex_);
@@ -124,21 +124,29 @@ bool DynamicLoadBalancer::SetWorkerToAssignJob(JobEntry *job) {
   assert(worker_map_.size() > 0);
   assert(worker_num_ > 0);
 
-  GeometricRegion region;
-  bool got_region = job->GetWriteSetRegion(data_manager_, &region);
+  GeometricRegion union_region;
+  bool got_union_region = job->GetUnionSetRegion(data_manager_, &union_region);
 
-  if (init_phase_ || !got_region) {
+  if (init_phase_ || (!got_union_region) || (!job->sterile())) {
     job->set_assigned_worker(worker_map_.begin()->second);
   } else {
     assert(worker_num_ == region_map_.table_size());
     worker_id_t w_id;
 
-    if (!region_map_.QueryWorkerWithMostOverlap(&region, &w_id)) {
+    if (!region_map_.QueryWorkerWithMostOverlap(&union_region, &w_id)) {
       dbg(DBG_ERROR, "ERROR: DynamicLoadBalancer: could not find worker for assigning job %lu.\n", job->job_id()); // NOLINT
       return false;
     }
 
     job->set_assigned_worker(worker_map_[w_id]);
+
+
+    GeometricRegion write_region;
+    if (job->GetWriteSetRegion(data_manager_, &write_region)) {
+      if (write_region.GetSurfaceArea() < (0.25 * global_region_.GetSurfaceArea())) {
+        region_map_.TrackRegionCoverage(&write_region, &w_id);
+      }
+    }
   }
 
   log.log_StopTimer();
@@ -175,7 +183,7 @@ void DynamicLoadBalancer::NotifyJobAssignment(const JobEntry *job) {
 
 
   Vertex<JobEntry, job_id_t>* vertex;
-  job_manager_->job_graph_p()->GetVertex(job->job_id(), &vertex);
+  job_manager_->GetJobGraphVertex(job->job_id(), &vertex);
 
   typename Edge<JobEntry, job_id_t>::Iter iter;
   for (iter = vertex->incoming_edges()->begin(); iter != vertex->incoming_edges()->end(); ++iter) {
@@ -225,7 +233,7 @@ void DynamicLoadBalancer::NotifyJobDone(const JobEntry *job) {
     return;
   }
 
-  assert(job->done());
+  // assert(job->done());
   done_jobs_.push_back(job->job_id());
 
   JobHistory::iterator it = job_history_.find(job->job_id());
@@ -237,7 +245,7 @@ void DynamicLoadBalancer::NotifyJobDone(const JobEntry *job) {
   job_profile->set_execute_duration(time - job_profile->ready_time());
 
   Vertex<JobEntry, job_id_t>* vertex;
-  job_manager_->job_graph_p()->GetVertex(job->job_id(), &vertex);
+  job_manager_->GetJobGraphVertex(job->job_id(), &vertex);
 
   typename Edge<JobEntry, job_id_t>::Iter iter;
   for (iter = vertex->outgoing_edges()->begin(); iter != vertex->outgoing_edges()->end(); ++iter) {

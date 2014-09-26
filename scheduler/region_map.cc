@@ -122,7 +122,6 @@ bool RegionMap::QueryWorkerWithMostOverlap(const GeometricRegion *region,
   }
 
   CacheQueryResult(region, &w_id);
-  TrackRegionCoverage(region, &w_id);
   *worker_id = w_id;
   return true;
 }
@@ -362,8 +361,8 @@ void RegionMap::SplitDimensions(size_t worker_num, size_t *num_x, size_t *num_y,
       *num_z = 1;
       break;
     case 4 :
-      *num_x = 4;
-      *num_y = 1;
+      *num_x = 2;
+      *num_y = 2;
       *num_z = 1;
       break;
     case 5 :

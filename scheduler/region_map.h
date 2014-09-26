@@ -86,6 +86,9 @@ namespace nimbus {
     bool QueryWorkerWithMostOverlap(const GeometricRegion *region,
                                       worker_id_t *worker_id);
 
+    void TrackRegionCoverage(const GeometricRegion *region,
+                             const worker_id_t *worker_id);
+
     bool WorkersAreNeighbor(worker_id_t first, worker_id_t second);
 
     std::string Print();
@@ -114,9 +117,6 @@ namespace nimbus {
 
     void CacheQueryResult(const GeometricRegion *region,
                           const worker_id_t *worker_id);
-
-    void TrackRegionCoverage(const GeometricRegion *region,
-                             const worker_id_t *worker_id);
 
     void InvalidateRegionCoverage();
   };

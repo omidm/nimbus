@@ -139,6 +139,8 @@ class JobManager {
                                       const logical_data_id_t& l_id,
                                       const PhysicalData& pd);
 
+    bool GetJobGraphVertex(job_id_t job_id, Vertex<JobEntry, job_id_t> **vertex);
+
   private:
     Log log_;
     AfterMap *after_map_;
@@ -158,8 +160,6 @@ class JobManager {
     bool AddJobEntryToJobGraph(job_id_t job_id, JobEntry *job);
 
     bool RemoveJobEntryFromJobGraph(job_id_t job_id);
-
-    bool GetJobGraphVertex(job_id_t job_id, Vertex<JobEntry, job_id_t> **vertex);
 
     Edge<JobEntry, job_id_t>* AddEdgeToJobGraph(job_id_t from, job_id_t to);
 };
