@@ -98,32 +98,100 @@ void RegionMap::set_table(const Table& table) {
   table_ = table;
 }
 
+void RegionMap::TrackRegionCoverage(DataManager *data_manager,
+                                    JobEntry *job,
+                                    const worker_id_t *worker_id) {
+  TableIter iter = table_.find(*worker_id);
+  if (iter == table_.end()) {
+    dbg(DBG_WARN, "WARNING: RegionMap: worker id %lu not in the table to track region coverage.\n", *worker_id); // NOLINT
+    return;
+  }
 
-bool RegionMap::QueryWorkerWithMostOverlap(const GeometricRegion *region,
-                                             worker_id_t *worker_id) {
+  GeometricRegion write_region;
+  if (job->GetWriteSetRegion(data_manager, &write_region)) {
+    if (write_region.GetSurfaceArea() < (0.25 * global_region_.GetSurfaceArea())) {
+      iter->second->AddCoveredRegion(&write_region);
+    }
+  }
+}
+
+bool RegionMap::QueryWorkerWithMostOverlap(DataManager *data_manager,
+                                           JobEntry *job,
+                                           worker_id_t *worker_id) {
   if (table_size() == 0) {
     return false;
   }
 
-  if (QueryCache(region, worker_id)) {
+  GeometricRegion union_region;
+  bool got_union_region = job->GetUnionSetRegion(data_manager, &union_region);
+  assert(got_union_region);
+
+  if (union_region.GetSurfaceArea() < (0.25 * global_region_.GetSurfaceArea())) {
+    /* 
+     * If the union set is not the global bounding then you can find the
+     * intersect with only union set region not each ldo one by one. If there
+     * are global variables being read by jobs, then the region of a job
+     * becomes the entire space.
+     */
+
+    if (QueryCache(&union_region, worker_id)) {
+      return true;
+    }
+
+    TableIter iter = table_.begin();
+    worker_id_t w_id = iter->first;
+    int_dimension_t common_area = iter->second->CommonSurface(&union_region);
+    ++iter;
+    for (; iter != table_.end(); ++iter) {
+      int_dimension_t temp = iter->second->CommonSurface(&union_region);
+      if (temp > common_area) {
+        common_area = temp;
+        w_id = iter->first;
+      }
+    }
+
+    CacheQueryResult(&union_region, &w_id);
+    *worker_id = w_id;
+    return true;
+  } else {
+    /*
+     * This method is weighted polling among the workers, the worker that has
+     * the highest aggregate intersect volume with each of the ldos in the
+     * union set of the job would win the job.
+     */
+
+    // initialize worker ranks.
+    WorkerRank worker_ranks;
+    TableIter tabit = table_.begin();
+    for (; tabit != table_.end(); ++tabit) {
+      worker_ranks[tabit->first] = 0;
+    }
+
+    IDSet<logical_data_id_t>::IDSetIter iter;
+    for (iter = job->union_set_p()->begin(); iter != job->union_set_p()->end(); ++iter) {
+      const LogicalDataObject* ldo;
+      ldo = data_manager->FindLogicalObject(*iter);
+      WorkerRank::iterator it = worker_ranks.begin();
+      for (; it != worker_ranks.end(); ++it) {
+        it->second += table_[it->first]->CommonSurface(ldo->region());
+      }
+    }
+
+    // find the worker that wins the poll.
+    WorkerRank::iterator writ = worker_ranks.begin();
+    assert(writ != worker_ranks.end());
+    worker_id_t w_id = writ->first;
+    int_dimension_t vol = worker_ranks[writ->first];
+    for (; writ != worker_ranks.end(); ++writ) {
+      if (vol < worker_ranks[writ->first]) {
+        vol = worker_ranks[writ->first];
+        w_id = writ->first;
+      }
+    }
+
+    *worker_id = w_id;
     return true;
   }
-
-  TableIter iter = table_.begin();
-  worker_id_t w_id = iter->first;
-  int_dimension_t common_area = iter->second->CommonSurface(region);
-  ++iter;
-  for (; iter != table_.end(); ++iter) {
-    int_dimension_t temp = iter->second->CommonSurface(region);
-    if (temp > common_area) {
-      common_area = temp;
-      w_id = iter->first;
-    }
-  }
-
-  CacheQueryResult(region, &w_id);
-  *worker_id = w_id;
-  return true;
 }
 
 bool RegionMap::WorkersAreNeighbor(worker_id_t first, worker_id_t second) {
@@ -145,6 +213,8 @@ bool RegionMap::WorkersAreNeighbor(worker_id_t first, worker_id_t second) {
 
 void RegionMap::Initialize(const std::vector<worker_id_t>& worker_ids,
                            const GeometricRegion& global_region) {
+  global_region_ = global_region;
+
   size_t num_x, num_y, num_z;
   SplitDimensions(worker_ids.size(), &num_x, &num_y, &num_z);
 
@@ -182,18 +252,6 @@ void RegionMap::InvalidateCache() {
 void RegionMap::CacheQueryResult(const GeometricRegion *region,
                                  const worker_id_t *worker_id) {
   cache_[*region] = *worker_id;
-}
-
-
-
-void RegionMap::TrackRegionCoverage(const GeometricRegion *region,
-                                    const worker_id_t *worker_id) {
-  TableIter iter = table_.find(*worker_id);
-  if (iter == table_.end()) {
-    dbg(DBG_WARN, "WARNING: REgionMap: worker id %lu not in the table to track region coverage.\n", *worker_id); // NOLINT
-    return;
-  }
-  iter->second->AddCoveredRegion(region);
 }
 
 void RegionMap::InvalidateRegionCoverage() {

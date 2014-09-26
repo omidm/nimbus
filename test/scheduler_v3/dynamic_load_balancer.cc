@@ -133,20 +133,14 @@ bool DynamicLoadBalancer::SetWorkerToAssignJob(JobEntry *job) {
     assert(worker_num_ == region_map_.table_size());
     worker_id_t w_id;
 
-    if (!region_map_.QueryWorkerWithMostOverlap(&union_region, &w_id)) {
+    if (!region_map_.QueryWorkerWithMostOverlap(data_manager_, job, &w_id)) {
       dbg(DBG_ERROR, "ERROR: DynamicLoadBalancer: could not find worker for assigning job %lu.\n", job->job_id()); // NOLINT
       return false;
     }
 
     job->set_assigned_worker(worker_map_[w_id]);
 
-
-    GeometricRegion write_region;
-    if (job->GetWriteSetRegion(data_manager_, &write_region)) {
-      if (write_region.GetSurfaceArea() < (0.25 * global_region_.GetSurfaceArea())) {
-        region_map_.TrackRegionCoverage(&write_region, &w_id);
-      }
-    }
+    region_map_.TrackRegionCoverage(data_manager_, job, &w_id);
   }
 
   log.log_StopTimer();
@@ -329,6 +323,7 @@ void DynamicLoadBalancer::InitializeRegionMap() {
 }
 
 void DynamicLoadBalancer::UpdateRegionMap() {
+  return;
   boost::unique_lock<boost::recursive_mutex> worker_map_lock(worker_map_mutex_);
   boost::unique_lock<boost::recursive_mutex> region_map_lock(region_map_mutex_);
   boost::unique_lock<boost::recursive_mutex> straggler_map_lock(straggler_map_mutex_);

@@ -53,6 +53,8 @@
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
+#include "scheduler/job_entry.h"
+#include "scheduler/data_manager.h"
 #include "scheduler/region_map_entry.h"
 
 namespace nimbus {
@@ -63,6 +65,7 @@ namespace nimbus {
     typedef Table::iterator TableIter;
     typedef std::map<GeometricRegion, worker_id_t> Cache;
     typedef Cache::iterator CacheIter;
+    typedef std::map<worker_id_t, int_dimension_t> WorkerRank;
 
     RegionMap();
     explicit RegionMap(const Table& table);
@@ -83,10 +86,12 @@ namespace nimbus {
     bool BalanceRegions(const worker_id_t &w_grow,
                         const worker_id_t &w_shrink);
 
-    bool QueryWorkerWithMostOverlap(const GeometricRegion *region,
-                                      worker_id_t *worker_id);
+    bool QueryWorkerWithMostOverlap(DataManager *data_manager,
+                                    JobEntry *job,
+                                    worker_id_t *worker_id);
 
-    void TrackRegionCoverage(const GeometricRegion *region,
+    void TrackRegionCoverage(DataManager *data_manager,
+                             JobEntry *job,
                              const worker_id_t *worker_id);
 
     bool WorkersAreNeighbor(worker_id_t first, worker_id_t second);
@@ -98,6 +103,7 @@ namespace nimbus {
   private:
     Table table_;
     Cache cache_;
+    GeometricRegion global_region_;
 
     void ClearTable();
 
