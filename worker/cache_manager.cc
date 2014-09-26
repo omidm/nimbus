@@ -53,12 +53,15 @@
 #include "worker/cache_manager.h"
 #include "worker/data.h"
 
+#define FIRST_UNIQUE_ID 1000
 namespace nimbus {
 
 /**
  * \details
  */
 CacheManager::CacheManager() {
+    unique_id_allocator_ = FIRST_UNIQUE_ID;
+    memory_sum_ = 0;
     pool_ = new Pool();
     pthread_mutex_init(&cache_lock, NULL);
     pthread_cond_init(&cache_cond, NULL);
@@ -109,7 +112,8 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
         CacheTable *ct = new CacheTable(cache::VAR);
         (*pool_)[prototype.id()] = ct;
         cv = prototype.CreateNew(region);
-        PrintTimeStamp(sizeof(*cv));
+        cv->set_unique_id(unique_id_allocator_++);
+        // PrintTimeStamp(sizeof(*cv));
         assert(cv != NULL);
         ct->AddEntry(region, cv);
     } else {
@@ -117,7 +121,8 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
         cv = ct->GetClosestAvailable(region, read_set, access);
         if (cv == NULL) {
             cv = prototype.CreateNew(region);
-            PrintTimeStamp(sizeof(*cv));
+            cv->set_unique_id(unique_id_allocator_++);
+            // PrintTimeStamp(sizeof(*cv));
             assert(cv != NULL);
             ct->AddEntry(region, cv);
         }
@@ -176,7 +181,8 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
         CacheTable *ct = new CacheTable(cache::STRUCT);
         (*pool_)[prototype.id()] = ct;
         cs = prototype.CreateNew(region);
-        PrintTimeStamp(sizeof(*cs));
+        cs->set_unique_id(unique_id_allocator_++);
+        // PrintTimeStamp(sizeof(*cs));
         assert(cs != NULL);
         ct->AddEntry(region, cs);
     } else {
@@ -184,7 +190,8 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
         cs = ct->GetClosestAvailable(region, var_type, read_sets, access);
         if (cs == NULL) {
             cs = prototype.CreateNew(region);
-            PrintTimeStamp(sizeof(*cs));
+            cs->set_unique_id(unique_id_allocator_++);
+            // PrintTimeStamp(sizeof(*cs));
             assert(cs != NULL);
             ct->AddEntry(region, cs);
         }
@@ -278,6 +285,28 @@ void CacheManager::ReleaseAccess(CacheObject* cache_object) {
     // TODO(quhang): use private method and mark friend class.
     cache_object->ReleaseAccessInternal();
     pthread_cond_broadcast(&cache_cond);
+
+    uint64_t data_id =cache_object->unique_id();
+    size_t new_size = cache_object->memory_size();
+    size_t old_size = 0;
+    if (memory_size_map_.find(data_id) == memory_size_map_.end()) {
+      memory_size_map_[data_id] = 0;
+    } else {
+      old_size = memory_size_map_[data_id];
+      memory_size_map_[data_id] = new_size;
+    }
+    if (new_size != old_size) {
+      memory_sum_ = memory_sum_ + new_size - old_size;
+      struct timespec t;
+      clock_gettime(CLOCK_REALTIME, &t);
+      double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
+      fprintf(alloc_log, "%f : %"PRIu64" %s %zu\n",
+              time_sum,
+              data_id,
+              cache_object->name().c_str(),
+              new_size);
+      fprintf(alloc_log, "%zu\n", memory_sum_);
+    }
     pthread_mutex_unlock(&cache_lock);
 }
 

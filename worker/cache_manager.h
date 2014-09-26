@@ -42,6 +42,7 @@
 #ifndef NIMBUS_WORKER_CACHE_MANAGER_H_
 #define NIMBUS_WORKER_CACHE_MANAGER_H_
 
+#include <boost/unordered_map.hpp>
 #include <pthread.h>
 #include <cstdio>
 #include <sstream>  // NOLINT
@@ -151,6 +152,11 @@ class CacheManager {
         void PrintProfile(std::stringstream* output);
 
     private:
+        uint64_t unique_id_allocator_;
+        typedef boost::unordered_map<uint64_t, size_t> MemorySizeMap;
+        MemorySizeMap memory_size_map_;
+        size_t memory_sum_;
+
         typedef std::map<cache::co_id_t,
                          CacheTable *> Pool;
         Pool *pool_;
