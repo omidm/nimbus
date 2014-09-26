@@ -55,33 +55,97 @@ WorkerMonitor::~WorkerMonitor() {
   }
 }
 
-void WorkerMonitor::AddWorker(worker_id_t worker_id) {
+bool WorkerMonitor::AddWorker(worker_id_t worker_id) {
+  MapIter iter = map_.find(worker_id);
+  if (iter != map_.end()) {
+    dbg(DBG_ERROR, "ERROR: WorkerMonitor: worker id %lu already exist!", worker_id);
+    exit(-1);
+    return false;
+  }
+
+  map_[worker_id] = new WorkerProfile(worker_id);
+  return true;
 }
 
-void WorkerMonitor::RemoveWorker(worker_id_t worker_id) {
+bool WorkerMonitor::RemoveWorker(worker_id_t worker_id) {
+  MapIter iter = map_.find(worker_id);
+  if (iter == map_.end()) {
+    dbg(DBG_ERROR, "ERROR: WorkerMonitor: worker id %lu does not exist!", worker_id);
+    exit(-1);
+    return false;
+  }
+
+  map_[worker_id] = new WorkerProfile(worker_id);
+  delete iter->second;
+  map_.erase(iter);
+  return true;
 }
 
 bool WorkerMonitor::AddReadyJob(worker_id_t worker_id, job_id_t job_id) {
-  return false;
+  MapIter iter = map_.find(worker_id);
+  if (iter == map_.end()) {
+    dbg(DBG_ERROR, "ERROR: WorkerMonitor: worker id %lu does not exist!", worker_id);
+    exit(-1);
+    return false;
+  }
+
+  iter->second->AddReadyJob(job_id);
+  return true;
 }
 
 bool WorkerMonitor::AddBlockedJob(worker_id_t worker_id, job_id_t job_id) {
-  return false;
+  MapIter iter = map_.find(worker_id);
+  if (iter == map_.end()) {
+    dbg(DBG_ERROR, "ERROR: WorkerMonitor: worker id %lu does not exist!", worker_id);
+    exit(-1);
+    return false;
+  }
+
+  iter->second->AddBlockedJob(job_id);
+  return true;
 }
 
 bool WorkerMonitor::NotifyJobDone(worker_id_t worker_id, job_id_t job_id) {
-  return false;
+  MapIter iter = map_.find(worker_id);
+  if (iter == map_.end()) {
+    dbg(DBG_ERROR, "ERROR: WorkerMonitor: worker id %lu does not exist!", worker_id);
+    exit(-1);
+    return false;
+  }
+
+  iter->second->NotifyJobDone(job_id);
+  return true;
 }
 
 void WorkerMonitor::ResetWorkerTimers() {
+  MapIter iter = map_.begin();
+  for (; iter != map_.end(); ++iter) {
+    iter->second->ResetTimers();
+  }
 }
 
-size_t WorkerMonitor::GetStragglers(std::list<worker_id_t> list, size_t percentile) {
+size_t WorkerMonitor::GetStragglers(std::list<worker_id_t> *list, size_t percentile) {
+  assert(percentile <= 100);
+  list->clear();
   return 0;
 }
 
-size_t WorkerMonitor::GetFastWorkers(std::list<worker_id_t> list, size_t percentile) {
+size_t WorkerMonitor::GetFastWorkers(std::list<worker_id_t> *list, size_t percentile) {
+  assert(percentile <= 100);
+  list->clear();
   return 0;
+}
+
+std::string WorkerMonitor::PrintStats() {
+  std::string rval;
+  rval += "\n+++++++ Worker Monitor Stats +++++++\n";
+  MapIter iter = map_.begin();
+  for (; iter != map_.end(); ++iter) {
+    rval += iter->second->PrintStats();
+  }
+
+  rval += "\n++++++++++++++++++++++++++++++++++++\n";
+  return rval;
 }
 
 }  // namespace nimbus

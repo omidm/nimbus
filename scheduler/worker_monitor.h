@@ -48,6 +48,7 @@
 #include <map>
 #include <list>
 #include <vector>
+#include <string>
 #include "shared/nimbus_types.h"
 #include "scheduler/worker_profile.h"
 #include "scheduler/region_map.h"
@@ -62,9 +63,9 @@ namespace nimbus {
     WorkerMonitor();
     virtual ~WorkerMonitor();
 
-    void AddWorker(worker_id_t worker_id);
+    bool AddWorker(worker_id_t worker_id);
 
-    void RemoveWorker(worker_id_t worker_id);
+    bool RemoveWorker(worker_id_t worker_id);
 
     bool AddReadyJob(worker_id_t worker_id, job_id_t job_id);
 
@@ -74,9 +75,11 @@ namespace nimbus {
 
     void ResetWorkerTimers();
 
-    size_t GetStragglers(std::list<worker_id_t> list, size_t percentile);
+    size_t GetStragglers(std::list<worker_id_t> *list, size_t percentile);
 
-    size_t GetFastWorkers(std::list<worker_id_t> list, size_t percentile);
+    size_t GetFastWorkers(std::list<worker_id_t> *list, size_t percentile);
+
+    std::string PrintStats();
 
   private:
     WorkerMonitor(const WorkerMonitor& other) {}

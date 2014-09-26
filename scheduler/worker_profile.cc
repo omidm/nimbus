@@ -135,10 +135,10 @@ void WorkerProfile::NotifyJobDone(job_id_t job_id) {
   }
 }
 
-std::string WorkerProfile::PrintStatus() {
+std::string WorkerProfile::PrintStats() {
   boost::unique_lock<boost::mutex> lock(mutex_);
   std::string rval;
-  rval += "\n+++++++ Worker Status +++++++\n";
+  rval += "\n+++++++ Worker Stats +++++++\n";
 
   {
     std::ostringstream ss;
@@ -176,7 +176,7 @@ std::string WorkerProfile::PrintStatus() {
     rval += "\n";
   }
 
-  rval += "\n+++++++++++++++++++++++++++++\n";
+  rval += "\n++++++++++++++++++++++++++++\n";
   return rval;
 }
 

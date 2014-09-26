@@ -79,7 +79,7 @@ class WorkerProfile {
 
     void NotifyJobDone(job_id_t job_id);
 
-    std::string PrintStatus();
+    std::string PrintStats();
 
   private:
     worker_id_t worker_id_;
