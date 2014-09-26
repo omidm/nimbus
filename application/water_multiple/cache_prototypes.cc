@@ -41,35 +41,38 @@
 
 namespace application {
 
-CacheFaceArray<T> kCacheFaceVel(kDefaultRegion, 0, true);
-CacheFaceArray<T> kCacheFaceVelGhost(kDefaultRegion, 3, true);
-CacheFaceArray<bool> kCachePsiN(kDefaultRegion, 1, true);
+CacheFaceArray<T> kCacheFaceVel(kDefaultRegion, 0, true, "face_vel");
+CacheFaceArray<T> kCacheFaceVelGhost(kDefaultRegion, 3, true, "face_vel_ghost");
+CacheFaceArray<bool> kCachePsiN(kDefaultRegion, 1, true, "psi_n");
 
-CacheScalarArray<T> kCachePhi3(kDefaultRegion, 3, true);
-CacheScalarArray<T> kCachePhi7(kDefaultRegion, 7, true);
-CacheScalarArray<T> kCachePhi8(kDefaultRegion, 8, true);
-CacheScalarArray<bool> kCachePsiD(kDefaultRegion, 1, true);
+CacheScalarArray<T> kCachePhi3(kDefaultRegion, 3, true, "phi_3");
+CacheScalarArray<T> kCachePhi7(kDefaultRegion, 7, true, "phi_7");
+CacheScalarArray<T> kCachePhi8(kDefaultRegion, 8, true, "phi_8");
+CacheScalarArray<bool> kCachePsiD(kDefaultRegion, 1, true, "psi_d");
 
 // Varibales for projection.
-CacheScalarArray<T> kCachePressure(kDefaultRegion, 1, true);
-CacheScalarArray<int> kCacheColors(kDefaultRegion, 1, true);
-CacheScalarArray<T> kCacheDivergence(kDefaultRegion, 1, true);
+CacheScalarArray<T> kCachePressure(kDefaultRegion, 1, true, "pressure");
+CacheScalarArray<int> kCacheColors(kDefaultRegion, 1, true,
+                                   "filled_region_colors");
+CacheScalarArray<T> kCacheDivergence(kDefaultRegion, 1, true, "divergence");
 // TODO(quhang): this cache variable is questionable, because it cannot be
 // deleted if meta_p is being used.
-CacheRawGridArray kCacheIndexC2M(kDefaultRegion, true);
+CacheRawGridArray kCacheIndexC2M(kDefaultRegion, true, "index_c2m");
 
-CacheParticleLevelsetEvolution<float> kCachePLE(kDefaultRegion, 3, true);
+CacheParticleLevelsetEvolution<float> kCachePLE(kDefaultRegion, 3, true,
+                                                "particle_container");
 
-CacheSparseMatrix kCacheSparseMatrixA(kDefaultRegion, true);
-CacheSparseMatrix kCacheSparseMatrixC(kDefaultRegion, true);
+CacheSparseMatrix kCacheSparseMatrixA(kDefaultRegion, true, "matrix_c");
+CacheSparseMatrix kCacheSparseMatrixC(kDefaultRegion, true, "matrix_a");
 
-CacheArrayM2C kCacheArrayM2C(kDefaultRegion, true);
+CacheArrayM2C kCacheArrayM2C(kDefaultRegion, true, "index_m2c");
 
-CacheCompressedScalarArray<float> kCacheMetaP(kDefaultRegion, 1, true);
+CacheCompressedScalarArray<float> kCacheMetaP(kDefaultRegion, 1, true,
+                                              "vector_p_meta_format");
 
-CacheVector kCacheVectorB(kDefaultRegion, true);
-CacheVector kCacheVectorPressure(kDefaultRegion, true);
-CacheVector kCacheVectorZ(kDefaultRegion, true);
-CacheVector kCacheVectorTemp(kDefaultRegion, true);
+CacheVector kCacheVectorB(kDefaultRegion, true, "vector_b");
+CacheVector kCacheVectorPressure(kDefaultRegion, true, "vector_pressure");
+CacheVector kCacheVectorZ(kDefaultRegion, true, "vector_z");
+CacheVector kCacheVectorTemp(kDefaultRegion, true, "vector_temp");
 } // namespace application
 

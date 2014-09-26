@@ -54,9 +54,11 @@ namespace application {
 template<class T> CacheCompressedScalarArray<T>::
 CacheCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
                            const int ghost_width,
-                           bool make_proto)
+                           bool make_proto,
+                           const std::string& name)
     : global_region_(global_reg),
       ghost_width_(ghost_width) {
+  set_name(name);
   data_ = new DataType();
   index_data_ = NULL;
   data_length_ = -1;
@@ -82,9 +84,11 @@ CacheCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
 
 template<class T> nimbus::CacheVar *CacheCompressedScalarArray<T>::
 CreateNew(const nimbus::GeometricRegion &ob_reg) const {
-  return new CacheCompressedScalarArray<T>(global_region_,
-                                           ob_reg,
-                                           ghost_width_);
+  nimbus::CacheVar* temp = new CacheCompressedScalarArray<T>(global_region_,
+                                                             ob_reg,
+                                                             ghost_width_);
+  temp->set_name(name());
+  return temp;
 }
 
 template<class T> void CacheCompressedScalarArray<T>::

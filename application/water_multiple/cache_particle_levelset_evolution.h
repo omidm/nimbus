@@ -73,7 +73,8 @@ class CacheParticleLevelsetEvolution : public nimbus::CacheStruct {
         explicit CacheParticleLevelsetEvolution(
                 const nimbus::GeometricRegion &global_reg,
                 int ghost_width,
-                bool make_proto = false);
+                bool make_proto,
+                const std::string& name);
 
         PhysBAMPLE *data() {
             return data_;
@@ -84,9 +85,6 @@ class CacheParticleLevelsetEvolution : public nimbus::CacheStruct {
 
         virtual size_t memory_size() {
           return sizeof(*this) + (data_ ? data_->memory_size() : 0);
-        }
-        virtual std::string name() {
-          return "particles_container";
         }
 
     protected:

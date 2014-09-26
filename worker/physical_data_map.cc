@@ -57,6 +57,7 @@ void PhysicalDataMap::PrintTimeStamp(const char* format, ...) {
   double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
   fprintf(physical_data_log, "%f ", time_sum);
   vfprintf(physical_data_log, format, args);
+  fflush(physical_data_log);
   va_end(args);
 }
 

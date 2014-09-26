@@ -300,12 +300,13 @@ void CacheManager::ReleaseAccess(CacheObject* cache_object) {
       struct timespec t;
       clock_gettime(CLOCK_REALTIME, &t);
       double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
-      fprintf(alloc_log, "%f : %"PRIu64" %s %zu\n",
+      fprintf(alloc_log, "%f %"PRIu64" %s %zu\n",
               time_sum,
               data_id,
               cache_object->name().c_str(),
               new_size);
-      fprintf(alloc_log, "%zu\n", memory_sum_);
+      fprintf(alloc_log, "%f %zu\n", time_sum, memory_sum_);
+      fflush(alloc_log);
     }
     pthread_mutex_unlock(&cache_lock);
 }

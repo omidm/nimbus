@@ -158,10 +158,6 @@ class CacheStruct : public CacheObject {
           return sizeof(*this);
         }
 
-        virtual std::string name() {
-          return "cache_struct";
-        }
-
     private:
         /**
          * \brief Disallow calling constructor with no arguments

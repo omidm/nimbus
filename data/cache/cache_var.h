@@ -141,10 +141,6 @@ class CacheVar : public CacheObject {
           return sizeof(*this);
         }
 
-        virtual std::string name() {
-          return "cache_var";
-        }
-
         bool CheckWritePendingFlag(const DataArray &write_set,
                                    GeometricRegion &write_region);
 

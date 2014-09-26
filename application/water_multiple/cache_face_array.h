@@ -62,7 +62,8 @@ class CacheFaceArray : public nimbus::CacheVar {
     public:
         explicit CacheFaceArray(const nimbus::GeometricRegion &global_reg,
                                 const int ghost_width,
-                                bool make_proto = false);
+                                bool make_proto,
+                                const std::string& name);
 
         PhysBAMFaceArray *data() {
             return data_;
@@ -72,9 +73,6 @@ class CacheFaceArray : public nimbus::CacheVar {
         }
         virtual size_t memory_size() {
           return data_ ? sizeof(*this) + data_->memory_size() : sizeof(*this);
-        }
-        virtual std::string name() {
-          return "face_array";
         }
 
     protected:

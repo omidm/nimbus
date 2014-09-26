@@ -43,6 +43,14 @@ public:
 
     T_FAST_LEVELSET_ADVECTION levelset_advection;
 
+    size_t dynamic_memory_size() {
+      return phi.dynamic_memory_size() + V.dynamic_memory_size();
+    }
+    size_t memory_size() {
+      return sizeof(*this) + dynamic_memory_size() +
+          particle_levelset.dynamic_memory_size();
+    }
+
     PARTICLE_LEVELSET_EVOLUTION_UNIFORM(const T_GRID& grid_input,const int number_of_ghost_cells_input);
     virtual ~PARTICLE_LEVELSET_EVOLUTION_UNIFORM();
 

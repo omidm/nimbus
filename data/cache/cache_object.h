@@ -164,11 +164,16 @@ class CacheObject {
           unique_id_ = unique_id;
         }
 
-        virtual std::string name() {
-          return "cache_object";
+        std::string name() const {
+          return name_;
+        }
+        void set_name(const std::string name) {
+          name_ = name;
         }
 
+
     private:
+        std::string name_;
         uint64_t unique_id_;
         bool pending_flag_;
         /**

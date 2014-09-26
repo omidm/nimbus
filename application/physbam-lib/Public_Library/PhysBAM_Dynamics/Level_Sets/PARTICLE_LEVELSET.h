@@ -57,6 +57,29 @@ public:
     T_ARRAYS_ARRAY_BOOL escaped_positive_particles,escaped_negative_particles;
     ARRAY<ARRAY<PAIR<PARTICLE_LEVELSET_PARTICLES<TV>*,int> >,TV_INT> deletion_list;
 
+    size_t memory_size_per_particle() {
+      return sizeof(TV) + sizeof(int) +
+          sizeof(T) + sizeof(T) + sizeof(unsigned short);
+    }
+    size_t memory_size_per_bucket() {
+      // Pointer to next, pointer in allocator.
+      return sizeof(char*) * 2 + sizeof(ARRAY_COLLECTION) +
+          sizeof(ARRAY_COLLECTION_ELEMENT<TV>) +
+          sizeof(ARRAY_COLLECTION_ELEMENT<T>) * 2+
+          sizeof(ARRAY_COLLECTION_ELEMENT<int>) +
+          sizeof(ARRAY_COLLECTION_ELEMENT<unsigned short>);
+    }
+    size_t dynamic_memory_size() {
+      return (memory_size_per_bucket() + number_particles_per_cell * memory_size_per_particle())
+          * particle_pool.num_allocated_buckets +
+          positive_particles.dynamic_memory_size() +
+          negative_particles.dynamic_memory_size() +
+          removed_positive_particles.dynamic_memory_size() +
+          removed_negative_particles.dynamic_memory_size() +
+          escaped_positive_particles.dynamic_memory_size() +
+          escaped_negative_particles.dynamic_memory_size();
+    }
+
     PARTICLE_LEVELSET(T_GRID& grid_input,T_ARRAYS_SCALAR& phi_input,const int number_of_ghost_cells_input);
     virtual ~PARTICLE_LEVELSET();
 

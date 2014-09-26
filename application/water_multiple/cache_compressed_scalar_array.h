@@ -60,7 +60,8 @@ class CacheCompressedScalarArray : public nimbus::CacheVar {
  public:
   explicit CacheCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
                                       const int ghost_width,
-                                      bool make_proto = false);
+                                      bool make_proto,
+                                      const std::string& name);
 
   DataType* data() { return data_; }
   void set_data(DataType* d) { data_ = d; }
@@ -78,9 +79,6 @@ class CacheCompressedScalarArray : public nimbus::CacheVar {
       temp += index_data_->memory_size();
     }
     return temp;
-  }
-  virtual std::string name() {
-    return "compuressed_scalar_array";
   }
 
  protected:
