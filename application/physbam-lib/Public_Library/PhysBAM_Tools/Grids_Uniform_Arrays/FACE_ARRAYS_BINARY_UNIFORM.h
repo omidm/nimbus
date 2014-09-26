@@ -76,6 +76,9 @@ public:
     void Delete_Pointers_And_Clean_Memory()
     {for(int side=1;side<=2;side++)for(int i=1;i<=dimension;i++) Component(side,i).Delete_Pointers_And_Clean_Memory();}
 
+    void Nimbus_Delete_Base_Pointer() 
+    {for(int side=1;side<=2;side++)for(int i=1;i<=dimension;i++) Component(side,i).Nimbus_Delete_Base_Pointer();}
+
     int Number_Of_Ghost_Cells() const
     {return 1-domain_indices.min_corner.x;}
 

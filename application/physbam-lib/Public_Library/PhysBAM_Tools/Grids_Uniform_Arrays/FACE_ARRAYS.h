@@ -180,6 +180,10 @@ namespace PhysBAM {
                 Clean_Memory();
             }
 
+	    void Nimbus_Delete_Base_Pointer() {
+	      delete[] base_pointer;
+	    }
+
             int Number_Of_Ghost_Cells() const {
                 return 1 - domain_indices.min_corner.x;
             }

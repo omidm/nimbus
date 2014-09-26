@@ -186,6 +186,9 @@ public:
     void Delete_Pointers_And_Clean_Memory() // only valid if T is a pointer type
     {for(ID i(1);i<=m;i++) delete (*this)(i);Clean_Memory();}
 
+    void Nimbus_Delete_Base_Pointer()
+    {delete[] base_pointer;}
+
     void Insert(const T& element,const ID index)
     {Ensure_Enough_Space(m+1);m++;for(ID i=m;i>index;i--) (*this)(i)=(*this)(i-1);(*this)(index)=element;}
 
