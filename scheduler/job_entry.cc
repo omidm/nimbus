@@ -52,7 +52,9 @@ JobEntry::JobEntry() {
   assigned_ = false;
   done_ = false;
   future_ = false;
-  region_valid_ = false;
+  read_region_valid_ = false;
+  write_region_valid_ = false;
+  union_region_valid_ = false;
   assigned_worker_ = NULL;
 }
 
@@ -225,14 +227,16 @@ void JobEntry::set_job_id(job_id_t job_id) {
 void JobEntry::set_read_set(IDSet<logical_data_id_t> read_set) {
   union_set_.remove(read_set_);
   union_set_.insert(read_set);
-  region_valid_ = false;
+  read_region_valid_ = false;
+  union_region_valid_ = false;
   read_set_ = read_set;
 }
 
 void JobEntry::set_write_set(IDSet<logical_data_id_t> write_set) {
   union_set_.remove(write_set_);
   union_set_.insert(write_set);
-  region_valid_ = false;
+  write_region_valid_ = false;
+  union_region_valid_ = false;
   write_set_ = write_set;
 }
 
@@ -373,8 +377,8 @@ void JobEntry::remove_versioning_dependency(job_id_t job_id) {
 }
 
 bool JobEntry::GetUnionSetRegion(DataManager *data_manager, GeometricRegion *region) {
-  if (region_valid_) {
-    *region = region_;
+  if (union_region_valid_) {
+    *region = union_region_;
     return true;
   } else {
     if (union_set_.size() == 0) {
@@ -383,16 +387,14 @@ bool JobEntry::GetUnionSetRegion(DataManager *data_manager, GeometricRegion *reg
       const LogicalDataObject* ldo;
       IDSet<logical_data_id_t>::IDSetIter iter = union_set_.begin();
       ldo = data_manager->FindLogicalObject(*iter);
-      // std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
-      region_ = *ldo->region();
+      union_region_ = *ldo->region();
       ++iter;
       for (; iter != union_set_.end(); ++iter) {
         ldo = data_manager->FindLogicalObject(*iter);
-        // std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
-        region_ = GeometricRegion::GetBoundingBox(region_, *ldo->region());
+        union_region_ = GeometricRegion::GetBoundingBox(union_region_, *ldo->region());
       }
-      *region = region_;
-      region_valid_ = true;
+      *region = union_region_;
+      union_region_valid_ = true;
       return true;
     }
   }
@@ -400,8 +402,8 @@ bool JobEntry::GetUnionSetRegion(DataManager *data_manager, GeometricRegion *reg
 
 
 bool JobEntry::GetReadSetRegion(DataManager *data_manager, GeometricRegion *region) {
-  if (region_valid_) {
-    *region = region_;
+  if (read_region_valid_) {
+    *region = read_region_;
     return true;
   } else {
     if (read_set_.size() == 0) {
@@ -410,24 +412,22 @@ bool JobEntry::GetReadSetRegion(DataManager *data_manager, GeometricRegion *regi
       const LogicalDataObject* ldo;
       IDSet<logical_data_id_t>::IDSetIter iter = read_set_.begin();
       ldo = data_manager->FindLogicalObject(*iter);
-      // std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
-      region_ = *ldo->region();
+      read_region_ = *ldo->region();
       ++iter;
       for (; iter != read_set_.end(); ++iter) {
         ldo = data_manager->FindLogicalObject(*iter);
-        // std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
-        region_ = GeometricRegion::GetBoundingBox(region_, *ldo->region());
+        read_region_ = GeometricRegion::GetBoundingBox(read_region_, *ldo->region());
       }
-      *region = region_;
-      region_valid_ = true;
+      *region = read_region_;
+      read_region_valid_ = true;
       return true;
     }
   }
 }
 
 bool JobEntry::GetWriteSetRegion(DataManager *data_manager, GeometricRegion *region) {
-  if (region_valid_) {
-    *region = region_;
+  if (write_region_valid_) {
+    *region = write_region_;
     return true;
   } else {
     if (write_set_.size() == 0) {
@@ -436,16 +436,14 @@ bool JobEntry::GetWriteSetRegion(DataManager *data_manager, GeometricRegion *reg
       const LogicalDataObject* ldo;
       IDSet<logical_data_id_t>::IDSetIter iter = write_set_.begin();
       ldo = data_manager->FindLogicalObject(*iter);
-      // std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
-      region_ = *ldo->region();
+      write_region_ = *ldo->region();
       ++iter;
       for (; iter != write_set_.end(); ++iter) {
         ldo = data_manager->FindLogicalObject(*iter);
-        // std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
-        region_ = GeometricRegion::GetBoundingBox(region_, *ldo->region());
+        write_region_ = GeometricRegion::GetBoundingBox(write_region_, *ldo->region());
       }
-      *region = region_;
-      region_valid_ = true;
+      *region = write_region_;
+      write_region_valid_ = true;
       return true;
     }
   }

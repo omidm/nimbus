@@ -149,9 +149,9 @@ class JobEntry {
     bool IsReadyForCompleteVersioning();
     void remove_versioning_dependency(job_id_t job_id);
 
-    bool GetUnionSetRegion(DataManager *data_manager, GeometricRegion *region);
     bool GetReadSetRegion(DataManager *data_manager, GeometricRegion *region);
     bool GetWriteSetRegion(DataManager *data_manager, GeometricRegion *region);
+    bool GetUnionSetRegion(DataManager *data_manager, GeometricRegion *region);
 
   protected:
     JobType job_type_;
@@ -174,7 +174,9 @@ class JobEntry {
     IDSet<job_id_t> jobs_passed_versions_;
     IDSet<job_id_t> assignment_dependencies_;
     IDSet<job_id_t> versioning_dependencies_;
-    GeometricRegion region_;
+    GeometricRegion read_region_;
+    GeometricRegion write_region_;
+    GeometricRegion union_region_;
     worker_id_t assigned_worker_id_;
     SchedulerWorker *assigned_worker_;
     bool sterile_;
@@ -183,7 +185,9 @@ class JobEntry {
     bool assigned_;
     bool done_;
     bool future_;
-    bool region_valid_;
+    bool read_region_valid_;
+    bool write_region_valid_;
+    bool union_region_valid_;
 
   private:
     void Initialize();
