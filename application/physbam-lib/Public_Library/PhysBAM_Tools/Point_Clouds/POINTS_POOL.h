@@ -26,11 +26,13 @@ private:
     pthread_mutex_t stack_lock,batch_lock;
 #endif
 public:
+    int num_allocated_buckets;
     int number_particles_per_cell;
 
     POINTS_POOL(const T_POINT_CLOUD& template_particles,const int allocation_batch_size_input=100000)
         :template_particles(template_particles),allocation_batch_size(allocation_batch_size_input),number_particles_per_cell(0)
     {
+        num_allocated_buckets = 0;
 #ifdef USE_PTHREADS
         pthread_mutex_init(&stack_lock,0);pthread_mutex_init(&batch_lock,0);
 #endif
@@ -91,6 +93,7 @@ private:
     LOG::filecout(ss.str());
 #endif
     CLONE_ARRAY<T_POINT_CLOUD>* batch=new CLONE_ARRAY<T_POINT_CLOUD>(template_particles,allocation_batch_size);
+    num_allocated_buckets += allocation_batch_size;
     for(int i=1;i<=allocation_batch_size;i++) (*batch)(i).array_collection->Preallocate(number_particles_per_cell);
     allocated_batches.Append(batch);
 #ifdef USE_PTHREADS

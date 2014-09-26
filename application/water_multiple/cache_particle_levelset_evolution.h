@@ -82,6 +82,13 @@ class CacheParticleLevelsetEvolution : public nimbus::CacheStruct {
             data_ = d;
         }
 
+        virtual size_t memory_size() {
+          return sizeof(*this) + (data_ ? data_->memory_size() : 0);
+        }
+        virtual std::string name() {
+          return "particles_container";
+        }
+
     protected:
         virtual nimbus::CacheStruct *CreateNew(
                 const nimbus::GeometricRegion &ob_reg) const;

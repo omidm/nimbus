@@ -34,6 +34,12 @@ public:
     ID buffer_size;
 
     ID m; // the current size of the array (buffer_size may be larger for elbow room)
+    size_t dynamic_memory_size() {
+      return sizeof(T) * buffer_size;
+    }
+    size_t memory_size() {
+      return sizeof(*this) + dynamic_memory_size();
+    }
 
     ARRAY()
         :base_pointer(0),buffer_size(0),m(0)

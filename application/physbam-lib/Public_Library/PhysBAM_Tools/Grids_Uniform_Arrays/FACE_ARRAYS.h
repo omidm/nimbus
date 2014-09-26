@@ -39,6 +39,14 @@ namespace PhysBAM {
             T* base_pointer;
             int buffer_size;
 
+            size_t dynamic_memory_size() {
+              return sizeof(T) * buffer_size;
+            }
+
+            size_t memory_size() {
+              return sizeof(*this) + dynamic_memory_size();
+            }
+
             enum {
                 dimension = TV::dimension
             };

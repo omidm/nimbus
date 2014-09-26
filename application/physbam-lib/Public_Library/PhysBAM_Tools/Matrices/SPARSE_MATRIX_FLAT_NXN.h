@@ -34,6 +34,14 @@ public:
     ARRAY<int> diagonal_index;
     SPARSE_MATRIX_FLAT_NXN<T>* C;
     THREAD_QUEUE* thread_queue;
+    size_t dynamic_memory_size() {
+      // C is not counted.
+      return offsets.dynamic_memory_size() + A.dynamic_memory_size() 
+          + diagonal_index.dynamic_memory_size();
+    }
+    size_t memory_size() {
+      return sizeof(*this) + dynamic_memory_size();
+    }
 
     void Set_Element(const int i,const int j,const T element)
     {(*this)(i,j)=element;}

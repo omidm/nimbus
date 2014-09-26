@@ -70,7 +70,7 @@ class CacheScalarArray : public nimbus::CacheVar {
             data_ = d;
         }
         virtual size_t memory_size() {
-          return data ? sizeof(*this) + data->memory_size() : sizeof(*this);
+          return data_ ? sizeof(*this) + data_->memory_size() : sizeof(*this);
         }
         virtual std::string name() {
           return "scalar_array";

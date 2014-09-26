@@ -71,11 +71,11 @@ class CacheCompressedScalarArray : public nimbus::CacheVar {
   static long CalculateHashCode(IndexType& index);
   virtual size_t memory_size() {
     size_t temp = sizeof(*this);
-    if (data) {
-      temp += data->memory_size();
+    if (data_) {
+      temp += data_->memory_size();
     }
-    if (index_data) {
-      temp += index_data->memory_size();
+    if (index_data_) {
+      temp += index_data_->memory_size();
     }
     return temp;
   }

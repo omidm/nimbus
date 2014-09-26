@@ -64,7 +64,7 @@ class CacheSparseMatrix : public nimbus::CacheVar {
   }
 
   virtual size_t memory_size() {
-    return data ? sizeof(*this) + d->memory_size() : sizeof(*this);
+    return data_ ? sizeof(*this) + data_->memory_size() : sizeof(*this);
   }
   virtual std::string name() {
     return "sparse_matrix";
