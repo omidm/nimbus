@@ -60,17 +60,17 @@ worker_id_t WorkerProfile::worker_id() {
 }
 
 double WorkerProfile::idle_time() {
-  boost::unique_lock<boost::mutex> lock(mutex_);
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   return idle_timer_.timer();
 }
 
 double WorkerProfile::active_time() {
-  boost::unique_lock<boost::mutex> lock(mutex_);
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   return active_timer_.timer();
 }
 
 double WorkerProfile::blocked_time() {
-  boost::unique_lock<boost::mutex> lock(mutex_);
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   return blocked_timer_.timer();
 }
 
@@ -84,7 +84,7 @@ IDSet<job_id_t>* WorkerProfile::blocked_jobs() {
 
 
 void WorkerProfile::ResetTimers() {
-  boost::unique_lock<boost::mutex> lock(mutex_);
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   if ((ready_jobs_->size() == 0) &&
       (blocked_jobs_->size() == 0)) {
     idle_timer_.Start();
@@ -102,7 +102,7 @@ void WorkerProfile::ResetTimers() {
 }
 
 void WorkerProfile::AddReadyJob(job_id_t job_id) {
-  boost::unique_lock<boost::mutex> lock(mutex_);
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   ready_jobs_->insert(job_id);
   blocked_jobs_->remove(job_id);
   idle_timer_.Stop();
@@ -111,7 +111,7 @@ void WorkerProfile::AddReadyJob(job_id_t job_id) {
 }
 
 void WorkerProfile::AddBlockedJob(job_id_t job_id) {
-  boost::unique_lock<boost::mutex> lock(mutex_);
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   blocked_jobs_->insert(job_id);
   idle_timer_.Stop();
   if (ready_jobs_->size() == 0) {
@@ -120,7 +120,7 @@ void WorkerProfile::AddBlockedJob(job_id_t job_id) {
 }
 
 void WorkerProfile::NotifyJobDone(job_id_t job_id) {
-  boost::unique_lock<boost::mutex> lock(mutex_);
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   assert(ready_jobs_->contains(job_id));
   ready_jobs_->remove(job_id);
   blocked_jobs_->remove(job_id);
@@ -136,7 +136,7 @@ void WorkerProfile::NotifyJobDone(job_id_t job_id) {
 }
 
 std::string WorkerProfile::PrintStats() {
-  boost::unique_lock<boost::mutex> lock(mutex_);
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   std::string rval;
   rval += "\n+++++++ Worker Stats +++++++\n";
 

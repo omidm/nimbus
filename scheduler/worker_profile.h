@@ -90,7 +90,7 @@ class WorkerProfile {
     Chronometer active_timer_;
     Chronometer blocked_timer_;
 
-    boost::mutex mutex_;
+    boost::recursive_mutex mutex_;
 };
 
 

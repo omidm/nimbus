@@ -85,7 +85,6 @@ namespace nimbus {
     WorkerMonitor(const WorkerMonitor& other) {}
 
     Map map_;
-    size_t worker_num_;
   };
 
 }  // namespace nimbus

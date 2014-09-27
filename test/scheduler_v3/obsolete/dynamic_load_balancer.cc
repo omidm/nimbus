@@ -42,7 +42,7 @@
 
 #include "./dynamic_load_balancer.h"
 
-#define LB_UPDATE_RATE 200
+#define LB_UPDATE_RATE 10
 
 namespace nimbus {
 
@@ -50,8 +50,8 @@ DynamicLoadBalancer::DynamicLoadBalancer() {
   worker_num_ = 0;
   update_ = false;
   init_phase_ = true;
+  blame_counter_ = 0;
   stamp_state_ = -1;
-  counter_ = 0;
   log_.set_file_name("load_balancer_log");
   global_region_ = GeometricRegion(0, 0, 0, 0, 0, 0);
 }
@@ -184,23 +184,29 @@ void DynamicLoadBalancer::NotifyJobAssignment(const JobEntry *job) {
     JobEntry *j = iter->second->start_vertex()->entry();
     if (!j->done()) {
       job_profile->waiting_set_p()->insert(j->job_id());
+    } else {
+      /*
+      JobHistory::iterator it = job_history_.find(j->job_id());
+      if (it != job_history_.end()) {
+        JobProfile *jp = it->second;
+        job_profile->add_log_entry(
+            jp->worker_id(), jp->job_id(), jp->done_time());
+      } else {
+        dbg(DBG_WARN, "WARNING: Load balancer, could not find done job in job history.");
+        exit(-1);
+      }
+      */
     }
   }
 
   if (job_profile->waiting_set_p()->size() == 0) {
     job_profile->set_ready_time(time);
     job_profile->set_ready(true);
-    boost::unique_lock<boost::recursive_mutex> lock_monitor(worker_monitor_mutex_);
-    worker_monitor_.AddReadyJob(job->assigned_worker()->worker_id(), job->job_id());
-  } else {
-    boost::unique_lock<boost::recursive_mutex> lock_monitor(worker_monitor_mutex_);
-    worker_monitor_.AddBlockedJob(job->assigned_worker()->worker_id(), job->job_id());
   }
 
-  {
-    boost::unique_lock<boost::recursive_mutex> lock_history(job_history_mutex_);
-    job_history_[job->job_id()] = job_profile;
-  }
+  boost::unique_lock<boost::recursive_mutex> lock_history(job_history_mutex_);
+  job_history_[job->job_id()] = job_profile;
+
 
   boost::unique_lock<boost::mutex> lock_stamp(stamp_mutex_);
   std::string jname = job->job_name();
@@ -221,13 +227,7 @@ void DynamicLoadBalancer::NotifyJobDone(const JobEntry *job) {
     return;
   }
 
-  if (++counter_ >  LB_UPDATE_RATE) {
-    log_.log_WriteToFile(worker_monitor_.PrintStats());
-    worker_monitor_.ResetWorkerTimers();
-    counter_ = 0;
-  }
-
-  assert(job->done());
+  // assert(job->done());
   done_jobs_.push_back(job->job_id());
 
   JobHistory::iterator it = job_history_.find(job->job_id());
@@ -237,10 +237,6 @@ void DynamicLoadBalancer::NotifyJobDone(const JobEntry *job) {
   job_profile->set_done_time(time);
   job_profile->set_done(true);
   job_profile->set_execute_duration(time - job_profile->ready_time());
-  {
-    boost::unique_lock<boost::recursive_mutex> lock_monitor(worker_monitor_mutex_);
-    worker_monitor_.NotifyJobDone(job_profile->worker_id(), job_profile->job_id());
-  }
 
   Vertex<JobEntry, job_id_t>* vertex;
   job_manager_->GetJobGraphVertex(job->job_id(), &vertex);
@@ -259,15 +255,29 @@ void DynamicLoadBalancer::NotifyJobDone(const JobEntry *job) {
       if (jp->waiting_set_p()->size() == 0) {
         jp->set_ready_time(time);
         jp->set_ready(true);
-        {
-          boost::unique_lock<boost::recursive_mutex> lock_monitor(worker_monitor_mutex_);
-          worker_monitor_.AddReadyJob(jp->worker_id(), jp->job_id());
-        }
       }
     }
   }
 
   // log_.log_WriteToFile(job_profile->Print());
+
+  worker_id_t blamed_worker_id;
+  if (job_profile->FindBlamedWorker(&blamed_worker_id)) {
+    boost::unique_lock<boost::recursive_mutex> straggler_map_lock(straggler_map_mutex_);
+    straggler_map_.AddRecord(job->assigned_worker_id(), blamed_worker_id);
+    std::cout << "STRAGGLER ADD RECORD: job name: " << job->job_name()
+              << " worker: " << job->assigned_worker_id()
+              << " blamed: " << blamed_worker_id << std::endl;
+
+    ++blame_map_[blamed_worker_id];
+
+    blame_counter_++;
+    if (blame_counter_ > LB_UPDATE_RATE) {
+      blame_counter_ = 0;
+      update_ = true;
+      update_cond_.notify_all();
+    }
+  }
 
   std::string jname = job->job_name();
   if (jname == "loop_iteration") {
@@ -280,11 +290,6 @@ void DynamicLoadBalancer::NotifyJobDone(const JobEntry *job) {
 void DynamicLoadBalancer::NotifyRegisteredWorker(SchedulerWorker *worker) {
   boost::unique_lock<boost::recursive_mutex> update_lock(update_mutex_);
   boost::unique_lock<boost::recursive_mutex> worker_map_lock(worker_map_mutex_);
-
-  {
-    boost::unique_lock<boost::recursive_mutex> lock_monitor(worker_monitor_mutex_);
-    worker_monitor_.AddWorker(worker->worker_id());
-  }
 
   worker_id_t worker_id = worker->worker_id();
   WorkerMap::iterator iter = worker_map_.find(worker_id);
@@ -321,11 +326,29 @@ void DynamicLoadBalancer::UpdateRegionMap() {
   return;
   boost::unique_lock<boost::recursive_mutex> worker_map_lock(worker_map_mutex_);
   boost::unique_lock<boost::recursive_mutex> region_map_lock(region_map_mutex_);
+  boost::unique_lock<boost::recursive_mutex> straggler_map_lock(straggler_map_mutex_);
 
-  if (region_map_.BalanceRegions(1, 1)) {
-    straggler_map_.ClearRecords();
-    log_.log_WriteToFile(region_map_.Print());
+  worker_id_t fast, slow;
+  if (straggler_map_.GetMostImbalanceWorkers(&fast, &slow)) {
+    std::cout << "LOAD BALANCER: fast worker: " << fast
+              << ", slow worker: " << slow << std::endl;
+    if (region_map_.BalanceRegions(fast, slow)) {
+      straggler_map_.ClearRecords();
+      log_.log_WriteToFile(region_map_.Print());
+    }
   }
+
+  worker_id_t worst_worker = 0;
+  size_t count = 0;
+  std::map<worker_id_t, size_t>::iterator iter = blame_map_.begin();
+  for (; iter != blame_map_.end(); ++iter) {
+    if (iter->second > count) {
+      count = iter->second;
+      worst_worker = iter->first;
+    }
+  }
+  std::cout << "LOAD BALANCER: worst worker: " << worst_worker << std::endl;
+  blame_map_.clear();
 }
 
 }  // namespace nimbus
