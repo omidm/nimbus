@@ -100,8 +100,12 @@ public:
     void Delete_Pointers_And_Clean_Memory() // only valid if T is a pointer type
     {for(int i=1;i<=array.Size();i++) delete array(i);Clean_Memory();}
 
-    // void Nimbus_Delete_Base_Pointer()
-    // {for(int i=1;i<=array.Size();i++) delete array(i);}
+    void Nimbus_Delete_Base_Pointer()
+    {for(int i=1;i<=array.Size();i++) delete array(i);
+    delete[] array.Get_Array_Pointer();}
+
+    void Nimbus_Delete_Base_Pointer_Scalar()
+    {delete[] array.Get_Array_Pointer();}
 
     ARRAY& operator=(const ARRAY& source)
     {if(array.Size()!=source.array.Size()){

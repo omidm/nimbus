@@ -1235,6 +1235,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (cache_fv)
     {
         T_FACE_ARRAY *fv = cache_fv->data();
+	face_velocities.Nimbus_Delete_Base_Pointer();
 	T_FACE_ARRAY::Nimbus_Copy_Arrays(face_velocities, *fv);
     }
 
@@ -1242,6 +1243,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (cache_fvg)
     {
         T_FACE_ARRAY *fvg = cache_fvg->data();
+	face_velocities_ghost.Nimbus_Delete_Base_Pointer();
 	T_FACE_ARRAY::Nimbus_Copy_Arrays(face_velocities_ghost, *fvg);
     }
 
@@ -1252,16 +1254,19 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (cache_phi3)
     {
         T_SCALAR_ARRAY *phi3 = cache_phi3->data();
+	particle_levelset.levelset.phi.Nimbus_Delete_Base_Pointer_Scalar();
 	T_SCALAR_ARRAY::Nimbus_Copy_Arrays(particle_levelset.levelset.phi, *phi3);
     }
     if (cache_phi7)
     {
         T_SCALAR_ARRAY *phi7 = cache_phi7->data();
+	phi_ghost_bandwidth_seven.Nimbus_Delete_Base_Pointer_Scalar();
 	T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_seven, *phi7); 
     }
     if (cache_phi8)
     {
         T_SCALAR_ARRAY *phi8 = cache_phi8->data();
+	phi_ghost_bandwidth_eight.Nimbus_Delete_Base_Pointer_Scalar();
 	T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_eight, *phi8); 
     }
 
@@ -1301,6 +1306,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (cache_psi_d)
     {
         BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
+	projection.laplace->psi_D.Nimbus_Delete_Base_Pointer_Scalar();
 	BOOL_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->psi_D, *psi_d);
     }
 
@@ -1315,18 +1321,21 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     // pressure.
     if (cache_pressure) {
       T_SCALAR_ARRAY* pressure = cache_pressure->data();
+      projection.p.Nimbus_Delete_Base_Pointer_Scalar();
       T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.p, *pressure);
     }
     // colors.
     if (cache_colors) {
       typedef typename PhysBAM::ARRAY<int, TV_INT> INT_SCALAR_ARRAY;
       INT_SCALAR_ARRAY* colors = cache_colors->data();
+      projection.laplace->filled_region_colors.Nimbus_Delete_Base_Pointer_Scalar();
       INT_SCALAR_ARRAY::Nimbus_Copy_Arrays(
           projection.laplace->filled_region_colors, *colors);
     }
     // divergence.
     if (cache_divergence) {
       T_SCALAR_ARRAY* divergence = cache_divergence->data();
+      projection.laplace->f.Nimbus_Delete_Base_Pointer_Scalar();
       T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->f, *divergence);
     }
 
@@ -1353,6 +1362,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (cache_index_c2m) {
       typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
       T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
+      laplace_solver_wrapper.cell_index_to_matrix_index.Nimbus_Delete_Base_Pointer_Scalar();
       T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
           laplace_solver_wrapper.cell_index_to_matrix_index, *index_c2m);
     }

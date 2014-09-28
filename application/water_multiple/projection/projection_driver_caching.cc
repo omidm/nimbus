@@ -134,6 +134,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     assert(cache_pressure != NULL);
     typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
     T_SCALAR_ARRAY* pressure = cache_pressure->data();
+    projection_data.pressure.Nimbus_Delete_Base_Pointer_Scalar();
     T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection_data.pressure, *pressure);
     if (print_debug) dbg(APP_LOG, "[PROJECTION] LOAD PRESSURE %f seconds\n", log_timer.timer());
   }
@@ -243,6 +244,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     assert(cache_index_c2m != NULL);
     typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
     T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
+    projection_data.cell_index_to_matrix_index.Nimbus_Delete_Base_Pointer_Scalar();
     T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
         projection_data.cell_index_to_matrix_index, *index_c2m);
     if (print_debug) dbg(APP_LOG, "[PROJECTION] LOAD INDEX_C2M %f seconds\n", log_timer.timer());
