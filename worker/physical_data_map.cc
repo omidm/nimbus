@@ -73,6 +73,7 @@ Data* PhysicalDataMap::AcquireAccess(
 bool PhysicalDataMap::ReleaseAccess(
     job_id_t job_id) {
   PhysicalDataIdSet& data_set= outstanding_used_data_[job_id];
+  /*
   for (PhysicalDataIdSet::iterator i_physical_data_id = data_set.begin();
        i_physical_data_id != data_set.end();
        ++i_physical_data_id) {
@@ -88,6 +89,7 @@ bool PhysicalDataMap::ReleaseAccess(
       PrintTimeStamp("%zu\n", sum_);
     }
   }
+  */
   outstanding_used_data_.erase(job_id);
   return true;
 }
@@ -98,11 +100,13 @@ bool PhysicalDataMap::AddMapping(
   assert(data != NULL);
   assert(internal_map_.find(physical_data_id) == internal_map_.end());
   internal_map_[physical_data_id].first = data;
+  /*
   internal_map_[physical_data_id].second = data->memory_size();
   PrintTimeStamp("%s %"PRIu64" %zu\n",
                  data->name().c_str(),
                  physical_data_id,
                  data->memory_size());
+                 */
   return true;
 }
 

@@ -286,6 +286,7 @@ void CacheManager::ReleaseAccess(CacheObject* cache_object) {
     cache_object->ReleaseAccessInternal();
     pthread_cond_broadcast(&cache_cond);
 
+    /*
     uint64_t data_id =cache_object->unique_id();
     size_t new_size = cache_object->memory_size();
     size_t old_size = 0;
@@ -308,6 +309,7 @@ void CacheManager::ReleaseAccess(CacheObject* cache_object) {
       fprintf(alloc_log, "%f %zu\n", time_sum, memory_sum_);
       fflush(alloc_log);
     }
+    */
     pthread_mutex_unlock(&cache_lock);
 }
 
