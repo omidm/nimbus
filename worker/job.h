@@ -46,10 +46,10 @@
 #include <set>
 #include <map>
 #include <list>
-#include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
 #include "shared/id.h"
 #include "shared/idset.h"
+#include "shared/geometric_region.h"
 #include "shared/serialized_data.h"
 #include "shared/worker_data_exchanger.h"
 #include "worker/cache_manager.h"
@@ -88,6 +88,7 @@ class Job {
                          const IDSet<job_id_t>& after,
                          const Parameter& params,
                          const bool& sterile = false,
+                         const GeometricRegion& region = GeometricRegion(),
                          const job_id_t& future_job_id = 0);
 
     bool SpawnCopyJob(const job_id_t& id,
@@ -137,6 +138,7 @@ class Job {
     Parameter parameters() const;
     Application* application() const;
     bool  sterile() const;
+    GeometricRegion region() const;
     double run_time() const;
     double wait_time() const;
     size_t max_alloc() const {
@@ -152,6 +154,7 @@ class Job {
     void set_parameters(Parameter parameters);
     void set_application(Application* app);
     void set_sterile(bool sterile);
+    void set_region(GeometricRegion region);
     void set_future_job_id(ID<job_id_t> future_job_id);
     void set_run_time(double run_time);
     void set_wait_time(double wait_time);
@@ -200,6 +203,7 @@ class Job {
     Parameter parameters_;
     Application* application_;
     bool sterile_;
+    GeometricRegion region_;
     bool app_is_set_;
     double run_time_;
     double wait_time_;

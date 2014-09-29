@@ -229,6 +229,7 @@ void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
                                    cm->parent_job_id().elem(),
                                    cm->future_job_id().elem(),
                                    cm->sterile(),
+                                   cm->region(),
                                    cm->params());
 
   snprintf(buff, sizeof(buff), "%10.9f JE id: %lu n: %s.",

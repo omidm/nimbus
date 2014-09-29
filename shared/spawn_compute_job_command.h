@@ -50,6 +50,7 @@
 
 #include <string>
 #include "shared/scheduler_command.h"
+#include "shared/geometric_region.h"
 #include "shared/protobuf_compiled/commands.pb.h"
 
 namespace nimbus {
@@ -65,6 +66,7 @@ class SpawnComputeJobCommand : public SchedulerCommand {
                            const ID<job_id_t>& parent_job_id,
                            const ID<job_id_t>& future_job_id,
                            const bool& sterile,
+                           const GeometricRegion& region,
                            const Parameter& params);
 
     ~SpawnComputeJobCommand();
@@ -82,8 +84,9 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     IDSet<job_id_t> after_set();
     ID<job_id_t> parent_job_id();
     ID<job_id_t> future_job_id();
-    Parameter params();
     bool sterile();
+    GeometricRegion region();
+    Parameter params();
 
   private:
     std::string job_name_;
@@ -95,6 +98,7 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     ID<job_id_t> parent_job_id_;
     ID<job_id_t> future_job_id_;
     bool sterile_;
+    GeometricRegion region_;
     Parameter params_;
 
     bool ReadFromProtobuf(const SubmitComputeJobPBuf& buf);

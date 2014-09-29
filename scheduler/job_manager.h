@@ -84,6 +84,7 @@ class JobManager {
                                  const job_id_t& parent_job_id,
                                  const job_id_t& future_job_id,
                                  const bool& sterile,
+                                 const GeometricRegion& region,
                                  const Parameter& params);
 
     JobEntry* AddExplicitCopyJobEntry();

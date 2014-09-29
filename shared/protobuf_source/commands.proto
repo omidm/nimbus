@@ -113,16 +113,17 @@ message SchedulerPBuf{
 }
 
 message SubmitComputeJobPBuf {
-  optional string name            = 1;
-  optional uint64 job_id          = 2;
-  optional LogicalIDSet read_set  = 3;
-  optional LogicalIDSet write_set = 4;
-  optional JobIDSet before_set    = 5;
-  optional JobIDSet after_set     = 6;
-  optional uint64 parent_id       = 7;
-  optional uint64 future_id       = 8;
-  optional bool sterile           = 9;
-  optional bytes params           = 10;
+  optional string name                = 1;
+  optional uint64 job_id              = 2;
+  optional LogicalIDSet read_set      = 3;
+  optional LogicalIDSet write_set     = 4;
+  optional JobIDSet before_set        = 5;
+  optional JobIDSet after_set         = 6;
+  optional uint64 parent_id           = 7;
+  optional uint64 future_id           = 8;
+  optional bool sterile               = 9;
+  optional bytes params               = 10;
+  optional GeometricRegionPBuf region = 11;
 }
 
 message SubmitCopyJobPBuf {
@@ -160,15 +161,16 @@ message JobDonePBuf {
 }
 
 message ExecuteComputeJobPBuf {
-  optional string name             = 1;
-  optional uint64 job_id           = 2;
-  optional PhysicalIDSet read_set  = 3;
-  optional PhysicalIDSet write_set = 4;
-  optional JobIDSet before_set     = 5;
-  optional JobIDSet after_set      = 6;
-  optional uint64 future_job_id    = 7; 
-  optional bool sterile            = 8;
-  optional bytes params            = 9;
+  optional string name                = 1;
+  optional uint64 job_id              = 2;
+  optional PhysicalIDSet read_set     = 3;
+  optional PhysicalIDSet write_set    = 4;
+  optional JobIDSet before_set        = 5;
+  optional JobIDSet after_set         = 6;
+  optional uint64 future_job_id       = 7; 
+  optional bool sterile               = 8;
+  optional bytes params               = 9;
+  optional GeometricRegionPBuf region = 10;
 }
 
 message CreateDataPBuf {

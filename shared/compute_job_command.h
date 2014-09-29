@@ -60,6 +60,7 @@ class ComputeJobCommand : public SchedulerCommand {
                       const IDSet<job_id_t>& after,
                       const ID<job_id_t>& future_job_id,
                       const bool& sterile,
+                      const GeometricRegion& region,
                       const Parameter& params);
     ~ComputeJobCommand();
 
@@ -75,8 +76,9 @@ class ComputeJobCommand : public SchedulerCommand {
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
     ID<job_id_t> future_job_id();
-    Parameter params();
     bool sterile();
+    GeometricRegion region();
+    Parameter params();
 
   private:
     std::string job_name_;
@@ -87,6 +89,7 @@ class ComputeJobCommand : public SchedulerCommand {
     IDSet<job_id_t> after_set_;
     ID<job_id_t> future_job_id_;
     bool sterile_;
+    GeometricRegion region_;
     Parameter params_;
 
     bool ReadFromProtobuf(const ExecuteComputeJobPBuf& buf);

@@ -597,6 +597,7 @@ bool JobAssigner::SendComputeJobToWorker(SchedulerWorker* worker,
                          job->after_set(),
                          future_job_id,
                          job->sterile(),
+                         job->region(),
                          job->params());
     dbg(DBG_SCHED, "Sending compute job %lu to worker %lu.\n", job->job_id(), worker->worker_id());
     server_->SendCommand(worker, &cm);

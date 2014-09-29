@@ -47,6 +47,7 @@ JobEntry::JobEntry() {
   Initialize();
   job_depth_ = NIMBUS_INIT_JOB_DEPTH;
   sterile_ = false;
+  region_ = GeometricRegion();
   partial_versioned_ = false;
   versioned_ = false;
   assigned_ = false;
@@ -170,6 +171,10 @@ SchedulerWorker* JobEntry::assigned_worker() const {
 
 bool JobEntry::sterile() const {
   return sterile_;
+}
+
+GeometricRegion JobEntry::region() const {
+  return region_;
 }
 
 bool JobEntry::partial_versioned() const {
@@ -315,6 +320,10 @@ void JobEntry::set_assigned_worker(SchedulerWorker *assigned_worker) {
 
 void JobEntry::set_sterile(bool flag) {
   sterile_ = flag;
+}
+
+void JobEntry::set_region(GeometricRegion region) {
+  region_ = region;
 }
 
 void JobEntry::set_partial_versioned(bool flag) {
@@ -466,6 +475,7 @@ ComputeJobEntry::ComputeJobEntry(
     const job_id_t& parent_job_id,
     const job_id_t& future_job_id,
     const bool& sterile,
+    const GeometricRegion& region,
     const Parameter& params) {
     job_type_ = JOB_COMP;
     job_name_ = job_name;
@@ -477,6 +487,7 @@ ComputeJobEntry::ComputeJobEntry(
     parent_job_id_ = parent_job_id;
     future_job_id_ = future_job_id;
     sterile_ = sterile;
+    region_ = region;
     params_ = params;
 
     union_set_.insert(read_set_);

@@ -82,6 +82,7 @@ bool Job::SpawnComputeJob(const std::string& name,
                           const IDSet<job_id_t>& after,
                           const Parameter& params,
                           const bool& sterile,
+                          const GeometricRegion& region,
                           const job_id_t& future_job_id) {
   if (sterile_) {
     dbg(DBG_ERROR, "ERROR: the job is sterile, it cannot spawn jobs.\n");
@@ -98,6 +99,7 @@ bool Job::SpawnComputeJob(const std::string& name,
                                   id_.elem(),
                                   future_job_id,
                                   sterile,
+                                  region,
                                   params);
     return true;
   } else {
@@ -292,6 +294,10 @@ bool Job::sterile() const {
   return sterile_;
 }
 
+GeometricRegion Job::region() const {
+  return region_;
+}
+
 ID<job_id_t> Job::future_job_id() const {
   return future_job_id_;
 }
@@ -339,6 +345,10 @@ void Job::set_application(Application* app) {
 
 void Job::set_sterile(bool sterile) {
   sterile_ = sterile;
+}
+
+void Job::set_region(GeometricRegion region) {
+  region_ = region;
 }
 
 void Job::set_future_job_id(ID<job_id_t> future_job_id) {

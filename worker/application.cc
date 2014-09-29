@@ -92,6 +92,7 @@ void Application::SpawnComputeJob(const std::string& name,
                                   const job_id_t& parent_id,
                                   const job_id_t& future_id,
                                   const bool& sterile,
+                                  const GeometricRegion& region,
                                   const Parameter& params) {
   // static double construct_time = 0;
   // struct timespec start_time;
@@ -106,6 +107,7 @@ void Application::SpawnComputeJob(const std::string& name,
                             ID<job_id_t>(parent_id),
                             ID<job_id_t>(future_id),
                             sterile,
+                            region,
                             params);
 
   // struct timespec t;

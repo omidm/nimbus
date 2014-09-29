@@ -53,6 +53,7 @@
 #include "shared/idset.h"
 #include "shared/parameter.h"
 #include "shared/nimbus_types.h"
+#include "shared/geometric_region.h"
 #include "scheduler/version_map.h"
 #include "scheduler/data_manager.h"
 #include "scheduler/scheduler_worker.h"
@@ -99,6 +100,7 @@ class JobEntry {
     worker_id_t assigned_worker_id() const;
     SchedulerWorker* assigned_worker() const;
     bool sterile() const;
+    GeometricRegion region() const;
     bool partial_versioned() const;
     bool versioned() const;
     bool assigned() const;
@@ -132,6 +134,7 @@ class JobEntry {
     void set_assigned_worker_id(worker_id_t assigned_worker_id);
     void set_assigned_worker(SchedulerWorker* assigned_worker);
     void set_sterile(bool flag);
+    void set_region(GeometricRegion region);
     void set_partial_versioned(bool flag);
     void set_versioned(bool flag);
     void set_assigned(bool flag);
@@ -180,6 +183,7 @@ class JobEntry {
     worker_id_t assigned_worker_id_;
     SchedulerWorker *assigned_worker_;
     bool sterile_;
+    GeometricRegion region_;
     bool partial_versioned_;
     bool versioned_;
     bool assigned_;
@@ -206,6 +210,7 @@ class ComputeJobEntry : public JobEntry {
         const job_id_t& parent_job_id,
         const job_id_t& future_job_id,
         const bool& sterile,
+        const GeometricRegion& region,
         const Parameter& params);
     ~ComputeJobEntry();
 };

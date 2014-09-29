@@ -96,6 +96,7 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
                                          const job_id_t& parent_job_id,
                                          const job_id_t& future_job_id,
                                          const bool& sterile,
+                                         const GeometricRegion& region,
                                          const Parameter& params) {
   JobEntry* job =
     new ComputeJobEntry(job_name,
@@ -107,6 +108,7 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
                         parent_job_id,
                         future_job_id,
                         sterile,
+                        region,
                         params);
 
   if (!AddJobEntryToJobGraph(job_id, job)) {
@@ -123,6 +125,7 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
       job->set_parent_job_id(parent_job_id, true);
       job->set_params(params);
       job->set_sterile(sterile);
+      job->set_region(region);
       job->set_future(false);
       dbg(DBG_SCHED, "Filled the information for future job (id: %lu).\n", job_id);
     } else {

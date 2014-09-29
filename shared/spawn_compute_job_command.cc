@@ -63,6 +63,7 @@ SpawnComputeJobCommand::SpawnComputeJobCommand(const std::string& job_name,
                                                const ID<job_id_t>& parent_job_id,
                                                const ID<job_id_t>& future_job_id,
                                                const bool& sterile,
+                                               const GeometricRegion& region,
                                                const Parameter& params)
   : job_name_(job_name),
     job_id_(job_id),
@@ -73,6 +74,7 @@ SpawnComputeJobCommand::SpawnComputeJobCommand(const std::string& job_name,
     parent_job_id_(parent_job_id),
     future_job_id_(future_job_id),
     sterile_(sterile),
+    region_(region),
     params_(params) {
   name_ = SPAWN_COMPUTE_NAME;
   type_ = SPAWN_COMPUTE;
@@ -135,6 +137,7 @@ std::string SpawnComputeJobCommand::ToString() {
   str += ("parent-id:" + parent_job_id_.ToNetworkData() + ",");
   str += ("future-id:" + future_job_id_.ToNetworkData() + ",");
   str += ("params:" + params_.ToNetworkData() + ",");
+  str += ("region:" + region_.ToNetworkData() + ",");
   if (sterile_) {
     str += "sterile";
   } else {
@@ -183,6 +186,11 @@ bool SpawnComputeJobCommand::sterile() {
   return sterile_;
 }
 
+GeometricRegion SpawnComputeJobCommand::region() {
+  return region_;
+}
+
+
 bool SpawnComputeJobCommand::ReadFromProtobuf(const SubmitComputeJobPBuf& buf) {
   job_name_ = buf.name();
   job_id_.set_elem(buf.job_id());
@@ -193,6 +201,7 @@ bool SpawnComputeJobCommand::ReadFromProtobuf(const SubmitComputeJobPBuf& buf) {
   parent_job_id_.set_elem(buf.parent_id());
   future_job_id_.set_elem(buf.future_id());
   sterile_ = buf.sterile();
+  region_.FillInValues(&buf.region());
   // Is this safe?
   SerializedData d(buf.params());
   params_.set_ser_data(d);
@@ -210,6 +219,7 @@ bool SpawnComputeJobCommand::WriteToProtobuf(SubmitComputeJobPBuf* buf) {
   buf->set_parent_id(parent_job_id().elem());
   buf->set_future_id(future_job_id().elem());
   buf->set_sterile(sterile_);
+  region_.FillInMessage(buf->mutable_region());
   buf->set_params(params().ser_data().ToNetworkData());
   return true;
 }

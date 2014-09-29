@@ -57,6 +57,7 @@ ComputeJobCommand::ComputeJobCommand(const std::string& job_name,
                                      const IDSet<job_id_t>& after,
                                      const ID<job_id_t>& future_job_id,
                                      const bool& sterile,
+                                     const GeometricRegion& region,
                                      const Parameter& params)
   : job_name_(job_name),
     job_id_(job_id),
@@ -66,6 +67,7 @@ ComputeJobCommand::ComputeJobCommand(const std::string& job_name,
     after_set_(after),
     future_job_id_(future_job_id),
     sterile_(sterile),
+    region_(region),
     params_(params) {
   name_ = EXECUTE_COMPUTE_NAME;
   type_ = EXECUTE_COMPUTE;
@@ -128,6 +130,7 @@ std::string ComputeJobCommand::ToString() {
   str += ("after:" + after_set_.ToNetworkData() + ",");
   str += ("future-job-id:" + future_job_id_.ToNetworkData() + ",");
   str += ("params:" + params_.ToNetworkData() + ",");
+  str += ("region:" + region_.ToNetworkData() + ",");
   if (sterile_) {
     str += "sterile";
   } else {
@@ -167,6 +170,10 @@ bool ComputeJobCommand::sterile() {
   return sterile_;
 }
 
+GeometricRegion ComputeJobCommand::region() {
+  return region_;
+}
+
 ID<job_id_t> ComputeJobCommand::future_job_id() {
   return future_job_id_;
 }
@@ -180,6 +187,7 @@ bool ComputeJobCommand::ReadFromProtobuf(const ExecuteComputeJobPBuf& buf) {
   after_set_.ConvertFromRepeatedField(buf.after_set().ids());
   future_job_id_.set_elem(buf.future_job_id());
   sterile_ = buf.sterile();
+  region_.FillInValues(&buf.region());
   SerializedData d(buf.params());
   params_.set_ser_data(d);
   return true;
@@ -194,6 +202,7 @@ bool ComputeJobCommand::WriteToProtobuf(ExecuteComputeJobPBuf* buf) {
   after_set().ConvertToRepeatedField(buf->mutable_after_set()->mutable_ids());
   buf->set_future_job_id(future_job_id().elem());
   buf->set_sterile(sterile());
+  region_.FillInMessage(buf->mutable_region());
   buf->set_params(params().ser_data().ToNetworkData());
   return true;
 }
