@@ -57,7 +57,6 @@
 #include "scheduler/straggler_map.h"
 #include "scheduler/job_assigner.h"
 #include "scheduler/load_balancer.h"
-#include "scheduler/worker_monitor.h"
 #include "shared/cluster.h"
 #include "shared/id_maker.h"
 #include "shared/scheduler_server.h"
@@ -105,17 +104,16 @@ namespace nimbus {
     WorkerMap worker_map_;
     boost::recursive_mutex worker_map_mutex_;
 
-    WorkerMonitor worker_monitor_;
-    boost::recursive_mutex worker_monitor_mutex_;
-
     StragglerMap straggler_map_;
     boost::recursive_mutex straggler_map_mutex_;
 
-    size_t counter_;
     bool update_;
     bool init_phase_;
     boost::recursive_mutex update_mutex_;
     boost::condition_variable_any update_cond_;
+
+    std::map<worker_id_t, size_t> blame_map_;
+    size_t blame_counter_;
 
     void InitializeRegionMap();
 
