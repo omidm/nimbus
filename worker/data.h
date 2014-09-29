@@ -71,6 +71,8 @@ class CacheObject;
 
 class Data {
  public:
+  enum Use { NONE, READ, WRITE };
+
   Data();
   virtual ~Data() {}
 
@@ -167,18 +169,28 @@ class Data {
 
   size_t co_size() { return cache_objects_.size(); }
 
-  bool pending_flag() {
+  int pending_flag() {
     return pending_flag_;
   }
-  void set_pending_flag() {
-    pending_flag_ = true;
+  void set_pending_flag(Use use) {
+    if (use == READ) {
+      pending_flag_++;
+    } else if (use == WRITE) {
+      assert(pending_flag_ == 0);
+      pending_flag_--;
+    }
   }
-  void unset_pending_flag() {
-    pending_flag_ = false;
+  void unset_pending_flag(Use use) {
+    if (use == READ) {
+      pending_flag_--;
+    } else if (use == WRITE) {
+      assert(pending_flag_ == -1);
+      pending_flag_++;
+    }
   }
 
  private:
-  bool pending_flag_;
+  int pending_flag_;
   logical_data_id_t logical_id_;
   physical_data_id_t physical_id_;
   partition_id_t partition_id_;

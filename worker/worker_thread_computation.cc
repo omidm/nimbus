@@ -130,8 +130,7 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
   }
 
 #endif
-  ProfilerMalloc::ResetThreadStatisticsByTid(pthread_self());
-  size_t base_alloc = ProfilerMalloc::AllocCurr();
+  ProfilerMalloc::ResetBaseAlloc();
   dbg(DBG_WORKER, "[WORKER_THREAD] Execute job, name=%s, id=%lld. \n",
       job->name().c_str(), job->id().elem());
   job->Execute(job->parameters(), job->data_array);
@@ -178,14 +177,14 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
 
     {
       std::stringstream msg;
-      int64_t unfreed = ProfilerMalloc::AllocCurr() - base_alloc;
+      size_t base = ProfilerMalloc::GetBaseAlloc();
+      size_t curr = ProfilerMalloc::GetCurrAlloc();
+      size_t max = ProfilerMalloc::GetMaxAlloc();
       pid_t tid = syscall(SYS_gettid);
-      msg << "*** TID: " << tid << " Job: " << jname << " Allocs: "
-          << ProfilerMalloc::NumAllocs() << " Frees: "
-          << ProfilerMalloc::NumFrees()  << " Unfreed: "
-          << unfreed
-          << " Before: " << base_alloc
-          << " After: " << ProfilerMalloc::AllocCurr();
+      msg << "*** TID: " << tid << " Job: " << jname
+          << " Before: " << base
+          << " After: " << curr
+          << " Max: " << max;
       cache_log_->WriteToFile(msg.str());
     }
   }

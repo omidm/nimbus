@@ -126,7 +126,9 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
 
     nimbus::Parameter init_params;
     std::string init_str;
-    SerializeParameter(frame, time, dt, kDefaultRegion, kRegY2W3Central[i], &init_str);
+    SerializeParameter(frame, time, dt, kPNAInt,
+                       kDefaultRegion, kRegY2W3Central[i],
+                       kPNAInt, &init_str);
     init_params.set_ser_data(SerializedData(init_str));
     job_query.StageJob(INITIALIZE,
                        init_job_ids[i],
@@ -150,7 +152,9 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
 
     nimbus::Parameter phi_params;
     std::string phi_str;
-    SerializeParameter(frame, time, dt, kDefaultRegion, kRegY2W3Central[i], &phi_str);
+    SerializeParameter(frame, time, dt, kPNAInt,
+                       kDefaultRegion, kRegY2W3Central[i],
+                       kPNAInt, &phi_str);
     phi_params.set_ser_data(SerializedData(phi_str));
 
     job_query.StageJob(EXTRAPOLATE_PHI,
@@ -177,7 +181,9 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
     LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[i], APP_PSI_D, APP_PSI_N,  NULL);
 
     std::string make_signed_distance_str;
-    SerializeParameter(frame, time, dt, kDefaultRegion, kRegY2W3Central[i], &make_signed_distance_str);
+    SerializeParameter(frame, time, dt, kPNAInt,
+                       kDefaultRegion, kRegY2W3Central[i],
+                       kPNAInt, &make_signed_distance_str);
     nimbus::Parameter make_signed_distance_params;
     make_signed_distance_params.set_ser_data(SerializedData(make_signed_distance_str));
 
@@ -209,8 +215,9 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
 
     nimbus::Parameter temp_params;
     std::string temp_str;
-    SerializeParameter(frame, time, dt, kDefaultRegion, kRegY2W3Central[i],
-                       &temp_str);
+    SerializeParameter(frame, time, dt, kPNAInt,
+                       kDefaultRegion, kRegY2W3Central[i],
+                       kPNAInt, &temp_str);
     temp_params.set_ser_data(SerializedData(temp_str));
     job_query.StageJob(RESEED_PARTICLES,
                        reseed_particles_job_ids[i],
@@ -234,7 +241,9 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
 
     nimbus::Parameter phi_params;
     std::string phi_str;
-    SerializeParameter(frame, time, dt, kDefaultRegion, kRegY2W3Central[i], &phi_str);
+    SerializeParameter(frame, time, dt, kPNAInt,
+                       kDefaultRegion, kRegY2W3Central[i],
+                       kPNAInt, &phi_str);
     phi_params.set_ser_data(SerializedData(phi_str));
 
     job_query.StageJob(EXTRAPOLATE_PHI,
@@ -261,7 +270,9 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
 
     nimbus::Parameter v_params;
     std::string v_str;
-    SerializeParameter(frame, time, dt, kDefaultRegion, kRegY2W3Central[i], &v_str);
+    SerializeParameter(frame, time, dt, kPNAInt,
+                       kDefaultRegion, kRegY2W3Central[i],
+                       kPNAInt, &v_str);
     v_params.set_ser_data(SerializedData(v_str));
 
     job_query.StageJob(EXTRAPOLATION,
@@ -287,8 +298,9 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
 
     nimbus::Parameter temp_params;
     std::string temp_str;
-    SerializeParameter(frame - 1, time + dt, 0, -1, kDefaultRegion, kDefaultRegion,
-                       &temp_str);
+    SerializeParameter(frame - 1, time + dt, 0, -1,
+                       kDefaultRegion, kDefaultRegion,
+                       kPNAInt, &temp_str);
     temp_params.set_ser_data(SerializedData(temp_str));
     job_query.StageJob(WRITE_OUTPUT,
                        write_output_job_ids[0],
@@ -311,8 +323,9 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
 
       nimbus::Parameter temp_params;
       std::string temp_str;
-      SerializeParameter(frame - 1, time + dt, 0, i+1, kDefaultRegion, kRegY2W3Central[i],
-                         &temp_str);
+      SerializeParameter(frame - 1, time + dt, 0, i+1,
+                         kDefaultRegion, kRegY2W3Central[i],
+                         kPNAInt, &temp_str);
       temp_params.set_ser_data(SerializedData(temp_str));
       job_query.StageJob(WRITE_OUTPUT,
                          write_output_job_ids[i],
@@ -331,7 +344,10 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
 
   nimbus::Parameter loop_params;
   std::string loop_str;
-  SerializeParameter(frame, kDefaultRegion, &loop_str);
+  SerializeParameter(frame, kPNAFloat, kPNAFloat, kPNAInt,
+                     kDefaultRegion,
+                     kPNAReg,
+                     kPNAInt, &loop_str);
   loop_params.set_ser_data(SerializedData(loop_str));
 
   job_query.StageJob(LOOP_FRAME,

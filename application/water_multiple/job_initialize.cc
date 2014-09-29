@@ -89,7 +89,10 @@ namespace application {
 //
 //        int frame = 0;
 //        std::string loop_str;
-//        SerializeParameter(frame, init_config.global_region, &loop_str);
+//        SerializeParameter(frame, kPNAFloat, kPNAFloat, kPNAInt,
+//                           init_config.global_region,
+//                           kPNAReg,
+//                           kPNAInt, &loop_str);
 //        loop_params.set_ser_data(SerializedData(loop_str));
 //
 //        dbg(APP_LOG, "Spawning loop frame job for frame %i in main\n", frame);
@@ -110,11 +113,9 @@ namespace application {
         // Threading settings.
         init_config.use_threading = use_threading();
         init_config.core_quota = core_quota();
-        T dt;
         std::string params_str(params.ser_data().data_ptr_raw(),
             params.ser_data().size());
-        LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
-            &init_config.global_region, &init_config.local_region);
+        LoadParameter(params_str, &init_config);
 
         PhysBAM::WATER_EXAMPLE<TV> *example;
         PhysBAM::WATER_DRIVER<TV> *driver;

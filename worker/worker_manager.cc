@@ -202,13 +202,6 @@ bool WorkerManager::StartWorkerThreads() {
   int error_code = pthread_create(
       &scheduling_id_, NULL, SchedulingEntryPoint, this);
   assert(error_code == 0);
-  std::vector<pthread_t> tids;
-  for (std::list<WorkerThread*>::iterator index = worker_thread_list_.begin();
-       index != worker_thread_list_.end();
-       ++index) {
-    tids.insert(tids.begin(), (*index)->thread_id);
-  }
-  ProfilerMalloc::RegisterThreads(tids);
   return true;
 }
 

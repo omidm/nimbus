@@ -89,8 +89,7 @@ namespace application {
     init_config.core_quota = core_quota();
     std::string params_str(params.ser_data().data_ptr_raw(),
         params.ser_data().size());
-    LoadParameter(params_str, &init_config.frame, &init_config.time,
-                  &init_config.global_region);
+    LoadParameter(params_str, &init_config);
     init_config.local_region = init_config.global_region;
 
     const int& frame = init_config.frame;
@@ -234,7 +233,9 @@ namespace application {
 
       nimbus::Parameter s11_params;
       std::string s11_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s11_str);
+      SerializeParameter(frame, time, dt, kPNAInt,
+                         global_region, kRegY2W3Central[i],
+                         kPNAInt, &s11_str);
       s11_params.set_ser_data(SerializedData(s11_str));
       job_query.StageJob(UPDATE_GHOST_VELOCITIES,
           update_ghost_velocities_job_ids[i],
@@ -262,12 +263,9 @@ namespace application {
                     APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
                     APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            SerializeParameter(frame,
-                               time,
-                               dt,
-                               global_region,
-                               kRegW3Central[0],
-                               &step_particles_str);
+            SerializeParameter(frame, time, dt, kPNAInt,
+                               global_region, kRegW3Central[0],
+                               kPNAInt, &step_particles_str);
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[sj], APP_FACE_VEL_GHOST, NULL);
             LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[sj], APP_POS_PARTICLES,
@@ -278,12 +276,9 @@ namespace application {
             kScratchNegParticles.GetJobScratchData(this, kRegY2W3Central[sj], &write);
             kScratchPosRemParticles.GetJobScratchData(this, kRegY2W3Central[sj], &write);
             kScratchNegRemParticles.GetJobScratchData(this, kRegY2W3Central[sj], &write);
-            SerializeParameter(frame,
-                               time,
-                               dt,
-                               global_region,
-                               kRegY2W3Central[sj],
-                               &step_particles_str);
+            SerializeParameter(frame, time, dt, kPNAInt,
+                               global_region, kRegY2W3Central[sj],
+                               kPNAInt, &step_particles_str);
         }
 
         nimbus::Parameter step_particles_params;
@@ -304,12 +299,9 @@ namespace application {
     if (!step_particles_single) {
         for (size_t i = 0; i < step_particles_sync_job_num; ++i) {
             std::string sync_particles_str;
-            SerializeParameter(frame,
-                               time,
-                               dt,
-                               global_region,
-                               kRegY2W3Central[i],
-                               &sync_particles_str);
+            SerializeParameter(frame, time, dt, kPNAInt,
+                               global_region, kRegY2W3Central[i],
+                               kPNAInt, &sync_particles_str);
             nimbus::Parameter sync_particles_params;
             sync_particles_params.set_ser_data(SerializedData(sync_particles_str));
 
@@ -378,7 +370,9 @@ namespace application {
 
       nimbus::Parameter s_extra_params;
       std::string s_extra_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s_extra_str);
+      SerializeParameter(frame, time, dt, kPNAInt,
+                         global_region, kRegY2W3Central[i],
+                         kPNAInt, &s_extra_str);
       s_extra_params.set_ser_data(SerializedData(s_extra_str));
       job_query.StageJob(EXTRAPOLATE_PHI,
           first_extrapolate_phi_job_ids[i],
@@ -402,7 +396,9 @@ namespace application {
 
       nimbus::Parameter s12_params;
       std::string s12_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s12_str);
+      SerializeParameter(frame, time, dt, kPNAInt,
+                         global_region, kRegY2W3Central[i],
+                         kPNAInt, &s12_str);
       s12_params.set_ser_data(SerializedData(s12_str));
       job_query.StageJob(ADVECT_PHI,
           advect_phi_job_ids[i],
@@ -427,7 +423,9 @@ namespace application {
 
       nimbus::Parameter s15_params;
       std::string s15_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s15_str);
+      SerializeParameter(frame, time, dt, kPNAInt,
+                         global_region, kRegY2W3Central[i],
+                         kPNAInt, &s15_str);
       s15_params.set_ser_data(SerializedData(s15_str));
       job_query.StageJob(ADVECT_V,
           advect_v_job_ids[i],
@@ -457,12 +455,9 @@ namespace application {
                 APP_NEG_REM_PARTICLES, NULL);
             LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES,  NULL);
-            SerializeParameter(frame,
-                               time,
-                               dt,
-                               global_region,
-                               kRegW3Central[0],
-                               &advect_rem_particles_str);
+            SerializeParameter(frame, time, dt, kPNAInt,
+                               global_region, kRegW3Central[0],
+                               kPNAInt, &advect_rem_particles_str);
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[sj], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
@@ -470,12 +465,9 @@ namespace application {
                 APP_NEG_REM_PARTICLES, NULL);
             LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[sj], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES,  NULL);
-            SerializeParameter(frame,
-                               time,
-                               dt,
-                               global_region,
-                               kRegY2W3Central[sj],
-                               &advect_rem_particles_str);
+            SerializeParameter(frame, time, dt, kPNAInt,
+                               global_region, kRegY2W3Central[sj],
+                               kPNAInt, &advect_rem_particles_str);
         }
 
         nimbus::Parameter advect_rem_particles_params;
@@ -520,8 +512,9 @@ namespace application {
 
         nimbus::Parameter temp_params;
         std::string temp_str;
-        SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i],
-                           &temp_str);
+        SerializeParameter(frame, time, dt, kPNAInt,
+                           global_region, kRegY2W3Central[i],
+                           kPNAInt, &temp_str);
         temp_params.set_ser_data(SerializedData(temp_str));
         job_query.StageJob(UPDATE_GHOST_VELOCITIES,
                            temp_job_ids[i],
@@ -545,7 +538,9 @@ namespace application {
 
       nimbus::Parameter s16_params;
       std::string s16_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s16_str);
+      SerializeParameter(frame, time, dt, kPNAInt,
+                         global_region, kRegY2W3Central[i],
+                         kPNAInt, &s16_str);
       s16_params.set_ser_data(SerializedData(s16_str));
       job_query.StageJob(APPLY_FORCES,
           apply_forces_job_ids[i],
@@ -572,8 +567,9 @@ namespace application {
 
         nimbus::Parameter temp_params;
         std::string temp_str;
-        SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i],
-                           &temp_str);
+        SerializeParameter(frame, time, dt, kPNAInt,
+                           global_region, kRegY2W3Central[i],
+                           kPNAInt, &temp_str);
         temp_params.set_ser_data(SerializedData(temp_str));
         job_query.StageJob(UPDATE_GHOST_VELOCITIES,
                            temp_job_ids[i],
@@ -603,12 +599,9 @@ namespace application {
             LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_PHI, NULL);
             LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            SerializeParameter(frame,
-                               time,
-                               dt,
-                               global_region,
-                               kRegW3Central[0],
-                               &modify_levelset_part_one_str);
+            SerializeParameter(frame, time, dt, kPNAInt,
+                               global_region, kRegW3Central[0],
+                               kPNAInt, &modify_levelset_part_one_str);
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_FACE_VEL_GHOST,
                     APP_FACE_VEL, APP_PHI, NULL);
@@ -617,12 +610,9 @@ namespace application {
             LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[mj], APP_PHI, NULL);
             LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[mj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            SerializeParameter(frame,
-                               time,
-                               dt,
-                               global_region,
-                               kRegY2W3Central[mj],
-                               &modify_levelset_part_one_str);
+            SerializeParameter(frame, time, dt, kPNAInt,
+                               global_region, kRegY2W3Central[mj],
+                               kPNAInt, &modify_levelset_part_one_str);
         }
 
         nimbus::Parameter modify_levelset_params;
@@ -656,12 +646,9 @@ namespace application {
             LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_PHI, NULL);
             LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            SerializeParameter(frame,
-                               time,
-                               dt,
-                               global_region,
-                               kRegW3Central[0],
-                               &modify_levelset_part_two_str);
+            SerializeParameter(frame, time, dt, kPNAInt,
+                               global_region, kRegW3Central[0],
+                               kPNAInt, &modify_levelset_part_two_str);
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_PHI, NULL);
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_FACE_VEL_GHOST,
@@ -671,12 +658,9 @@ namespace application {
             LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[mj], APP_PHI, NULL);
             LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[mj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            SerializeParameter(frame,
-                               time,
-                               dt,
-                               global_region,
-                               kRegY2W3Central[mj],
-                               &modify_levelset_part_two_str);
+            SerializeParameter(frame, time, dt, kPNAInt,
+                               global_region, kRegY2W3Central[mj],
+                               kPNAInt, &modify_levelset_part_two_str);
         }
 
         nimbus::Parameter modify_levelset_params;
@@ -704,7 +688,9 @@ namespace application {
 
       nimbus::Parameter adjust_phi_params;
       std::string adjust_phi_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &adjust_phi_str);
+      SerializeParameter(frame, time, dt, kPNAInt,
+                         global_region, kRegY2W3Central[i],
+                         kPNAInt, &adjust_phi_str);
       adjust_phi_params.set_ser_data(SerializedData(adjust_phi_str));
       job_query.StageJob(ADJUST_PHI,
           adjust_phi_job_ids[i],
@@ -734,12 +720,9 @@ namespace application {
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            SerializeParameter(frame,
-                               time,
-                               dt,
-                               global_region,
-                               kRegW3Central[0],
-                               &delete_particles_str);
+            SerializeParameter(frame, time, dt, kPNAInt,
+                               global_region, kRegW3Central[0],
+                               kPNAInt, &delete_particles_str);
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[dj], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
@@ -747,12 +730,9 @@ namespace application {
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[dj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            SerializeParameter(frame,
-                               time,
-                               dt,
-                               global_region,
-                               kRegY2W3Central[dj],
-                               &delete_particles_str);
+            SerializeParameter(frame, time, dt, kPNAInt,
+                               global_region, kRegY2W3Central[dj],
+                               kPNAInt, &delete_particles_str);
         }
 
         nimbus::Parameter delete_particles_params;
@@ -786,12 +766,9 @@ namespace application {
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            SerializeParameter(frame,
-                               time,
-                               dt,
-                               global_region,
-                               kRegW3Central[0],
-                               &reincorporate_particles_str);
+            SerializeParameter(frame, time, dt, kPNAInt,
+                               global_region, kRegW3Central[0],
+                               kPNAInt, &reincorporate_particles_str);
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[rj], APP_FACE_VEL,
                     APP_PHI, NULL);
@@ -799,12 +776,9 @@ namespace application {
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[rj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            SerializeParameter(frame,
-                               time,
-                               dt,
-                               global_region,
-                               kRegY2W3Central[rj],
-                               &reincorporate_particles_str);
+            SerializeParameter(frame, time, dt, kPNAInt,
+                               global_region, kRegY2W3Central[rj],
+                               kPNAInt, &reincorporate_particles_str);
         }
 
         nimbus::Parameter reincorporate_particles_params;
@@ -842,8 +816,9 @@ namespace application {
 
     nimbus::Parameter projection_main_params;
     std::string projection_main_str;
-    SerializeParameter(frame, time, dt, global_region, global_region,
-                       &projection_main_str);
+    SerializeParameter(frame, time, dt, kPNAInt,
+                       global_region, global_region,
+                       kPNAInt, &projection_main_str);
     projection_main_params.set_ser_data(
         SerializedData(projection_main_str));
     job_query.StageJob(PROJECTION_MAIN,

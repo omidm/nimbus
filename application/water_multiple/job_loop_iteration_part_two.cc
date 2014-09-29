@@ -70,11 +70,10 @@ void JobLoopIterationPartTwo::Execute(
   // Threading settings.
   init_config.use_threading = use_threading();
   init_config.core_quota = core_quota();
-  T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
-  LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
-                &init_config.global_region, &init_config.local_region);
+  LoadParameter(params_str, &init_config);
+  T dt = init_config.dt;
   dbg(APP_LOG, "Frame %i in LOOP_ITERATION_PART_TWO job\n", init_config.frame);
 
   const int& frame = init_config.frame;
@@ -148,8 +147,9 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
     nimbus::Parameter s_extra_params;
     std::string s_extra_str;
-    SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i],
-                       &s_extra_str);
+    SerializeParameter(frame, time, dt, kPNAInt,
+                       global_region, kRegY2W3Central[i],
+                       kPNAInt, &s_extra_str);
     s_extra_params.set_ser_data(SerializedData(s_extra_str));
     job_query.StageJob(EXTRAPOLATE_PHI, extrapolate_phi_job_ids[i],
                        read, write,
@@ -172,8 +172,9 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
     nimbus::Parameter extrapolation_params;
     std::string extrapolation_str;
-    SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i],
-                       &extrapolation_str);
+    SerializeParameter(frame, time, dt, kPNAInt,
+                       global_region, kRegY2W3Central[i],
+                       kPNAInt, &extrapolation_str);
     extrapolation_params.set_ser_data(SerializedData(extrapolation_str));
     job_query.StageJob(EXTRAPOLATION, extrapolation_job_ids[i],
                        read, write,
@@ -204,8 +205,9 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
       nimbus::Parameter dt_params;
       std::string dt_str;
-      SerializeParameter(frame, time, 0, global_region,
-                         kRegY2W3Central[i], &dt_str);
+      SerializeParameter(frame, time, 0, kPNAInt,
+                         global_region, kRegY2W3Central[i],
+                         kPNAInt, &dt_str);
       dt_params.set_ser_data(SerializedData(dt_str));
       job_query.StageJob(CALCULATE_DT, calculate_dt_job_ids[i],
                          read, write,
@@ -219,7 +221,10 @@ void JobLoopIterationPartTwo::SpawnJobs(
     write.clear();
     nimbus::Parameter iter_params;
     std::string iter_str;
-    SerializeParameter(frame, time + dt, global_region, &iter_str);
+    SerializeParameter(frame, time + dt, kPNAFloat, kPNAInt,
+                       global_region,
+                       kPNAReg,
+                       kPNAInt, &iter_str);
     iter_params.set_ser_data(SerializedData(iter_str));
     job_query.StageJob(LOOP_ITERATION, job_ids[1],
                        read, write,
@@ -252,8 +257,9 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
       nimbus::Parameter temp_params;
       std::string temp_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i],
-                         &temp_str);
+      SerializeParameter(frame, time, dt, kPNAInt,
+                         global_region, kRegY2W3Central[i],
+                         kPNAInt, &temp_str);
       temp_params.set_ser_data(SerializedData(temp_str));
       job_query.StageJob(RESEED_PARTICLES,
           reseed_particles_job_ids[i],
@@ -277,8 +283,9 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
       nimbus::Parameter temp_params;
       std::string temp_str;
-      SerializeParameter(frame, time, dt, -1, global_region, global_region,
-                         &temp_str);
+      SerializeParameter(frame, time, dt, -1,
+                         global_region, global_region,
+                         kPNAInt, &temp_str);
       temp_params.set_ser_data(SerializedData(temp_str));
       job_query.StageJob(WRITE_OUTPUT,
                          write_output_job_ids[0],
@@ -301,8 +308,9 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
         nimbus::Parameter temp_params;
         std::string temp_str;
-        SerializeParameter(frame, time, dt, i+1, global_region, kRegY2W3Central[i],
-                           &temp_str);
+        SerializeParameter(frame, time, dt, i+1,
+                           global_region, kRegY2W3Central[i],
+                           kPNAInt, &temp_str);
         temp_params.set_ser_data(SerializedData(temp_str));
         job_query.StageJob(WRITE_OUTPUT,
                            write_output_job_ids[i],
@@ -320,7 +328,10 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
     nimbus::Parameter frame_params;
     std::string frame_str;
-    SerializeParameter(frame + 1, global_region, &frame_str);
+    SerializeParameter(frame + 1, kPNAFloat, kPNAFloat, kPNAInt,
+                       global_region,
+                       kPNAReg,
+                       kPNAInt, &frame_str);
     frame_params.set_ser_data(SerializedData(frame_str));
     job_query.StageJob(LOOP_FRAME, loop_job_id[0],
                        read, write,

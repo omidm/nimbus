@@ -74,6 +74,8 @@ class CacheScalarArray : public nimbus::CacheVar {
           return data_ ? sizeof(*this) + data_->memory_size() : sizeof(*this);
         }
 
+        virtual void DumpData(std::string file_name);
+
     protected:
         explicit CacheScalarArray(const nimbus::GeometricRegion &global_reg,
                                   const nimbus::GeometricRegion &ob_reg,

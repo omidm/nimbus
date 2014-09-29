@@ -341,16 +341,25 @@ void CacheStruct::SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,
             d->set_cache_type(t);
         }
         for (size_t i = 0; i < flush_t.size(); ++i) {
-            flush_t.at(i)->set_pending_flag();
-        }
-        for (size_t i = 0; i < diff_t.size(); ++i) {
-            diff_t.at(i)->set_pending_flag();
+          assert(flush_t.at(i)->pending_flag() == 0);
+          flush_t.at(i)->set_pending_flag(Data::WRITE);
         }
         for (size_t i = 0; i < sync_t.size(); ++i) {
-            sync_t.at(i)->set_pending_flag();
+          /* Data in the sync array may also be present in the flush array. */
+          if (sync_t.at(i)->pending_flag() != -1) {
+            assert(sync_t.at(i)->pending_flag() == 0);
+            sync_t.at(i)->set_pending_flag(Data::WRITE);
+          }
+        }
+        for (size_t i = 0; i < diff_t.size(); ++i) {
+          /* Data in the diff array may have also be present in the sync and flush
+             arrays. Only set read flag if the data was not marked in write mode. */
+          if (diff_t.at(i)->pending_flag() != -1) {
+            diff_t.at(i)->set_pending_flag(Data::READ);
+          }
         }
         for (size_t i = 0; i < sync_co_t.size(); ++i) {
-            sync_co_t.at(i)->set_pending_flag();
+          sync_co_t.at(i)->set_pending_flag();
         }
     }
 }
@@ -366,44 +375,66 @@ bool CacheStruct::CheckPendingFlag(
     assert(read_sets.size() == num_vars &&
            write_sets.size() == num_vars);
     assert(num_vars <= num_variables_);
+
     for (size_t t = 0; t < num_vars; ++t) {
-        const DataArray &read_set_t = read_sets[t];
-        const DataArray &write_set_t = write_sets[t];
-        cache::type_id_t type = var_type[t];
-        DMap &data_map_t = data_maps_[type];
-        for (size_t i = 0; i < read_set_t.size(); ++i) {
-            Data *d = read_set_t.at(i);
-            if (d->pending_flag()) {
-                return false;
+      const DataArray &read_set_t = read_sets[t];
+      const DataArray &write_set_t = write_sets[t];
+      cache::type_id_t type = var_type[t];
+      DMap &data_map_t = data_maps_[type];
+      DataSet &write_back_t = write_backs_[type];
+      for (size_t i = 0; i < read_set_t.size(); ++i) {
+        Data *d = read_set_t.at(i);
+        if (d->pending_flag() == -1) {
+          return false;
+        }
+        GeometricRegion dreg = d->region();
+        DMap::iterator it = data_map_t.find(dreg);
+        if (it == data_map_t.end()) {
+          if (d->dirty_cache_object()) {
+            if (d->pending_flag() != 0) {
+              return false;
             }
-            GeometricRegion dreg = d->region();
-            DMap::iterator it = data_map_t.find(dreg);
-            if (it != data_map_t.end()) {
-                Data *d_old = it->second;
-                if (d_old->pending_flag()) {
-                    return false;
-                }
+            if (d->dirty_cache_object()->pending_flag()) {
+              return false;
             }
+          }
+        } else {
+          Data *d_old = it->second;
+          if (d_old != d) {
             if (d->dirty_cache_object()) {
-                if (d->dirty_cache_object()->pending_flag()) {
-                    return false;
-                }
-            }
-        }
-        for (size_t i = 0; i < write_set_t.size(); ++i) {
-            Data *d = write_set_t.at(i);
-            if (d->pending_flag()) {
+              if (d->pending_flag() != 0) {
                 return false;
+              }
+              if (d->dirty_cache_object()->pending_flag()) {
+                return false;
+              }
             }
-            GeometricRegion dreg = d->region();
-            DMap::iterator it = data_map_t.find(dreg);
-            if (it != data_map_t.end()) {
-                Data *d_old = it->second;
-                if (d_old->pending_flag()) {
-                    return false;
-                }
+            if (write_back_t.find(d_old) != write_back_t.end()) {
+              if (d_old->pending_flag() != 0) {
+                return false;
+              }
             }
+          }
         }
+      }
+      for (size_t i = 0; i < write_set_t.size(); ++i) {
+        Data *d = write_set_t.at(i);
+        if (d->pending_flag() != 0) {
+          return false;
+        }
+        GeometricRegion dreg = d->region();
+        DMap::iterator it = data_map_t.find(dreg);
+        if (it != data_map_t.end()) {
+          Data *d_old = it->second;
+          if (d_old != d) {
+            if (write_back_t.find(d_old) != write_back_t.end()) {
+              if (d_old->pending_flag() != 0) {
+                return false;
+              }
+            }
+          }
+        }
+      }
     }
     return true;
 }
@@ -431,13 +462,22 @@ void CacheStruct::ReleasePendingFlag(
         DataArray &sync_t = sync_sets->at(t);
         CacheObjects &sync_co_t = sync_co_sets->at(t);
         for (size_t i = 0; i < flush_t.size(); ++i) {
-            flush_t.at(i)->unset_pending_flag();
-        }
-        for (size_t i = 0; i < diff_t.size(); ++i) {
-            diff_t.at(i)->unset_pending_flag();
+          flush_t.at(i)->unset_pending_flag(Data::WRITE);
+          assert(flush_t.at(i)->pending_flag() == 0);
         }
         for (size_t i = 0; i < sync_t.size(); ++i) {
-            sync_t.at(i)->unset_pending_flag();
+          /* Check for case where data in sync array is also present in flush array. */
+          assert(sync_t.at(i)->pending_flag() <= 0);
+          if (sync_t.at(i)->pending_flag() == -1) {
+            sync_t.at(i)->unset_pending_flag(Data::WRITE);
+          }
+          assert(sync_t.at(i)->pending_flag() == 0);
+        }
+        for (size_t i = 0; i < diff_t.size(); ++i) {
+          /* Check for case where data in diff array is also present in flush or sync array */
+          if (diff_t.at(i)->pending_flag() > 0) {
+            diff_t.at(i)->unset_pending_flag(Data::READ);
+          }
         }
         for (size_t i = 0; i < sync_co_t.size(); ++i) {
             sync_co_t.at(i)->unset_pending_flag();

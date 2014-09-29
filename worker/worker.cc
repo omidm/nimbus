@@ -435,7 +435,6 @@ void Worker::ProcessTerminateCommand(TerminateCommand* cm) {
   }
   // profiler_thread_->interrupt();
   // profiler_thread_->join();
-  // ProfilerMalloc::Exit();
   exit(cm->exit_status().elem());
 }
 
