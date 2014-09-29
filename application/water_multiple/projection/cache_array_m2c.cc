@@ -50,8 +50,10 @@
 namespace application {
 
 CacheArrayM2C::CacheArrayM2C(const nimbus::GeometricRegion &global_reg,
-                             bool make_proto)
+                             bool make_proto,
+                             const std::string& name)
     : global_region_(global_reg) {
+  set_name(name);
   if (make_proto)
     MakePrototype();
 }
@@ -64,7 +66,9 @@ CacheArrayM2C::CacheArrayM2C(const nimbus::GeometricRegion &global_reg,
 
 nimbus::CacheVar* CacheArrayM2C::CreateNew(
     const nimbus::GeometricRegion &ob_reg) const {
-  return new CacheArrayM2C(global_region_, ob_reg);
+  nimbus::CacheVar* temp = new CacheArrayM2C(global_region_, ob_reg);
+  temp->set_name(name());
+  return temp;
 }
 
 void CacheArrayM2C::ReadToCache(const nimbus::DataArray &read_set,

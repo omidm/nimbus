@@ -50,8 +50,9 @@
 namespace application {
 
 CacheSparseMatrix::CacheSparseMatrix(const nimbus::GeometricRegion &global_reg,
-                                     bool make_proto)
+                                     bool make_proto, const std::string& name)
     : global_region_(global_reg) {
+  set_name(name);
   data_ = NULL;
   if (make_proto)
     MakePrototype();
@@ -65,7 +66,9 @@ CacheSparseMatrix::CacheSparseMatrix(const nimbus::GeometricRegion &global_reg,
 
 nimbus::CacheVar* CacheSparseMatrix::CreateNew(
     const nimbus::GeometricRegion &ob_reg) const {
-  return new CacheSparseMatrix(global_region_, ob_reg);
+  nimbus::CacheVar* temp = new CacheSparseMatrix(global_region_, ob_reg);
+  temp->set_name(name());
+  return temp;
 }
 
 void CacheSparseMatrix::ReadToCache(const nimbus::DataArray &read_set,

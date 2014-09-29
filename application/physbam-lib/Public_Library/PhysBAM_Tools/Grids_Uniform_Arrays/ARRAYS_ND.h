@@ -33,6 +33,13 @@ public:
 private:
     using BASE::base_pointer;
 public:
+    size_t dynamic_memory_size() {
+      return sizeof(T) * array.Size();
+    }
+
+    size_t memory_size() {
+      return sizeof(*this) + dynamic_memory_size();
+    }
 
     ARRAY()
         :BASE()

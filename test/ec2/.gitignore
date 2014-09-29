@@ -1,3 +1,5 @@
 *.pyc
 boto_test.py
+*.txt
+*.png
 

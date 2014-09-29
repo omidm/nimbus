@@ -54,10 +54,12 @@ template<class TS> CacheParticleLevelsetEvolution<TS>::
 CacheParticleLevelsetEvolution(
         const nimbus::GeometricRegion &global_reg,
         int ghost_width,
-        bool make_proto)
+        bool make_proto,
+        const std::string& name)
     : CacheStruct(NUM_PARTICLE_TYPES),
       global_region_(global_reg),
       ghost_width_(ghost_width) {
+    set_name(name);
     if (make_proto)
         MakePrototype();
 }
@@ -172,10 +174,12 @@ CacheParticleLevelsetEvolution(
 
 template<class TS> nimbus::CacheStruct *CacheParticleLevelsetEvolution<TS>::
 CreateNew(const nimbus::GeometricRegion &ob_reg) const {
-    return new CacheParticleLevelsetEvolution(
-                              global_region_,
-                              ob_reg,
-                              ghost_width_);
+    nimbus::CacheStruct* temp = new CacheParticleLevelsetEvolution(
+        global_region_,
+        ob_reg,
+        ghost_width_);
+    temp->set_name(name());
+    return temp;
 }
 
 template<class TS> void CacheParticleLevelsetEvolution<TS>::

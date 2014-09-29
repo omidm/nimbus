@@ -30,6 +30,12 @@ public:
 private:
     bool owns_data; // whether or not we own x
 public:
+    size_t dynamic_size() {
+      return sizeof(T) * n;
+    }
+    size_t memory_size() {
+      return sizeof(*this) + dynamic_size();
+    }
 
     explicit VECTOR_ND(const int n_input=0,const bool initialize=true)
         :n(n_input),owns_data(true)

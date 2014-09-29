@@ -39,16 +39,14 @@
 #ifndef NIMBUS_WORKER_PHYSICAL_DATA_MAP_H_
 #define NIMBUS_WORKER_PHYSICAL_DATA_MAP_H_
 
+#include <boost/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
 #include <pthread.h>
 #include <cassert>
 #include <list>
-#include <map>
+#include <utility>
 
 #include "shared/nimbus_types.h"
-
-#ifndef MUTE_DATA_ACCESS_CHECK
-#define MUTE_DATA_ACCESS_CHECK
-#endif
 
 namespace nimbus {
 class Data;
@@ -60,16 +58,13 @@ class PhysicalDataMap {
     INIT
   };
   explicit PhysicalDataMap();
-  virtual ~PhysicalDataMap();
+  virtual ~PhysicalDataMap() {}
 
   Data* AcquireAccess(
       physical_data_id_t physical_data_id,
       job_id_t job_id,
       AccessPattern access_pattern);
-  bool ReleaseAccess(
-      physical_data_id_t physical_data_id,
-      job_id_t job_id,
-      AccessPattern access_pattern);
+  bool ReleaseAccess(job_id_t job_id);
 
   bool AddMapping(
       physical_data_id_t physical_data_id,
@@ -78,23 +73,13 @@ class PhysicalDataMap {
       physical_data_id_t physical_data_id);
 
  private:
-  pthread_mutex_t lock_;
-  // job_id_t
-  struct AccessState {
-    Data* data;
-    bool initialized;
-    bool flag_write;
-    bool flag_read_and_write;
-    job_id_t write_job;
-    std::list<job_id_t> read_jobs;
-    AccessState() {
-      data = NULL;
-      initialized = false;
-      flag_write = false;
-      flag_read_and_write = false;
-    }
-  };
-  typedef std::map<physical_data_id_t, AccessState> InternalMap;
+  size_t sum_;
+  FILE* physical_data_log;
+  void PrintTimeStamp(const char* format, ...);
+  typedef boost::unordered_set<physical_data_id_t> PhysicalDataIdSet;
+  boost::unordered_map<job_id_t, PhysicalDataIdSet> outstanding_used_data_;
+  typedef boost::unordered_map<physical_data_id_t, std::pair<Data*, size_t> >
+      InternalMap;
   InternalMap internal_map_;
 };
 }  // namespace nimbus

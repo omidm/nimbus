@@ -390,7 +390,7 @@ void JobQuery::PrintTimeProfile() {
          "spawn_time:%f\ne1_time:%f\ne2_time:%f\ne3_time:%f\ne4_time:%f\n",
          query_time_, commit_time_, copy_time_, elimination_time_, spawn_time_,
          e1_time_, e2_time_, e3_time_, e4_time_);
-  printf("\ntotal job:%lld\ntotal objects:%lld\n",
+  printf("\ntotal job:%"PRId64"\ntotal objects:%"PRId64"\n",
          total_job_, total_objects_);
 }
 

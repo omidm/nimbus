@@ -62,6 +62,9 @@ namespace nimbus {
                 virtual bool Serialize(SerializedData* ser_data);
                 virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
 
+                virtual size_t memory_size() {
+                  return sizeof(*this);
+                }
                 void set_scalar(T scalar);
                 T scalar();
 

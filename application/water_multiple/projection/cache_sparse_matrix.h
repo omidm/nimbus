@@ -54,13 +54,18 @@ class CacheSparseMatrix : public nimbus::CacheVar {
  public:
   typedef PhysBAM::SPARSE_MATRIX_FLAT_NXN<float> DATA_TYPE;
   explicit CacheSparseMatrix(const nimbus::GeometricRegion& global_reg,
-                             bool make_proto = false);
+                             bool make_proto,
+                             const std::string& name);
 
   DATA_TYPE* data() {
     return data_;
   }
   void set_data(DATA_TYPE* d) {
     data_ = d;
+  }
+
+  virtual size_t memory_size() {
+    return data_ ? sizeof(*this) + data_->memory_size() : sizeof(*this);
   }
 
  protected:

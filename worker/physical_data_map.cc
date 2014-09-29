@@ -37,150 +37,86 @@
   */
 
 #include <algorithm>
+#include <cstdio>
+#include <ctime>
+#include "worker/data.h"
 #include "worker/physical_data_map.h"
 
 namespace nimbus {
 
 PhysicalDataMap::PhysicalDataMap() {
-  pthread_mutex_init(&lock_, NULL);
+  sum_ = 0;
+  physical_data_log = fopen("physical_data.txt", "w");
 }
 
-PhysicalDataMap::~PhysicalDataMap() {
-  pthread_mutex_destroy(&lock_);
+void PhysicalDataMap::PrintTimeStamp(const char* format, ...) {
+  va_list args;
+  va_start(args, format);
+  struct timespec t;
+  clock_gettime(CLOCK_REALTIME, &t);
+  double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
+  fprintf(physical_data_log, "%f ", time_sum);
+  vfprintf(physical_data_log, format, args);
+  fflush(physical_data_log);
+  va_end(args);
 }
 
 Data* PhysicalDataMap::AcquireAccess(
     physical_data_id_t physical_data_id,
     job_id_t job_id,
     AccessPattern access_pattern) {
-#ifdef MUTE_DATA_ACCESS_CHECK
+  outstanding_used_data_[job_id].insert(physical_data_id);
   assert(internal_map_.find(physical_data_id) != internal_map_.end());
-  return internal_map_[physical_data_id].data;
-#else
-  pthread_mutex_lock(&lock_);
-  assert(internal_map_.find(physical_data_id) != internal_map_.end());
-  AccessState& access_state = internal_map_[physical_data_id];
-  Data* result = NULL;
-  switch (access_pattern) {
-    case READ:
-      assert(access_state.initialized);
-      if (access_state.flag_write) {
-        assert(!access_state.flag_read_and_write);
-        assert(access_state.write_job == job_id);
-        access_state.flag_read_and_write = true;
-      } else {
-        access_state.read_jobs.push_back(job_id);
-      }
-      result = access_state.data;
-      break;
-    case WRITE:
-      assert(access_state.initialized);
-      assert(!access_state.flag_write);
-      if (access_state.read_jobs.empty()) {
-        access_state.flag_write = true;
-        access_state.write_job = job_id;
-      } else {
-        assert(*access_state.read_jobs.begin() == job_id);
-        assert((++access_state.read_jobs.begin()) ==
-               access_state.read_jobs.end());
-        access_state.flag_write = true;
-        access_state.flag_read_and_write = true;
-        access_state.read_jobs.clear();
-        access_state.write_job = job_id;
-      }
-      result = access_state.data;
-      break;
-    case INIT:
-      assert(!access_state.initialized);
-      assert(!access_state.flag_write);
-      assert(access_state.read_jobs.empty());
-      access_state.initialized = true;
-      access_state.flag_write = true;
-      access_state.write_job = job_id;
-      result = access_state.data;
-      break;
-    default:
-      assert(false);
-  }
-  pthread_mutex_unlock(&lock_);
-  return result;
-#endif
+  return internal_map_[physical_data_id].first;
 }
 
 bool PhysicalDataMap::ReleaseAccess(
-    physical_data_id_t physical_data_id,
-    job_id_t job_id,
-    AccessPattern access_pattern) {
-#ifdef MUTE_DATA_ACCESS_CHECK
-  return true;
-#else
-  pthread_mutex_lock(&lock_);
-  assert(internal_map_.find(physical_data_id) != internal_map_.end());
-  AccessState& access_state = internal_map_[physical_data_id];
-  switch (access_pattern) {
-    case READ: {
-      assert(access_state.initialized);
-      if (access_state.flag_write) {
-        assert(access_state.flag_read_and_write);
-        assert(access_state.write_job == job_id);
-        access_state.flag_read_and_write = false;
-      } else {
-        std::list<job_id_t>::iterator iterator =
-            std::find(access_state.read_jobs.begin(),
-                      access_state.read_jobs.end(),
-                      job_id);
-        assert(iterator != access_state.read_jobs.end());
-        access_state.read_jobs.erase(iterator);
-      }
-      break;
+    job_id_t job_id) {
+  PhysicalDataIdSet& data_set= outstanding_used_data_[job_id];
+  /*
+  for (PhysicalDataIdSet::iterator i_physical_data_id = data_set.begin();
+       i_physical_data_id != data_set.end();
+       ++i_physical_data_id) {
+    physical_data_id_t physical_data_id= *i_physical_data_id;
+    size_t temp_size = internal_map_[physical_data_id].first->memory_size();
+    if (temp_size != internal_map_[physical_data_id].second) {
+      sum_ = sum_ + temp_size - internal_map_[physical_data_id].second;
+      internal_map_[physical_data_id].second = temp_size;
+      PrintTimeStamp("%s %"PRIu64" %zu\n",
+                     internal_map_[physical_data_id].first->name().c_str(),
+                     physical_data_id,
+                     temp_size);
+      PrintTimeStamp("%zu\n", sum_);
     }
-    case WRITE:
-      assert(access_state.initialized);
-      assert(access_state.flag_write);
-      assert(access_state.write_job == job_id);
-      assert(access_state.read_jobs.empty());
-      if (access_state.flag_read_and_write) {
-        access_state.flag_read_and_write = false;
-        access_state.flag_write = false;
-        access_state.read_jobs.push_back(job_id);
-      } else {
-        access_state.flag_write = false;
-      }
-      break;
-    case INIT:
-      assert(false);
-      assert(access_state.initialized);
-      assert(access_state.flag_write);
-      assert(access_state.write_job == job_id);
-      assert(access_state.read_jobs.empty());
-      access_state.flag_write = false;
-      break;
-    default:
-      assert(false);
   }
-  pthread_mutex_unlock(&lock_);
+  */
+  outstanding_used_data_.erase(job_id);
   return true;
-#endif
 }
 
 bool PhysicalDataMap::AddMapping(
     physical_data_id_t physical_data_id,
     Data* data) {
-  pthread_mutex_lock(&lock_);
   assert(data != NULL);
   assert(internal_map_.find(physical_data_id) == internal_map_.end());
-  internal_map_[physical_data_id].data = data;
-  pthread_mutex_unlock(&lock_);
+  internal_map_[physical_data_id].first = data;
+  /*
+  internal_map_[physical_data_id].second = data->memory_size();
+  PrintTimeStamp("%s %"PRIu64" %zu\n",
+                 data->name().c_str(),
+                 physical_data_id,
+                 data->memory_size());
+                 */
   return true;
 }
 
 bool PhysicalDataMap::RemoveMapping(
     physical_data_id_t physical_data_id) {
-  pthread_mutex_lock(&lock_);
+  // TODO(quhang): this function should not be used.
+  assert(false);
   InternalMap::iterator index = internal_map_.find(physical_data_id);
   assert(index != internal_map_.end());
   internal_map_.erase(index);
-  pthread_mutex_unlock(&lock_);
   return true;
 }
 

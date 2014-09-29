@@ -51,8 +51,10 @@
 namespace application {
 
 CacheVector::CacheVector(const nimbus::GeometricRegion &global_reg,
-                         bool make_proto)
+                         bool make_proto,
+                         const std::string& name)
     : global_region_(global_reg) {
+  set_name(name);
   if (make_proto)
     MakePrototype();
 }
@@ -65,7 +67,9 @@ CacheVector::CacheVector(const nimbus::GeometricRegion &global_reg,
 
 nimbus::CacheVar* CacheVector::CreateNew(
     const nimbus::GeometricRegion &ob_reg) const {
-  return new CacheVector(global_region_, ob_reg);
+  nimbus::CacheVar* temp = new CacheVector(global_region_, ob_reg);
+  temp->set_name(name());
+  return temp;
 }
 
 void CacheVector::ReadToCache(const nimbus::DataArray &read_set,

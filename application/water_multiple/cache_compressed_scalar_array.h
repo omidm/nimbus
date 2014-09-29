@@ -60,7 +60,8 @@ class CacheCompressedScalarArray : public nimbus::CacheVar {
  public:
   explicit CacheCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
                                       const int ghost_width,
-                                      bool make_proto = false);
+                                      bool make_proto,
+                                      const std::string& name);
 
   DataType* data() { return data_; }
   void set_data(DataType* d) { data_ = d; }
@@ -69,6 +70,16 @@ class CacheCompressedScalarArray : public nimbus::CacheVar {
   nimbus::int_dimension_t data_length() { return data_length_; }
   void set_data_length(nimbus::int_dimension_t l) { data_length_ = l;  }
   static long CalculateHashCode(IndexType& index);
+  virtual size_t memory_size() {
+    size_t temp = sizeof(*this);
+    if (data_) {
+      temp += data_->memory_size();
+    }
+    if (index_data_) {
+      temp += index_data_->memory_size();
+    }
+    return temp;
+  }
 
  protected:
   explicit CacheCompressedScalarArray(

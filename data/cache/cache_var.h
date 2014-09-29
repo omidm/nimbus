@@ -137,6 +137,10 @@ class CacheVar : public CacheObject {
                         GeometricRegion &write_region,
                         DataArray* flush);
 
+        virtual size_t memory_size() {
+          return sizeof(*this);
+        }
+
         bool CheckWritePendingFlag(const DataArray &write_set,
                                    GeometricRegion &write_region);
 

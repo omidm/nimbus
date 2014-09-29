@@ -72,6 +72,10 @@ class PhysBAMData: public Data {
   virtual bool Serialize(SerializedData* ser_data);
   virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
 
+  virtual size_t memory_size() {
+    return sizeof(*this) + size_ * sizeof(char) +  // NOLINT
+        (temp_buffer_?sizeof(*temp_buffer_):0);
+  }
   virtual char* buffer() const;
   virtual void set_buffer(char* b, int_dimension_t s);
 

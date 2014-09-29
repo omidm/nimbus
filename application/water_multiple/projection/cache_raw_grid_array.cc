@@ -51,8 +51,9 @@
 namespace application {
 
 CacheRawGridArray::CacheRawGridArray(const nimbus::GeometricRegion &global_reg,
-                         bool make_proto)
+                         bool make_proto, const std::string& name)
     : global_region_(global_reg) {
+  set_name(name);
   if (make_proto)
     MakePrototype();
 }
@@ -70,7 +71,9 @@ CacheRawGridArray::CacheRawGridArray(const nimbus::GeometricRegion &global_reg,
 
 nimbus::CacheVar* CacheRawGridArray::CreateNew(
     const nimbus::GeometricRegion &ob_reg) const {
-  return new CacheRawGridArray(global_region_, ob_reg);
+  nimbus::CacheVar* temp = new CacheRawGridArray(global_region_, ob_reg);
+  temp->set_name(name());
+  return temp;
 }
 
 void CacheRawGridArray::ReadToCache(const nimbus::DataArray &read_set,

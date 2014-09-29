@@ -92,6 +92,10 @@ class Data {
   virtual void split(Data *, Data *) {}
   virtual void merge(Data *, Data *) {}
 
+  virtual size_t memory_size() {
+    return sizeof(*this);
+  }
+
   virtual int get_debug_info();
 
   logical_data_id_t logical_id();

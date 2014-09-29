@@ -51,9 +51,11 @@ namespace application {
 template<class T, class TS> CacheFaceArray<T, TS>::
 CacheFaceArray(const nimbus::GeometricRegion &global_reg,
                const int ghost_width,
-               bool make_proto)
+               bool make_proto,
+               const std::string& name)
     : global_region_(global_reg),
       ghost_width_(ghost_width) {
+    set_name(name);
     if (make_proto)
         MakePrototype();
 }
@@ -80,9 +82,11 @@ CacheFaceArray(const nimbus::GeometricRegion &global_reg,
 
 template<class T, class TS> nimbus::CacheVar *CacheFaceArray<T, TS>::
 CreateNew(const nimbus::GeometricRegion &ob_reg) const {
-    return new CacheFaceArray(global_region_,
-                              ob_reg,
-                              ghost_width_);
+    nimbus::CacheVar* temp = new CacheFaceArray(global_region_,
+                                                ob_reg,
+                                                ghost_width_);
+    temp->set_name(name());
+    return temp;
 }
 
 template<class T, class TS> void CacheFaceArray<T, TS>::
