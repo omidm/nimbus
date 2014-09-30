@@ -457,6 +457,11 @@ void RegionMap::SplitDimensions(size_t worker_num, size_t *num_x, size_t *num_y,
       *num_y = 1;
       *num_z = 1;
       break;
+    case 100 :
+      *num_x = 5;
+      *num_y = 5;
+      *num_z = 4;
+      break;
     default:
       dbg(DBG_ERROR, "ERROR: Do not know how to split!");
       exit(-1);
