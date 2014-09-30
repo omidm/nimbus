@@ -115,7 +115,8 @@ namespace application {
                             calculate_dt_job_ids[i],
                             read, write,
                             before, after,
-                            dt_params, true);
+                            dt_params, true,
+                            kRegY2W3Central[i]);
           }
 
           std::string str;
@@ -134,7 +135,8 @@ namespace application {
               job_ids[0],
               read, write,
               before, after,
-              iter_params);
+              iter_params, false,
+              kRegW3Central[0]);
         } else {
           // Last job has been computed, just terminate the application.
           dbg(APP_LOG, "Simulation is complete, last frame computed.\n");

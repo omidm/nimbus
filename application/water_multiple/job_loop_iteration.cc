@@ -239,7 +239,8 @@ namespace application {
       job_query.StageJob(UPDATE_GHOST_VELOCITIES,
           update_ghost_velocities_job_ids[i],
           read, write,
-          s11_params, true);
+          s11_params, true,
+          kRegY2W3Central[i]);
       job_query.Hint(update_ghost_velocities_job_ids[i],
                      kRegY2W3Central[i]);
     }
@@ -253,6 +254,7 @@ namespace application {
         read.clear();
         write.clear();
         std::string step_particles_str;
+        GeometricRegion job_region;
 
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
@@ -268,6 +270,7 @@ namespace application {
                                global_region,
                                kRegW3Central[0],
                                &step_particles_str);
+            job_region = kRegW3Central[0];
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[sj], APP_FACE_VEL_GHOST, NULL);
             LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[sj], APP_POS_PARTICLES,
@@ -284,6 +287,7 @@ namespace application {
                                global_region,
                                kRegY2W3Central[sj],
                                &step_particles_str);
+            job_region = kRegY2W3Central[sj];
         }
 
         nimbus::Parameter step_particles_params;
@@ -292,8 +296,9 @@ namespace application {
         job_query.StageJob(STEP_PARTICLES,
                 step_particles_job_ids[sj],
                 read, write,
-                step_particles_params, true);
-        job_query.Hint(step_particles_job_ids[sj], kRegY2W3Central[sj]);
+                step_particles_params, true,
+                job_region);
+        job_query.Hint(step_particles_job_ids[sj], job_region);
     }
 
     job_query.CommitStagedJobs();
@@ -343,7 +348,8 @@ namespace application {
             job_query.StageJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[i],
                     read, write,
-                    sync_particles_params, true);
+                    sync_particles_params, true,
+                    kRegY2W3Central[i]);
             job_query.Hint(step_particles_sync_job_ids[i],
                            kRegY2W3Central[i]);
         }
@@ -361,7 +367,9 @@ namespace application {
                          barrier_job_ids[0],
                          read, write,
                          params,
-                         true, true);
+                         true,
+                         kRegW3Central[0],
+                         true);
       job_query.Hint(barrier_job_ids[0], kRegW0Central[0], true);
       job_query.CommitStagedJobs();
     }
@@ -383,7 +391,8 @@ namespace application {
       job_query.StageJob(EXTRAPOLATE_PHI,
           first_extrapolate_phi_job_ids[i],
           read, write,
-          s_extra_params, true);
+          s_extra_params, true,
+          kRegY2W3Central[i]);
       job_query.Hint(first_extrapolate_phi_job_ids[i],
                      kRegY2W3Central[i]);
     }
@@ -407,7 +416,8 @@ namespace application {
       job_query.StageJob(ADVECT_PHI,
           advect_phi_job_ids[i],
           read, write,
-          s12_params, true);
+          s12_params, true,
+          kRegY2W3Central[i]);
       job_query.Hint(advect_phi_job_ids[i], kRegY2W3Central[i]);
     }
 
@@ -432,7 +442,8 @@ namespace application {
       job_query.StageJob(ADVECT_V,
           advect_v_job_ids[i],
           read, write,
-          s15_params, true);
+          s15_params, true,
+          kRegY2W3Central[i]);
       job_query.Hint(advect_v_job_ids[i],
                      kRegY2W3Central[i]);
     }
@@ -447,6 +458,7 @@ namespace application {
         read.clear();
         write.clear();
         std::string advect_rem_particles_str;
+        GeometricRegion job_region;
 
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
@@ -463,6 +475,7 @@ namespace application {
                                global_region,
                                kRegW3Central[0],
                                &advect_rem_particles_str);
+            job_region = kRegW3Central[0];
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[sj], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
@@ -476,6 +489,7 @@ namespace application {
                                global_region,
                                kRegY2W3Central[sj],
                                &advect_rem_particles_str);
+            job_region = kRegY2W3Central[sj];
         }
 
         nimbus::Parameter advect_rem_particles_params;
@@ -484,9 +498,10 @@ namespace application {
         job_query.StageJob(ADVECT_REMOVED_PARTICLES,
             advect_removed_particles_job_ids[sj],
             read, write,
-            advect_rem_particles_params, true);
+            advect_rem_particles_params, true,
+            job_region);
         job_query.Hint(advect_removed_particles_job_ids[sj],
-                       kRegY2W3Central[sj]);
+                       job_region);
     }
 
     job_query.CommitStagedJobs();
@@ -501,7 +516,9 @@ namespace application {
                          barrier_job_ids[0],
                          read, write,
                          params,
-                         true, true);
+                         true,
+                         kRegW3Central[0],
+                         true);
       job_query.Hint(barrier_job_ids[0], kRegW0Central[0], true);
       job_query.CommitStagedJobs();
     }
@@ -526,7 +543,8 @@ namespace application {
         job_query.StageJob(UPDATE_GHOST_VELOCITIES,
                            temp_job_ids[i],
                            read, write,
-                           temp_params, true);
+                           temp_params, true,
+                           kRegY2W3Central[i]);
         job_query.Hint(temp_job_ids[i],
                        kRegY2W3Central[i]);
       }
@@ -550,7 +568,8 @@ namespace application {
       job_query.StageJob(APPLY_FORCES,
           apply_forces_job_ids[i],
           read, write,
-          s16_params, true);
+          s16_params, true,
+          kRegY2W3Central[i]);
       job_query.Hint(apply_forces_job_ids[i],
                      kRegY2W3Central[i]);
     }
@@ -578,7 +597,8 @@ namespace application {
         job_query.StageJob(UPDATE_GHOST_VELOCITIES,
                            temp_job_ids[i],
                            read, write,
-                           temp_params, true);
+                           temp_params, true,
+                           kRegY2W3Central[i]);
         job_query.Hint(temp_job_ids[i],
                        kRegY2W3Central[i]);
       }
@@ -592,6 +612,7 @@ namespace application {
         read.clear();
         write.clear();
         std::string modify_levelset_part_one_str;
+        GeometricRegion job_region;
 
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
@@ -609,6 +630,7 @@ namespace application {
                                global_region,
                                kRegW3Central[0],
                                &modify_levelset_part_one_str);
+            job_region = kRegW3Central[0];
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_FACE_VEL_GHOST,
                     APP_FACE_VEL, APP_PHI, NULL);
@@ -623,6 +645,7 @@ namespace application {
                                global_region,
                                kRegY2W3Central[mj],
                                &modify_levelset_part_one_str);
+            job_region = kRegY2W3Central[mj];
         }
 
         nimbus::Parameter modify_levelset_params;
@@ -631,9 +654,10 @@ namespace application {
         job_query.StageJob(MODIFY_LEVELSET_PART_ONE,
             modify_levelset_part_one_job_ids[mj],
             read, write,
-            modify_levelset_params, true);
+            modify_levelset_params, true,
+            job_region);
         job_query.Hint(modify_levelset_part_one_job_ids[mj],
-                       kRegY2W3Central[mj]);
+                       job_region);
     }
 
     job_query.CommitStagedJobs();
@@ -645,6 +669,7 @@ namespace application {
         read.clear();
         write.clear();
         std::string modify_levelset_part_two_str;
+        GeometricRegion job_region;
 
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
@@ -662,6 +687,7 @@ namespace application {
                                global_region,
                                kRegW3Central[0],
                                &modify_levelset_part_two_str);
+            job_region = kRegW3Central[0];
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_PHI, NULL);
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_FACE_VEL_GHOST,
@@ -677,6 +703,7 @@ namespace application {
                                global_region,
                                kRegY2W3Central[mj],
                                &modify_levelset_part_two_str);
+            job_region = kRegY2W3Central[mj];
         }
 
         nimbus::Parameter modify_levelset_params;
@@ -685,9 +712,10 @@ namespace application {
         job_query.StageJob(MODIFY_LEVELSET_PART_TWO,
             modify_levelset_part_two_job_ids[mj],
             read, write,
-            modify_levelset_params, true);
+            modify_levelset_params, true,
+            job_region);
         job_query.Hint(modify_levelset_part_two_job_ids[mj],
-                       kRegY2W3Central[mj]);
+                       job_region);
     }
 
     job_query.CommitStagedJobs();
@@ -709,7 +737,8 @@ namespace application {
       job_query.StageJob(ADJUST_PHI,
           adjust_phi_job_ids[i],
           read, write,
-          adjust_phi_params, true);
+          adjust_phi_params, true,
+          kRegY2W3Central[i]);
       job_query.Hint(adjust_phi_job_ids[i],
                      kRegY2W3Central[i]);
     }
@@ -724,6 +753,7 @@ namespace application {
         read.clear();
         write.clear();
         std::string delete_particles_str;
+        GeometricRegion job_region;
 
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
@@ -740,6 +770,7 @@ namespace application {
                                global_region,
                                kRegW3Central[0],
                                &delete_particles_str);
+            job_region = kRegW3Central[0];
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[dj], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
@@ -753,6 +784,7 @@ namespace application {
                                global_region,
                                kRegY2W3Central[dj],
                                &delete_particles_str);
+            job_region = kRegY2W3Central[dj];
         }
 
         nimbus::Parameter delete_particles_params;
@@ -761,9 +793,10 @@ namespace application {
         job_query.StageJob(DELETE_PARTICLES,
             delete_particles_job_ids[dj],
             read, write,
-            delete_particles_params, true);
+            delete_particles_params, true,
+            job_region);
         job_query.Hint(delete_particles_job_ids[dj],
-                       kRegY2W3Central[dj]);
+                       job_region);
     }
 
     job_query.CommitStagedJobs();
@@ -776,6 +809,7 @@ namespace application {
         read.clear();
         write.clear();
         std::string reincorporate_particles_str;
+        GeometricRegion job_region;
 
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
@@ -792,6 +826,7 @@ namespace application {
                                global_region,
                                kRegW3Central[0],
                                &reincorporate_particles_str);
+            job_region = kRegW3Central[0];
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[rj], APP_FACE_VEL,
                     APP_PHI, NULL);
@@ -805,6 +840,7 @@ namespace application {
                                global_region,
                                kRegY2W3Central[rj],
                                &reincorporate_particles_str);
+            job_region = kRegY2W3Central[rj];
         }
 
         nimbus::Parameter reincorporate_particles_params;
@@ -813,9 +849,10 @@ namespace application {
         job_query.StageJob(REINCORPORATE_PARTICLES,
             reincorporate_particles_job_ids[rj],
             read, write,
-            reincorporate_particles_params, true);
+            reincorporate_particles_params, true,
+            job_region);
         job_query.Hint(reincorporate_particles_job_ids[rj],
-                       kRegY2W3Central[rj]);
+                       job_region);
     }
 
     job_query.CommitStagedJobs();
@@ -850,7 +887,9 @@ namespace application {
                     job_ids[10],
                     read, write,
                     projection_main_params,
-                    false, true);
+                    false,
+                    kRegW3Central[0],
+                    true);
     job_query.Hint(job_ids[10], kRegW3Central[0], true);
     job_query.CommitStagedJobs();
     job_query.PrintTimeProfile();

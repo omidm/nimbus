@@ -131,7 +131,8 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
     job_query.StageJob(INITIALIZE,
                        init_job_ids[i],
                        read, write,
-                       init_params, true);
+                       init_params, true,
+                       kRegY2W3Central[i]);
     job_query.Hint(init_job_ids[i], kRegY2W3Central[i]);
   }
   job_query.CommitStagedJobs();
@@ -156,7 +157,8 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
     job_query.StageJob(EXTRAPOLATE_PHI,
                        extrapolate_phi_job_ids[i],
                        read, write,
-                       phi_params, true);
+                       phi_params, true,
+                       kRegY2W3Central[i]);
     job_query.Hint(extrapolate_phi_job_ids[i], kRegY2W3Central[i]);
   }
   job_query.CommitStagedJobs();
@@ -184,7 +186,8 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
     job_query.StageJob(MAKE_SIGNED_DISTANCE,
                        make_signed_distance_job_ids[i],
                        read, write,
-                       make_signed_distance_params, true);
+                       make_signed_distance_params, true,
+                       kRegY2W3Central[i]);
     job_query.Hint(make_signed_distance_job_ids[i], kRegY2W3Central[i]);
   }
   job_query.CommitStagedJobs();
@@ -215,7 +218,8 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
     job_query.StageJob(RESEED_PARTICLES,
                        reseed_particles_job_ids[i],
                        read, write,
-                       temp_params, true);
+                       temp_params, true,
+                       kRegY2W3Central[i]);
     job_query.Hint(reseed_particles_job_ids[i], kRegY2W3Central[i]);
   }
   job_query.CommitStagedJobs();
@@ -240,7 +244,8 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
     job_query.StageJob(EXTRAPOLATE_PHI,
                        extrapolate_phi_2_job_ids[i],
                        read, write,
-                       phi_params, true);
+                       phi_params, true,
+                       kRegY2W3Central[i]);
     job_query.Hint(extrapolate_phi_2_job_ids[i], kRegY2W3Central[i]);
   }
   job_query.CommitStagedJobs();
@@ -293,7 +298,8 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
     job_query.StageJob(WRITE_OUTPUT,
                        write_output_job_ids[0],
                        read, write,
-                       temp_params, true);
+                       temp_params, true,
+                       kRegW3Central[0]);
     job_query.Hint(write_output_job_ids[0], kRegW3Central[0], true);
     job_query.CommitStagedJobs();
   } else {
@@ -317,7 +323,8 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
       job_query.StageJob(WRITE_OUTPUT,
                          write_output_job_ids[i],
                          read, write,
-                         temp_params, true);
+                         temp_params, true,
+                         kRegY2W3Central[i]);
       job_query.Hint(write_output_job_ids[i], kRegY2W3Central[i]);
     }
     job_query.CommitStagedJobs();
@@ -337,7 +344,9 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
   job_query.StageJob(LOOP_FRAME,
                      loop_frame_job_ids[0],
                      read, write,
-                     loop_params, false, true);
+                     loop_params, false,
+                     kRegW3Central[0],
+                     true);
   job_query.Hint(loop_frame_job_ids[0], kRegW3Central[0], true);
   job_query.CommitStagedJobs();
 
