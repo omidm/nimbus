@@ -42,7 +42,7 @@
 
 #include "./dynamic_load_balancer.h"
 
-#define LB_UPDATE_RATE 200
+#define LB_UPDATE_RATE 2000
 
 namespace nimbus {
 
@@ -124,10 +124,9 @@ bool DynamicLoadBalancer::SetWorkerToAssignJob(JobEntry *job) {
   assert(worker_map_.size() > 0);
   assert(worker_num_ > 0);
 
-  GeometricRegion union_region;
-  bool got_union_region = job->GetUnionSetRegion(data_manager_, &union_region);
+  GeometricRegion region;
 
-  if (init_phase_ || (!got_union_region) || (!job->sterile())) {
+  if (init_phase_ || (job->union_set_p()->size() == 0) || (!job->sterile())) {
     job->set_assigned_worker(worker_map_.begin()->second);
   } else {
     assert(worker_num_ == region_map_.table_size());

@@ -116,6 +116,9 @@ namespace nimbus {
                        const std::vector<worker_id_t>& worker_ids,
                        const GeometricRegion& global_region);
 
+    bool FindWorkerWithMostOverlappedRegion(const GeometricRegion *region,
+                                            worker_id_t *worker_id);
+
     bool QueryCache(const GeometricRegion *region,
                     worker_id_t *worker_id);
 
