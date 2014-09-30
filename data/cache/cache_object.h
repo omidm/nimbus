@@ -171,6 +171,11 @@ class CacheObject {
           name_ = name;
         }
 
+        /**
+         * \brief Dumps out data to a file, to be implemented by child classes
+         * \param file_name is file to dump data to
+         */
+        virtual void DumpData(std::string file_name) {}
 
     private:
         std::string name_;

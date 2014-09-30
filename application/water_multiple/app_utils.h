@@ -60,6 +60,14 @@ using nimbus::IDSet;
 using nimbus::SerializedData;
 
 namespace application {
+    // forward declaration
+    struct InitConfig;
+
+    // undefined values
+    const int kPNAInt = -1000;
+    const int kPNAFloat = -1;
+    const nimbus::GeometricRegion kPNAReg(-1000, -1000, -1000, 0, 0, 0);
+
     typedef std::vector<Data*> DataVec;
     typedef std::vector<DataVec*> DataSetVec;
 
@@ -124,68 +132,17 @@ namespace application {
 
     bool SerializeParameter(
         const int frame,
-        const GeometricRegion& global_region,
-        std::string* result);
-    bool SerializeParameter(
-        const int frame,
-        const T time,
-        const GeometricRegion& global_region,
-        std::string *result);
-    bool SerializeParameter(
-        const int frame,
-        const T time,
-        const T dt,
-        const GeometricRegion& global_region,
-        const GeometricRegion& local_region,
-        std::string *result);
-    bool SerializeParameter(
-        const int frame,
         const T time,
         const T dt,
         const int rank,
-        const GeometricRegion& global_region,
-        const GeometricRegion& local_region,
-        std::string *result);
-    bool SerializeParameter(
-        const int frame,
-        const T time,
-        const T dt,
-        const GeometricRegion& global_region,
-        const GeometricRegion& local_region,
+        const GeometricRegion &global_region,
+        const GeometricRegion &local_region,
         const int iteration,
         std::string *result);
     bool LoadParameter(
         const std::string str,
-        int* frame,
-        GeometricRegion* global_region);
-    bool LoadParameter(
-        const std::string str,
-        int* frame,
-        T* time,
-        GeometricRegion* global_region);
-    bool LoadParameter(
-        const std::string str,
-        int* frame,
-        T* time,
-        T* dt,
-        GeometricRegion* global_region,
-        GeometricRegion* local_region);
-    bool LoadParameter(
-        const std::string str,
-        int* frame,
-        T* time,
-        T* dt,
-        int* rank,
-        GeometricRegion* global_region,
-        GeometricRegion* local_region);
-    bool LoadParameter(
-        const std::string str,
-        int* frame,
-        T* time,
-        T* dt,
-        GeometricRegion* global_region,
-        GeometricRegion* local_region,
-        int* iteration);
+        InitConfig *config);
+
     class ScopeTimer {
      public:
       ScopeTimer(const std::string& name);

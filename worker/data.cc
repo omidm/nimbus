@@ -47,7 +47,7 @@ using namespace nimbus; // NOLINT
 Data::Data() {
   dirty_cache_object_ = NULL;
   cache_type_ = MAGIC_CACHE_TYPE;
-  pending_flag_ = false;
+  pending_flag_ = 0;
 }
 
 Data* Data::Clone() {

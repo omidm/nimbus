@@ -107,6 +107,13 @@ public:
     void Delete_Pointers_And_Clean_Memory() // only valid if T is a pointer type
     {for(int i=1;i<=array.Size();i++) delete array(i);Clean_Memory();}
 
+    void Nimbus_Delete_Base_Pointer()
+    {for(int i=1;i<=array.Size();i++) delete array(i);
+    delete[] array.Get_Array_Pointer();}
+
+    void Nimbus_Delete_Base_Pointer_Scalar()
+    {delete[] array.Get_Array_Pointer();}
+
     ARRAY& operator=(const ARRAY& source)
     {if(array.Size()!=source.array.Size()){
         delete[] array.Get_Array_Pointer();
@@ -186,6 +193,20 @@ public:
     exchange(a.domain,b.domain);exchange(a.counts,b.counts);
     a.Calculate_Acceleration_Constants();b.Calculate_Acceleration_Constants();
     long t = a.hash_code; a.hash_code = b.hash_code; b.hash_code = t;}
+
+    static void Nimbus_Copy_Arrays(ARRAY& dest,ARRAY& src)
+    {dest.array.Nimbus_Copy(src.array);
+    nimbus_copy(dest.domain, src.domain);
+    nimbus_copy(dest.counts, src.counts);
+    dest.Calculate_Acceleration_Constants();
+    src.Calculate_Acceleration_Constants();
+    dest.hash_code = src.hash_code;}
+
+    static void Nimbus_Clear_Array(ARRAY& a)
+    {a.array.Nimbus_Clear();
+    nimbus_clear(a.domain);
+    nimbus_clear(a.counts);
+    a.hash_code = 0;}
 
     void Shift_Domain_Indices(TV_INT& shift)
     {domain.min_corner+=shift;domain.max_corner+=shift;Calculate_Acceleration_Constants();}

@@ -42,12 +42,13 @@
 
 
 #include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/data_names.h"
 #include "application/water_multiple/job_loop_frame.h"
+#include "application/water_multiple/job_names.h"
+#include "application/water_multiple/options.h"
+#include "application/water_multiple/reg_def.h"
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"
-#include "application/water_multiple/job_names.h"
-#include "application/water_multiple/data_names.h"
-#include "application/water_multiple/reg_def.h"
 #include "data/physbam/physbam_data.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
@@ -68,11 +69,12 @@ namespace application {
         dbg(APP_LOG, "Executing loop frame job.\n");
 
         // get frame from parameters
-        int frame;
-        GeometricRegion global_region;
         std::string params_str(params.ser_data().data_ptr_raw(),
                                params.ser_data().size());
-        LoadParameter(params_str, &frame, &global_region);
+        InitConfig init_config;
+        LoadParameter(params_str, &init_config);
+        int frame = init_config.frame;
+        nimbus::GeometricRegion global_region = init_config.global_region;
 
         // get time from frame
         PhysBAM::WATER_EXAMPLE<TV>* example =
@@ -108,8 +110,9 @@ namespace application {
 
             nimbus::Parameter dt_params;
             std::string dt_str;
-            SerializeParameter(frame, time, 0, global_region,
-                               kRegY2W3Central[i], &dt_str);
+            SerializeParameter(frame, time, 0, kPNAInt,
+                               global_region, kRegY2W3Central[i],
+                               kPNAInt, &dt_str);
             dt_params.set_ser_data(SerializedData(dt_str));
             SpawnComputeJob(CALCULATE_DT,
                             calculate_dt_job_ids[i],
@@ -120,7 +123,10 @@ namespace application {
           }
 
           std::string str;
-          SerializeParameter(frame, time, global_region, &str);
+          SerializeParameter(frame, time, 0, kPNAInt,
+                             global_region,
+                             kPNAReg,
+                             kPNAInt, &str);
           iter_params.set_ser_data(SerializedData(str));
 
           read.clear();

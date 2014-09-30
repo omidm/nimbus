@@ -76,6 +76,9 @@ public:
     void Delete_Pointers_And_Clean_Memory()
     {for(int side=1;side<=2;side++)for(int i=1;i<=dimension;i++) Component(side,i).Delete_Pointers_And_Clean_Memory();}
 
+    void Nimbus_Delete_Base_Pointer() 
+    {for(int side=1;side<=2;side++)for(int i=1;i<=dimension;i++) Component(side,i).Nimbus_Delete_Base_Pointer();}
+
     int Number_Of_Ghost_Cells() const
     {return 1-domain_indices.min_corner.x;}
 
@@ -135,6 +138,16 @@ public:
 
     static void Exchange_Arrays(ARRAY& a,ARRAY& b)
     {BASE::Exchange_Arrays(a,b);BASE::Exchange_Arrays(a.u2,b.u2);a.Initialize();b.Initialize();}
+
+    static void Nimbus_Copy_Arrays(ARRAY& dest, ARRAY& src)
+    {BASE::Nimbus_Copy_Arrays(dest,src);
+    BASE::Nimbus_Copy_Arrays(dest.u2,src.u2);
+    dest.Initialize();
+    src.Initialize();}
+
+    static void Nimbus_Clear_Array(ARRAY& a)
+    {BASE::Nimbus_Clear_Array(a);
+    BASE::Nimbus_Clear_Array(a.u2);}
     
     template<class RW> void Read(std::istream& input)
     {BASE::Read(input);Read_Binary<RW>(input,u2);}

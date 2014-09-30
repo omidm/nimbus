@@ -69,12 +69,10 @@ void JobProjectionMain::Execute(
   // Get parameters: frame, time
   InitConfig init_config;
   init_config.use_cache = true;
-  T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
-  LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
-                &init_config.global_region, &init_config.local_region);
-
+  LoadParameter(params_str, &init_config);
+  T dt = init_config.dt;
   const int& frame = init_config.frame;
   const T& time = init_config.time;
 
@@ -97,8 +95,9 @@ void JobProjectionMain::SpawnJobs(
   nimbus::Parameter default_params;
   std::string default_params_str;
   SerializeParameter(
-      frame, time, dt, global_region, global_region,
-      &default_params_str);
+      frame, time, dt, kPNAInt,
+      global_region, global_region,
+      kPNAInt, &default_params_str);
   default_params.set_ser_data(SerializedData(default_params_str));
 
   std::vector<nimbus::Parameter> default_part_params;
@@ -106,8 +105,9 @@ void JobProjectionMain::SpawnJobs(
   for (int i = 0; i < kProjAppPartNum; ++i) {
     std::string default_params_str;
     SerializeParameter(
-        frame, time, dt, global_region, kProjRegY2W0Central[i],
-        &default_params_str);
+        frame, time, dt, kPNAInt,
+        global_region, kProjRegY2W0Central[i],
+        kPNAInt, &default_params_str);
     default_part_params[i].set_ser_data(SerializedData(default_params_str));
   }
 
@@ -271,8 +271,9 @@ void JobProjectionMain::SpawnJobs(
   nimbus::Parameter projection_loop_iteration_params;
   std::string projection_loop_iteration_str;
   SerializeParameter(
-      frame, time, dt, global_region, global_region, 1,
-      &projection_loop_iteration_str);
+      frame, time, dt, kPNAInt,
+      global_region, global_region,
+      1, &projection_loop_iteration_str);
   projection_loop_iteration_params.set_ser_data(
       SerializedData(projection_loop_iteration_str));
   job_query.StageJob(PROJECTION_LOOP_ITERATION,

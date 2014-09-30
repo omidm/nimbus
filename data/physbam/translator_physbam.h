@@ -1744,6 +1744,7 @@ template <class TS> class TranslatorPhysBAM {
                   z < inter_region.z() + inter_region.dz()) {
                 int m_index = index_data(x - shift.x, y - shift.y, z - shift.z);
                 assert(m_index >= 1);
+                assert(m_index <= data_length);
                 (*data)(m_index) = value;
               }
             }

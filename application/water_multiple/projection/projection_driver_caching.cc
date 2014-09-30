@@ -129,12 +129,13 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_thin_outer,
             write, array_reg_thin_outer,
             application::kCachePressure, array_reg_thin_outer,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache_pressure = dynamic_cast<application::CacheScalarArray<T>*>(cache_var);
     assert(cache_pressure != NULL);
     typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
     T_SCALAR_ARRAY* pressure = cache_pressure->data();
-    T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection_data.pressure);
+    projection_data.pressure.Nimbus_Delete_Base_Pointer_Scalar();
+    T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection_data.pressure, *pressure);
     if (print_debug) dbg(APP_LOG, "[PROJECTION] LOAD PRESSURE %f seconds\n", log_timer.timer());
   }
 
@@ -150,7 +151,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_central,
             write, array_reg_central,
             application::kCacheSparseMatrixA, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache_matrix_a = dynamic_cast<application::CacheSparseMatrix*>(cache_var);
     assert(cache_matrix_a != NULL);
     assert(projection_data.matrix_a == NULL);
@@ -178,7 +179,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_central,
             write, array_reg_central,
             application::kCacheSparseMatrixC, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache_matrix_c = dynamic_cast<application::CacheSparseMatrix*>(cache_var);
     assert(cache_matrix_c != NULL);
     projection_data.matrix_a->C = cache_matrix_c->data();
@@ -198,7 +199,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_central,
             write, array_reg_central,
             application::kCacheArrayM2C, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache_index_m2c = dynamic_cast<application::CacheArrayM2C*>(cache_var);
     assert(cache_index_m2c != NULL);
     projection_data.matrix_index_to_cell_index = cache_index_m2c->data();
@@ -218,7 +219,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_central,
             write, array_reg_central,
             application::kCacheVectorB, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache_vector_b = dynamic_cast<application::CacheVector*>(cache_var);
     assert(cache_vector_b != NULL);
     projection_data.vector_b.n = cache_vector_b->data()->n;
@@ -243,8 +244,9 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     assert(cache_index_c2m != NULL);
     typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
     T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
-    T_SCALAR_ARRAY::Exchange_Arrays(*index_c2m,
-        projection_data.cell_index_to_matrix_index);
+    projection_data.cell_index_to_matrix_index.Nimbus_Delete_Base_Pointer_Scalar();
+    T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
+        projection_data.cell_index_to_matrix_index, *index_c2m);
     if (print_debug) dbg(APP_LOG, "[PROJECTION] LOAD INDEX_C2M %f seconds\n", log_timer.timer());
   }
 
@@ -415,7 +417,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_thin_outer,
             write, array_reg_thin_outer,
             application::kCacheMetaP, array_reg_thin_outer,
-            nimbus::cache::EXCLUSIVE,
+            nimbus::cache::SHARED,
             set_up_meta_p,
             &meta_p_aux_data);
     cache_meta_p = dynamic_cast<application::CacheCompressedScalarArray<T>*>(cache_var);
@@ -440,7 +442,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_central,
             write, array_reg_central,
             application::kCacheVectorZ, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache_vector_z = dynamic_cast<application::CacheVector*>(cache_var);
     assert(cache_vector_z != NULL);
     projection_data.z_interior.n = cache_vector_z->data()->n;
@@ -460,7 +462,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_central,
             write, array_reg_central,
             application::kCacheVectorTemp, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache_vector_temp = dynamic_cast<application::CacheVector*>(cache_var);
     assert(cache_vector_temp != NULL);
     projection_data.temp.n = cache_vector_temp->data()->n;
@@ -480,7 +482,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             read, array_reg_central,
             write, array_reg_central,
             application::kCacheVectorPressure, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
+            nimbus::cache::SHARED);
     cache_vector_pressure = dynamic_cast<application::CacheVector*>(cache_var);
     assert(cache_vector_pressure != NULL);
     projection_data.vector_pressure.n = cache_vector_pressure->data()->n;
@@ -517,7 +519,8 @@ void ProjectionDriver::Cache_SaveToNimbus(
     log_timer.StartTimer();
     typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
     T_SCALAR_ARRAY* pressure = cache_pressure->data();
-    T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection_data.pressure);
+    T_SCALAR_ARRAY::Nimbus_Copy_Arrays(*pressure, projection_data.pressure);
+    T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection_data.pressure, t_scalar_dummy);
     cm->ReleaseAccess(cache_pressure);
     cache_pressure = NULL;
     if (print_debug) dbg(APP_LOG, "[PROJECTION] SAVE PRESSURE %f seconds\n", log_timer.timer());
@@ -664,8 +667,10 @@ void ProjectionDriver::Cache_SaveToNimbus(
     log_timer.StartTimer();
     typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
     T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
-    T_SCALAR_ARRAY::Exchange_Arrays(*index_c2m,
-        projection_data.cell_index_to_matrix_index);
+    T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
+        *index_c2m, projection_data.cell_index_to_matrix_index);
+    T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
+        projection_data.cell_index_to_matrix_index, i_scalar_dummy);
     cm->ReleaseAccess(cache_index_c2m);
     cache_index_c2m = NULL;
     if (print_debug) dbg(APP_LOG, "[PROJECTION] SAVE INDEX_C2M %f seconds\n", log_timer.timer());

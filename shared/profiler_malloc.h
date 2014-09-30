@@ -41,13 +41,9 @@
 #ifndef NIMBUS_SHARED_PROFILER_MALLOC_H_
 #define NIMBUS_SHARED_PROFILER_MALLOC_H_
 
-#include <boost/thread/recursive_mutex.hpp>
 #include <pthread.h>
 #include <stdint.h>
 #include <inttypes.h>
-#include <map>
-#include <vector>
-#include <string>
 
 namespace nimbus {
 
@@ -55,58 +51,14 @@ class ProfilerMalloc {
  public:
   static void *p_malloc(size_t size);
   static void p_free(void *ptr);
-  static bool IsInit();
-  static bool IsMapInclude();
-  static void Initialize();
-  static void IncreaseAlloc(void *ptr, size_t size);
-  static void DecreaseAlloc(void *ptr, size_t size);
-  static void InsertAllocPointer(void *ptr, size_t size);
-  static void DeleteAllocPointer(void *ptr);
-  static size_t AllocSize(void *ptr);
-  static size_t CurrentAlloc();
-  static size_t AllocMax();
-  static size_t AllocMaxTid(pthread_t tid);
-  static size_t AllocCurr();
-  static void Exit();
-  static void Enable();
-  static void EnableTid(pthread_t tid);
-  static void Disable();
-  static void DisableTid(pthread_t tid);
-  static bool IsEnabled();
-  static bool IsEnabledTid(pthread_t tid);
-  static void ResetThreadStatistics();
-  static void ResetThreadStatisticsByTid(pthread_t tid);
-  static void RegisterThreads(std::vector<pthread_t> tids);
-  static uint64_t NumAllocs();
-  static uint64_t NumFrees();
+  static void ResetBaseAlloc();
+  static size_t GetMaxAlloc();
+  static size_t GetCurrAlloc();
+  static size_t GetBaseAlloc();
 
  private:
-  struct ThreadAllocState {
-    ThreadAllocState() {
-      max_alloc = 0;
-      curr_alloc = 0;
-      num_allocs = 0;
-      num_frees = 0;
-      on = true;
-    }
-    size_t max_alloc;
-    size_t curr_alloc;
-    bool on;
-    uint64_t num_allocs;
-    uint64_t num_frees;
-  };
-
- private:
-  typedef std::map<void *, size_t> MallocMap;
-  typedef std::map<pthread_t, ThreadAllocState> ThreadMap;
-
- private:
-  static size_t alloc_;
-  static MallocMap *alloc_map_;
-  static bool init_;
-  static bool map_include_;
-  static ThreadMap *thread_alloc_map_;
-  static bool enabled_;
+  static void AddPointerToThreadLocalData(void *ptr);
+  static void RemovePointerFromThreadLocalData(void *ptr);
 };
 
 }  // namespace nimbus

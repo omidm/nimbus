@@ -68,11 +68,10 @@ void JobProjectionCalculateBoundaryConditionPartTwo::Execute(
   init_config.use_cache = true;
   init_config.set_boundary_condition = false;
 
-  T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
-  LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
-                &init_config.global_region, &init_config.local_region);
+  LoadParameter(params_str, &init_config);
+  T dt = init_config.dt;
 
   // Assume time, dt, frame is ready from here.
   dbg(APP_LOG,

@@ -66,11 +66,9 @@ void JobCalculateDt::Execute(
     const nimbus::DataArray& da) {
   dbg(APP_LOG, "Executing CALCULATE_DT job\n");
   InitConfig init_config;
-  T dt_dumb;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
-  LoadParameter(params_str, &init_config.frame, &init_config.time, &dt_dumb,
-                &init_config.global_region, &init_config.local_region);
+  LoadParameter(params_str, &init_config);
 
   // initialize configuration and state
   PhysBAM::WATER_EXAMPLE<TV> *example;

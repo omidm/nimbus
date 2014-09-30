@@ -71,11 +71,10 @@ void JobModifyLevelsetPartTwo::Execute(nimbus::Parameter params, const nimbus::D
     init_config.core_quota = core_quota();
     init_config.use_cache = true;
     init_config.set_boundary_condition = false;
-    T dt;
     std::string params_str(params.ser_data().data_ptr_raw(),
                            params.ser_data().size());
-    LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
-                  &init_config.global_region, &init_config.local_region);
+    LoadParameter(params_str, &init_config);
+    T dt = init_config.dt;
     dbg(APP_LOG, "Frame %i in modify levelset job\n", init_config.frame);
 
     // initialize configuration and state

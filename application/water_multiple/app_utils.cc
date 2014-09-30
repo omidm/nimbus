@@ -41,6 +41,7 @@
 #include <string>
 #include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/data_names.h"
+#include "application/water_multiple/options.h"
 #include "application/water_multiple/reg_def.h"
 #include "data/physbam/physbam_data.h"
 #include "data/physbam/protobuf_compiled/water_parameter.pb.h"
@@ -359,95 +360,30 @@ namespace application {
 
     bool SerializeParameter(
         const int frame,
-        const GeometricRegion& global_region,
-        std::string* result) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.set_frame(frame);
-      SerializeRegionHelper(
-          global_region,
-          water_parameter.mutable_global_region());
-      water_parameter.SerializeToString(result);
-      return true;
-    }
-
-    bool SerializeParameter(
-        const int frame,
-        const T time,
-        const GeometricRegion& global_region,
-        std::string* result) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.set_frame(frame);
-      water_parameter.set_time(time);
-      SerializeRegionHelper(
-          global_region,
-          water_parameter.mutable_global_region());
-      water_parameter.SerializeToString(result);
-      return true;
-    }
-
-    bool SerializeParameter(
-        const int frame,
-        const T time,
-        const T dt,
-        const GeometricRegion& global_region,
-        const GeometricRegion& local_region,
-        std::string *result) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.set_frame(frame);
-      water_parameter.set_time(time);
-      water_parameter.set_dt(dt);
-      SerializeRegionHelper(
-          global_region,
-          water_parameter.mutable_global_region());
-      SerializeRegionHelper(
-          local_region,
-          water_parameter.mutable_local_region());
-      water_parameter.SerializeToString(result);
-      return true;
-    }
-
-    bool SerializeParameter(
-        const int frame,
         const T time,
         const T dt,
         const int rank,
-        const GeometricRegion& global_region,
-        const GeometricRegion& local_region,
-        std::string *result) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.set_frame(frame);
-      water_parameter.set_time(time);
-      water_parameter.set_dt(dt);
-      water_parameter.set_rank(rank);
-      SerializeRegionHelper(
-          global_region,
-          water_parameter.mutable_global_region());
-      SerializeRegionHelper(
-          local_region,
-          water_parameter.mutable_local_region());
-      water_parameter.SerializeToString(result);
-      return true;
-    }
-
-    bool SerializeParameter(
-        const int frame,
-        const T time,
-        const T dt,
-        const GeometricRegion& global_region,
-        const GeometricRegion& local_region,
+        const GeometricRegion &global_region,
+        const GeometricRegion &local_region,
         const int iteration,
         std::string *result) {
       nimbus_message::WaterParameter water_parameter;
       water_parameter.set_frame(frame);
-      water_parameter.set_time(time);
-      water_parameter.set_dt(dt);
-      water_parameter.set_iteration(iteration);
+      if (time != kPNAFloat)
+          water_parameter.set_time(time);
+      if (dt != kPNAFloat)
+          water_parameter.set_dt(dt);
+      if (rank != kPNAInt)
+          water_parameter.set_rank(rank);
       SerializeRegionHelper(
           global_region,
           water_parameter.mutable_global_region());
-      SerializeRegionHelper(
-          local_region,
-          water_parameter.mutable_local_region());
+      if (local_region != kPNAReg)
+          SerializeRegionHelper(
+              local_region,
+              water_parameter.mutable_local_region());
+      if (iteration != kPNAInt)
+          water_parameter.set_iteration(iteration);
       water_parameter.SerializeToString(result);
       return true;
     }
@@ -462,110 +398,25 @@ namespace application {
 
     bool LoadParameter(
         const std::string str,
-        int* frame,
-        GeometricRegion* global_region) {
+        InitConfig *config) {
       nimbus_message::WaterParameter water_parameter;
       water_parameter.ParseFromString(str);
-      assert(water_parameter.has_frame());
-      *frame = water_parameter.frame();
-      assert(water_parameter.has_global_region());
-      DeserializeRegionHelper(water_parameter.global_region(),
-                              global_region);
-      return true;
-    }
-
-    bool LoadParameter(
-        const std::string str,
-        int* frame,
-        T* time,
-        GeometricRegion* global_region) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.ParseFromString(str);
-      assert(water_parameter.has_frame());
-      *frame = water_parameter.frame();
-      assert(water_parameter.has_time());
-      *time = water_parameter.time();
-      assert(water_parameter.has_global_region());
-      DeserializeRegionHelper(water_parameter.global_region(),
-                              global_region);
-      return true;
-    }
-
-    bool LoadParameter(
-        const std::string str,
-        int* frame,
-        T* time,
-        T* dt,
-        GeometricRegion* global_region,
-        GeometricRegion* local_region) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.ParseFromString(str);
-      assert(water_parameter.has_frame());
-      *frame = water_parameter.frame();
-      assert(water_parameter.has_time());
-      *time = water_parameter.time();
-      assert(water_parameter.has_dt());
-      *dt = water_parameter.dt();
-      assert(water_parameter.has_global_region());
-      DeserializeRegionHelper(water_parameter.global_region(),
-                              global_region);
-      assert(water_parameter.has_local_region());
-      DeserializeRegionHelper(water_parameter.local_region(),
-                              local_region);
-      return true;
-    }
-
-    bool LoadParameter(
-        const std::string str,
-        int* frame,
-        T* time,
-        T* dt,
-        int* rank,
-        GeometricRegion* global_region,
-        GeometricRegion* local_region) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.ParseFromString(str);
-      assert(water_parameter.has_frame());
-      *frame = water_parameter.frame();
-      assert(water_parameter.has_time());
-      *time = water_parameter.time();
-      assert(water_parameter.has_dt());
-      *dt = water_parameter.dt();
-      assert(water_parameter.has_rank());
-      *rank = water_parameter.rank();
-      assert(water_parameter.has_global_region());
-      DeserializeRegionHelper(water_parameter.global_region(),
-                              global_region);
-      assert(water_parameter.has_local_region());
-      DeserializeRegionHelper(water_parameter.local_region(),
-                              local_region);
-      return true;
-    }
-
-    bool LoadParameter(
-        const std::string str,
-        int* frame,
-        T* time,
-        T* dt,
-        GeometricRegion* global_region,
-        GeometricRegion* local_region,
-        int* iteration) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.ParseFromString(str);
-      assert(water_parameter.has_frame());
-      *frame = water_parameter.frame();
-      assert(water_parameter.has_time());
-      *time = water_parameter.time();
-      assert(water_parameter.has_dt());
-      *dt = water_parameter.dt();
-      assert(water_parameter.has_iteration());
-      *iteration = water_parameter.iteration();
-      assert(water_parameter.has_global_region());
-      DeserializeRegionHelper(water_parameter.global_region(),
-                              global_region);
-      assert(water_parameter.has_local_region());
-      DeserializeRegionHelper(water_parameter.local_region(),
-                              local_region);
+      if (water_parameter.has_frame())
+          config->frame = water_parameter.frame();
+      if (water_parameter.has_time())
+          config->time = water_parameter.time();
+      if (water_parameter.has_dt())
+          config->dt = water_parameter.dt();
+      if (water_parameter.has_rank())
+          config->rank = water_parameter.rank();
+      if (water_parameter.has_global_region())
+          DeserializeRegionHelper(water_parameter.global_region(),
+                                  &config->global_region);
+      if (water_parameter.has_local_region())
+          DeserializeRegionHelper(water_parameter.local_region(),
+                                  &config->local_region);
+      if (water_parameter.has_iteration())
+          config->projection_iteration = water_parameter.iteration();
       return true;
     }
 

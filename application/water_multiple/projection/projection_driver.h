@@ -73,6 +73,9 @@ class ProjectionDriver {
   typedef application::InitConfig InitConfig;
   nimbus::NimbusThreadQueue* thread_queue;
 
+  PhysBAM::ARRAY<T, TV_INT> t_scalar_dummy;
+  PhysBAM::ARRAY<int, TV_INT> i_scalar_dummy;
+
   ProjectionDriver(
       PCG_SPARSE<T>& pcg_input,
       application::InitConfig& init_config_input,
