@@ -45,6 +45,7 @@
 #include <string>
 #include <vector>
 #include "shared/nimbus.h"
+#include "shared/geometric_region.h"
 #include "worker/job.h"
 
 namespace nimbus {
@@ -60,6 +61,7 @@ class JobQuery {
       IDSet<logical_data_id_t>& write,
       const Parameter& params,
       const bool sterile,
+      const GeometricRegion& region,
       const bool barrier = false);
   bool CommitStagedJobs();
   bool CommitJob(const job_id_t& id);
@@ -105,6 +107,7 @@ class JobQuery {
     IDSet<job_id_t> before;
     Parameter params;
     bool sterile;
+    GeometricRegion region;
   };
   std::list<JobEntry> staged_jobs_;
 
