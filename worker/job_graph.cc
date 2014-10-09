@@ -48,9 +48,11 @@
 using namespace nimbus; // NOLINT
 
 JobGraph::JobGraph(Application *application,
+                   std::string job_graph_name,
                    size_t inner_job_num,
                    size_t outer_job_num) {
   application_ = application;
+  job_graph_name_ = job_graph_name;
   inner_job_num_ = inner_job_num;
   outer_job_num_ = outer_job_num;
   InitializeIDLists();
@@ -77,7 +79,17 @@ bool JobGraph::AddComputeJob(const std::string& name,
                              const bool& sterile,
                              const GeometricRegion& region,
                              const job_id_t& future_job_id) {
-  return false;
+  application_->AddComputeJobToJobGraph(name,
+                                        id,
+                                        read,
+                                        write,
+                                        before,
+                                        after,
+                                        sterile,
+                                        region,
+                                        future_job_id,
+                                        job_graph_name_);
+  return true;
 }
 
 bool JobGraph::AddCopyJob(const job_id_t& id,
@@ -85,17 +97,25 @@ bool JobGraph::AddCopyJob(const job_id_t& id,
                           const logical_data_id_t& to_logical_id,
                           const IDSet<job_id_t>& before,
                           const IDSet<job_id_t>& after) {
-  return false;
+  application_->AddCopyJobToJobGraph(id,
+                                     from_logical_id,
+                                     to_logical_id,
+                                     before,
+                                     after,
+                                     job_graph_name_);
+  return true;
 }
 
 
 
 job_id_t JobGraph::GetInnerJobID(size_t index) {
-  return 0;
+  assert(index < inner_job_num_);
+  return inner_job_ids_[index];
 }
 
 job_id_t JobGraph::GetOuterJobID(size_t index) {
-  return 0;
+  assert(index < outer_job_num_);
+  return outer_job_ids_[index];
 }
 
 bool JobGraph::GetPartition(partition_id_t id, GeometricRegion* r) const {

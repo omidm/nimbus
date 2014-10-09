@@ -65,6 +65,7 @@ typedef std::map<std::string, JobGraph*> JobGraphTable;
 class JobGraph {
   public:
     JobGraph(Application *application,
+             std::string job_graph_name,
              size_t inner_job_num,
              size_t outer_job_num);
     virtual ~JobGraph();
@@ -107,11 +108,13 @@ class JobGraph {
                                       const GeometricRegion* r);
 
     Application* application() const;
+    std::string job_graph_name() const;
     size_t inner_job_num() const;
     size_t outer_job_num() const;
 
   private:
     Application* application_;
+    std::string job_graph_name_;
     size_t inner_job_num_;
     size_t outer_job_num_;
 

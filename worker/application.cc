@@ -131,6 +131,30 @@ void Application::SpawnCopyJob(const job_id_t& id,
   client_->SendCommand(&cm);
 }
 
+
+
+void Application::AddComputeJobToJobGraph(const std::string& name,
+                                          const job_id_t& id,
+                                          const IDSet<logical_data_id_t>& read,
+                                          const IDSet<logical_data_id_t>& write,
+                                          const IDSet<job_id_t>& before,
+                                          const IDSet<job_id_t>& after,
+                                          const bool& sterile,
+                                          const GeometricRegion& region,
+                                          const job_id_t& future_job_id,
+                                          const std::string& job_graph_name) {
+  // TODO(omidm): complete the implementation.
+}
+
+void Application::AddCopyJobToJobGraph(const job_id_t& id,
+                                       const logical_data_id_t& from_logical_id,
+                                       const logical_data_id_t& to_logical_id,
+                                       const IDSet<job_id_t>& before,
+                                       const IDSet<job_id_t>& after,
+                                       const std::string& job_graph_name) {
+  // TODO(omidm): complete the implementation.
+}
+
 // Thread-safe.
 void Application::DefineData(const std::string& name,
                              const logical_data_id_t& logical_data_id,
