@@ -98,6 +98,11 @@ class Job {
                       const IDSet<job_id_t>& after,
                       const Parameter& params);
 
+    bool SpawnJobGraph(const std::string& job_graph_name,
+                       const std::vector<job_id_t>& inner_job_ids,
+                       const std::vector<job_id_t>& outer_job_ids,
+                       const std::vector<Parameter>& parameters);
+
     bool DefineData(const std::string& name,
                     const logical_data_id_t& logical_data_id,
                     const partition_id_t& partition_id,
@@ -105,6 +110,8 @@ class Job {
 
     bool DefinePartition(const ID<partition_id_t>& partition_id,
                          const GeometricRegion& r);
+
+    bool DefineJobGraph(const std::string& job_graph_name);
 
     bool TerminateApplication(const exit_status_t& exit_status_id = NIMBUS_TERMINATE_SUCCESS);
 

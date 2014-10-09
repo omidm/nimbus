@@ -129,6 +129,31 @@ bool Job::SpawnCopyJob(const job_id_t& id,
   }
 }
 
+
+bool Job::SpawnJobGraph(const std::string& job_graph_name,
+                        const std::vector<job_id_t>& inner_job_ids,
+                        const std::vector<job_id_t>& outer_job_ids,
+                        const std::vector<Parameter>& parameters) {
+  if (sterile_) {
+    dbg(DBG_ERROR, "ERROR: the job is sterile, it cannot spawn job graph.\n");
+    return false;
+  }
+  if (app_is_set_) {
+    application_->SpawnJobGraph(job_graph_name,
+                                inner_job_ids,
+                                outer_job_ids,
+                                parameters,
+                                id_.elem());
+    return true;
+  } else {
+    std::cout << "ERROR: SpawnJobGraph, application has not been set." << std::endl;
+    return false;
+  }
+}
+
+
+
+
 bool Job::DefineData(const std::string& name,
                      const logical_data_id_t& logical_data_id,
                      const partition_id_t& partition_id,
@@ -155,6 +180,16 @@ bool Job::DefinePartition(const ID<partition_id_t>& partition_id,
             std::endl;
         return false;
     }
+}
+
+bool Job::DefineJobGraph(const std::string& job_graph_name) {
+  if (app_is_set_) {
+    application_->DefineJobGraph(job_graph_name);
+    return true;
+  } else {
+    std::cout << "ERROR: DefineJobGraph, application has not been set." << std::endl;
+    return false;
+  }
 }
 
 bool Job::TerminateApplication(const exit_status_t& exit_status) {

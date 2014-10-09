@@ -59,6 +59,7 @@
 #include "shared/scheduler_command_include.h"
 #include "worker/data.h"
 #include "worker/job.h"
+#include "worker/job_graph.h"
 #include "worker/worker_ldo_map.h"
 
 namespace nimbus {
@@ -75,10 +76,14 @@ class Application {
   ~Application();
 
   virtual void Load();
+
   virtual void Start(SchedulerClient* client, IDMaker* id_maker, WorkerLdoMap* ldo_map);
 
   void RegisterJob(std::string name, Job* job);
+
   void RegisterData(std::string name, Data* data);
+
+  void RegisterJobGraph(std::string name, JobGraph* job_graph);
 
   void SpawnComputeJob(const std::string& name,
                        const job_id_t& id,
@@ -99,6 +104,12 @@ class Application {
                     const IDSet<job_id_t>& before,
                     const IDSet<job_id_t>& after,
                     const job_id_t& parent_id);
+
+  bool SpawnJobGraph(const std::string& job_graph_name,
+                     const std::vector<job_id_t>& inner_job_ids,
+                     const std::vector<job_id_t>& outer_job_ids,
+                     const std::vector<Parameter>& parameters,
+                     const job_id_t& parent_id);
 
   void AddComputeJobToJobGraph(const std::string& name,
                                const job_id_t& id,
@@ -127,6 +138,8 @@ class Application {
 
   void DefinePartition(const ID<partition_id_t>& partition_id,
                        const GeometricRegion& r);
+
+  bool DefineJobGraph(const std::string& job_graph_name);
 
   void TerminateApplication(const exit_status_t& exit_status_id);
 
@@ -160,6 +173,9 @@ class Application {
   // Protects data table.
   pthread_mutex_t lock_data_table_;
   DataTable data_table_;
+  // Protects job graph table.
+  pthread_mutex_t lock_job_graph_table_;
+  JobGraphTable job_graph_table_;
   SchedulerClient* client_;
   IDMaker* id_maker_;
   WorkerLdoMap* ldo_map_;

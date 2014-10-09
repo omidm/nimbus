@@ -47,12 +47,14 @@ using namespace nimbus; // NOLINT
 Application::Application() {
   pthread_mutex_init(&lock_job_table_, NULL);
   pthread_mutex_init(&lock_data_table_, NULL);
+  pthread_mutex_init(&lock_job_graph_table_, NULL);
 }
 
 Application::~Application() {
   delete cache_manager_;
   pthread_mutex_destroy(&lock_job_table_);
   pthread_mutex_destroy(&lock_data_table_);
+  pthread_mutex_destroy(&lock_job_graph_table_);
 }
 
 void Application::Load() {
@@ -80,6 +82,11 @@ void Application::RegisterJob(std::string name, Job* j) {
 void Application::RegisterData(std::string name, Data* d) {
   LockGuard lock(&lock_data_table_);
   data_table_[name] = d;
+}
+
+void Application::RegisterJobGraph(std::string name, JobGraph *j) {
+  LockGuard lock(&lock_job_graph_table_);
+  job_graph_table_[name] = j;
 }
 
 // Thread-safe.
@@ -132,6 +139,14 @@ void Application::SpawnCopyJob(const job_id_t& id,
 }
 
 
+bool Application::SpawnJobGraph(const std::string& job_graph_name,
+                                const std::vector<job_id_t>& inner_job_ids,
+                                const std::vector<job_id_t>& outer_job_ids,
+                                const std::vector<Parameter>& parameters,
+                                const job_id_t& parent_id) {
+  // TODO(omidm): complete the implementation.
+}
+
 
 void Application::AddComputeJobToJobGraph(const std::string& name,
                                           const job_id_t& id,
@@ -177,6 +192,19 @@ void Application::DefinePartition(const ID<partition_id_t>& partition_id,
   ldo_map_->AddPartition(partition_id.elem(), r);
   DefinePartitionCommand cm(partition_id, r);
   client_->SendCommand(&cm);
+}
+
+bool Application::DefineJobGraph(const std::string& name) {
+  // TODO(omidm): complete the implementation.
+
+  LockGuard lock(&lock_job_graph_table_);
+  if (job_graph_table_.count(name) == 0) {
+    dbg(DBG_ERROR, "ERROR: job graph name %s is not registered in the application.\n", name.c_str()); // NOLINT
+    exit(-1);
+  } else {
+    job_graph_table_[name]->Define();
+    return true;
+  }
 }
 
 // Thread-safe.
