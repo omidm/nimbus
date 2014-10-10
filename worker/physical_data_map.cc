@@ -72,8 +72,8 @@ Data* PhysicalDataMap::AcquireAccess(
 
 bool PhysicalDataMap::ReleaseAccess(
     job_id_t job_id) {
-  PhysicalDataIdSet& data_set= outstanding_used_data_[job_id];
   /*
+  PhysicalDataIdSet& data_set= outstanding_used_data_[job_id];
   for (PhysicalDataIdSet::iterator i_physical_data_id = data_set.begin();
        i_physical_data_id != data_set.end();
        ++i_physical_data_id) {

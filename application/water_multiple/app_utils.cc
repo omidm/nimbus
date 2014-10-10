@@ -421,19 +421,29 @@ namespace application {
     }
 
     ScopeTimer::ScopeTimer(const std::string& name) {
+      if (!activated_) return;
       name_ = name;
       clock_gettime(CLOCK_REALTIME, &start_time_);
     }
 
     ScopeTimer::~ScopeTimer() {
+      if (!activated_) return;
       struct timespec t;
       double time_sum;
       clock_gettime(CLOCK_REALTIME, &t);
       time_sum = difftime(t.tv_sec, start_time_.tv_sec)
           + .000000001
           * (static_cast<double>(t.tv_nsec - start_time_.tv_nsec));
-      dbg(APP_LOG, "\n[TIME] Job %s, %f seconds.\n", name_.c_str(), time_sum);
-      nimbus::LocalCopyJob::PrintTimeProfile();
+      fprintf(log_file_, "%s %f\n", name_.c_str(), time_sum);
     }
+
+    void ScopeTimer::Initialize(bool activated) {
+      activated_ = activated;
+      if (!activated_) return;
+      log_file_ = fopen("app_internal.txt", "w");
+    }
+
+    FILE* ScopeTimer::log_file_ = NULL;
+    bool ScopeTimer::activated_ = false;
 
 } // namespace application
