@@ -28,7 +28,7 @@ import ec2
 
 ip_addresses = ec2.get_ip_addresses(config.EC2_LOCATION);
 
-scheduler_ip = "54.185.152.63"
+scheduler_ip = "54.184.182.178"
 worker_ips = list(ip_addresses)
 worker_ips.remove(scheduler_ip)
 # scheduler_ip = ip_addresses[0]
