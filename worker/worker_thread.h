@@ -43,6 +43,10 @@
 #ifndef NIMBUS_WORKER_WORKER_THREAD_H_
 #define NIMBUS_WORKER_WORKER_THREAD_H_
 
+#include <pthread.h>
+
+#include <list>
+
 #include "shared/nimbus.h"
 #include "shared/high_resolution_timer.h"
 #include "shared/log.h"
@@ -63,8 +67,16 @@ class WorkerThread {
   Job* next_job_to_run;
   bool idle;
   bool job_assigned;
+
+  virtual bool RegisterThread(const pthread_t& thread_handle);
+  virtual bool DeregisterThread(const pthread_t& thread_handle);
+  virtual void ClearRegisterThreads();
+  virtual void SetThreadAffinity(const size_t cpusetsize, const cpu_set_t* cpuset);
+
  protected:
   WorkerManager* worker_manager_;
+  pthread_mutex_t internal_thread_list_lock_;
+  std::list<pthread_t> internal_thread_list_;
   // Logging data structures.
   Log* log_;
   Log* cache_log_;

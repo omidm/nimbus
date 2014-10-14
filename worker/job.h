@@ -62,6 +62,7 @@ namespace nimbus {
 
 class Application;
 class Job;
+class WorkerThread;
 typedef std::list<Job*> JobList;
 typedef std::map<job_id_t, Job*> JobMap;
 typedef std::map<std::string, Job*> JobTable;
@@ -187,6 +188,12 @@ class Job {
     virtual bool SupportMultiThread() const {
       return false;
     }
+    WorkerThread* worker_thread() const {
+      return worker_thread_;
+    }
+    void set_worker_thread(WorkerThread* worker_thread) {
+      worker_thread_ = worker_thread;
+    }
 
   private:
     std::map<std::string, LdoIndexCache> query_cache_;
@@ -208,6 +215,7 @@ class Job {
     double run_time_;
     double wait_time_;
     size_t max_alloc_;
+    WorkerThread* worker_thread_;
 
   protected:
     // TODO(omidm) should remove it later; left them now so the tests

@@ -53,6 +53,7 @@ Job::Job() {
   run_time_ = 0;
   wait_time_ = 0;
   max_alloc_ = 0;
+  worker_thread_ = NULL;
 }
 
 Job::~Job() {

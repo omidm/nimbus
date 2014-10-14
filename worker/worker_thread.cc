@@ -36,8 +36,11 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
+#include <list>
+
 #include "worker/worker_manager.h"
 #include "worker/worker_thread.h"
+
 namespace nimbus {
 
 WorkerThread::WorkerThread(WorkerManager* worker_manager) {
@@ -46,10 +49,13 @@ WorkerThread::WorkerThread(WorkerManager* worker_manager) {
   next_job_to_run = NULL;
   idle = true;
   job_assigned = false;
+  pthread_mutex_init(&internal_thread_list_lock_, NULL);
+  ClearRegisterThreads();
 }
 
 WorkerThread::~WorkerThread() {
   pthread_cond_destroy(&thread_can_start);
+  pthread_mutex_destroy(&internal_thread_list_lock_);
 }
 
 void WorkerThread::SetLoggingInterface(
@@ -60,6 +66,45 @@ void WorkerThread::SetLoggingInterface(
   data_hash_log_ = data_hash_log;
   cache_log_ = cache_log;
   timer_ = timer;
+}
+
+bool WorkerThread::RegisterThread(const pthread_t& thread_handle) {
+  pthread_mutex_lock(&internal_thread_list_lock_);
+  internal_thread_list_.push_back(thread_handle);
+  pthread_mutex_unlock(&internal_thread_list_lock_);
+  return false;
+}
+
+bool WorkerThread::DeregisterThread(const pthread_t& thread_handle) {
+  pthread_mutex_lock(&internal_thread_list_lock_);
+  for (std::list<pthread_t>::iterator iter = internal_thread_list_.begin();
+       iter != internal_thread_list_.end();
+       ++iter) {
+    if (pthread_equal(*iter, thread_handle) != 0) {
+      internal_thread_list_.erase(iter);
+      pthread_mutex_unlock(&internal_thread_list_lock_);
+      return true;
+    }
+  }
+  pthread_mutex_unlock(&internal_thread_list_lock_);
+  return false;
+}
+
+void WorkerThread::ClearRegisterThreads() {
+  pthread_mutex_lock(&internal_thread_list_lock_);
+  internal_thread_list_.clear();
+  pthread_mutex_unlock(&internal_thread_list_lock_);
+}
+
+void WorkerThread::SetThreadAffinity(
+    const size_t cpusetsize, const cpu_set_t* cpuset) {
+  pthread_mutex_lock(&internal_thread_list_lock_);
+  for (std::list<pthread_t>::iterator iter = internal_thread_list_.begin();
+       iter != internal_thread_list_.end();
+       ++iter) {
+    pthread_setaffinity_np(*iter, cpusetsize, cpuset);
+  }
+  pthread_mutex_unlock(&internal_thread_list_lock_);
 }
 
 }  // namespace nimbus
