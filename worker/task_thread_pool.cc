@@ -37,6 +37,8 @@
  */
 
 #include <cassert>
+#include <cstdlib>
+#include <cstdio>
 
 #include "worker/task_thread_pool.h"
 
@@ -62,6 +64,15 @@ TaskThreadWrapper::~TaskThreadWrapper() {
   pthread_cond_destroy(&internal_cond_);
 }
 void* TaskThreadWrapper::ThreadRoutine(void* parameter) {
+  {
+    struct sched_param param;
+    param.sched_priority = 0;
+    int st = pthread_setschedparam(pthread_self(), SCHED_BATCH, &param);
+    if (st != 0) {
+      // Scheduling setting goes wrong.
+      std::exit(1);
+    }
+  }
   TaskThreadWrapper* task_thread =
       static_cast<TaskThreadWrapper*>(parameter);
   task_thread->MainLoop();

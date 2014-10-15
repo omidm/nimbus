@@ -238,6 +238,12 @@ void WorkerManager::ScheduleComputationJobs() {
                 inside_job_parallism, &worker_thread->allocated_threads);
         assert(status);
       }
+      cpu_set_t cpuset;
+      CPU_ZERO(&cpuset);
+      for (int i = 0; i < 2; ++i) {
+        CPU_SET(i, &cpuset);
+      }
+      worker_thread->SetThreadAffinity(&cpuset);
       ++dispatched_computation_job_count_;
       --ready_jobs_count_;
       pthread_cond_signal(&worker_thread->thread_can_start);
@@ -248,6 +254,15 @@ void WorkerManager::ScheduleComputationJobs() {
 }
 
 void* WorkerManager::ThreadEntryPoint(void* parameters) {
+  {
+    struct sched_param param;
+    param.sched_priority = 0;
+    int st = pthread_setschedparam(pthread_self(), SCHED_BATCH, &param);
+    if (st != 0) {
+      // Scheduling setting goes wrong.
+      std::exit(1);
+    }
+  }
   WorkerThread* worker_thread = reinterpret_cast<WorkerThread*>(parameters);
   worker_thread->Run();
   assert(false);
