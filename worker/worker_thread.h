@@ -70,15 +70,10 @@ class WorkerThread {
   bool job_assigned;
 
   TaskThreadPool::TaskThreadList allocated_threads;
-  virtual bool RegisterThread(const pthread_t& thread_handle);
-  virtual bool DeregisterThread(const pthread_t& thread_handle);
-  virtual void ClearRegisterThreads();
-  virtual void SetThreadAffinity(const size_t cpusetsize, const cpu_set_t* cpuset);
+  virtual void SetThreadAffinity(const cpu_set_t* cpuset);
 
  protected:
   WorkerManager* worker_manager_;
-  pthread_mutex_t internal_thread_list_lock_;
-  std::list<pthread_t> internal_thread_list_;
   // Logging data structures.
   Log* log_;
   Log* cache_log_;

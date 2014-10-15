@@ -231,17 +231,12 @@ void WorkerManager::ScheduleComputationJobs() {
       worker_thread->job_assigned = true;
       task_thread_pool_.FreeTaskThreads(worker_thread->allocated_threads);
       worker_thread->allocated_threads.clear();
-      if (inside_job_parallism <= 0 ||
-          !worker_thread->next_job_to_run->SupportMultiThread()) {
-        worker_thread->set_use_threading(false);
-        worker_thread->set_core_quota(1);
-      } else {
-        worker_thread->set_use_threading(true);
+      if (inside_job_parallism >= 2 ||
+          worker_thread->next_job_to_run->SupportMultiThread()) {
         bool status =
             task_thread_pool_.AllocateTaskThreads(
                 inside_job_parallism, &worker_thread->allocated_threads);
         assert(status);
-        worker_thread->set_core_quota(inside_job_parallism);
       }
       ++dispatched_computation_job_count_;
       --ready_jobs_count_;

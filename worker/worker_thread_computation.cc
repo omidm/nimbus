@@ -50,8 +50,6 @@ namespace nimbus {
 
 WorkerThreadComputation::WorkerThreadComputation(WorkerManager* worker_manager)
     : WorkerThread(worker_manager) {
-  use_threading_ = false;
-  core_quota_ = 1;
 }
 
 WorkerThreadComputation::~WorkerThreadComputation() {
@@ -62,8 +60,6 @@ void WorkerThreadComputation::Run() {
   while (true) {
     job = worker_manager_->NextComputationJobToRun(this);
     assert(job != NULL);
-    job->set_use_threading(use_threading_);
-    job->set_core_quota(core_quota_);
     job->set_worker_thread(this);
     ExecuteJob(job);
     job->set_worker_thread(NULL);

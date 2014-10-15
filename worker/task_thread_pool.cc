@@ -74,6 +74,7 @@ void TaskThreadWrapper::Run(
   has_work_to_do_ = true;
   user_function_ = user_function;
   user_parameter_ = user_parameter;
+  pthread_cond_broadcast(&internal_cond_);
   pthread_mutex_unlock(&internal_lock_);
 }
 void* TaskThreadWrapper::Join() {
