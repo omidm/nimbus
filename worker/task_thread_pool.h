@@ -46,6 +46,7 @@
 
 namespace nimbus {
 
+// Exception to indicate an task thread finishes.
 class ExceptionTaskThreadExit : public std::exception {
  public:
   explicit ExceptionTaskThreadExit(void* user_result);
@@ -54,13 +55,16 @@ class ExceptionTaskThreadExit : public std::exception {
   void* user_result_;
 };
 
+// A wrapper over pthread threads.
 class TaskThreadWrapper {
  public:
   TaskThreadWrapper();
   ~TaskThreadWrapper();
-  static void* ThreadRoutine(void* parameter);
+  // Runs the user_function with user_parameter passed as parameter.
   void Run(void* (*user_function)(void* parameter), void* user_parameter);
+  // Joins the task thread.
   void* Join();
+  // Initializes the task thread.
   bool Initialize();
   pthread_t thread_handle() const;
 
@@ -72,6 +76,7 @@ class TaskThreadWrapper {
   void* (*user_function_)(void* parameter);
   void* user_result_;
   bool has_work_to_do_;
+  static void* ThreadRoutine(void* parameter);
   void MainLoop();
 };
 

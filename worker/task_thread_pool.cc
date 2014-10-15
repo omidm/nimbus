@@ -107,8 +107,8 @@ void TaskThreadWrapper::MainLoop() {
     } catch(ExceptionTaskThreadExit finish_exception) {
       user_result_ = finish_exception.user_result();
     }
-    has_work_to_do_ = false;
     pthread_mutex_lock(&internal_lock_);
+    has_work_to_do_ = false;
     pthread_cond_broadcast(&internal_cond_);
     pthread_mutex_unlock(&internal_lock_);
   }  // Finishes loop.
