@@ -50,6 +50,7 @@
 #include "shared/nimbus.h"
 #include "shared/high_resolution_timer.h"
 #include "shared/log.h"
+#include "worker/task_thread_pool.h"
 
 namespace nimbus {
 class WorkerManager;
@@ -68,6 +69,7 @@ class WorkerThread {
   bool idle;
   bool job_assigned;
 
+  TaskThreadPool::TaskThreadList allocated_threads;
   virtual bool RegisterThread(const pthread_t& thread_handle);
   virtual bool DeregisterThread(const pthread_t& thread_handle);
   virtual void ClearRegisterThreads();

@@ -43,7 +43,6 @@
 
 #include <string>
 #include "shared/nimbus.h"
-#include "worker/task_thread_pool.h"
 
 namespace nimbus {
 class WorkerThreadComputation : public WorkerThread {
@@ -63,7 +62,6 @@ class WorkerThreadComputation : public WorkerThread {
   bool use_threading() {
     return use_threading_;
   }
-  TaskThreadPool::TaskThreadList allocated_threads;
 
  private:
   int core_quota_;

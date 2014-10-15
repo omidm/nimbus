@@ -91,8 +91,6 @@ void WorkerThreadMonitor::Run() {
     output << dispatched_computation_job_count
               - dispatched_computation_job_count_last
            << " "
-           << worker_manager_->ActiveComputationThreads()
-           << " "
            << ready_job_queue_length
            << std::endl;
     output.flush();

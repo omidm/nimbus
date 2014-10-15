@@ -55,7 +55,7 @@ class NimbusThreadQueue
   friend class NimbusTaskThread;
  public:
   using PhysBAM::THREAD_QUEUE::TASK;
-  NimbusThreadQueue(TaskThreadPool::TaskThreadList* allocated_threads);
+  explicit NimbusThreadQueue(TaskThreadPool::TaskThreadList* allocated_threads);
   virtual ~NimbusThreadQueue();
 
   virtual void Queue(TASK* task);

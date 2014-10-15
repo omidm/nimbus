@@ -79,13 +79,14 @@ class ProjectionDriver {
   ProjectionDriver(
       PCG_SPARSE<T>& pcg_input,
       application::InitConfig& init_config_input,
-      application::DataConfig& data_config_input)
+      application::DataConfig& data_config_input,
+      nimbus::TaskThreadPool::TaskThreadList* allocated_threads)
           : pcg(pcg_input),
             init_config(init_config_input),
             data_config(data_config_input) {
-    if (init_config.use_threading) {
+    if (allocated_threads->size() != 0) {
       thread_queue = new
-          nimbus::NimbusThreadQueue(init_config.core_quota);
+          nimbus::NimbusThreadQueue(allocated_threads);
     } else {
       thread_queue = NULL;
     }

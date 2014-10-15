@@ -39,10 +39,10 @@ using namespace PhysBAM;
 //#####################################################################
 template<class TV> WATER_EXAMPLE<TV>::
 WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
-              bool use_threading,
-              int thread_quota) :
-    nimbus_thread_queue(use_threading ?
-                        new nimbus::NimbusThreadQueue(thread_quota) : NULL),
+              nimbus::TaskThreadPool::TaskThreadList* allocated_threads) :
+    nimbus_thread_queue(allocated_threads.size() != 0 ?
+                        new nimbus::NimbusThreadQueue(allocated_threads) :
+                        NULL),
     stream_type(stream_type_input),
     initial_time(0),
     first_frame(0),
@@ -86,10 +86,10 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
 template<class TV> WATER_EXAMPLE<TV>::
 WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
               application::AppCacheObjects *cache,
-              bool use_threading,
-              int thread_quota) :
-    nimbus_thread_queue(use_threading ?
-                        new nimbus::NimbusThreadQueue(thread_quota) : NULL),
+              nimbus::TaskThreadPool::TaskThreadList* allocated_threads) :
+    nimbus_thread_queue(allocated_threads.size() != 0 ?
+                        new nimbus::NimbusThreadQueue(allocated_threads) :
+                        NULL),
     stream_type(stream_type_input),
     initial_time(0),
     first_frame(0),
@@ -134,10 +134,10 @@ template<class TV> WATER_EXAMPLE<TV>::
 WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
               application::AppCacheObjects *cache,
               PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple,
-              bool use_threading,
-              int thread_quota) :
-    nimbus_thread_queue(use_threading ?
-                        new nimbus::NimbusThreadQueue(thread_quota) : NULL),
+              nimbus::TaskThreadPool::TaskThreadList* allocated_threads) :
+    nimbus_thread_queue(allocated_threads.size() != 0 ?
+                        new nimbus::NimbusThreadQueue(allocated_threads) :
+                        NULL),
     stream_type(stream_type_input),
     initial_time(0),
     first_frame(0),
