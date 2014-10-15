@@ -52,7 +52,6 @@ WorkerThreadComputation::WorkerThreadComputation(WorkerManager* worker_manager)
     : WorkerThread(worker_manager) {
   use_threading_ = false;
   core_quota_ = 1;
-  thread_queue = NULL;
 }
 
 WorkerThreadComputation::~WorkerThreadComputation() {
@@ -65,12 +64,9 @@ void WorkerThreadComputation::Run() {
     assert(job != NULL);
     job->set_use_threading(use_threading_);
     job->set_core_quota(core_quota_);
-    thread_queue = NULL;
-    job->set_thread_queue_hook(&thread_queue);
     job->set_worker_thread(this);
     ExecuteJob(job);
     job->set_worker_thread(NULL);
-    assert(thread_queue == NULL);
     assert(worker_manager_ != NULL);
     bool success_flag = worker_manager_->FinishJob(job);
     assert(success_flag);

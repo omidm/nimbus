@@ -43,7 +43,7 @@
 
 #include <string>
 #include "shared/nimbus.h"
-#include "worker/thread_queue_proto.h"
+#include "worker/task_thread_pool.h"
 
 namespace nimbus {
 class WorkerThreadComputation : public WorkerThread {
@@ -63,9 +63,7 @@ class WorkerThreadComputation : public WorkerThread {
   bool use_threading() {
     return use_threading_;
   }
-  // The worker thread maintains a pointer to the thread_pool so that it can
-  // observe the running status of the job.
-  ThreadQueueProto* thread_queue;
+  TaskThreadPool::TaskThreadList allocated_threads;
 
  private:
   int core_quota_;

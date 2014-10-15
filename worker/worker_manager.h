@@ -47,6 +47,7 @@
 #include "shared/high_resolution_timer.h"
 #include "shared/log.h"
 #include "shared/nimbus.h"
+#include "worker/task_thread_pool.h"
 
 namespace nimbus {
 class SchedulerCommand;
@@ -114,8 +115,6 @@ class WorkerManager {
   // Thread scheduling algorithm.
   void ScheduleComputationJobs();
 
-  int ActiveComputationThreads();
-
   pthread_mutex_t scheduling_needed_lock_;
   pthread_cond_t scheduling_needed_cond_;
   // Protected by scheduling_needed_lock_.
@@ -158,6 +157,8 @@ class WorkerManager {
   Log* data_hash_log_;
   Log* cache_log_;
   HighResolutionTimer* timer_;
+
+  TaskThreadPool task_thread_pool_;
 };
 }  // namespace nimbus
 

@@ -44,24 +44,29 @@
 
 namespace nimbus {
 
-NimbusThreadQueue::NimbusThreadQueue(int thread_count) : THREAD_QUEUE(-1) {
+NimbusThreadQueue::NimbusThreadQueue(
+    TaskThreadPool::TaskThreadList* allocated_threads) : THREAD_QUEUE(-1) {
   pthread_attr_init(&attr);
   pthread_cond_init(&done_condition, 0);
   pthread_cond_init(&todo_condition, 0);
   pthread_mutex_init(&queue_lock, 0);
+  allocated_threads_ = allocated_threads;
   // Includes the parent thread.
-  thread_quota = thread_count;
+  thread_quota = allocated_threads->size();
   active_threads = thread_count + 1;
   inactive_threads = 0;
   blocked_threads = 0;
   queue_length_ = 0;
   task_threads.resize(thread_count);
 
+  TaskThreadPool::TaskThreadList::iterator iter = allocate_threads_.begin();
   for (int i = 0; i < (int)task_threads.size(); i++){
     task_threads[i] = new NimbusTaskThread(this, i);
-    pthread_create(
-        &(task_threads[i]->pthread_control_handler), NULL,
-        NimbusTaskThread::ThreadRoutine, task_threads[i]);
+    iter->Run(NimbusTaskThread::ThreadRoutine, task_threads[i]);
+    ++iter;
+    // pthread_create(
+    //     &(task_threads[i]->pthread_control_handler), NULL,
+    //     NimbusTaskThread::ThreadRoutine, task_threads[i]);
   }
 }
 NimbusThreadQueue::~NimbusThreadQueue() {
@@ -71,8 +76,11 @@ NimbusThreadQueue::~NimbusThreadQueue() {
   for (int i = 0; i < (int)task_threads.size(); i++) {
     Queue(&exiter[i]);
   }
+  TaskThreadPool::TaskThreadList::iterator iter = allocate_threads_.begin();
   for (int i = 0; i < (int)task_threads.size(); i++) {
-    pthread_join(task_threads[i]->pthread_control_handler, NULL);
+    iter->Join();
+    // pthread_join(task_threads[i]->pthread_control_handler, NULL);
+    ++iter;
     delete task_threads[i];
   }
   pthread_cond_destroy(&done_condition);
@@ -110,13 +118,6 @@ void NimbusThreadQueue::Wait() {
 }
 int NimbusThreadQueue::Number_Of_Threads() {
   return task_threads.size();
-}
-int NimbusThreadQueue::get_active_threads() {
-  int result;
-  pthread_mutex_lock(&queue_lock);
-  result = active_threads;
-  pthread_mutex_unlock(&queue_lock);
-  return result;
 }
 
 }  // namespace nimbus

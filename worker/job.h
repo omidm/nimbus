@@ -56,7 +56,6 @@
 #include "worker/data.h"
 #include "worker/ldo_index_cache.h"
 #include "worker/worker_ldo_map.h"
-#include "worker/thread_queue_proto.h"
 
 namespace nimbus {
 
@@ -179,12 +178,6 @@ class Job {
     bool use_threading() {
       return use_threading_;
     }
-    void set_thread_queue_hook(ThreadQueueProto** thread_queue_hook) {
-      thread_queue_hook_ = thread_queue_hook;
-    }
-    ThreadQueueProto** thread_queue_hook() {
-      return thread_queue_hook_;
-    }
     virtual bool SupportMultiThread() const {
       return false;
     }
@@ -199,7 +192,6 @@ class Job {
     std::map<std::string, LdoIndexCache> query_cache_;
     int core_quota_;
     bool use_threading_;
-    ThreadQueueProto** thread_queue_hook_;
     std::string name_;
     ID<job_id_t> id_;
     IDSet<physical_data_id_t> read_set_;

@@ -122,6 +122,7 @@ TaskThreadPool::~TaskThreadPool() {
 }
 bool TaskThreadPool::AllocateTaskThreads(
     const int thread_num, TaskThreadList* thread_list) {
+  pthread_mutex_lock(&list_lock_);
   for (int i = 0; i < thread_num; ++i) {
     if (free_list_.empty()) {
       TaskThreadWrapper* temp_thread = new TaskThreadWrapper;
@@ -132,14 +133,17 @@ bool TaskThreadPool::AllocateTaskThreads(
     thread_list->push_back(free_list_.front());
     free_list_.pop_front();
   }
+  pthread_mutex_unlock(&list_lock_);
   return true;
 }
 void TaskThreadPool::FreeTaskThreads(const TaskThreadList& thread_list) {
+  pthread_mutex_lock(&list_lock_);
   for (TaskThreadList::const_iterator iter = thread_list.begin();
        iter != thread_list.end();
        ++iter) {
     free_list_.push_back(*iter);
   }
+  pthread_mutex_unlock(&list_lock_);
 }
 
 }  // namespace nimbus

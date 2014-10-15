@@ -229,11 +229,18 @@ void WorkerManager::ScheduleComputationJobs() {
       //     worker_thread->next_job_to_run->name().c_str(),
       //     worker_thread->next_job_to_run->id().elem());
       worker_thread->job_assigned = true;
-      if (inside_job_parallism <= 0) {
+      task_thread_pool_.FreeTaskThreads(worker_thread->allocated_threads);
+      worker_thread->allocated_threads.clear();
+      if (inside_job_parallism <= 0 ||
+          !worker_thread->next_job_to_run->SupportMultiThread()) {
         worker_thread->set_use_threading(false);
         worker_thread->set_core_quota(1);
       } else {
         worker_thread->set_use_threading(true);
+        bool status =
+            task_thread_pool_.AllocateTaskThreads(
+                inside_job_parallism, &worker_thread->allocated_threads);
+        assert(status);
         worker_thread->set_core_quota(inside_job_parallism);
       }
       ++dispatched_computation_job_count_;
@@ -243,22 +250,6 @@ void WorkerManager::ScheduleComputationJobs() {
   }
   pthread_mutex_unlock(&scheduling_critical_section_lock_);
   pthread_mutex_unlock(&computation_job_queue_lock_);
-}
-
-int WorkerManager::ActiveComputationThreads() {
-  int result = 0;
-  for (std::list<WorkerThread*>::iterator index = worker_thread_list_.begin();
-       index != worker_thread_list_.end();
-       ++index) {
-    WorkerThreadComputation* worker_thread =
-        dynamic_cast<WorkerThreadComputation*>(*index);  // NOLINT
-    if (worker_thread && !worker_thread->idle) {
-      // TODO(quhang) Race condition still might happen.
-      ThreadQueueProto* thread_queue = worker_thread->thread_queue;
-      result += (thread_queue ? thread_queue->get_active_threads() : 1);
-    }
-  }
-  return result;
 }
 
 void* WorkerManager::ThreadEntryPoint(void* parameters) {
