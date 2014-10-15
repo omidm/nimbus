@@ -50,6 +50,7 @@
 
 #include "data/scalar_data.h"
 #include "application/water_multiple/data_include.h"
+#include "worker/worker_thread.h"
 #include "application/water_multiple/projection/job_projection_global_initialize.h"
 
 namespace application {
@@ -91,7 +92,7 @@ void JobProjectionGlobalInitialize::Execute(
   pcg_temp.Show_Results();
 
   PhysBAM::ProjectionDriver projection_driver(
-      pcg_temp, init_config, data_config);
+      pcg_temp, init_config, data_config, &worker_thread()->allocated_threads);
   dbg(APP_LOG, "Job PROJECTION_GLOBA_INITIALIZE starts (dt=%f).\n", dt);
 
   projection_driver.LoadFromNimbus(this, da);

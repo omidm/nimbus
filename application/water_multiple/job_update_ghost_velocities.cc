@@ -68,9 +68,6 @@ void JobAdjustPhiWithObjects::Execute(nimbus::Parameter params,
 
   // get time, dt, frame from the parameters.
   InitConfig init_config;
-  // Threading settings.
-  init_config.use_threading = use_threading();
-  init_config.core_quota = core_quota();
   init_config.use_cache = true;
   init_config.set_boundary_condition = false;
   std::string params_str(params.ser_data().data_ptr_raw(),
@@ -90,7 +87,6 @@ void JobAdjustPhiWithObjects::Execute(nimbus::Parameter params,
   dbg(APP_LOG, "Begin initialization.\n");
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
-  *thread_queue_hook() = example->nimbus_thread_queue;
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in UPDATE_GHOST_VELOCITY job.\n");
@@ -99,7 +95,6 @@ void JobAdjustPhiWithObjects::Execute(nimbus::Parameter params,
     driver->UpdateGhostVelocitiesImpl(this, da, dt);
   }
 
-  *thread_queue_hook() = NULL;
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
   // Free resources.
   DestroyExampleAndDriver(example, driver);

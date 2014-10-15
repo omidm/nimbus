@@ -50,6 +50,7 @@
 
 #include "data/scalar_data.h"
 #include "application/water_multiple/data_include.h"
+#include "worker/worker_thread.h"
 #include "application/water_multiple/projection/job_projection_reduce_alpha.h"
 
 namespace application {
@@ -87,7 +88,7 @@ void JobProjectionReduceAlpha::Execute(
   pcg_temp.Show_Results();
 
   PhysBAM::ProjectionDriver projection_driver(
-      pcg_temp, init_config, data_config);
+      pcg_temp, init_config, data_config, &worker_thread()->allocated_threads);
   projection_driver.projection_data.iteration = iteration;
   dbg(APP_LOG, "Job PROJECTION_REDUCE_ALPHA starts (dt=%f).\n", dt);
 

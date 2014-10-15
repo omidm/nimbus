@@ -40,7 +40,7 @@ using namespace PhysBAM;
 template<class TV> WATER_EXAMPLE<TV>::
 WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
               nimbus::TaskThreadPool::TaskThreadList* allocated_threads) :
-    nimbus_thread_queue(allocated_threads.size() != 0 ?
+    nimbus_thread_queue(allocated_threads->size() != 0 ?
                         new nimbus::NimbusThreadQueue(allocated_threads) :
                         NULL),
     stream_type(stream_type_input),
@@ -87,7 +87,7 @@ template<class TV> WATER_EXAMPLE<TV>::
 WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
               application::AppCacheObjects *cache,
               nimbus::TaskThreadPool::TaskThreadList* allocated_threads) :
-    nimbus_thread_queue(allocated_threads.size() != 0 ?
+    nimbus_thread_queue(allocated_threads->size() != 0 ?
                         new nimbus::NimbusThreadQueue(allocated_threads) :
                         NULL),
     stream_type(stream_type_input),
@@ -135,7 +135,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
               application::AppCacheObjects *cache,
               PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple,
               nimbus::TaskThreadPool::TaskThreadList* allocated_threads) :
-    nimbus_thread_queue(allocated_threads.size() != 0 ?
+    nimbus_thread_queue(allocated_threads->size() != 0 ?
                         new nimbus::NimbusThreadQueue(allocated_threads) :
                         NULL),
     stream_type(stream_type_input),

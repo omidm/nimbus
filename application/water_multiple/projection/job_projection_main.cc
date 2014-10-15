@@ -48,6 +48,7 @@
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include "worker/job_query.h"
+#include "worker/worker_thread.h"
 
 #include "application/water_multiple/projection/job_projection_main.h"
 

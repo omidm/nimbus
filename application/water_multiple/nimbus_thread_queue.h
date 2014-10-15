@@ -65,11 +65,11 @@ class NimbusThreadQueue
   struct EXITER : public TASK {
     void Run(const int threadid) {
       // pthread_exit(0);
-      throw ExceptionTaskThreadFinish(NULL);
+      throw ExceptionTaskThreadExit(NULL);
     }
   };
  private:
-  TaskThreadPool::TaskThreadList* allocate_threads_;
+  TaskThreadPool::TaskThreadList* allocated_threads_;
   int queue_length_;
   std::vector<NimbusTaskThread*> task_threads;
   std::list<TASK*> queue;

@@ -53,16 +53,16 @@ NimbusThreadQueue::NimbusThreadQueue(
   allocated_threads_ = allocated_threads;
   // Includes the parent thread.
   thread_quota = allocated_threads->size();
-  active_threads = thread_count + 1;
+  active_threads = thread_quota + 1;
   inactive_threads = 0;
   blocked_threads = 0;
   queue_length_ = 0;
-  task_threads.resize(thread_count);
+  task_threads.resize(thread_quota);
 
-  TaskThreadPool::TaskThreadList::iterator iter = allocate_threads_.begin();
+  TaskThreadPool::TaskThreadList::iterator iter = allocated_threads_->begin();
   for (int i = 0; i < (int)task_threads.size(); i++){
     task_threads[i] = new NimbusTaskThread(this, i);
-    iter->Run(NimbusTaskThread::ThreadRoutine, task_threads[i]);
+    (*iter)->Run(NimbusTaskThread::ThreadRoutine, (void*)task_threads[i]);
     ++iter;
     // pthread_create(
     //     &(task_threads[i]->pthread_control_handler), NULL,
@@ -76,9 +76,9 @@ NimbusThreadQueue::~NimbusThreadQueue() {
   for (int i = 0; i < (int)task_threads.size(); i++) {
     Queue(&exiter[i]);
   }
-  TaskThreadPool::TaskThreadList::iterator iter = allocate_threads_.begin();
+  TaskThreadPool::TaskThreadList::iterator iter = allocated_threads_->begin();
   for (int i = 0; i < (int)task_threads.size(); i++) {
-    iter->Join();
+    (*iter)->Join();
     // pthread_join(task_threads[i]->pthread_control_handler, NULL);
     ++iter;
     delete task_threads[i];

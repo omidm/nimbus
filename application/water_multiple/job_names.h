@@ -48,7 +48,6 @@
 #define LOOP_FRAME "loop_frame"
 #define LOOP_ITERATION "loop_iteration"
 #define LOOP_ITERATION_PART_TWO "loop_iteration_part_two"
-#define CALCULATE_FRAME "calculate_frame"
 #define WRITE_OUTPUT "write_output"
 #define RESEED_PARTICLES "reseed_particles"
 #define BARRIER_JOB "barrier_job"

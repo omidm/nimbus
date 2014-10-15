@@ -53,6 +53,7 @@
 #include "application/water_multiple/water_sources.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus.h"
+#include "worker/worker_thread.h"
 #include "worker/task_thread_pool.h"
 
 #define PHYSBAM_INIT_LOG
@@ -397,17 +398,17 @@ bool InitializeExampleAndDriver(
         example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
                                                  &cache,
                                                  cache.ple->data(),
-                                                 &job->worker_thread_->allocated_threads);
+                                                 &job->worker_thread()->allocated_threads);
       else
         example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
                                                  &cache,
-                                                 &job->worker_thread_->allocated_threads);
+                                                 &job->worker_thread()->allocated_threads);
       example->use_cache = true;
     } else {
       example_scope_timer =
           new application::ScopeTimer("init_example");
       example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
-                                               &job->worker_thread_->allocated_threads);
+                                               &job->worker_thread()->allocated_threads);
       example->use_cache = false;
     }
     // parameters for nimbus

@@ -50,6 +50,7 @@
 
 #include "data/scalar_data.h"
 #include "application/water_multiple/data_include.h"
+#include "worker/worker_thread.h"
 #include "application/water_multiple/projection/job_projection_step_two.h"
 
 namespace application {
@@ -89,7 +90,7 @@ void JobProjectionStepTwo::Execute(
   pcg_temp.Show_Results();
 
   PhysBAM::ProjectionDriver projection_driver(
-      pcg_temp, init_config, data_config);
+      pcg_temp, init_config, data_config, &worker_thread()->allocated_threads);
   dbg(APP_LOG, "Job PROJECTION_STEP_TWO starts (iteration=%d).\n", iteration);
 
   projection_driver.LoadFromNimbus(this, da);
