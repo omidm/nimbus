@@ -51,7 +51,7 @@
 #include "shared/nimbus_types.h"
 #include "shared/id.h"
 #include "shared/idset.h"
-#include "shared/Parameter.h"
+#include "shared/parameter.h"
 #include "shared/geometric_region.h"
 #include "shared/logical_data_object.h"
 
