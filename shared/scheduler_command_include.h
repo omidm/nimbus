@@ -46,7 +46,7 @@
 #include "shared/add_copy_job_command.h"
 #include "shared/spawn_compute_job_command.h"
 #include "shared/spawn_copy_job_command.h"
-// #include "shared/spawn_job_graph_command.h"
+#include "shared/spawn_job_graph_command.h"
 #include "shared/compute_job_command.h"
 #include "shared/create_data_command.h"
 #include "shared/remote_copy_send_command.h"

@@ -87,6 +87,7 @@ SchedulerCommand::Type SchedulerCommand::type() {
 const std::string SchedulerCommand::BASE_NAME = "nop";
 const std::string SchedulerCommand::ADD_COMPUTE_NAME = "addcomputejob";
 const std::string SchedulerCommand::ADD_COPY_NAME = "addcopyjob";
+const std::string SchedulerCommand::SPAWN_JOB_GRAPH_NAME = "spawnjobgraph";
 const std::string SchedulerCommand::SPAWN_COMPUTE_NAME = "spawncomputejob";
 const std::string SchedulerCommand::SPAWN_COPY_NAME = "spawncopyjob";
 const std::string SchedulerCommand::DEFINE_DATA_NAME = "definedata";
@@ -116,6 +117,9 @@ std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
       break;
     case ADD_COPY:
       str = ADD_COPY_NAME;
+      break;
+    case SPAWN_JOB_GRAPH:
+      str = SPAWN_JOB_GRAPH_NAME;
       break;
     case SPAWN_COMPUTE:
       str = SPAWN_COMPUTE_NAME;
