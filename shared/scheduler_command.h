@@ -73,6 +73,7 @@ class SchedulerCommand {
   enum Type {
     BASE,
     ADD_COMPUTE      = SchedulerPBuf_Type_ADD_COMPUTE,
+    ADD_COPY         = SchedulerPBuf_Type_ADD_COPY,
     SPAWN_COMPUTE    = SchedulerPBuf_Type_SPAWN_COMPUTE,
     SPAWN_COPY       = SchedulerPBuf_Type_SPAWN_COPY,
     DEFINE_DATA      = SchedulerPBuf_Type_DEFINE_DATA,
@@ -137,6 +138,7 @@ class SchedulerCommand {
   std::string name_;
   static const std::string BASE_NAME;
   static const std::string ADD_COMPUTE_NAME;
+  static const std::string ADD_COPY_NAME;
   static const std::string SPAWN_COMPUTE_NAME;
   static const std::string SPAWN_COPY_NAME;
   static const std::string DEFINE_DATA_NAME;

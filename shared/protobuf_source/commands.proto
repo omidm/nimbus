@@ -72,46 +72,48 @@ message SchedulerPBuf{
   enum Type {
      BASE             =  1;
      ADD_COMPUTE      =  2;
-     SPAWN_COMPUTE    =  3;
-     SPAWN_COPY       =  4;
-     DEFINE_DATA      =  5;
-     HANDSHAKE        =  6;
-     JOB_DONE         =  7;
-     EXECUTE_COMPUTE  =  8;
-     CREATE_DATA      =  9;
-     REMOTE_RECEIVE   = 10;
-     REMOTE_SEND      = 11;
-     LOCAL_COPY       = 12;
-     DEFINE_PARTITION = 13;
-     LDO_ADD          = 14;
-     LDO_REMOVE       = 15;
-     PARTITION_ADD    = 16;
-     PARTITION_REMOVE = 17;
-     TERMINATE        = 18;
-     PROFILE          = 19;
+     ADD_COPY         =  3;
+     SPAWN_COMPUTE    =  4;
+     SPAWN_COPY       =  5;
+     DEFINE_DATA      =  6;
+     HANDSHAKE        =  7;
+     JOB_DONE         =  8;
+     EXECUTE_COMPUTE  =  9;
+     CREATE_DATA      = 10;
+     REMOTE_RECEIVE   = 11;
+     REMOTE_SEND      = 12;
+     LOCAL_COPY       = 13;
+     DEFINE_PARTITION = 14;
+     LDO_ADD          = 15;
+     LDO_REMOVE       = 16;
+     PARTITION_ADD    = 17;
+     PARTITION_REMOVE = 18;
+     TERMINATE        = 19;
+     PROFILE          = 20;
   }
   required Type type = 1;
 
 // Note that the field type should agree with the type
 // value, to simplify reading.
   optional AddComputeJobPBuf add_compute         =  2;
-  optional SubmitComputeJobPBuf submit_compute   =  3;
-  optional SubmitCopyJobPBuf submit_copy         =  4;
-  optional DefineDataPBuf define_data            =  5;
-  optional HandshakePBuf handshake               =  6;
-  optional JobDonePBuf job_done                  =  7;
-  optional ExecuteComputeJobPBuf execute_compute =  8;
-  optional CreateDataPBuf create_data            =  9;
-  optional RemoteCopySendPBuf remote_send        = 10;
-  optional RemoteCopyReceivePBuf remote_receive  = 11;
-  optional LocalCopyPBuf local_copy              = 12;
-  optional DefinePartitionPBuf define_partition  = 13;
-  optional LdoAddPBuf ldo_add                    = 14;
-  optional LdoRemovePBuf ldo_remove              = 15;
-  optional PartitionAddPBuf partition_add        = 16;
-  optional PartitionRemovePBuf partition_remove  = 17;
-  optional TerminatePBuf terminate               = 18;
-  optional ProfilePBuf profile                   = 19;
+  optional AddCopyJobPBuf add_copy               =  3;
+  optional SubmitComputeJobPBuf submit_compute   =  4;
+  optional SubmitCopyJobPBuf submit_copy         =  5;
+  optional DefineDataPBuf define_data            =  6;
+  optional HandshakePBuf handshake               =  7;
+  optional JobDonePBuf job_done                  =  8;
+  optional ExecuteComputeJobPBuf execute_compute =  9;
+  optional CreateDataPBuf create_data            = 10;
+  optional RemoteCopySendPBuf remote_send        = 11;
+  optional RemoteCopyReceivePBuf remote_receive  = 12;
+  optional LocalCopyPBuf local_copy              = 13;
+  optional DefinePartitionPBuf define_partition  = 14;
+  optional LdoAddPBuf ldo_add                    = 15;
+  optional LdoRemovePBuf ldo_remove              = 16;
+  optional PartitionAddPBuf partition_add        = 17;
+  optional PartitionRemovePBuf partition_remove  = 18;
+  optional TerminatePBuf terminate               = 19;
+  optional ProfilePBuf profile                   = 20;
 }
 
 message AddComputeJobPBuf {
@@ -126,6 +128,16 @@ message AddComputeJobPBuf {
   optional uint64 future_id           =  9;
   optional string job_graph_name      = 10;
 }
+
+message AddCopyJobPBuf {
+  optional uint64 job_id            = 1;
+  optional uint64 from_logical_id   = 2;
+  optional uint64 to_logical_id     = 3;
+  optional JobIDSet before_set      = 4;
+  optional JobIDSet after_set       = 5;
+  optional string job_graph_name    = 6;
+}
+
 
 
 message SubmitComputeJobPBuf {

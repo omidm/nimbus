@@ -43,7 +43,7 @@
 #include "shared/scheduler_command.h"
 #include "shared/handshake_command.h"
 #include "shared/add_compute_job_command.h"
-// #include "shared/add_copy_job_command.h"
+#include "shared/add_copy_job_command.h"
 #include "shared/spawn_compute_job_command.h"
 #include "shared/spawn_copy_job_command.h"
 // #include "shared/spawn_job_graph_command.h"
