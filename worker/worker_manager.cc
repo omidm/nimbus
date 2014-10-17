@@ -147,7 +147,8 @@ bool WorkerManager::GetLocalJobDoneList(JobList* buffer) {
   return true;
 }
 
-Job* WorkerManager::NextComputationJobToRun(WorkerThread* worker_thread) {
+Job* WorkerManager::NextComputationJobToRun(
+    WorkerThreadComputation* worker_thread) {
   pthread_mutex_lock(&scheduling_critical_section_lock_);
   worker_thread->idle = true;
   worker_thread->job_assigned = false;
@@ -189,7 +190,6 @@ bool WorkerManager::LaunchThread(WorkerThread* worker_thread) {
   int error_code =
       pthread_create(&worker_thread->thread_id, NULL,
                      ThreadEntryPoint, worker_thread);
-  // WorkerManager::RegisterThread(&worker_thread->thread_id);
   assert(error_code == 0);
   return true;
 }
@@ -238,12 +238,14 @@ void WorkerManager::ScheduleComputationJobs() {
                 inside_job_parallism, &worker_thread->allocated_threads);
         assert(status);
       }
+      /*
       cpu_set_t cpuset;
       CPU_ZERO(&cpuset);
       for (int i = 0; i < 2; ++i) {
         CPU_SET(i, &cpuset);
       }
       worker_thread->SetThreadAffinity(&cpuset);
+      */
       ++dispatched_computation_job_count_;
       --ready_jobs_count_;
       pthread_cond_signal(&worker_thread->thread_can_start);

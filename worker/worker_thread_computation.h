@@ -51,6 +51,11 @@ class WorkerThreadComputation : public WorkerThread {
   virtual ~WorkerThreadComputation();
   virtual void Run();
 
+  pthread_cond_t thread_can_start;
+  Job* next_job_to_run;
+  bool idle;
+  bool job_assigned;
+
  private:
   void ExecuteJob(Job* job);
   uint64_t ParseLine(std::string line);

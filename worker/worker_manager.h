@@ -71,7 +71,7 @@ class WorkerManager {
   // Computation job: computation-intensive job.
   // Fast job: non-computation-intensive job.
 
-  Job* NextComputationJobToRun(WorkerThread* worker_thread);
+  Job* NextComputationJobToRun(WorkerThreadComputation* worker_thread);
 
   bool PushJob(Job* job);
   bool PushJobList(std::list<Job*>* job_list);

@@ -50,9 +50,14 @@ namespace nimbus {
 
 WorkerThreadComputation::WorkerThreadComputation(WorkerManager* worker_manager)
     : WorkerThread(worker_manager) {
+  pthread_cond_init(&thread_can_start, NULL);
+  next_job_to_run = NULL;
+  idle = true;
+  job_assigned = false;
 }
 
 WorkerThreadComputation::~WorkerThreadComputation() {
+  pthread_cond_destroy(&thread_can_start);
 }
 
 void WorkerThreadComputation::Run() {

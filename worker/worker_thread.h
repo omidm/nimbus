@@ -62,13 +62,8 @@ class WorkerThread {
       Log* log, Log* version_log, Log* data_hash_log, Log* cache_log,
       HighResolutionTimer* timer);
   virtual void Run() = 0;
-  // TODO(quhang) data member accessor.
-  pthread_t thread_id;
-  pthread_cond_t thread_can_start;
-  Job* next_job_to_run;
-  bool idle;
-  bool job_assigned;
 
+  pthread_t thread_id;
   TaskThreadPool::TaskThreadList allocated_threads;
   virtual void SetThreadAffinity(const cpu_set_t* cpuset);
 

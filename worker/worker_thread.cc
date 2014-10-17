@@ -45,14 +45,9 @@ namespace nimbus {
 
 WorkerThread::WorkerThread(WorkerManager* worker_manager) {
   worker_manager_ = worker_manager;
-  pthread_cond_init(&thread_can_start, NULL);
-  next_job_to_run = NULL;
-  idle = true;
-  job_assigned = false;
 }
 
 WorkerThread::~WorkerThread() {
-  pthread_cond_destroy(&thread_can_start);
 }
 
 void WorkerThread::SetLoggingInterface(
