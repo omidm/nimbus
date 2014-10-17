@@ -296,28 +296,4 @@ void WorkerManager::TriggerScheduling() {
   pthread_mutex_unlock(&scheduling_needed_lock_);
 }
 
-/*
-void WorkerManager::RegisterThread(
-    const pthread_t* child_thread, const pthread_t* parenter_thread) {
-}
-
-void WorkerManager::RegisterThreadStateStub(
-    const pthread_t* thread, const ThreadStateStub* thread_stub) {
-}
-
-void WorkerManager::DeregisterThreadStateStub(const pthread_t* thread) {
-}
-
-void WorkerManager::AllocateThreadStateStub() {
-  pthread_setspecific(*thread_state_stub_key, new ThreadStateStub);
-}
-
-WorkerManager::ThreadStateStub* WorkerManager::DetachThreadStateStub() {
-  ThreadStateStub* temp =
-      static_cast<ThreadStateStub*>(pthread_getspecific(*thread_state_stub_key));
-  pthread_setspecific(*thread_state_stub_key, NULL);
-  return temp;
-}
-*/
-
 }  // namespace nimbus
