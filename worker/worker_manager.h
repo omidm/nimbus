@@ -59,96 +59,77 @@ class Worker;
 class WorkerManager {
   friend class WorkerThreadMonitor;
  public:
+  // Configuration: used parallism level.
   static int inside_job_parallism;
   static int across_job_parallism;
+  // Configuration: the number of computation threads used.
+  int computation_thread_num;
+
+  // Constructor and deconstructor
   explicit WorkerManager();
   ~WorkerManager();
-
-  void SetLoggingInterface(
-      Log* log, Log* version_log, Log* data_hash_log, Log* cache_log,
-      HighResolutionTimer* timer);
-
-  // Computation job: computation-intensive job.
-  // Fast job: non-computation-intensive job.
-
-  Job* NextComputationJobToRun(WorkerThreadComputation* worker_thread);
-
-  bool PushJob(Job* job);
-  bool PushJobList(std::list<Job*>* job_list);
-  bool FinishJob(Job* job);
-
-  bool SendCommand(SchedulerCommand* command);
-
-  bool GetLocalJobDoneList(JobList* buffer);
-
   // Starts all the worker threads and the scheduling thread.
   bool StartWorkerThreads();
 
-  // Configuration for the number of threads used.
-  int computation_thread_num;
+  // Interfaces for worker.
+  // 1. Push a job.
+  bool PushJob(Job* job);
+  // 2. Push a list of jobs.
+  bool PushJobList(std::list<Job*>* job_list);
+  // 3. Retrieve the job done list.
+  bool GetLocalJobDoneList(JobList* buffer);
+
+  // Interfaces for worker threads.
+  // 1. Retrieve next computation job.
+  Job* NextComputationJobToRun(WorkerThreadComputation* worker_thread);
+  // 2. Send a command.
+  bool SendCommand(SchedulerCommand* command);
+  // 3. Finish a job
+  bool FinishJob(Job* job);
 
  public:
-  // TODO(quhang) Not sure if maintaining such a pointer is good or not.
   Worker* worker_;
-  /*
-  static void RegisterThread(const pthread_t* child_thread,
-                             const pthread_t* parenter_thread = NULL);
-  struct ThreadStateStub {
-    size_t allocated_memory;
-    size_t freed_memory;
-    bool is_active;
-    ThreadStateStub() {
-      allocated_memory = 0;
-      freed_memory = 0;
-      is_active = false;
-    }
-  };
-  static void RegisterThreadStateStub(
-      const pthread_t* thread, const ThreadStateStub* thread_stub);
-  static void DeregisterThreadStateStub(const pthread_t* thread);
-  static pthread_key_t* thread_state_stub_key;
-  static void AllocateThreadStateStub();
-  static ThreadStateStub* DetachThreadStateStub();
-  */
 
  private:
   // Thread scheduling algorithm.
   void ScheduleComputationJobs();
+  // The thread pool.
+  TaskThreadPool task_thread_pool_;
 
-  pthread_mutex_t scheduling_needed_lock_;
-  pthread_cond_t scheduling_needed_cond_;
-  // Protected by scheduling_needed_lock_.
-  bool scheduling_needed_;
-  // Triggers the scheduling algorithm.
-  void TriggerScheduling();
-
+  // Threads.
+  // 1. The thread to run scheduling.
+  pthread_t scheduling_id_;
+  static void* SchedulingEntryPoint(void* parameters);
+  // 2. The worker threads.
   std::list<WorkerThread*> worker_thread_list_;
   bool LaunchThread(WorkerThread* worker_thread);
   // Entry point for each worker thread.
   static void* ThreadEntryPoint(void* parameters);
 
-  pthread_t scheduling_id_;
-  // Entry point for the scheduling thread.
-  static void* SchedulingEntryPoint(void* parameters);
+  // The scheduling triggering mechanism.
+  pthread_mutex_t scheduling_needed_lock_;
+  pthread_cond_t scheduling_needed_cond_;
+  bool scheduling_needed_;
+  void TriggerScheduling();
 
+  // Data structures and locks used for scheduling.
+  // 1. Lock to protect schedulign critical session.
   pthread_mutex_t scheduling_critical_section_lock_;
-
+  // 2. The list of ready computation jobs.
   pthread_mutex_t computation_job_queue_lock_;
-  // Protected by computation_job_queue_lock.
   std::list<Job*> computation_job_list_;
-
-  std::list<Job*> computation_job_to_schedule_list_;
-
+  // 3. The list of finished jobs.
   pthread_mutex_t local_job_done_list_lock_;
-  // Protected by local_job_done_queue_lock_.
   JobList local_job_done_list_;
 
-  // Measures running states of the worker.
-  int64_t dispatched_computation_job_count_;
-  int idle_computation_threads_;
-  int64_t ready_jobs_count_;
+ public:
+  // Logging: set up logging interface.
+  void SetLoggingInterface(
+      Log* log, Log* version_log, Log* data_hash_log, Log* cache_log,
+      HighResolutionTimer* timer);
 
-  // Logging data structures.
+ private:
+  // Internal logging facility.
   void PrintTimeStamp(const char* event, const char* s, const uint64_t d);
   FILE* event_log;
   bool log_ready_;
@@ -157,8 +138,10 @@ class WorkerManager {
   Log* data_hash_log_;
   Log* cache_log_;
   HighResolutionTimer* timer_;
-
-  TaskThreadPool task_thread_pool_;
+  // Performance measurement.
+  int64_t dispatched_computation_job_count_;
+  int idle_computation_threads_;
+  int64_t ready_jobs_count_;
 };
 }  // namespace nimbus
 
