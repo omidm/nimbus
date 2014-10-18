@@ -71,6 +71,7 @@ WorkerManager::WorkerManager() {
   log_ready_ = false;
 
   pthread_mutex_init(&computation_job_queue_lock_, NULL);
+  pthread_mutex_init(&auxiliary_job_queue_lock_, NULL);
 
   pthread_mutex_init(&local_job_done_list_lock_, NULL);
 
@@ -91,6 +92,7 @@ WorkerManager::~WorkerManager() {
   pthread_mutex_destroy(&scheduling_critical_section_lock_);
 
   pthread_mutex_destroy(&computation_job_queue_lock_);
+  pthread_mutex_destroy(&auxiliary_job_queue_lock_);
 }
 
 void WorkerManager::PrintTimeStamp(
@@ -112,21 +114,53 @@ void WorkerManager::SetLoggingInterface(
   log_ready_ = true;
 }
 
+bool WorkerManager::ClassifyAndAddJob(Job* job) {
+  bool result;
+  if (dynamic_cast<RemoteCopySendJob*>(job) ||  // NOLINT
+      dynamic_cast<RemoteCopyReceiveJob*>(job) ||  // NOLINT
+      dynamic_cast<LocalCopyJob*>(job) ||  // NOLINT
+      dynamic_cast<CreateDataJob*>(job)) {  // NOLINT
+    pthread_mutex_lock(&auxiliary_job_queue_lock_);
+    auxiliary_job_list_.push_back(job);
+    pthread_mutex_unlock(&auxiliary_job_queue_lock_);
+    result = false;
+  } else {
+    pthread_mutex_lock(&computation_job_queue_lock_);
+    computation_job_list_.push_back(job);
+    ++ready_jobs_count_;
+    pthread_mutex_unlock(&computation_job_queue_lock_);
+    result = true;
+  }
+  return result;
+}
+
 bool WorkerManager::PushJob(Job* job) {
-  pthread_mutex_lock(&computation_job_queue_lock_);
-  computation_job_list_.push_back(job);
-  ++ready_jobs_count_;
-  pthread_mutex_unlock(&computation_job_queue_lock_);
-  TriggerScheduling();
+  if (ClassifyAndAddJob(job)) {
+    TriggerScheduling();
+  }
   return true;
 }
 
 bool WorkerManager::PushJobList(std::list<Job*>* job_list) {
-  pthread_mutex_lock(&computation_job_queue_lock_);
-  ready_jobs_count_ += job_list->size();
-  computation_job_list_.splice(computation_job_list_.end(), *job_list);
-  pthread_mutex_unlock(&computation_job_queue_lock_);
-  TriggerScheduling();
+  bool result = false;
+  for (std::list<Job*>::iterator iter = job_list->begin();
+       iter != job_list->end();
+       ++iter) {
+    if (ClassifyAndAddJob(*iter)) {
+      result = true;
+    }
+  }
+  if (result) {
+    TriggerScheduling();
+  }
+  return true;
+}
+
+bool WorkerManager::PullAuxiliaryJobs(WorkerThreadAuxiliary* worker_thread,
+                       std::list<Job*>* job_list) {
+  pthread_mutex_lock(&auxiliary_job_queue_lock_);
+  job_list->splice(job_list->end(), auxiliary_job_list_);
+  pthread_mutex_unlock(&auxiliary_job_queue_lock_);
   return true;
 }
 

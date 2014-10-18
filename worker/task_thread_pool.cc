@@ -58,6 +58,7 @@ TaskThreadWrapper::TaskThreadWrapper() {
   user_parameter_ = NULL;
   user_function_ = NULL;
   has_work_to_do_ = false;
+  finished_ = false;
 }
 TaskThreadWrapper::~TaskThreadWrapper() {
   pthread_mutex_destroy(&internal_lock_);
@@ -91,9 +92,10 @@ void TaskThreadWrapper::Run(
 void* TaskThreadWrapper::Join() {
   void* result = NULL;
   pthread_mutex_lock(&internal_lock_);
-  while (has_work_to_do_) {
+  while (!finished_) {
     pthread_cond_wait(&internal_cond_, &internal_lock_);
   }
+  finished_ = false;
   result = user_result_;
   pthread_mutex_unlock(&internal_lock_);
   return result;
@@ -113,6 +115,8 @@ void TaskThreadWrapper::MainLoop() {
       pthread_cond_wait(&internal_cond_, &internal_lock_);
     }
     user_result_ = NULL;
+    finished_ = false;
+    has_work_to_do_ = false;
     pthread_mutex_unlock(&internal_lock_);
     try {
       user_result_ = user_function_(user_parameter_);
@@ -120,7 +124,7 @@ void TaskThreadWrapper::MainLoop() {
       user_result_ = finish_exception.user_result();
     }
     pthread_mutex_lock(&internal_lock_);
-    has_work_to_do_ = false;
+    finished_ = true;
     pthread_cond_broadcast(&internal_cond_);
     pthread_mutex_unlock(&internal_lock_);
   }  // Finishes loop.
@@ -148,6 +152,20 @@ bool TaskThreadPool::AllocateTaskThreads(
   pthread_mutex_unlock(&list_lock_);
   return true;
 }
+TaskThreadWrapper* TaskThreadPool::AllocateTaskThread() {
+  TaskThreadWrapper* result = NULL;
+  pthread_mutex_lock(&list_lock_);
+  if (free_list_.empty()) {
+    TaskThreadWrapper* temp_thread = new TaskThreadWrapper;
+    bool status = temp_thread->Initialize();
+    assert(status);
+    free_list_.push_back(temp_thread);
+  }
+  result = free_list_.front();
+  free_list_.pop_front();
+  pthread_mutex_unlock(&list_lock_);
+  return result;
+}
 void TaskThreadPool::FreeTaskThreads(const TaskThreadList& thread_list) {
   pthread_mutex_lock(&list_lock_);
   for (TaskThreadList::const_iterator iter = thread_list.begin();
@@ -155,6 +173,11 @@ void TaskThreadPool::FreeTaskThreads(const TaskThreadList& thread_list) {
        ++iter) {
     free_list_.push_back(*iter);
   }
+  pthread_mutex_unlock(&list_lock_);
+}
+void TaskThreadPool::FreeTaskThread(TaskThreadWrapper* task_thread) {
+  pthread_mutex_lock(&list_lock_);
+  free_list_.push_back(task_thread);
   pthread_mutex_unlock(&list_lock_);
 }
 

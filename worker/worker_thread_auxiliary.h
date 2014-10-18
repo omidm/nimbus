@@ -32,69 +32,52 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Author: Hang Qu<quhang@stanford.edu>
- */
+ /*
+  * Author: Hang Qu <quhang@stanford.edu>
+  */
 
-#ifndef NIMBUS_WORKER_TASK_THREAD_POOL_H_
-#define NIMBUS_WORKER_TASK_THREAD_POOL_H_
+#ifndef NIMBUS_WORKER_WORKER_THREAD_AUXILIARY_H_
+#define NIMBUS_WORKER_WORKER_THREAD_AUXILIARY_H_
 
-#include <pthread.h>
-
-#include <exception>
 #include <list>
+#include "shared/nimbus.h"
+#include "worker/task_thread_pool.h"
 
 namespace nimbus {
 
-// Exception to indicate an task thread finishes.
-class ExceptionTaskThreadExit : public std::exception {
+class WorkerThreadAuxiliary;
+
+class WorkerTaskThreadAuxiliary {
  public:
-  explicit ExceptionTaskThreadExit(void* user_result);
-  void* user_result();
- private:
-  void* user_result_;
+  WorkerTaskThreadAuxiliary() {
+    task_thread_wrapper = NULL;
+    worker_thread_auxiliary = NULL;
+  }
+  ~WorkerTaskThreadAuxiliary() {}
+  TaskThreadWrapper* task_thread_wrapper;
+  WorkerThreadAuxiliary* worker_thread_auxiliary;
+  static void* TaskThreadEntryPoint(void* parameter);
 };
 
-// A wrapper over pthread threads.
-class TaskThreadWrapper {
+class WorkerThreadAuxiliary : public WorkerThread {
  public:
-  TaskThreadWrapper();
-  ~TaskThreadWrapper();
-  // Runs the user_function with user_parameter passed as parameter.
-  void Run(void* (*user_function)(void* parameter), void* user_parameter);
-  // Joins the task thread.
-  void* Join();
-  // Initializes the task thread.
-  bool Initialize();
-  pthread_t thread_handle() const;
-
+  explicit WorkerThreadAuxiliary(
+      WorkerManager* worker_manager, TaskThreadPool* task_thread_pool);
+  virtual ~WorkerThreadAuxiliary();
+  virtual void Run();
+  void MainLoop(WorkerTaskThreadAuxiliary* task_thread);
+  void SetThreadNum(const int thread_num);
  private:
   pthread_mutex_t internal_lock_;
   pthread_cond_t internal_cond_;
-  pthread_t thread_handle_;
-  void* user_parameter_;
-  void* (*user_function_)(void* parameter);
-  void* user_result_;
-  bool has_work_to_do_;
-  bool finished_;
-  static void* ThreadRoutine(void* parameter);
-  void MainLoop();
+  Job* PullAuxiliaryJob();
+  void ProcessJob(Job* job);
+  TaskThreadPool* task_thread_pool_;
+  int thread_num_;
+  int active_thread_num_;
+  std::list<Job*> ready_job_list_;
+  std::list<WorkerTaskThreadAuxiliary*> stopped_task_threads_;
 };
-
-class TaskThreadPool {
- public:
-  typedef std::list<TaskThreadWrapper*> TaskThreadList;
-  TaskThreadPool();
-  ~TaskThreadPool();
-  TaskThreadWrapper* AllocateTaskThread();
-  bool AllocateTaskThreads(const int thread_num, TaskThreadList* thread_list);
-  void FreeTaskThreads(const TaskThreadList& thread_list);
-  void FreeTaskThread(TaskThreadWrapper* task_thread);
-
- private:
-  pthread_mutex_t list_lock_;
-  std::list<TaskThreadWrapper*> free_list_;
-};
-
 }  // namespace nimbus
-#endif  // NIMBUS_WORKER_TASK_THREAD_POOL_H_
+
+#endif  // NIMBUS_WORKER_WORKER_THREAD_AUXILIARY_H_

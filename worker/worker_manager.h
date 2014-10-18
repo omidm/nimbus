@@ -54,6 +54,7 @@ class SchedulerCommand;
 class WorkerThreadMonitor;
 class WorkerThread;
 class WorkerThreadComputation;
+class WorkerThreadAuxiliary;
 class Worker;
 
 class WorkerManager {
@@ -86,11 +87,16 @@ class WorkerManager {
   bool SendCommand(SchedulerCommand* command);
   // 3. Finish a job
   bool FinishJob(Job* job);
+  // 4. Retrieve next auxiliary job list.
+  bool PullAuxiliaryJobs(WorkerThreadAuxiliary* worker_thread,
+                         std::list<Job*>* job_list);
 
  public:
   Worker* worker_;
 
  private:
+  // True when a scheduling algorithms is needed to be triggered.
+  bool ClassifyAndAddJob(Job* job);
   // Thread scheduling algorithm.
   void ScheduleComputationJobs();
   // The thread pool.
@@ -118,7 +124,10 @@ class WorkerManager {
   // 2. The list of ready computation jobs.
   pthread_mutex_t computation_job_queue_lock_;
   std::list<Job*> computation_job_list_;
-  // 3. The list of finished jobs.
+  // 3. The list of ready computation jobs.
+  pthread_mutex_t auxiliary_job_queue_lock_;
+  std::list<Job*> auxiliary_job_list_;
+  // 4. The list of finished jobs.
   pthread_mutex_t local_job_done_list_lock_;
   JobList local_job_done_list_;
 
