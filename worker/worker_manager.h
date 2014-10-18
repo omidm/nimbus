@@ -151,6 +151,8 @@ class WorkerManager {
   int64_t dispatched_computation_job_count_;
   int idle_computation_threads_;
   int64_t ready_jobs_count_;
+
+  WorkerThreadAuxiliary* worker_thread_auxiliary_;
 };
 }  // namespace nimbus
 

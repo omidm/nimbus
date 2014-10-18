@@ -46,6 +46,7 @@
 #include "shared/profiler_malloc.h"
 #include "worker/worker_thread.h"
 #include "worker/worker_thread_computation.h"
+#include "worker/worker_thread_auxiliary.h"
 #include "worker/worker_thread_monitor.h"
 
 #include "worker/worker_manager.h"
@@ -233,6 +234,10 @@ bool WorkerManager::StartWorkerThreads() {
   for (int i = 0; i < computation_thread_num; ++i) {
     LaunchThread(new WorkerThreadComputation(this));
   }
+  worker_thread_auxiliary_ =
+      new WorkerThreadAuxiliary(this, &task_thread_pool_);
+  LaunchThread(worker_thread_auxiliary_);
+  worker_thread_auxiliary_->SetThreadNum(4);
   int error_code = pthread_create(
       &scheduling_id_, NULL, SchedulingEntryPoint, this);
   assert(error_code == 0);

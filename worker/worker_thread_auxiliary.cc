@@ -91,15 +91,15 @@ void WorkerThreadAuxiliary::SetThreadNum(const int thread_num) {
       WorkerTaskThreadAuxiliary* task_thread = NULL;
       if (stopped_task_threads_.empty()) {
         task_thread = new WorkerTaskThreadAuxiliary();
+        task_thread->worker_thread_auxiliary = this;
         task_thread->task_thread_wrapper =
             task_thread_pool_->AllocateTaskThread();
         assert(task_thread->task_thread_wrapper);
       } else {
         task_thread = stopped_task_threads_.front();
       }
-      task_thread->worker_thread_auxiliary = this;
       task_thread->task_thread_wrapper->Run(
-          WorkerTaskThreadAuxiliary::TaskThreadEntryPoint, this);
+          WorkerTaskThreadAuxiliary::TaskThreadEntryPoint, task_thread);
     }
   } else {
     for (int i = 0; i < thread_num_ - thread_num; ++i) {
