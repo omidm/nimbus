@@ -68,6 +68,7 @@ class WorkerThread {
   virtual void SetThreadAffinity(const cpu_set_t* cpuset);
 
  protected:
+  cpu_set_t* used_cpu_set_;
   WorkerManager* worker_manager_;
   // Logging data structures.
   Log* log_;

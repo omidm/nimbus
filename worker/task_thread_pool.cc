@@ -172,12 +172,14 @@ void TaskThreadPool::FreeTaskThreads(const TaskThreadList& thread_list) {
        iter != thread_list.end();
        ++iter) {
     free_list_.push_back(*iter);
+    assert((*iter)->has_work_to_do_ == false);
   }
   pthread_mutex_unlock(&list_lock_);
 }
 void TaskThreadPool::FreeTaskThread(TaskThreadWrapper* task_thread) {
   pthread_mutex_lock(&list_lock_);
   free_list_.push_back(task_thread);
+  assert(task_thread->has_work_to_do_ == false);
   pthread_mutex_unlock(&list_lock_);
 }
 

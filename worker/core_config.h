@@ -36,66 +36,14 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#include <unistd.h>
-#include <fstream>  // NOLINT
-#include <sstream>
-#include <string>
-
-#include "worker/worker.h"
-#include "worker/worker_manager.h"
-#include "worker/worker_thread.h"
-#include "worker/worker_thread_monitor.h"
+#ifndef NIMBUS_WORKER_CORE_CONFIG_H_
+#define NIMBUS_WORKER_CORE_CONFIG_H_
 
 namespace nimbus {
-
-WorkerThreadMonitor::WorkerThreadMonitor(WorkerManager* worker_manager)
-    : WorkerThread(worker_manager) {
-}
-
-WorkerThreadMonitor::~WorkerThreadMonitor() {
-}
-
-void WorkerThreadMonitor::Run() {
-  std::ofstream output("worker_state.log");
-  int64_t dispatched_computation_job_count_last = 0;
-
-  int64_t dispatched_computation_job_count;
-  int64_t ready_job_queue_length;
-
-  output << "dispatched_computation_job_count "
-      << "working_computation_thread_num "
-      << "ready_job_queue_length "
-      << std::endl;
-  // int count = 0;
-  while (true) {
-    // count = (count + 1) % 10000;
-    // if (count == 0) {
-    //   CacheManager* cache_manager =
-    //       worker_manager_->worker_->application_->cache_manager();
-    //   if (cache_manager) {
-    //     std::stringstream s;
-    //     cache_manager->PrintProfile(&s);
-    //     // TODO(quhang): temporary usage.
-    //     // printf("\nCache profile\n%s\n", s.str().c_str());
-    //   }
-    // }
-    usleep(10000);
-
-    dispatched_computation_job_count =
-        worker_manager_->dispatched_computation_job_count_;
-
-    ready_job_queue_length = worker_manager_->ready_jobs_count_;
-
-    output << dispatched_computation_job_count
-              - dispatched_computation_job_count_last
-           << " "
-           << ready_job_queue_length
-           << std::endl;
-    output.flush();
-
-    dispatched_computation_job_count_last =
-        dispatched_computation_job_count;
-  }
-}
-
+const int PHYSICAL_CORE_NUM = 4;
+const int LOGICAL_CORE_X[PHYSICAL_CORE_NUM] = {0, 1, 2, 3};
+const int LOGICAL_CORE_Y[PHYSICAL_CORE_NUM] = {4, 5, 6, 7};
+const int LOGICAL_CORE[PHYSICAL_CORE_NUM * 2] = {0, 4, 1, 5, 2, 6, 3, 7};
 }  // namespace nimbus
+
+#endif  // NIMBUS_WORKER_CORE_CONFIG_H_

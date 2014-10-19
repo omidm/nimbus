@@ -53,8 +53,8 @@ class WorkerThreadComputation : public WorkerThread {
 
   pthread_cond_t thread_can_start;
   Job* next_job_to_run;
-  bool idle;
   bool job_assigned;
+  int used_parallelism;
 
  private:
   void ExecuteJob(Job* job);

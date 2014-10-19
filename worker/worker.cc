@@ -149,6 +149,7 @@ void Worker::WorkerCoreProcessor() {
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Launching worker threads.\n");
   worker_manager_->StartWorkerThreads();
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Finishes launching worker threads.\n");
+  worker_manager_->TriggerScheduling();
 
   JobList local_job_done_list;
   while (true) {

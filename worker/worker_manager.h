@@ -79,6 +79,8 @@ class WorkerManager {
   bool PushJobList(std::list<Job*>* job_list);
   // 3. Retrieve the job done list.
   bool GetLocalJobDoneList(JobList* buffer);
+  // 4. Trigger scheduling.
+  void TriggerScheduling();
 
   // Interfaces for worker threads.
   // 1. Retrieve next computation job.
@@ -107,7 +109,6 @@ class WorkerManager {
   pthread_t scheduling_id_;
   static void* SchedulingEntryPoint(void* parameters);
   // 2. The worker threads.
-  std::list<WorkerThread*> worker_thread_list_;
   bool LaunchThread(WorkerThread* worker_thread);
   // Entry point for each worker thread.
   static void* ThreadEntryPoint(void* parameters);
@@ -116,7 +117,6 @@ class WorkerManager {
   pthread_mutex_t scheduling_needed_lock_;
   pthread_cond_t scheduling_needed_cond_;
   bool scheduling_needed_;
-  void TriggerScheduling();
 
   // Data structures and locks used for scheduling.
   // 1. Lock to protect schedulign critical session.
@@ -149,10 +149,12 @@ class WorkerManager {
   HighResolutionTimer* timer_;
   // Performance measurement.
   int64_t dispatched_computation_job_count_;
-  int idle_computation_threads_;
   int64_t ready_jobs_count_;
 
   WorkerThreadAuxiliary* worker_thread_auxiliary_;
+  std::list<WorkerThreadComputation*> idle_worker_thread_computation_list_;
+  std::list<WorkerThreadComputation*> busy_worker_thread_computation_list_;
+  int32_t ongoing_parallelism_;
 };
 }  // namespace nimbus
 

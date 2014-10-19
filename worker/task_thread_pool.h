@@ -55,8 +55,11 @@ class ExceptionTaskThreadExit : public std::exception {
   void* user_result_;
 };
 
+class TaskThreadPool;
+
 // A wrapper over pthread threads.
 class TaskThreadWrapper {
+  friend class TaskThreadPool;
  public:
   TaskThreadWrapper();
   ~TaskThreadWrapper();

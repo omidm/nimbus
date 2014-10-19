@@ -52,8 +52,8 @@ WorkerThreadComputation::WorkerThreadComputation(WorkerManager* worker_manager)
     : WorkerThread(worker_manager) {
   pthread_cond_init(&thread_can_start, NULL);
   next_job_to_run = NULL;
-  idle = true;
   job_assigned = false;
+  used_parallelism = 0;
 }
 
 WorkerThreadComputation::~WorkerThreadComputation() {

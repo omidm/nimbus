@@ -45,6 +45,7 @@ namespace nimbus {
 
 WorkerThread::WorkerThread(WorkerManager* worker_manager) {
   worker_manager_ = worker_manager;
+  used_cpu_set_ = NULL;
 }
 
 WorkerThread::~WorkerThread() {
@@ -61,6 +62,15 @@ void WorkerThread::SetLoggingInterface(
 }
 
 void WorkerThread::SetThreadAffinity(const cpu_set_t* cpuset) {
+  if (used_cpu_set_ == NULL) {
+    used_cpu_set_ = new cpu_set_t;
+  } else {
+    if (CPU_EQUAL(used_cpu_set_, cpuset)) {
+      return;
+    } else {
+      *used_cpu_set_ = *cpuset;
+    }
+  }
   pthread_setaffinity_np(thread_id, sizeof(cpu_set_t), cpuset);
   for (TaskThreadPool::TaskThreadList::iterator iter =
        allocated_threads.begin();
