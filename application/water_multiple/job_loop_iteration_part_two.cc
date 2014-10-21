@@ -153,7 +153,8 @@ void JobLoopIterationPartTwo::SpawnJobs(
     s_extra_params.set_ser_data(SerializedData(s_extra_str));
     job_query.StageJob(EXTRAPOLATE_PHI, extrapolate_phi_job_ids[i],
                        read, write,
-                       s_extra_params, true);
+                       s_extra_params, true,
+                       kRegY2W3Central[i]);
     job_query.Hint(extrapolate_phi_job_ids[i], kRegY2W3Central[i]);
   }
 
@@ -178,7 +179,8 @@ void JobLoopIterationPartTwo::SpawnJobs(
     extrapolation_params.set_ser_data(SerializedData(extrapolation_str));
     job_query.StageJob(EXTRAPOLATION, extrapolation_job_ids[i],
                        read, write,
-                       extrapolation_params, true);
+                       extrapolation_params, true,
+                       kRegY2W3Central[i]);
     job_query.Hint(extrapolation_job_ids[i], kRegY2W3Central[i]);
   }
 
@@ -211,7 +213,8 @@ void JobLoopIterationPartTwo::SpawnJobs(
       dt_params.set_ser_data(SerializedData(dt_str));
       job_query.StageJob(CALCULATE_DT, calculate_dt_job_ids[i],
                          read, write,
-                         dt_params, true);
+                         dt_params, true,
+                         kRegY2W3Central[i]);
       job_query.Hint(calculate_dt_job_ids[i], kRegY2W3Central[i]);
     }
     job_query.CommitStagedJobs();
@@ -228,7 +231,9 @@ void JobLoopIterationPartTwo::SpawnJobs(
     iter_params.set_ser_data(SerializedData(iter_str));
     job_query.StageJob(LOOP_ITERATION, job_ids[1],
                        read, write,
-                       iter_params, false, true);
+                       iter_params, false,
+                       kRegW3Central[0],
+                       true);
     job_query.Hint(job_ids[1], kRegW3Central[0], true);
     job_query.CommitStagedJobs();
 
@@ -264,7 +269,8 @@ void JobLoopIterationPartTwo::SpawnJobs(
       job_query.StageJob(RESEED_PARTICLES,
           reseed_particles_job_ids[i],
           read, write,
-          temp_params, true);
+          temp_params, true,
+          kRegY2W3Central[i]);
       job_query.Hint(reseed_particles_job_ids[i], kRegY2W3Central[i]);
     }
     job_query.CommitStagedJobs();
@@ -290,7 +296,8 @@ void JobLoopIterationPartTwo::SpawnJobs(
       job_query.StageJob(WRITE_OUTPUT,
                          write_output_job_ids[0],
                          read, write,
-                         temp_params, true);
+                         temp_params, true,
+                         kRegW3Central[0]);
       job_query.Hint(write_output_job_ids[0], kRegW3Central[0], true);
       job_query.CommitStagedJobs();
     } else {
@@ -315,7 +322,8 @@ void JobLoopIterationPartTwo::SpawnJobs(
         job_query.StageJob(WRITE_OUTPUT,
                            write_output_job_ids[i],
                            read, write,
-                           temp_params, true);
+                           temp_params, true,
+                           kRegY2W3Central[i]);
         job_query.Hint(write_output_job_ids[i], kRegY2W3Central[i]);
       }
       job_query.CommitStagedJobs();
@@ -335,7 +343,9 @@ void JobLoopIterationPartTwo::SpawnJobs(
     frame_params.set_ser_data(SerializedData(frame_str));
     job_query.StageJob(LOOP_FRAME, loop_job_id[0],
                        read, write,
-                       frame_params, false, true);
+                       frame_params, false,
+                       kRegW3Central[0],
+                       true);
     job_query.Hint(loop_job_id[0], kRegW3Central[0], true);
     job_query.CommitStagedJobs();
 

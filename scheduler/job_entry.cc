@@ -385,6 +385,15 @@ void JobEntry::remove_versioning_dependency(job_id_t job_id) {
   meta_before_set_->InvalidateNegativeQueryCache();
 }
 
+bool JobEntry::GetRegion(GeometricRegion *region) {
+  if (region_ != GeometricRegion()) {
+    *region = region_;
+    return true;
+  }
+
+  return false;
+}
+
 bool JobEntry::GetUnionSetRegion(DataManager *data_manager, GeometricRegion *region) {
   if (union_region_valid_) {
     *region = union_region_;

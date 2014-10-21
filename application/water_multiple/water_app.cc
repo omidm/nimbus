@@ -63,6 +63,7 @@ namespace application {
     /* Register data and job types and initialize constant quantities used by
      * application jobs. */
     void WaterApp::Load() {
+        ScopeTimer::Initialize(true);
         //nimbus::Timer::Initialize();
         PhysBAM::Initialize_Particles();
         PhysBAM::Initialize_Read_Write_General_Structures();

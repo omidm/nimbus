@@ -25,9 +25,10 @@ LDIR = ${NIMBUS_ROOT}
 CPP = g++
 # Flags for all cpp invocations
 CFLAGS = -Wall -g -O3
-# CFLAGS += -fno-omit-frame-pointer -pg
-# CFLAGS += -D_NIMBUS_NO_DBG
-# CFLAGS += -D_NIMBUS_NO_LOG
+# CFLAGS += -pg # flags for profiling with gprof
+# CFLAGS += -fno-omit-frame-pointer -ggdb -pg # flags for profiling with perf
+# CFLAGS += -D_NIMBUS_NO_DBG # flaf to remove dbg statements
+# CFLAGS += -D_NIMBUS_NO_LOG # flaf to remove log statements
 # CFLAGS += -DNDEBUG
 # CFLAGS  += -DCACHE_LOG
 

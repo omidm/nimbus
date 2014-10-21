@@ -84,6 +84,11 @@ namespace nimbus {
 
   protected:
     Log log_;
+    Log log_assign_;
+    Log log_prepare_;
+    Log log_job_manager_;
+    Log log_data_manager_;
+    Log log_version_manager_;
     Log log_before_set_;
     Log log_assign_stamp_;
     IDMaker *id_maker_;

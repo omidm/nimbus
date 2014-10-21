@@ -412,19 +412,16 @@ bool InitializeExampleAndDriver(
   dbg(APP_LOG, "Global region: %s\n", init_config.global_region.ToNetworkData().c_str());
   dbg(APP_LOG, "Local region: %s\n", init_config.local_region.ToNetworkData().c_str());
   {
-    double cache_lookup_time = 0;
-    double init_example_time = 0;
-    struct timespec start_time;
-    struct timespec t;
-    clock_gettime(CLOCK_REALTIME, &start_time);
+    application::ScopeTimer* example_scope_timer = NULL;
     if (init_config.use_cache && kUseCache) {
+      application::ScopeTimer* cache_scope_timer =
+          new application::ScopeTimer("cache_lookup");
       AppCacheObjects cache;
       GetAppCacheObjects(init_config, data_config, *job, da, &cache);
-      clock_gettime(CLOCK_REALTIME, &t);
-      cache_lookup_time += difftime(t.tv_sec, start_time.tv_sec)
-          + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+      delete cache_scope_timer;
+      example_scope_timer =
+          new application::ScopeTimer("init_example");
 
-      clock_gettime(CLOCK_REALTIME, &start_time);
       if (cache.ple)
         example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
                                                  &cache,
@@ -438,6 +435,8 @@ bool InitializeExampleAndDriver(
                                                  init_config.core_quota);
       example->use_cache = true;
     } else {
+      example_scope_timer =
+          new application::ScopeTimer("init_example");
       example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
                                                init_config.use_threading,
                                                init_config.core_quota);
@@ -458,11 +457,7 @@ bool InitializeExampleAndDriver(
         GridToRange(init_config.global_region, init_config.local_region));
     PhysBAM::WaterSources::Add_Source(example);
     example->data_config.Set(data_config);
-    clock_gettime(CLOCK_REALTIME, &t);
-    init_example_time += difftime(t.tv_sec, start_time.tv_sec)
-        + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
-    dbg(APP_LOG, "\n[TIME] Job cache_loopup, %f seconds.\n", cache_lookup_time);
-    dbg(APP_LOG, "\n[TIME] Job init_example, %f seconds.\n", init_example_time);
+    delete example_scope_timer;
   }
   {
     application::ScopeTimer scope_timer("init_driver");
@@ -481,8 +476,6 @@ bool InitializeExampleAndDriver(
     else
       driver->Initialize(job, da);
   }
-
-  dbg(APP_LOG, "Exit initialize_example_driver.\n");
 
 // #ifdef PHYSBAM_INIT_LOG
 //   {

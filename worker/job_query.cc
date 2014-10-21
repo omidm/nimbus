@@ -68,6 +68,7 @@ bool JobQuery::StageJob(
     IDSet<logical_data_id_t>& write,
     const Parameter& params,
     const bool sterile,
+    const GeometricRegion& region,
     const bool barrier) {
   ++total_job_;
   total_objects_ += read.size() + write.size();
@@ -120,6 +121,7 @@ bool JobQuery::StageJob(
   job_entry.before.swap(query_results);
   job_entry.params = params;
   job_entry.sterile = sterile;
+  job_entry.region = region;
   clock_gettime(CLOCK_REALTIME, &t);
   copy_time_ += difftime(t.tv_sec, start_time.tv_sec)
       + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
@@ -148,7 +150,7 @@ bool JobQuery::CommitStagedJobs() {
     job_->SpawnComputeJob(
         iterator->name, iterator->id, iterator->read, iterator->write,
         iterator->before, IDSet<job_id_t>(), iterator->params,
-        iterator->sterile);
+        iterator->sterile, iterator->region);
     clock_gettime(CLOCK_REALTIME, &t);
     spawn_time_ += difftime(t.tv_sec, start_time.tv_sec)
         + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));

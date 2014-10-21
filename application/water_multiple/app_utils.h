@@ -147,7 +147,10 @@ namespace application {
      public:
       ScopeTimer(const std::string& name);
       ~ScopeTimer();
+      static void Initialize(bool activated);
      private:
+      static FILE* log_file_;
+      static bool activated_;
       std::string name_;
       struct timespec start_time_;
     };

@@ -107,13 +107,35 @@ void RegionMap::TrackRegionCoverage(DataManager *data_manager,
     return;
   }
 
-  GeometricRegion write_region;
-  if (job->GetWriteSetRegion(data_manager, &write_region)) {
-    if (write_region.GetSurfaceArea() < (0.25 * global_region_.GetSurfaceArea())) {
-      iter->second->AddCoveredRegion(&write_region);
+  GeometricRegion region;
+  if (job->GetRegion(&region)) {
+  } else if (job->GetWriteSetRegion(data_manager, &region)) {
+    if (region.GetSurfaceArea() < (0.25 * global_region_.GetSurfaceArea())) {
+      iter->second->AddCoveredRegion(&region);
     }
   }
 }
+
+
+bool RegionMap::FindWorkerWithMostOverlappedRegion(const GeometricRegion *region,
+                                                   worker_id_t *worker_id) {
+  assert(table_.size() > 0);
+  TableIter iter = table_.begin();
+  worker_id_t w_id = iter->first;
+  int_dimension_t common_area = iter->second->CommonSurface(region);
+  ++iter;
+  for (; iter != table_.end(); ++iter) {
+    int_dimension_t temp = iter->second->CommonSurface(region);
+    if (temp > common_area) {
+      common_area = temp;
+      w_id = iter->first;
+    }
+  }
+
+  *worker_id = w_id;
+  return true;
+}
+
 
 bool RegionMap::QueryWorkerWithMostOverlap(DataManager *data_manager,
                                            JobEntry *job,
@@ -122,11 +144,15 @@ bool RegionMap::QueryWorkerWithMostOverlap(DataManager *data_manager,
     return false;
   }
 
-  GeometricRegion union_region;
-  bool got_union_region = job->GetUnionSetRegion(data_manager, &union_region);
-  assert(got_union_region);
+  GeometricRegion region;
+  if (job->GetRegion(&region)) {
+  } else if (job->GetUnionSetRegion(data_manager, &region)) {
+  } else {
+    dbg(DBG_ERROR, "ERROR: RegionMap: could not get any region for job %lu.\n", job->job_id()); // NOLINT
+    return false;
+  }
 
-  if (union_region.GetSurfaceArea() < (0.25 * global_region_.GetSurfaceArea())) {
+  if (region.GetSurfaceArea() < (0.25 * global_region_.GetSurfaceArea())) {
     /* 
      * If the union set is not the global bounding then you can find the
      * intersect with only union set region not each ldo one by one. If there
@@ -134,24 +160,12 @@ bool RegionMap::QueryWorkerWithMostOverlap(DataManager *data_manager,
      * becomes the entire space.
      */
 
-    if (QueryCache(&union_region, worker_id)) {
+    if (QueryCache(&region, worker_id)) {
       return true;
     }
 
-    TableIter iter = table_.begin();
-    worker_id_t w_id = iter->first;
-    int_dimension_t common_area = iter->second->CommonSurface(&union_region);
-    ++iter;
-    for (; iter != table_.end(); ++iter) {
-      int_dimension_t temp = iter->second->CommonSurface(&union_region);
-      if (temp > common_area) {
-        common_area = temp;
-        w_id = iter->first;
-      }
-    }
-
-    CacheQueryResult(&union_region, &w_id);
-    *worker_id = w_id;
+    FindWorkerWithMostOverlappedRegion(&region, worker_id);
+    CacheQueryResult(&region, worker_id);
     return true;
   } else {
     /*
@@ -442,6 +456,11 @@ void RegionMap::SplitDimensions(size_t worker_num, size_t *num_x, size_t *num_y,
       *num_x = 8;
       *num_y = 1;
       *num_z = 1;
+      break;
+    case 100 :
+      *num_x = 5;
+      *num_y = 5;
+      *num_z = 4;
       break;
     default:
       dbg(DBG_ERROR, "ERROR: Do not know how to split!");

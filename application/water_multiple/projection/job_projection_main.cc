@@ -149,7 +149,8 @@ void JobProjectionMain::SpawnJobs(
     job_query.StageJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
                        calculate_boundary_condition_part_one_job_ids[index],
                        read, write,
-                       default_part_params[index], true);
+                       default_part_params[index], true,
+                       kProjRegY2W3Central[index]);
     job_query.Hint(calculate_boundary_condition_part_one_job_ids[index],
                    kProjRegY2W3Central[index]);
   }
@@ -175,7 +176,8 @@ void JobProjectionMain::SpawnJobs(
     job_query.StageJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,
                        calculate_boundary_condition_part_two_job_ids[index],
                        read, write,
-                       default_part_params[index], true);
+                       default_part_params[index], true,
+                       kProjRegY2W3Central[index]);
     job_query.Hint(calculate_boundary_condition_part_two_job_ids[index],
                    kProjRegY2W3Central[index]);
   }
@@ -204,7 +206,8 @@ void JobProjectionMain::SpawnJobs(
     job_query.StageJob(PROJECTION_CONSTRUCT_MATRIX,
                        construct_matrix_job_ids[index],
                        read, write,
-                       default_part_params[index], true);
+                       default_part_params[index], true,
+                       kProjRegY2W3Central[index]);
     job_query.Hint(construct_matrix_job_ids[index], kProjRegY2W3Central[index]);
   }
   job_query.CommitStagedJobs();
@@ -222,7 +225,8 @@ void JobProjectionMain::SpawnJobs(
   job_query.StageJob(PROJECTION_GLOBAL_INITIALIZE,
                      projection_job_ids[3],
                      read, write,
-                     default_params, true);
+                     default_params, true,
+                     kRegW3Central[0]);
   // Global initialize is a job that serves as a bottleneck.
   job_query.Hint(projection_job_ids[3], kRegW3Central[0], true);
   job_query.CommitStagedJobs();
@@ -249,7 +253,8 @@ void JobProjectionMain::SpawnJobs(
     job_query.StageJob(PROJECTION_LOCAL_INITIALIZE,
                        local_initialize_job_ids[index],
                        read, write,
-                       default_part_params[index], true);
+                       default_part_params[index], true,
+                       kProjRegY2W3Central[index]);
     job_query.Hint(local_initialize_job_ids[index], kProjRegY2W3Central[index]);
   }
   job_query.CommitStagedJobs();
@@ -274,7 +279,9 @@ void JobProjectionMain::SpawnJobs(
   job_query.StageJob(PROJECTION_LOOP_ITERATION,
                      projection_job_ids[4],
                      read, write,
-                     projection_loop_iteration_params, false, true);
+                     projection_loop_iteration_params, false,
+                     kRegW3Central[0],
+                     true);
   job_query.Hint(projection_job_ids[4], kRegW3Central[0], true);
   job_query.CommitStagedJobs();
   job_query.PrintTimeProfile();
