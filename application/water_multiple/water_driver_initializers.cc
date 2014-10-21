@@ -19,8 +19,7 @@ using namespace PhysBAM;
 
 template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
     const nimbus::Job *job,
-    const nimbus::DataArray &da)
-{
+    const nimbus::DataArray &da) {
   typedef application::DataConfig DataConfig;
   DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
   output_number=current_frame;
@@ -42,27 +41,31 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
     example.boundary=&example.boundary_scalar;
     example.boundary->Set_Constant_Extrapolation(domain_open_boundaries);
   }
+
   // allocates array for levelset/ particles/ removed particles
   {
     InitializeParticleLevelsetEvolutionHelper(
         example.data_config,
         example.mac_grid,
-        &example.particle_levelset_evolution);
+        &example.particle_levelset_evolution,
+        true);
     InitializeIncompressibleProjectionHelper(
         example.data_config,
         example.mac_grid,
         &example.incompressible,
-        &example.projection);
+        &example.projection,
+        true);
     if (example.data_config.GetFlag(DataConfig::VELOCITY)) {
-      // NOT THREAD SAFE!!! LOG::Time("Velocity memory allocated.\n");
+      // [Allocate] face_velocities.
       example.face_velocities.Resize(example.mac_grid);
     }
     if (example.data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
-      // NOT THREAD SAFE!!! LOG::Time("Ghost Velocity memory allocated.\n");
+      // [Allocate] face_velocities_ghost.
       example.face_velocities_ghost.Resize(example.incompressible.grid,
           example.number_of_ghost_cells, false);
     }
   }
+
   {
     // policies etc
     example.collision_bodies_affecting_fluid.Initialize_Grids();
@@ -100,6 +103,7 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
     example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
     example.collision_bodies_affecting_fluid.Rasterize_Objects();
     example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
+    // Initializes for particles_levelset_evolution.phi
     example.Initialize_Phi();
     example.Adjust_Phi_With_Sources(time);
     // example.particle_levelset_evolution.Make_Signed_Distance();
@@ -138,8 +142,7 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
 
 template<class TV> void WATER_DRIVER<TV>::Initialize(
     const nimbus::Job *job,
-    const nimbus::DataArray &da)
-{
+    const nimbus::DataArray &da) {
   typedef application::DataConfig DataConfig;
   DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
   output_number=current_frame;
@@ -261,8 +264,7 @@ template<class TV> void WATER_DRIVER<TV>::Initialize(
 
 template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
     const nimbus::Job *job,
-    const nimbus::DataArray &da)
-{
+    const nimbus::DataArray &da) {
   typedef application::DataConfig DataConfig;
   DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
   output_number=current_frame;
@@ -340,7 +342,6 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
     LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* laplace_solver =
       dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
           example.projection.elliptic_solver);
-    // TODO(quhang): array initiatialization.
     example.laplace_solver_wrapper.BindLaplaceAndInitialize(laplace_solver);
 
     //add forces
@@ -367,7 +368,8 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeIncompressibleProjectionHelp
     const application::DataConfig& data_config,
     const GRID<TV>& grid_input,
     INCOMPRESSIBLE_UNIFORM<GRID<TV> >* incompressible,
-    PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >* projection) {
+    PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >* projection,
+    bool forced_alloc) {
   typedef application::DataConfig DataConfig;
   // T_FACE_ARRAYS_BOOL.
   if (data_config.GetFlag(DataConfig::VALID_MASK)) {
@@ -450,7 +452,8 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHel
     const application::DataConfig& data_config,
     const GRID<TV>& grid_input,
     PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >*
-    particle_levelset_evolution) {
+    particle_levelset_evolution,
+    bool forced_alloc) {
   typedef application::DataConfig DataConfig;
   PARTICLE_LEVELSET_UNIFORM<GRID<TV> >* particle_levelset =
     &particle_levelset_evolution->particle_levelset;
@@ -519,7 +522,8 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHel
     const application::DataConfig& data_config,
     const GRID<TV>& grid_input,
     PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >*
-    particle_levelset_evolution) {
+    particle_levelset_evolution,
+    bool forced_alloc) {
   typedef application::DataConfig DataConfig;
   PARTICLE_LEVELSET_UNIFORM<GRID<TV> >* particle_levelset =
     &particle_levelset_evolution->particle_levelset;

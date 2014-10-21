@@ -56,18 +56,21 @@ public:
         const application::DataConfig& data_config,
         const GRID<TV>& grid_input,
         INCOMPRESSIBLE_UNIFORM<GRID<TV> >* incompressible,
-        PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >* projection);
+        PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >* projection,
+        bool forced_alloc = false);
 
     bool InitializeParticleLevelsetEvolutionHelper(
         const application::DataConfig& data_config,
         const GRID<TV>& grid_input,
         PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >*
-        particle_levelset_evolution);
+        particle_levelset_evolution,
+        bool forced_alloc = false);
     bool InitializeParticleLevelsetEvolutionHelperUseCache(
         const application::DataConfig& data_config,
         const GRID<TV>& grid_input,
         PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >*
-        particle_levelset_evolution);
+        particle_levelset_evolution,
+        bool forced_alloc = false);
 
     void CalculateFrameImpl(const nimbus::Job *job,
                             const nimbus::DataArray &da,
