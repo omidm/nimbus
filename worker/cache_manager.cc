@@ -39,6 +39,7 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
+#include <sys/syscall.h>
 #include <pthread.h>
 #include <cstdio>
 #include <ctime>
@@ -65,8 +66,8 @@ CacheManager::CacheManager() {
     pool_ = new Pool();
     pthread_mutex_init(&cache_lock, NULL);
     pthread_cond_init(&cache_cond, NULL);
-    alloc_log = fopen("cache_objects.txt", "w");
     block_log = fopen("cache_behavior.txt", "w");
+    time_log = fopen("cache_time.txt", "w");
 }
 
 void CacheManager::DoSetUpWrite(CacheVar* cache_var,
@@ -105,7 +106,9 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
                                   cache::CacheAccess access,
                                   void (*aux)(CacheVar*, void*),
                                   void* aux_data) {
+    PrintTimeStamp("GAV ent");
     pthread_mutex_lock(&cache_lock);
+    PrintTimeStamp("GAV la");
     CacheVar *cv = NULL;
     // Get a cache object form the cache table.
     if (pool_->find(prototype.id()) == pool_->end()) {
@@ -113,7 +116,6 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
         (*pool_)[prototype.id()] = ct;
         cv = prototype.CreateNew(region);
         cv->set_unique_id(unique_id_allocator_++);
-        // PrintTimeStamp(sizeof(*cv));
         assert(cv != NULL);
         ct->AddEntry(region, cv);
     } else {
@@ -122,7 +124,6 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
         if (cv == NULL) {
             cv = prototype.CreateNew(region);
             cv->set_unique_id(unique_id_allocator_++);
-            // PrintTimeStamp(sizeof(*cv));
             assert(cv != NULL);
             ct->AddEntry(region, cv);
         }
@@ -131,9 +132,11 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     DataArray flush, sync, diff;
     CacheObjects sync_co;
     BlockPrintTimeStamp("enter");
+    PrintTimeStamp("GAV checkB");
     while (!cv->CheckPendingFlag(read_set, write_set)) {
       pthread_cond_wait(&cache_cond, &cache_lock);
     }
+    PrintTimeStamp("GAV checkE");
     BlockPrintTimeStamp("leave");
     // Move here.
     cv->AcquireAccess(access);
@@ -146,16 +149,22 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
 
     GeometricRegion write_region_old = cv->write_region_;
     cv->write_region_ = write_region;
+    PrintTimeStamp("GAV wfcB");
     cv->WriteFromCache(flush, write_region_old);
     for (size_t i = 0; i < sync.size(); ++i) {
         // assert(sync_co[i]->IsAvailable(cache::EXCLUSIVE));
         sync_co[i]->PullData(sync[i]);
     }
+    PrintTimeStamp("GAV wfcE");
+    PrintTimeStamp("GAV rfcB");
     cv->ReadToCache(diff, read_region);
+    PrintTimeStamp("GAV rfcE");
     pthread_mutex_lock(&cache_lock);
+    PrintTimeStamp("GAV la2");
     cv->ReleasePendingFlag(&flush, &diff, &sync, &sync_co);
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
+    PrintTimeStamp("GAV exit");
     return cv;
 }
 
@@ -175,14 +184,15 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
                                         const CacheStruct &prototype,
                                         const GeometricRegion &region,
                                         cache::CacheAccess access) {
+    PrintTimeStamp("GAS ent");
     pthread_mutex_lock(&cache_lock);
+    PrintTimeStamp("GAS la");
     CacheStruct *cs = NULL;
     if (pool_->find(prototype.id()) == pool_->end()) {
         CacheTable *ct = new CacheTable(cache::STRUCT);
         (*pool_)[prototype.id()] = ct;
         cs = prototype.CreateNew(region);
         cs->set_unique_id(unique_id_allocator_++);
-        // PrintTimeStamp(sizeof(*cs));
         assert(cs != NULL);
         ct->AddEntry(region, cs);
     } else {
@@ -191,7 +201,6 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
         if (cs == NULL) {
             cs = prototype.CreateNew(region);
             cs->set_unique_id(unique_id_allocator_++);
-            // PrintTimeStamp(sizeof(*cs));
             assert(cs != NULL);
             ct->AddEntry(region, cs);
         }
@@ -203,11 +212,13 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
                            diff_sets(num_var);
     std::vector<CacheObjects> sync_co_sets(num_var);
     BlockPrintTimeStamp("enter");
+    PrintTimeStamp("GAS checkB");
     // Move here.
     while (!cs->CheckPendingFlag(var_type, read_sets, write_sets)) {
       pthread_cond_wait(&cache_cond, &cache_lock);
     }
     BlockPrintTimeStamp("leave");
+    PrintTimeStamp("GAS checkE");
     cs->AcquireAccess(access);
     cs->SetUpReadWrite(var_type, read_sets, write_sets,
                        &flush_sets, &diff_sets, &sync_sets, &sync_co_sets);
@@ -215,6 +226,7 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
 
     GeometricRegion write_region_old = cs->write_region_;
     cs->write_region_ = write_region;
+    PrintTimeStamp("GAS wfcB");
     cs->WriteFromCache(var_type, flush_sets, write_region_old);
     for (size_t t = 0; t < num_var; ++t) {
         DataArray &sync_t = sync_sets[t];
@@ -224,12 +236,17 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
             sync_co_t[i]->PullData(sync_t[i]);
         }
     }
+    PrintTimeStamp("GAS wfcE");
+    PrintTimeStamp("GAS rfcB");
     cs->ReadToCache(var_type, diff_sets, read_region);
+    PrintTimeStamp("GAS rfcE");
     pthread_mutex_lock(&cache_lock);
+    PrintTimeStamp("GAS la2");
     cs->ReleasePendingFlag(var_type,
                            &flush_sets, &diff_sets, &sync_sets, &sync_co_sets);
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
+    PrintTimeStamp("GAS exit");
     return cs;
 }
 
@@ -237,18 +254,23 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
  * \details
  */
 void CacheManager::SyncData(Data *d) {
+    PrintTimeStamp("SD ent");
     CacheObject *co = NULL;
     pthread_mutex_lock(&cache_lock);
+    PrintTimeStamp("SD la");
     BlockPrintTimeStamp("enter");
+    PrintTimeStamp("SD checkB");
     while (d->pending_flag() != 0 ||
            (d->dirty_cache_object()
             && d->dirty_cache_object()->pending_flag())) {
        pthread_cond_wait(&cache_cond, &cache_lock);
     }
+    PrintTimeStamp("SD checkE");
     BlockPrintTimeStamp("leave");
     co = d->dirty_cache_object();
     if (!co) {
         pthread_mutex_unlock(&cache_lock);
+        PrintTimeStamp("SD exit");
         return;
     }
     // assert(co->IsAvailable(cache::EXCLUSIVE));
@@ -258,25 +280,33 @@ void CacheManager::SyncData(Data *d) {
     pthread_mutex_unlock(&cache_lock);
 
     co->PullData(d);
+    PrintTimeStamp("SD la2b");
     pthread_mutex_lock(&cache_lock);
+    PrintTimeStamp("SD la2e");
     d->unset_pending_flag(Data::WRITE);
     co->unset_pending_flag();
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
+    PrintTimeStamp("SD exit");
 }
 
 /**
  * \details
  */
 void CacheManager::InvalidateMappings(Data *d) {
+    PrintTimeStamp("IM ent");
     pthread_mutex_lock(&cache_lock);
+    PrintTimeStamp("IM la");
     BlockPrintTimeStamp("enter");
+    PrintTimeStamp("IM checkB");
     while (d->pending_flag() != 0) {
         pthread_cond_wait(&cache_cond, &cache_lock);
     }
+    PrintTimeStamp("IM checkE");
     BlockPrintTimeStamp("leave");
     d->InvalidateMappings();
     pthread_mutex_unlock(&cache_lock);
+    PrintTimeStamp("IM exit");
 }
 
 void CacheManager::ReleaseAccess(CacheObject* cache_object) {
@@ -326,11 +356,12 @@ void CacheManager::PrintProfile(std::stringstream* output) {
   *output << "-----------" << std::endl;
 }
 
-void CacheManager::PrintTimeStamp(uint64_t size) {
+void CacheManager::PrintTimeStamp(const char *message) {
   struct timespec t;
   clock_gettime(CLOCK_REALTIME, &t);
   double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
-  fprintf(alloc_log, "%f : %lu\n", time_sum, size);
+  pid_t tid = syscall(SYS_gettid);
+  fprintf(time_log, "%d %f : %s\n", tid, time_sum, message);
 }
 
 void CacheManager::BlockPrintTimeStamp(const char* message) {
