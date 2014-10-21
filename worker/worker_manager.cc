@@ -113,10 +113,11 @@ void WorkerManager::SetLoggingInterface(
 
 bool WorkerManager::ClassifyAndAddJob(Job* job) {
   bool result;
-  if (dynamic_cast<RemoteCopySendJob*>(job) ||  // NOLINT
+  if (use_auxiliary_thread_ &&
+      (dynamic_cast<RemoteCopySendJob*>(job) ||  // NOLINT
       dynamic_cast<RemoteCopyReceiveJob*>(job) ||  // NOLINT
       dynamic_cast<LocalCopyJob*>(job) ||  // NOLINT
-      dynamic_cast<CreateDataJob*>(job)) {  // NOLINT
+      dynamic_cast<CreateDataJob*>(job))) {  // NOLINT
     pthread_mutex_lock(&auxiliary_job_queue_lock_);
     auxiliary_job_list_.push_back(job);
     pthread_mutex_unlock(&auxiliary_job_queue_lock_);
@@ -231,10 +232,12 @@ bool WorkerManager::StartWorkerThreads() {
         new WorkerThreadComputation(this));
     LaunchThread(busy_worker_thread_computation_list_.back());
   }
-  worker_thread_auxiliary_ =
-      new WorkerThreadAuxiliary(this, &task_thread_pool_);
-  LaunchThread(worker_thread_auxiliary_);
-  worker_thread_auxiliary_->SetThreadNum(4);
+  if (use_auxiliary_thread_) {
+    worker_thread_auxiliary_ =
+        new WorkerThreadAuxiliary(this, &task_thread_pool_);
+    LaunchThread(worker_thread_auxiliary_);
+    worker_thread_auxiliary_->SetThreadNum(4);
+  }
   int error_code = pthread_create(
       &scheduling_id_, NULL, SchedulingEntryPoint, this);
   assert(error_code == 0);
@@ -277,20 +280,22 @@ void WorkerManager::ScheduleComputationJobs() {
     --ready_jobs_count_;
     pthread_cond_signal(&worker_thread->thread_can_start);
   }
-  int physical_core_for_auxiliary_jobs =
-      PHYSICAL_CORE_NUM - (ongoing_parallelism_ + 1) / 2;
-  if (physical_core_for_auxiliary_jobs < 1) {
-    physical_core_for_auxiliary_jobs = 1;
+  if (use_auxiliary_thread_) {
+    int physical_core_for_auxiliary_jobs =
+        PHYSICAL_CORE_NUM - (ongoing_parallelism_ + 1) / 2;
+    if (physical_core_for_auxiliary_jobs < 1) {
+      physical_core_for_auxiliary_jobs = 1;
+    }
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    for (int i = 0; i < physical_core_for_auxiliary_jobs; ++i) {
+      CPU_SET(LOGICAL_CORE_X[i], &cpuset);
+      CPU_SET(LOGICAL_CORE_Y[i], &cpuset);
+    }
+    worker_thread_auxiliary_->SetThreadAffinity(&cpuset);
+    worker_thread_auxiliary_->SetThreadNum(
+        physical_core_for_auxiliary_jobs * 8);
   }
-  cpu_set_t cpuset;
-  CPU_ZERO(&cpuset);
-  for (int i = 0; i < physical_core_for_auxiliary_jobs; ++i) {
-    CPU_SET(LOGICAL_CORE_X[i], &cpuset);
-    CPU_SET(LOGICAL_CORE_Y[i], &cpuset);
-  }
-  worker_thread_auxiliary_->SetThreadAffinity(&cpuset);
-  worker_thread_auxiliary_->SetThreadNum(
-      physical_core_for_auxiliary_jobs * 8);
   pthread_mutex_unlock(&scheduling_critical_section_lock_);
   pthread_mutex_unlock(&computation_job_queue_lock_);
 }

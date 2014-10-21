@@ -151,6 +151,7 @@ class WorkerManager {
   int64_t dispatched_computation_job_count_;
   int64_t ready_jobs_count_;
 
+  static const bool use_auxiliary_thread_ = false;
   WorkerThreadAuxiliary* worker_thread_auxiliary_;
   std::list<WorkerThreadComputation*> idle_worker_thread_computation_list_;
   std::list<WorkerThreadComputation*> busy_worker_thread_computation_list_;
