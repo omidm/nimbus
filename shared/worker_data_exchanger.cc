@@ -38,8 +38,10 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include <sstream> // NOLINT
 #include "shared/worker_data_exchanger.h"
 
+#define _NIMBUS_NO_NETWORK_LOG
 
 using boost::asio::ip::tcp;
 
@@ -50,6 +52,10 @@ WorkerDataExchanger::WorkerDataExchanger(port_t port_no)
   io_service_ = new boost::asio::io_service();
   acceptor_ = new tcp::acceptor(*io_service_,
       tcp::endpoint(tcp::v4(), listening_port_));
+
+  std::ostringstream ss;
+  ss << port_no;
+  log_.set_file_name("log_wdx-" + ss.str());
 }
 
 WorkerDataExchanger::~WorkerDataExchanger() {
@@ -230,6 +236,12 @@ size_t WorkerDataExchanger::ReadData(WorkerDataExchangerConnection* connection,
 
 void WorkerDataExchanger::AddSerializedData(job_id_t job_id,
     SerializedData* ser_data, data_version_t version) {
+#ifndef _NIMBUS_NO_NETWORK_LOG
+  char buff[LOG_MAX_BUFF_SIZE];
+  snprintf(buff, sizeof(buff), "R %10.9lf j: %5.0lu s: %5.0lu",
+      Log::GetRawTime(), job_id, ser_data->size());
+  log_.log_WriteToFile(std::string(buff));
+#endif
   boost::mutex::scoped_lock lock(data_map_mutex_);
   assert(data_map_.find(job_id) == data_map_.end());
   data_map_[job_id] = std::make_pair(ser_data, version);
@@ -306,6 +318,13 @@ bool WorkerDataExchanger::SendSerializedData(job_id_t job_id,
   std::ostringstream ss_v;
   ss_v << version;
   header += (ss_v.str() + ";");
+
+#ifndef _NIMBUS_NO_NETWORK_LOG
+  char buff[LOG_MAX_BUFF_SIZE];
+  snprintf(buff, sizeof(buff), "S %10.9lf j: %5.0lu s: %5.0lu",
+      Log::GetRawTime(), job_id, size);
+  log_.log_WriteToFile(std::string(buff));
+#endif
 
   boost::asio::write(*(connection->socket()), boost::asio::buffer(header),
       boost::asio::transfer_all(), ignored_error);

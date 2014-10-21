@@ -53,6 +53,7 @@
 #include <utility>
 #include <map>
 #include "shared/dbg.h"
+#include "shared/log.h"
 #include "shared/parser.h"
 #include "shared/nimbus_types.h"
 #include "shared/serialized_data.h"
@@ -90,6 +91,7 @@ class WorkerDataExchanger {
  private:
   typedef std::map<worker_id_t, std::pair<std::string, port_t> >AddressBook;
 
+  Log log_;
   port_t listening_port_;
   boost::mutex address_book_mutex_;
   AddressBook address_book_;
