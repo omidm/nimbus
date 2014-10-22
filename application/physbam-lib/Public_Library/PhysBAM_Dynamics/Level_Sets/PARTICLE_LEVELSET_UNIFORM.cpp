@@ -308,16 +308,16 @@ Euler_Step_Removed_Particles(T_ARRAYS_PARTICLE_LEVELSET_REMOVED_PARTICLES& parti
     int number_of_deleted_particles=0,number_of_non_occupied_cells=0;
     for(NODE_ITERATOR iterator(levelset.grid);iterator.Valid();iterator.Next()){TV_INT block=iterator.Node_Index();if(particles(block)){
         PARTICLE_LEVELSET_REMOVED_PARTICLES<TV>& cell_particles=*particles(block);
-        if(!levelset.collision_body_list->Swept_Occupied_Block(T_BLOCK(levelset.grid,block))){
-            number_of_non_occupied_cells++;
-            for(int k=cell_particles.array_collection->Size();k>=1;k--) // since not an occupied block, don't need to adjust for objects
-                levelset.levelset_callbacks->Adjust_Particle_For_Domain_Boundaries(cell_particles,k,cell_particles.V(k),particle_type,dt,time);}
-        else{
-            for(int k=cell_particles.array_collection->Size();k>=1;k--){
-                levelset.levelset_callbacks->Adjust_Particle_For_Domain_Boundaries(cell_particles,k,cell_particles.V(k),particle_type,dt,time);
-                T collision_distance=Particle_Collision_Distance(cell_particles.quantized_collision_distance(k));
-                if(!Adjust_Particle_For_Objects(cell_particles.X(k),cell_particles.V(k),cell_particles.radius(k),collision_distance,particle_type,dt,time)){
-                    Delete_Particle_And_Clean_Memory(particles(block),cell_particles,k);number_of_deleted_particles++;}}}
+        // if(!levelset.collision_body_list->Swept_Occupied_Block(T_BLOCK(levelset.grid,block))){
+        number_of_non_occupied_cells++;
+        for(int k=cell_particles.array_collection->Size();k>=1;k--) // since not an occupied block, don't need to adjust for objects
+          levelset.levelset_callbacks->Adjust_Particle_For_Domain_Boundaries(cell_particles,k,cell_particles.V(k),particle_type,dt,time);
+        // }else{
+        //     for(int k=cell_particles.array_collection->Size();k>=1;k--){
+        //         levelset.levelset_callbacks->Adjust_Particle_For_Domain_Boundaries(cell_particles,k,cell_particles.V(k),particle_type,dt,time);
+        //         T collision_distance=Particle_Collision_Distance(cell_particles.quantized_collision_distance(k));
+        //         if(!Adjust_Particle_For_Objects(cell_particles.X(k),cell_particles.V(k),cell_particles.radius(k),collision_distance,particle_type,dt,time)){
+        //             Delete_Particle_And_Clean_Memory(particles(block),cell_particles,k);number_of_deleted_particles++;}}}
         cell_particles.Euler_Step_Position(dt);
         if(!cell_particles.array_collection->Size()) Free_Particle_And_Clear_Pointer(particles(block));}}
     if(verbose){
@@ -1163,14 +1163,12 @@ template<class T_GRID> void PARTICLE_LEVELSET_UNIFORM<T_GRID>::
 Identify_And_Remove_Escaped_Particles_Threaded(RANGE<TV_INT>& domain,const T_FACE_ARRAYS_SCALAR& V,const T radius_fraction,const T time,const bool verbose)
 {
     T_FACE_LOOKUP V_lookup(V);
-    T_FACE_LOOKUP_COLLIDABLE V_lookup_collidable(V_lookup,*levelset.collision_body_list,levelset.face_velocities_valid_mask_current);
-    typename T_FACE_LOOKUP_COLLIDABLE::LOOKUP V_lookup_collidable_lookup(V_lookup_collidable,V_lookup);
 
     Identify_Escaped_Particles(domain);int p=0,n=0;
     if(use_removed_positive_particles){
         for(NODE_ITERATOR iterator(levelset.grid,domain);iterator.Valid();iterator.Next()){TV_INT block=iterator.Node_Index();if(positive_particles(block)){
             p+=Remove_Escaped_Particles(BLOCK_UNIFORM<T_GRID>(levelset.grid,block),*positive_particles(block),escaped_positive_particles(block),1,removed_positive_particles(block),
-                V_lookup_collidable_lookup,radius_fraction,time);
+                V_lookup,radius_fraction,time);
             if(!positive_particles(block)->array_collection->Size()) Free_Particle_And_Clear_Pointer(positive_particles(block));}}}
     else{
         for(NODE_ITERATOR iterator(levelset.grid,domain);iterator.Valid();iterator.Next()){TV_INT block=iterator.Node_Index();if(positive_particles(block)){
@@ -1179,7 +1177,7 @@ Identify_And_Remove_Escaped_Particles_Threaded(RANGE<TV_INT>& domain,const T_FAC
     if(use_removed_negative_particles){
         for(NODE_ITERATOR iterator(levelset.grid,domain);iterator.Valid();iterator.Next()){TV_INT block=iterator.Node_Index();if(negative_particles(block)){
             n+=Remove_Escaped_Particles(BLOCK_UNIFORM<T_GRID>(levelset.grid,block),*negative_particles(block),escaped_negative_particles(block),-1,removed_negative_particles(block),
-                V_lookup_collidable_lookup,radius_fraction,time);
+                V_lookup,radius_fraction,time);
             if(!negative_particles(block)->array_collection->Size()) Free_Particle_And_Clear_Pointer(negative_particles(block));}}}
     else{
         for(NODE_ITERATOR iterator(levelset.grid,domain);iterator.Valid();iterator.Next()){TV_INT block=iterator.Node_Index();if(negative_particles(block)){
@@ -1194,8 +1192,6 @@ template<class T_GRID> void PARTICLE_LEVELSET_UNIFORM<T_GRID>::
 Identify_And_Remove_Escaped_Positive_Particles(const T_FACE_ARRAYS_SCALAR& V,const T radius_fraction,const T time,const bool verbose)
 {
     T_FACE_LOOKUP V_lookup(V);
-    T_FACE_LOOKUP_COLLIDABLE V_lookup_collidable(V_lookup,*levelset.collision_body_list,levelset.face_velocities_valid_mask_current);
-    typename T_FACE_LOOKUP_COLLIDABLE::LOOKUP V_lookup_collidable_lookup(V_lookup_collidable,V_lookup);
 
     RANGE<TV_INT> domain(levelset.grid.Domain_Indices());domain.max_corner+=TV_INT::All_Ones_Vector();
     escaped_positive_particles.Resize(levelset.grid.Domain_Indices(3));
@@ -1204,7 +1200,7 @@ Identify_And_Remove_Escaped_Positive_Particles(const T_FACE_ARRAYS_SCALAR& V,con
     if(use_removed_positive_particles){
         for(NODE_ITERATOR iterator(levelset.grid);iterator.Valid();iterator.Next()){TV_INT block=iterator.Node_Index();if(positive_particles(block))
             p+=Remove_Escaped_Particles(BLOCK_UNIFORM<T_GRID>(levelset.grid,block),*positive_particles(block),escaped_positive_particles(block),1,removed_positive_particles(block),
-                V_lookup_collidable_lookup,radius_fraction,time);}}
+                V_lookup,radius_fraction,time);}}
     else{
         for(NODE_ITERATOR iterator(levelset.grid);iterator.Valid();iterator.Next()){TV_INT block=iterator.Node_Index();if(positive_particles(block))
             p+=Remove_Escaped_Particles(BLOCK_UNIFORM<T_GRID>(levelset.grid,block),*positive_particles(block),escaped_positive_particles(block),1,radius_fraction);}}
@@ -1214,9 +1210,11 @@ Identify_And_Remove_Escaped_Positive_Particles(const T_FACE_ARRAYS_SCALAR& V,con
 //#####################################################################
 template<class T_GRID> template<class T_FACE_LOOKUP_LOOKUP> int PARTICLE_LEVELSET_UNIFORM<T_GRID>::
 Remove_Escaped_Particles(const BLOCK_UNIFORM<T_GRID>& block,PARTICLE_LEVELSET_PARTICLES<TV>& particles,const ARRAY<bool>& escaped,const int sign,
-    PARTICLE_LEVELSET_REMOVED_PARTICLES<TV>*& removed_particles,const T_FACE_LOOKUP_LOOKUP& V,const T radius_fraction,const T time)
+    PARTICLE_LEVELSET_REMOVED_PARTICLES<TV>*& removed_particles,const
+    T_FACE_LOOKUP_LOOKUP& V,const T radius_fraction,const T time)
 {
     T_LINEAR_INTERPOLATION_COLLIDABLE_FACE_SCALAR linear_interpolation_collidable;
+    T_LINEAR_INTERPOLATION_SCALAR linear_interpolation;
     bool near_objects=levelset.collision_body_list?levelset.collision_body_list->Occupied_Block(block):false;if(near_objects) levelset.Enable_Collision_Aware_Interpolation(sign);
     int removed=0;T one_over_radius_multiplier=-sign/radius_fraction;
     // TODO: limit the amount of mass removed - don't let the particles just set their own radii
@@ -1224,15 +1222,21 @@ Remove_Escaped_Particles(const BLOCK_UNIFORM<T_GRID>& block,PARTICLE_LEVELSET_PA
     ARRAY<PAIR<int,T> > removed_particle_times_local;
     ARRAY<bool> local_escaped(escaped);
     PARTICLE_LEVELSET_PARTICLES<TV>* cell_particles=&particles;
-    while(cell_particles){for(int k=cell_particles->array_collection->Size();k>=1;k--) if(local_escaped(k) && one_over_radius_multiplier*levelset.Phi(cell_particles->X(k))>cell_particles->radius(k)){
-        if(!removed_particles) removed_particles=Allocate_Particles(template_removed_particles);
-        removed++;
-        if(id) removed_particle_times_local.Append(PAIR<int,T>((*id)(k),time));
-        Copy_Particle(*cell_particles,*removed_particles,k);
-        Delete_Particle_And_Clean_Memory(&particles,*cell_particles,k);
-        removed_particles->V.Last()=linear_interpolation_collidable.Clamped_To_Array_Face(levelset.grid,V,removed_particles->X.Last());}
-        cell_particles=cell_particles->next;
-        if(cell_particles) Identify_Escaped_Particles(block,*cell_particles,local_escaped,sign);}
+    while(cell_particles) {
+      for(int k=cell_particles->array_collection->Size();k>=1;k--)
+        if(local_escaped(k) && one_over_radius_multiplier*levelset.Phi(cell_particles->X(k))>cell_particles->radius(k)){
+          if(!removed_particles) removed_particles=Allocate_Particles(template_removed_particles);
+          removed++;
+          if(id) removed_particle_times_local.Append(PAIR<int,T>((*id)(k),time));
+          Copy_Particle(*cell_particles,*removed_particles,k);
+          Delete_Particle_And_Clean_Memory(&particles,*cell_particles,k);
+          // removed_particles->V.Last()=linear_interpolation_collidable.Clamped_To_Array_Face(levelset.grid,V,removed_particles->X.Last());
+          removed_particles->V.Last()=linear_interpolation.Clamped_To_Array_Face(levelset.grid,V,removed_particles->X.Last());
+        }
+
+      cell_particles=cell_particles->next;
+      if(cell_particles) Identify_Escaped_Particles(block,*cell_particles,local_escaped,sign);
+    }
     if(near_objects) levelset.Disable_Collision_Aware_Interpolation();
 #ifdef USE_PTHREADS
     if(thread_queue) pthread_mutex_lock(&cell_lock);

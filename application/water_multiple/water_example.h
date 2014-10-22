@@ -82,7 +82,7 @@ public:
     BOUNDARY_UNIFORM<GRID<TV>,T> *boundary,*phi_boundary;
     T_BOUNDARY_PHI_WATER phi_boundary_water;
     VECTOR<VECTOR<bool,2>,TV::dimension> domain_boundary;
-    T_GRID_BASED_COLLISION_GEOMETRY collision_bodies_affecting_fluid;
+    // T_GRID_BASED_COLLISION_GEOMETRY collision_bodies_affecting_fluid;
     ARRAY<IMPLICIT_OBJECT<TV>*> sources;
     LaplaceSolverWrapper laplace_solver_wrapper;
 

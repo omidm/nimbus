@@ -555,8 +555,8 @@ DeleteParticlesImpl(const nimbus::Job *job,
     example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
     example.particle_levelset_evolution.particle_levelset.
         Delete_Particles_In_Local_Maximum_Phi_Cells(1);
-    example.particle_levelset_evolution.particle_levelset.
-        Delete_Particles_Far_From_Interface(); // uses visibility
+    // example.particle_levelset_evolution.particle_levelset.
+    //     Delete_Particles_Far_From_Interface(); // uses visibility
     example.particle_levelset_evolution.particle_levelset.
         Identify_And_Remove_Escaped_Particles(example.face_velocities_ghost,
                 1.5,
