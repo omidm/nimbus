@@ -290,7 +290,6 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
   version_log_.set_file_name(ss.str() + "_version_log.txt");
   data_hash_log_.set_file_name(ss.str() + "_data_hash_log.txt");
   data_exchanger_->WriteTimeDriftToLog(time - cm->time());
-  
 }
 
 // Processes jobdone command. Moves a job from blocked queue to ready queue if
