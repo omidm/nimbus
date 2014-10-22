@@ -151,7 +151,7 @@ class CacheManager {
 
         void PrintProfile(std::stringstream* output);
 
-        void PrintTimeStamp(const char * message);
+        void PrintTimeStamp(const char *status, const char * message);
 
     private:
         uint64_t unique_id_allocator_;
