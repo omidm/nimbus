@@ -88,6 +88,8 @@ class WorkerDataExchanger {
 
   WorkerDataExchangerConnectionList* receive_connections();
 
+  void WriteTimeDriftToLog(double drift);
+
  private:
   typedef std::map<worker_id_t, std::pair<std::string, port_t> >AddressBook;
 

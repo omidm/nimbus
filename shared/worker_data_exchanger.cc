@@ -364,6 +364,11 @@ WorkerDataExchangerConnectionList* WorkerDataExchanger::receive_connections() {
   return &receive_connections_;
 }
 
+void WorkerDataExchanger::WriteTimeDriftToLog(double drift) {
+  char buff[LOG_MAX_BUFF_SIZE];
+  snprintf(buff, sizeof(buff), "D %10.9lf", drift);
+  log_.log_WriteToFile(std::string(buff));
+}
 
 /*
 

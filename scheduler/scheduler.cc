@@ -396,7 +396,6 @@ size_t Scheduler::RegisterPendingWorkers() {
       ID<port_t> port(0);
       HandshakeCommand cm(worker_id, ip, port, Log::GetRawTime());
       dbg(DBG_SCHED, "Sending command: %s.\n", cm.ToString().c_str());
-      std::cout << "OMID: " << cm.ToString() << std::endl;
       server_->SendCommand(*iter, &cm);
     }
   }

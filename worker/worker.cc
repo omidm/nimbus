@@ -289,9 +289,9 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
   // TODO(quhang) thread-safety(log).
   version_log_.set_file_name(ss.str() + "_version_log.txt");
   data_hash_log_.set_file_name(ss.str() + "_data_hash_log.txt");
-  std::cout << "OMID: " << cm->ToString() << std::endl;
-  std::cout << "OMID N: " << new_cm.ToString() << std::endl;
   std::cout << "OMID: " << time - cm->time() << std::endl;
+  data_exchanger_->WriteTimeDriftToLog(time - cm->time());
+  
 }
 
 // Processes jobdone command. Moves a job from blocked queue to ready queue if
