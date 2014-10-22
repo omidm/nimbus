@@ -41,6 +41,7 @@
   */
 
 #include "shared/handshake_command.h"
+#include "boost/lexical_cast.hpp"
 
 using namespace nimbus;  // NOLINT
 using boost::tokenizer;
@@ -53,10 +54,12 @@ HandshakeCommand::HandshakeCommand() {
 
 HandshakeCommand::HandshakeCommand(const ID<worker_id_t>& worker_id,
                                    const std::string& ip,
-                                   const ID<port_t>& port)
+                                   const ID<port_t>& port,
+                                   const double& time)
 : worker_id_(worker_id),
   ip_(ip),
-  port_(port) {
+  port_(port),
+  time_(time) {
   name_ = HANDSHAKE_NAME;
   type_ = HANDSHAKE;
 }
@@ -110,7 +113,8 @@ std::string HandshakeCommand::ToString() {
   str += (name_ + " ");
   str += ("worker-id:" + worker_id_.ToNetworkData() + " ");
   str += ("ip:" + ip_ + " ");
-  str += ("port:" + port_.ToNetworkData());
+  str += ("port:" + port_.ToNetworkData() + " ");
+  str += ("time: " + boost::lexical_cast<std::string>(time_));
   return str;
 }
 
@@ -127,10 +131,15 @@ ID<port_t> HandshakeCommand::port() {
   return port_;
 }
 
+double HandshakeCommand::time() {
+  return time_;
+}
+
 bool HandshakeCommand::ReadFromProtobuf(const HandshakePBuf& buf) {
   worker_id_.set_elem(buf.worker_id());
   ip_ = buf.ip();
   port_.set_elem(buf.port());
+  time_ = buf.time();
   return true;
 }
 
@@ -138,5 +147,6 @@ bool HandshakeCommand::WriteToProtobuf(HandshakePBuf* buf) {
   buf->set_worker_id(worker_id().elem());
   buf->set_ip(ip());
   buf->set_port(port().elem());
+  buf->set_time(time_);
   return true;
 }

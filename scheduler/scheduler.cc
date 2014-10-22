@@ -40,6 +40,8 @@
 
 #include "scheduler/scheduler.h"
 
+#define HANDSHAKE_COMMAND_NUM 1
+
 namespace nimbus {
 
 #define DEFAULT_MAX_JOB_TO_ASSIGN 1
@@ -394,9 +396,17 @@ size_t Scheduler::RegisterPendingWorkers() {
       ID<worker_id_t> worker_id((*iter)->worker_id());
       std::string ip("you-know");
       ID<port_t> port(0);
-      HandshakeCommand cm(worker_id, ip, port);
-      dbg(DBG_SCHED, "Sending command: %s.\n", cm.ToString().c_str());
-      server_->SendCommand(*iter, &cm);
+      {
+        HandshakeCommand cm(worker_id, ip, port, Log::GetRawTime());
+        dbg(DBG_SCHED, "Sending command: %s.\n", cm.ToString().c_str());
+        server_->SendCommand(*iter, &cm);
+      }
+      for (int i = 0; i < (HANDSHAKE_COMMAND_NUM - 1); ++i) {
+        sleep(1);
+        HandshakeCommand cm(worker_id, ip, port, Log::GetRawTime());
+        dbg(DBG_SCHED, "Sending command: %s.\n", cm.ToString().c_str());
+        server_->SendCommand(*iter, &cm);
+      }
     }
   }
   return registered_num;
