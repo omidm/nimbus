@@ -401,24 +401,28 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeIncompressibleProjectionHelp
     }
     // T_ARRAYS_SCALAR.
     if (data_config.GetFlag(DataConfig::DIVERGENCE)) {
-      // TODO(quhang): removes resizing.
-      laplace->f.Resize(grid_input.Domain_Indices(1));
+      if (forced_alloc) {
+        laplace->f.Resize(grid_input.Domain_Indices(1));
+      }
     }
     // T_FACE_ARRAYS_BOOL.
     if (data_config.GetFlag(DataConfig::PSI_N)) {
-      // TODO(quhang): removes resizing.
-      laplace->psi_N.Resize(grid_input, 1);
+      if (forced_alloc) {
+        laplace->psi_N.Resize(grid_input, 1);
+      }
     }
     // T_ARRAYS_BOOL.
     if (data_config.GetFlag(DataConfig::PSI_D)) {
-      // TODO(quhang): removes resizing.
-      laplace->psi_D.Resize(grid_input.Domain_Indices(1));
+      if (forced_alloc) {
+        laplace->psi_D.Resize(grid_input.Domain_Indices(1));
+      }
     }
     // T_ARRAYS_INT.
     if (data_config.GetFlag(DataConfig::REGION_COLORS)) {
-      // TODO(quhang): removes resizing.
-      laplace->filled_region_colors.Resize(
-          grid_input.Domain_Indices(1));
+      if (forced_alloc) {
+        laplace->filled_region_colors.Resize(
+            grid_input.Domain_Indices(1));
+      }
     }
     // Assume uniform region coloring.
     laplace->number_of_regions = 1;
@@ -430,18 +434,17 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeIncompressibleProjectionHelp
   projection->divergence.Clean_Memory();
   // T_ARRAYS_SCALAR.
   if (data_config.GetFlag(DataConfig::PRESSURE)) {
-    // TODO(quhang): removes resizing.
-    projection->p.Resize(grid_input.Domain_Indices(1));
+    if (forced_alloc) {
+      projection->p.Resize(grid_input.Domain_Indices(1));
+    }
   }
   // T_ARRAYS_SCALAR.
   if (data_config.GetFlag(DataConfig::PRESSURE_SAVE)) {
-    // TODO(quhang): removes resizing.
-    projection->p_save_for_projection.Resize(grid_input.Domain_Indices(1));
+    // projection->p_save_for_projection.Resize(grid_input.Domain_Indices(1));
   }
   // T_FACE_ARRAYS_SCALAR.
   if (data_config.GetFlag(DataConfig::VELOCITY_SAVE)) {
-    // TODO(quhang): removes resizing.
-    projection->face_velocities_save_for_projection.Resize(grid_input);
+    // projection->face_velocities_save_for_projection.Resize(grid_input);
   }
   // dsd is not considered.
   assert(projection->dsd == NULL);
@@ -528,26 +531,24 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHel
   PARTICLE_LEVELSET_UNIFORM<GRID<TV> >* particle_levelset =
     &particle_levelset_evolution->particle_levelset;
   assert(grid_input.Is_MAC_Grid());
+  // If this flag is true, it suggests that the ple is not a cached version.
   if (example.create_destroy_ple) {
     particle_levelset_evolution->grid = grid_input;
     // Resizes phi here.
     if (data_config.GetFlag(DataConfig::LEVELSET)
         || data_config.GetFlag(DataConfig::LEVELSET_READ)
         || data_config.GetFlag(DataConfig::LEVELSET_WRITE)) {
-      // TODO(quhang): removes resizing.
       particle_levelset_evolution->phi.Resize(
           grid_input.Domain_Indices(particle_levelset->number_of_ghost_cells));
     }
     // Resizes particles.
     particle_levelset_evolution->particle_levelset.Set_Band_Width(6);
     if (data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
-      // TODO(quhang): removes resizing.
       particle_levelset->positive_particles.Resize(
           particle_levelset->levelset.grid.Block_Indices(
             particle_levelset->number_of_ghost_cells));
     }
     if (data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
-      // TODO(quhang): removes resizing.
       particle_levelset->negative_particles.Resize(
           particle_levelset->levelset.grid.Block_Indices(
             particle_levelset->number_of_ghost_cells));
@@ -556,13 +557,11 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHel
     particle_levelset->use_removed_negative_particles=true;
     // Resizes removed particles.
     if (data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
-      // TODO(quhang): removes resizing.
       particle_levelset->removed_positive_particles.Resize(
           particle_levelset->levelset.grid.Block_Indices(
             particle_levelset->number_of_ghost_cells));
     }
     if (data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
-      // TODO(quhang): removes resizing.
       particle_levelset->removed_negative_particles.Resize(
           particle_levelset->levelset.grid.Block_Indices(
             particle_levelset->number_of_ghost_cells));
