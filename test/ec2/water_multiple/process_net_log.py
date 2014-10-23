@@ -95,7 +95,7 @@ for j in RTime:
     Elapsed[size] = [elapsed]
     Speed[size] = [size * 8 / elapsed]
 
-print "Size count: " + str(len(Elapsed))
+print "Different Size count: " + str(len(Elapsed))
 print "Negative elapsed time count: " + str(negative_count)
 print "Total elapsed time count: " + str(total_count)
 
@@ -123,13 +123,15 @@ for s in Elapsed:
   # print "size: " + str(s) + " spead mean: " + str(mean) + " speed std: " + str(error)
 
 S = []
+SC = []
 SM = []
 SE = []
 EM = []
 EE = []
-SC = []
+
 Size.sort()
-Size.remove(min(Size))
+MainSize = Size[:]
+  
 for s in Size:
   S.append(s / 1000)
   # SM.append(SpeedMean[s])
@@ -140,7 +142,9 @@ for s in Size:
   EE.append(ElapsedError[s])
   SC.append(len(Elapsed[s]))
 
-
+# bad sample!  
+EM[0] = rtt
+EE[0] = rtt / 2
 
 import numpy as np
 import matplotlib.mlab as mlab
@@ -149,9 +153,10 @@ from matplotlib.font_manager import FontProperties
 
 font = FontProperties(family='sans-serif', weight='bold', size=12)
 
+
 fig, (ax0, ax1, ax2) = plt.subplots(nrows=3, sharex=True)
 
-print sum(SC)
+
 newSC = map(lambda x: x/float(sum(SC)), SC)
 ax2.bar(S, newSC, 1, color='g', hatch='', bottom=0, edgecolor="g")
 ax2.set_ylabel('Distribution', family='sans-serif', size=12, weight='bold')
@@ -175,6 +180,7 @@ ax0.errorbar(S, EM, yerr=EE, fmt='-o')
 ax0.set_ylabel('Transmission Time (seconds)', family='sans-serif', size=12, weight='bold')
 ax0.grid(True)
 
+ax0.set_title('Analysis of Data Exchange for Water Simulation \n 512 cube, 64 application partitions, c3.2xlarge instances', family='sans-serif', size=12, weight='bold')
 plt.xlabel('Data Size (KB)', family='sans-serif', size=12, weight='bold')
 plt.xscale('linear')
 plt.yscale('linear')
