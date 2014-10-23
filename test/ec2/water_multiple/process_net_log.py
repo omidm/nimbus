@@ -29,6 +29,9 @@ parser.add_argument(
 args = parser.parse_args()
 
 FN = 2
+throughput = 1.008 # Gbps
+rtt = 0.7e-3
+
 
 STime = {}
 RTime = {}
@@ -52,7 +55,6 @@ for n in range (1, FN + 1):
       if len(result) == 1:
         Drift.append(float(decimal.Decimal(result[0])))
         drift = numpy.mean(Drift)
-        print drift
       else:
         print "Wrong input in the file:" + file_name
 
@@ -67,43 +69,116 @@ for n in range (1, FN + 1):
           RSize[result[0][2]] = float(decimal.Decimal(result[0][3]))
         else:
           print "Wrong input in the file:" + file_name
-          print type(result[0][0])
       else:
         print "Wrong input in the file:" + file_name
 
   f.close()
 
 
-for 
+Speed = {}
+Elapsed = {}
+total_count = 0
+negative_count = 0
+
+for j in RTime:
+  total_count += 1
+  elapsed = RTime[j] - STime[j];
+  if elapsed < 0:
+    negative_count += 1
+    elapsed = rtt
+  assert(RSize[j] == SSize[j]);
+  size = RSize[j]
+  if Elapsed.has_key(size):
+    Elapsed[size].append(elapsed)
+    Speed[size].append(size * 8 / elapsed)
+  else:
+    Elapsed[size] = [elapsed]
+    Speed[size] = [size * 8 / elapsed]
+
+print "Size count: " + str(len(Elapsed))
+print "Negative elapsed time count: " + str(negative_count)
+print "Total elapsed time count: " + str(total_count)
 
 
+SpeedMean = {}
+SpeedError = {}
+ElapsedMean = {}
+ElapsedError = {}
+Size = []
 
+for s in Elapsed:
+  speed_mean = numpy.mean(Speed[s])
+  speed_error = numpy.std(Speed[s])
+  elapsed_mean = numpy.mean(Elapsed[s])
+  elapsed_error = numpy.std(Elapsed[s])
+  if (speed_error > speed_mean):
+    speed_error = speed_mean
+  if (elapsed_error > elapsed_mean):
+    elapsed_error = elapsed_mean
+  Size.append(s)
+  SpeedMean[s] = speed_mean
+  SpeedError[s] = speed_error
+  ElapsedMean[s] = elapsed_mean
+  ElapsedError[s] = elapsed_error
+  # print "size: " + str(s) + " spead mean: " + str(mean) + " speed std: " + str(error)
 
-exit(0)
+S = []
+SM = []
+SE = []
+EM = []
+EE = []
+SC = []
+Size.sort()
+Size.remove(min(Size))
+for s in Size:
+  S.append(s / 1000)
+  # SM.append(SpeedMean[s])
+  # SE.append(SpeedError[s])
+  SM.append(s * 8 / ElapsedMean[s])
+  SE.append(0)
+  EM.append(ElapsedMean[s])
+  EE.append(ElapsedError[s])
+  SC.append(len(Elapsed[s]))
 
-# print "Total " + args.tag + " time: " + str(time)
-
-diff = []
-for i in range (1, len(time) - 1):
-  diff.append(float(time[i + 1] - time[i]))
-
-diff.remove(max(diff))
-diff.remove(min(diff))
-
-print min(diff)
-print float(sum(diff)) / float(len(diff))
-print max(diff)
 
 
 import numpy as np
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
 
-# the histogram of the data
-n, bins, patches = plt.hist(diff, 50, normed=1, facecolor='green', alpha=0.75)
+font = FontProperties(family='sans-serif', weight='bold', size=12)
 
-plt.xlabel('Projection Period')
-plt.ylabel('Probability')
+fig, (ax0, ax1, ax2) = plt.subplots(nrows=3, sharex=True)
+
+print sum(SC)
+newSC = map(lambda x: x/float(sum(SC)), SC)
+ax2.bar(S, newSC, 1, color='g', hatch='', bottom=0, edgecolor="g")
+ax2.set_ylabel('Distribution', family='sans-serif', size=12, weight='bold')
+
+
+ax1.axhline(throughput, color='r', ls='--', linewidth=4)
+tag = 'iperf throughput: %2.2f Gbps' % throughput
+ax1.annotate(tag, xy=(S[len(S) / 2 + 2], throughput), fontproperties=font)
+
+newSM = map(lambda x: x/1e9, SM)
+newSE = map(lambda x: x/1e9, SE)
+ax1.errorbar(S, newSM, yerr=newSE, fmt='-o')
+ax1.set_ylabel('Transmission Speed (Gbps)', family='sans-serif', size=12, weight='bold')
+ax1.grid(True)
+
+ax0.axhline(rtt, color='r', ls='--', linewidth=4)
+tag = 'ping RTT: %2.2f ms' % (rtt / 1e-3)
+ax0.annotate(tag, xy=(S[len(S) / 2 + 2], rtt), fontproperties=font)
+
+ax0.errorbar(S, EM, yerr=EE, fmt='-o')
+ax0.set_ylabel('Transmission Time (seconds)', family='sans-serif', size=12, weight='bold')
+ax0.grid(True)
+
+plt.xlabel('Data Size (KB)', family='sans-serif', size=12, weight='bold')
+plt.xscale('linear')
+plt.yscale('linear')
+plt.rc('font', family='sans-serif', size=12, weight='bold')
 # plt.axis([40, 160, 0, 0.03])
 plt.grid(True)
 
