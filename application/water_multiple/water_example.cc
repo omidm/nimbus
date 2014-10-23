@@ -57,8 +57,8 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,nimbus_thread_queue)),
     particle_levelset_evolution(*new  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >(mac_grid,number_of_ghost_cells)),
     incompressible(mac_grid,projection,nimbus_thread_queue),
-    boundary(0)
-    // collision_bodies_affecting_fluid(mac_grid)
+    boundary(0),
+    collision_bodies_affecting_fluid(mac_grid)
 {
     use_cache   = false;
     cache_fv    = NULL;
@@ -104,8 +104,8 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,nimbus_thread_queue)),
     particle_levelset_evolution(*new  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >(mac_grid,number_of_ghost_cells)),
     incompressible(mac_grid,projection,nimbus_thread_queue),
-    boundary(0)
-    // collision_bodies_affecting_fluid(mac_grid)
+    boundary(0),
+    collision_bodies_affecting_fluid(mac_grid)
 {
     use_cache   = false;
     cache_fv    = cache->fv;
@@ -152,8 +152,8 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,nimbus_thread_queue)),
     particle_levelset_evolution(*ple),
     incompressible(mac_grid,projection,nimbus_thread_queue),
-    boundary(0)
-    // collision_bodies_affecting_fluid(mac_grid)
+    boundary(0),
+    collision_bodies_affecting_fluid(mac_grid)
 {
     use_cache   = false;
     cache_fv    = cache->fv;

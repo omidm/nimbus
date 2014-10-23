@@ -68,7 +68,8 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
 
   {
     // policies etc
-    // example.collision_bodies_affecting_fluid.Initialize_Grids();
+    // TODO(quhang): remove.
+    example.collision_bodies_affecting_fluid.Initialize_Grids();
     // example.incompressible.Set_Custom_Advection(example.advection_scalar);
 
     example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
@@ -84,7 +85,8 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
     example.particle_levelset_evolution.particle_levelset.Use_Removed_Negative_Particles();
     example.particle_levelset_evolution.particle_levelset.Store_Unique_Particle_Id();
     example.particle_levelset_evolution.Use_Particle_Levelset(true);
-    // example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
+    // TODO: remove.
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
     example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
 
@@ -100,9 +102,12 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
           example.projection.elliptic_solver);
     example.laplace_solver_wrapper.BindLaplaceAndInitialize(laplace_solver);
 
-    // example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
-    // example.collision_bodies_affecting_fluid.Rasterize_Objects();
-    // example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
+    // TODO(quhang): remove.
+    // Should be able to be commented out.
+    example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
+    // Should be able to be commented out.
+    example.collision_bodies_affecting_fluid.Rasterize_Objects();
+    example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
     // Initializes for particles_levelset_evolution.phi
     example.Initialize_Phi();
     example.Adjust_Phi_With_Sources(time);
@@ -110,14 +115,16 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
     example.projection.p.Fill(0);
     // example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
 
-    // example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
+    // TODO(quhang): remove.
+    example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
     // example.particle_levelset_evolution.Set_Seed(2606);
     // example.particle_levelset_evolution.Seed_Particles(time);
     // example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
 
     //add forces
     example.incompressible.Set_Gravity();
-    example.incompressible.Set_Body_Force(false);
+    // TODO(quhang): remove.
+    example.incompressible.Set_Body_Force(true);
     example.incompressible.projection.Use_Non_Zero_Divergence(false);
     example.incompressible.projection.elliptic_solver->Solve_Neumann_Regions(false);
     example.incompressible.projection.elliptic_solver->solve_single_cell_neumann_regions=false;
@@ -137,6 +144,8 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
   }
   // write, save
 //  Write_Output_Files(example.first_frame);
+  example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,0,0);
+  example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
   example.Save_To_Nimbus_No_Cache(job, da, current_frame);
 }
 
@@ -187,7 +196,8 @@ template<class TV> void WATER_DRIVER<TV>::Initialize(
         example.mac_grid,
         &example.incompressible,
         &example.projection);
-    // example.collision_bodies_affecting_fluid.Initialize_Grids();
+    // TODO(quhang): remove.
+    example.collision_bodies_affecting_fluid.Initialize_Grids();
     if (example.data_config.GetFlag(DataConfig::VELOCITY)) {
       // NOT THREAD SAFE!!! LOG::Time("Velocity memory allocated.\n");
       example.face_velocities.Resize(example.mac_grid);
@@ -226,14 +236,16 @@ template<class TV> void WATER_DRIVER<TV>::Initialize(
     example.particle_levelset_evolution.Set_Time(time);
     example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
-    // example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
+    // TODO(quhang): remove.
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
     example.particle_levelset_evolution.Set_Seed(2606);
 
-    // example.collision_bodies_affecting_fluid.Rasterize_Objects();
-    // example.collision_bodies_affecting_fluid.
-    //    Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
-    // example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
+    // TODO(quhang): remove.
+    example.collision_bodies_affecting_fluid.Rasterize_Objects();
+    example.collision_bodies_affecting_fluid.
+      Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
+    example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
 
     example.incompressible.Set_Custom_Boundary(*example.boundary);
     example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
@@ -244,7 +256,8 @@ template<class TV> void WATER_DRIVER<TV>::Initialize(
 
     //add forces
     example.incompressible.Set_Gravity();
-    example.incompressible.Set_Body_Force(false);
+    // TODO(quhang): remove.
+    example.incompressible.Set_Body_Force(true);
     example.incompressible.projection.Use_Non_Zero_Divergence(false);
     example.incompressible.projection.elliptic_solver->Solve_Neumann_Regions(false);
     example.incompressible.projection.elliptic_solver->solve_single_cell_neumann_regions=false;
@@ -257,7 +270,8 @@ template<class TV> void WATER_DRIVER<TV>::Initialize(
     example.incompressible.Set_Variable_Viscosity(false);
     example.incompressible.projection.Set_Density(1e3);
 
-    // example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,0,0);
+    // TODO(quhang): remove.
+    example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,0,0);
     example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
   }
 }
@@ -306,7 +320,8 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
   }
   {
     application::ScopeTimer scope_timer("part_2.3");
-    // example.collision_bodies_affecting_fluid.Initialize_Grids();
+    // TODO: remove.
+    example.collision_bodies_affecting_fluid.Initialize_Grids();
   }
   {
     application::ScopeTimer scope_timer("part_3.1");
@@ -353,17 +368,19 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
     example.particle_levelset_evolution.Set_Time(time);
     example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
-    // example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
+    // TODO: remove.
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
     example.particle_levelset_evolution.Set_Seed(2606);
 
   }
   {
     application::ScopeTimer scope_timer("part_4.2");
-    // example.collision_bodies_affecting_fluid.Rasterize_Objects();
-    // example.collision_bodies_affecting_fluid.
-    //   Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
-    // example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
+    // TODO: remove.
+    example.collision_bodies_affecting_fluid.Rasterize_Objects();
+    example.collision_bodies_affecting_fluid.
+      Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
+    example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
 
     example.incompressible.Set_Custom_Boundary(*example.boundary);
     example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
@@ -383,7 +400,8 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
   }
   {
     application::ScopeTimer scope_timer("part_4.4.2");
-    example.incompressible.Set_Body_Force(false);
+    // TODO: remove
+    example.incompressible.Set_Body_Force(true);
   }
   {
     application::ScopeTimer scope_timer("part_4.4.3");
@@ -411,7 +429,8 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
   }
   {
     application::ScopeTimer scope_timer("part_4.6");
-    // example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,0,0);
+    // TODO: remove.
+    example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,0,0);
     example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
   }
 }

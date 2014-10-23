@@ -41,6 +41,7 @@ template<class T_GRID> GRID_BASED_COLLISION_GEOMETRY_UNIFORM<T_GRID>::
 template<class T_GRID> void GRID_BASED_COLLISION_GEOMETRY_UNIFORM<T_GRID>::
 Initialize_Grids()
 {
+    // Nimbus call here.
     collision_thickness=(T)1e-3*grid.Minimum_Edge_Length();
     collision_geometry_collection.Set_Collision_Body_Thickness(collision_thickness);
 
@@ -55,6 +56,7 @@ Initialize_Grids()
 template<class T_GRID> void GRID_BASED_COLLISION_GEOMETRY_UNIFORM<T_GRID>::
 Compute_Occupied_Blocks(const bool with_body_motion,const T extra_thickness,const T body_thickness_factor)
 {
+    // Nimbus call here.
     T_ARRAYS_BOOL& occupied=with_body_motion?swept_occupied_blocks:occupied_blocks;
     occupied.Resize(grid.Block_Indices(3),false,false);occupied.Fill(false);
     for(COLLISION_GEOMETRY_ID i(1);i<=collision_geometry_collection.bodies.m;i++)
@@ -67,6 +69,7 @@ Compute_Occupied_Blocks(const bool with_body_motion,const T extra_thickness,cons
 template<class T_GRID> void GRID_BASED_COLLISION_GEOMETRY_UNIFORM<T_GRID>::
 Compute_Grid_Visibility()
 {
+    // Nimbus call.
     TV_BOOL all_true;all_true.Fill(true);
     cell_neighbors_visible.Fill(all_true);face_neighbors_visible.Fill(all_true);
     if(!collision_geometry_collection.bodies.m) return;
