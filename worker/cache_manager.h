@@ -152,6 +152,7 @@ class CacheManager {
         void PrintProfile(std::stringstream* output);
 
     private:
+        static bool print_stat_;
         uint64_t unique_id_allocator_;
         typedef boost::unordered_map<uint64_t, size_t> MemorySizeMap;
         MemorySizeMap memory_size_map_;
