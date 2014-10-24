@@ -143,8 +143,8 @@ for s in Size:
   SC.append(len(Elapsed[s]))
 
 # bad sample!  
-EM[0] = rtt
-EE[0] = rtt / 2
+# EM[0] = rtt
+# EE[0] = rtt / 2
 
 import numpy as np
 import matplotlib.mlab as mlab
@@ -176,8 +176,10 @@ ax0.axhline(rtt, color='r', ls='--', linewidth=4)
 tag = 'ping RTT: %2.2f ms' % (rtt / 1e-3)
 ax0.annotate(tag, xy=(S[len(S) / 2 + 2], rtt), fontproperties=font)
 
-ax0.errorbar(S, EM, yerr=EE, fmt='-o')
-ax0.set_ylabel('Transmission Time (seconds)', family='sans-serif', size=12, weight='bold')
+newEM = map(lambda x: x/1e-3, EM)
+newEE = map(lambda x: x/1e-3, EE)
+ax0.errorbar(S, newEM, yerr=newEE, fmt='-o')
+ax0.set_ylabel('Transmission Time (ms)', family='sans-serif', size=12, weight='bold')
 ax0.grid(True)
 
 ax0.set_title('Analysis of Data Exchange for Water Simulation \n 512 cube, 64 application partitions, c3.2xlarge instances', family='sans-serif', size=12, weight='bold')
