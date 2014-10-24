@@ -298,6 +298,12 @@ def collect_output_data(scheduler_ip, worker_ips):
         config.REL_WORKER_PATH + 'cache_behavior.txt',
         config.OUTPUT_PATH + str(num) + '_cache_behavior.txt'])
 
+    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+        config.REL_WORKER_PATH  + 'log_wdx*',
+        config.OUTPUT_PATH])
 
 
 def clean_output_data(scheduler_ip, worker_ips):
@@ -322,6 +328,7 @@ def clean_output_data(scheduler_ip, worker_ips):
     worker_command +=  'rm -rf ' + worker_path + '*_' + config.LOG_FILE_NAME + ';'
     worker_command +=  'rm -rf ' + worker_path + config.WORKER_LOG_FILE_NAME + '*;'
     worker_command +=  'rm -rf ' + worker_path + 'event_*;'
+    worker_command +=  'rm -rf ' + worker_path + '*log*;'
     worker_command +=  'rm -rf ' + worker_path + 'core;'
   
     subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
