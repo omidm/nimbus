@@ -48,6 +48,8 @@
 #include <string>
 #include "shared/address_book.h"
 
+#define TCP_NODELAY_OPTION true
+
 #define NIMBUS_TERMINATE_SUCCESS (exit_status_t)(0)
 #define NIMBUS_TERMINATE_FAILURE (exit_status_t)(-1)
 

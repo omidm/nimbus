@@ -102,6 +102,9 @@ void WorkerDataExchanger::HandleAccept(WorkerDataExchangerConnection* connection
   if (!error) {
     dbg(DBG_NET, "Worker accepted new connection.\n");
     AddReceiveConnection(connection);
+    // Turn of Nagle algorithm.
+    boost::asio::ip::tcp::no_delay nd_option(TCP_NODELAY_OPTION);
+    connection->socket()->set_option(nd_option);
     ListenForNewConnections();
     boost::asio::async_read(*(connection->socket()),
         boost::asio::buffer(connection->read_buffer(),
@@ -347,6 +350,9 @@ bool WorkerDataExchanger::CreateNewSendConnection(worker_id_t worker_id,
   WorkerDataExchangerConnection* connection =
     new WorkerDataExchangerConnection(socket);
   socket->connect(*iterator, error);
+  // Turn of Nagle algorithm.
+  boost::asio::ip::tcp::no_delay nd_option(TCP_NODELAY_OPTION);
+  connection->socket()->set_option(nd_option);
   send_connections_[worker_id] = connection;
   return true;
 }
