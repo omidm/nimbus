@@ -293,7 +293,7 @@ void CacheManager::ReleaseAccess(CacheObject* cache_object) {
       size_t new_size = cache_object->memory_size();
       size_t old_size = 0;
       if (memory_size_map_.find(data_id) == memory_size_map_.end()) {
-        memory_size_map_[data_id] = 0;
+        memory_size_map_[data_id] = new_size;
       } else {
         old_size = memory_size_map_[data_id];
         memory_size_map_[data_id] = new_size;
