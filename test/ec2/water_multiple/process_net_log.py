@@ -28,7 +28,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-FN = 2
+FN = 8
 throughput = 1.008 # Gbps
 rtt = 0.7e-3
 
@@ -79,11 +79,15 @@ Speed = {}
 Elapsed = {}
 total_count = 0
 negative_count = 0
+corrupted_count = 0
 
 for j in RTime:
   total_count += 1
+  if ((not RTime.has_key(j)) or (not STime.has_key(j))):
+    corrupted_count += 1
+    continue
   elapsed = RTime[j] - STime[j];
-  if elapsed < 0:
+  if elapsed <= 0:
     negative_count += 1
     elapsed = rtt
   assert(RSize[j] == SSize[j]);
@@ -97,6 +101,7 @@ for j in RTime:
 
 print "Different Size count: " + str(len(Elapsed))
 print "Negative elapsed time count: " + str(negative_count)
+print "Corrupted sample count: " + str(corrupted_count)
 print "Total elapsed time count: " + str(total_count)
 
 
