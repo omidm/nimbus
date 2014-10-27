@@ -165,6 +165,7 @@ class CacheManager {
         Pool *pool_;
         FILE* time_log;
         FILE* block_log;
+        FILE* alloc_log;
 
         void BlockPrintTimeStamp(const char* message);
 };  // class CacheManager

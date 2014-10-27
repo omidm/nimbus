@@ -68,6 +68,7 @@ CacheManager::CacheManager() {
     pool_ = new Pool();
     pthread_mutex_init(&cache_lock, NULL);
     pthread_cond_init(&cache_cond, NULL);
+    alloc_log = fopen("cache_objects.txt", "w");
     block_log = fopen("cache_behavior.txt", "w");
     time_log = fopen("cache_time.txt", "w");
 }
