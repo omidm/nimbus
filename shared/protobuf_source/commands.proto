@@ -150,6 +150,7 @@ message HandshakePBuf {
   optional uint32 worker_id       = 1;
   optional string ip              = 2;
   optional uint32 port            = 3;
+  optional double time            = 4;
 }
 
 message JobDonePBuf {

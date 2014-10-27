@@ -258,6 +258,9 @@ void SchedulerClient::CreateNewConnections() {
   boost::asio::socket_base::receive_buffer_size r_option(CLIENT_TCP_RECEIVE_BUF_SIZE);
   socket_->set_option(s_option);
   socket_->set_option(r_option);
+  // Turn of Nagle algorithm.
+  boost::asio::ip::tcp::no_delay nd_option(TCP_NODELAY_OPTION);
+  socket_->set_option(nd_option);
   boost::asio::async_read(*socket_,
                           boost::asio::buffer(read_buffer_,
                                               max_read_buffer_length_),

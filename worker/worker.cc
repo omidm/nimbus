@@ -283,11 +283,12 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
 // Processes handshake command. Configures the worker based on the handshake
 // command and responds by sending another handshake command.
 void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
+  double time = Log::GetRawTime();
   ID<port_t> port(listening_port_);
   HandshakeCommand new_cm = HandshakeCommand(cm->worker_id(),
       // boost::asio::ip::host_name(), port);
       // "127.0.0.1", port);
-      ip_address_, port);
+      ip_address_, port, time);
   client_->SendCommand(&new_cm);
 
   id_ = cm->worker_id().elem();
@@ -298,6 +299,7 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
   // TODO(quhang) thread-safety(log).
   version_log_.set_file_name(ss.str() + "_version_log.txt");
   data_hash_log_.set_file_name(ss.str() + "_data_hash_log.txt");
+  data_exchanger_->WriteTimeDriftToLog(time - cm->time());
 }
 
 // Processes jobdone command. Moves a job from blocked queue to ready queue if

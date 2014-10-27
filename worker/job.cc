@@ -379,12 +379,14 @@ RemoteCopySendJob::~RemoteCopySendJob() {
 // TODO(quhang) data exchanger is thread-safe?
 void RemoteCopySendJob::Execute(Parameter params, const DataArray& da) {
   CacheManager *cm = GetCacheManager();
+  cm->PrintTimeStamp("start", "RCS");
   cm->SyncData(da[0]);
   SerializedData ser_data;
   da[0]->Serialize(&ser_data);
   data_exchanger_->SendSerializedData(receive_job_id().elem(),
       to_worker_id_.elem(), ser_data, da[0]->version());
   // delete ser_data.data_ptr(); // Not needed with shared pointer.
+  cm->PrintTimeStamp("end", "RCS");
 }
 
 Job* RemoteCopySendJob::Clone() {
@@ -434,6 +436,7 @@ RemoteCopyReceiveJob::~RemoteCopyReceiveJob() {
 
 void RemoteCopyReceiveJob::Execute(Parameter params, const DataArray& da) {
   CacheManager *cm = GetCacheManager();
+  cm->PrintTimeStamp("start", "RCR");
   cm->InvalidateMappings(da[0]);
   Data * data_copy = NULL;
   da[0]->DeSerialize(*serialized_data_, &data_copy);
@@ -443,6 +446,7 @@ void RemoteCopyReceiveJob::Execute(Parameter params, const DataArray& da) {
   data_copy->Destroy();
   // delete serialized_data_->data_ptr(); // Not needed with shared pointer.
   delete serialized_data_;
+  cm->PrintTimeStamp("end", "RCR");
 }
 
 Job* RemoteCopyReceiveJob::Clone() {
@@ -473,6 +477,7 @@ void LocalCopyJob::Execute(Parameter params, const DataArray& da) {
   struct timespec t;
   clock_gettime(CLOCK_REALTIME, &start_time);
   CacheManager *cm = GetCacheManager();
+  cm->PrintTimeStamp("start", "LC");
   cm->SyncData(da[0]);
   cm->InvalidateMappings(da[1]);
   da[1]->Copy(da[0]);
@@ -492,6 +497,7 @@ void LocalCopyJob::Execute(Parameter params, const DataArray& da) {
     // printf("[PROFILE] Central Copy %s, %s\n", da[1]->name().c_str(),
     //        region.ToNetworkData().c_str());
   }
+  cm->PrintTimeStamp("end", "LC");
 }
 
 void LocalCopyJob::PrintTimeProfile() {

@@ -54,7 +54,8 @@ class HandshakeCommand : public SchedulerCommand {
     HandshakeCommand();
     explicit HandshakeCommand(const ID<worker_id_t>& worker_id,
                               const std::string& ip,
-                              const ID<port_t>& port);
+                              const ID<port_t>& port,
+                              const double& time);
     ~HandshakeCommand();
 
     virtual SchedulerCommand* Clone();
@@ -65,11 +66,13 @@ class HandshakeCommand : public SchedulerCommand {
     ID<worker_id_t> worker_id();
     std::string ip();
     ID<port_t> port();
+    double time();
 
   private:
     ID<worker_id_t> worker_id_;
     std::string ip_;
     ID<port_t> port_;
+    double time_;
 
     bool ReadFromProtobuf(const HandshakePBuf& buf);
     bool WriteToProtobuf(HandshakePBuf* buf);

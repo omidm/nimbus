@@ -151,6 +151,8 @@ class CacheManager {
 
         void PrintProfile(std::stringstream* output);
 
+        void PrintTimeStamp(const char *status, const char * message);
+
     private:
         static bool print_stat_;
         uint64_t unique_id_allocator_;
@@ -161,10 +163,9 @@ class CacheManager {
         typedef std::map<cache::co_id_t,
                          CacheTable *> Pool;
         Pool *pool_;
-        FILE* alloc_log;
+        FILE* time_log;
         FILE* block_log;
 
-        void PrintTimeStamp(uint64_t size);
         void BlockPrintTimeStamp(const char* message);
 };  // class CacheManager
 
