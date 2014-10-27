@@ -44,7 +44,7 @@
 
 namespace nimbus {
 
-bool PhysicalDataMap::print_stat_ = true;
+bool PhysicalDataMap::print_stat_ = false;
 
 PhysicalDataMap::PhysicalDataMap() {
   sum_ = 0;

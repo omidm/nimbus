@@ -57,7 +57,7 @@
 #define FIRST_UNIQUE_ID 1000
 namespace nimbus {
 
-bool CacheManager::print_stat_ = true;
+bool CacheManager::print_stat_ = false;
 
 /**
  * \details
@@ -346,7 +346,7 @@ void CacheManager::ReleaseAccess(CacheObject* cache_object) {
                 cache_object->name().c_str(),
                 new_size);
         fprintf(alloc_log, "%f %zu\n", time_sum, memory_sum_);
-        fflush(alloc_log);
+        // fflush(alloc_log);
       }
     }
     pthread_mutex_unlock(&cache_lock);
