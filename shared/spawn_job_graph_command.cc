@@ -140,8 +140,35 @@ ID<job_id_t> SpawnJobGraphCommand::parent_job_id() {
 
 
 bool SpawnJobGraphCommand::ReadFromProtobuf(const SubmitJobGraphPBuf& buf) {
-  // TODO(omidm) complete the implementation!
   job_graph_name_ = buf.job_graph_name();
+  {
+    inner_job_ids_.clear();
+    typename google::protobuf::RepeatedField<job_id_t>::const_iterator it =
+      buf.inner_job_ids().ids().begin();
+    for (; it != buf.inner_job_ids().ids().end(); ++it) {
+      inner_job_ids_.push_back(*it);
+    }
+  }
+  {
+    outer_job_ids_.clear();
+    typename google::protobuf::RepeatedField<job_id_t>::const_iterator it =
+      buf.outer_job_ids().ids().begin();
+    for (; it != buf.outer_job_ids().ids().end(); ++it) {
+      outer_job_ids_.push_back(*it);
+    }
+  }
+  {
+    parameters_.clear();
+    typename google::protobuf::RepeatedPtrField<std::string >::const_iterator it =
+      buf.parameters().params().begin();
+    for (; it != buf.parameters().params().end(); ++it) {
+      SerializedData d(*it);
+      Parameter p;
+      p.set_ser_data(d);
+      parameters_.push_back(p);
+    }
+  }
+
   parent_job_id_.set_elem(buf.parent_job_id());
 
   return true;
