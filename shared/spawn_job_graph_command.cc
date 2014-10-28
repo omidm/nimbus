@@ -141,6 +141,7 @@ ID<job_id_t> SpawnJobGraphCommand::parent_job_id() {
 
 bool SpawnJobGraphCommand::ReadFromProtobuf(const SubmitJobGraphPBuf& buf) {
   job_graph_name_ = buf.job_graph_name();
+
   {
     inner_job_ids_.clear();
     typename google::protobuf::RepeatedField<job_id_t>::const_iterator it =
@@ -175,8 +176,32 @@ bool SpawnJobGraphCommand::ReadFromProtobuf(const SubmitJobGraphPBuf& buf) {
 }
 
 bool SpawnJobGraphCommand::WriteToProtobuf(SubmitJobGraphPBuf* buf) {
-  // TODO(omidm) complete the implementation!
   buf->set_job_graph_name(job_graph_name());
+
+  {
+    typename google::protobuf::RepeatedField<job_id_t> *b =
+      buf->mutable_inner_job_ids()->mutable_ids();
+    std::vector<job_id_t>::const_iterator it = inner_job_ids_.begin();
+    for (; it != inner_job_ids_.end(); ++it) {
+      b->Add(*it);
+    }
+  }
+  {
+    typename google::protobuf::RepeatedField<job_id_t> *b =
+      buf->mutable_outer_job_ids()->mutable_ids();
+    std::vector<job_id_t>::const_iterator it = outer_job_ids_.begin();
+    for (; it != outer_job_ids_.end(); ++it) {
+      b->Add(*it);
+    }
+  }
+  {
+    ParameterVector *b = buf->mutable_parameters();
+    std::vector<Parameter>::iterator it = parameters_.begin();
+    for (; it != parameters_.end(); ++it) {
+      b->add_params(it->ser_data().ToNetworkData());
+    }
+  }
+
   buf->set_parent_job_id(parent_job_id().elem());
 
   return true;
