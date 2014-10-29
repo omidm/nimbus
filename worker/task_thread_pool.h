@@ -32,57 +32,72 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Author: Hang Qu <quhang@stanford.edu>
-  */
+/*
+ * Author: Hang Qu<quhang@stanford.edu>
+ */
 
-#ifndef NIMBUS_WORKER_PHYSICAL_DATA_MAP_H_
-#define NIMBUS_WORKER_PHYSICAL_DATA_MAP_H_
+#ifndef NIMBUS_WORKER_TASK_THREAD_POOL_H_
+#define NIMBUS_WORKER_TASK_THREAD_POOL_H_
 
-#include <boost/unordered_set.hpp>
-#include <boost/unordered_map.hpp>
 #include <pthread.h>
-#include <cassert>
-#include <list>
-#include <utility>
 
-#include "shared/nimbus_types.h"
+#include <exception>
+#include <list>
 
 namespace nimbus {
-class Data;
-class PhysicalDataMap {
+
+// Exception to indicate an task thread finishes.
+class ExceptionTaskThreadExit : public std::exception {
  public:
-  enum AccessPattern {
-    READ,
-    WRITE,
-    INIT
-  };
-  explicit PhysicalDataMap();
-  virtual ~PhysicalDataMap() {}
+  explicit ExceptionTaskThreadExit(void* user_result);
+  void* user_result();
+ private:
+  void* user_result_;
+};
 
-  Data* AcquireAccess(
-      physical_data_id_t physical_data_id,
-      job_id_t job_id,
-      AccessPattern access_pattern);
-  bool ReleaseAccess(job_id_t job_id);
+class TaskThreadPool;
 
-  bool AddMapping(
-      physical_data_id_t physical_data_id,
-      Data* data);
-  bool RemoveMapping(
-      physical_data_id_t physical_data_id);
+// A wrapper over pthread threads.
+class TaskThreadWrapper {
+  friend class TaskThreadPool;
+ public:
+  TaskThreadWrapper();
+  ~TaskThreadWrapper();
+  // Runs the user_function with user_parameter passed as parameter.
+  void Run(void* (*user_function)(void* parameter), void* user_parameter);
+  // Joins the task thread.
+  void* Join();
+  // Initializes the task thread.
+  bool Initialize();
+  pthread_t thread_handle() const;
 
  private:
-  static bool print_stat_;
-  size_t sum_;
-  FILE* physical_data_log;
-  void PrintTimeStamp(const char* format, ...);
-  typedef boost::unordered_set<physical_data_id_t> PhysicalDataIdSet;
-  boost::unordered_map<job_id_t, PhysicalDataIdSet> outstanding_used_data_;
-  typedef boost::unordered_map<physical_data_id_t, std::pair<Data*, size_t> >
-      InternalMap;
-  InternalMap internal_map_;
+  pthread_mutex_t internal_lock_;
+  pthread_cond_t internal_cond_;
+  pthread_t thread_handle_;
+  void* user_parameter_;
+  void* (*user_function_)(void* parameter);
+  void* user_result_;
+  bool has_work_to_do_;
+  bool finished_;
+  static void* ThreadRoutine(void* parameter);
+  void MainLoop();
 };
-}  // namespace nimbus
 
-#endif  // NIMBUS_WORKER_PHYSICAL_DATA_MAP_H_
+class TaskThreadPool {
+ public:
+  typedef std::list<TaskThreadWrapper*> TaskThreadList;
+  TaskThreadPool();
+  ~TaskThreadPool();
+  TaskThreadWrapper* AllocateTaskThread();
+  bool AllocateTaskThreads(const int thread_num, TaskThreadList* thread_list);
+  void FreeTaskThreads(const TaskThreadList& thread_list);
+  void FreeTaskThread(TaskThreadWrapper* task_thread);
+
+ private:
+  pthread_mutex_t list_lock_;
+  std::list<TaskThreadWrapper*> free_list_;
+};
+
+}  // namespace nimbus
+#endif  // NIMBUS_WORKER_TASK_THREAD_POOL_H_

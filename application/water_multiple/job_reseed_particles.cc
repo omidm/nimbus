@@ -79,10 +79,6 @@ void JobReseedParticles::Execute(nimbus::Parameter params,
   PhysBAM::WATER_EXAMPLE<TV> *example;
   PhysBAM::WATER_DRIVER<TV> *driver;
 
-  // Threading settings.
-  init_config.use_threading = use_threading();
-  init_config.core_quota = core_quota();
-
   DataConfig data_config;
   data_config.SetFlag(DataConfig::VELOCITY);
   data_config.SetFlag(DataConfig::LEVELSET_READ);
@@ -106,13 +102,11 @@ void JobReseedParticles::Execute(nimbus::Parameter params,
     app->translator_log->WriteToFile(msg.str());
   }
 
-  *thread_queue_hook() = example->nimbus_thread_queue;
   // Reseed particles and write frame.
   {
     application::ScopeTimer scope_timer(name());
     driver->ReseedParticlesImpl(this, da, dt);
   }
-  *thread_queue_hook() = NULL;
 
   if (app->translator_log) {
     std::stringstream msg;

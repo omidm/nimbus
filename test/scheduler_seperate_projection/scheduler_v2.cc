@@ -33,56 +33,18 @@
  */
 
  /*
-  * Author: Hang Qu <quhang@stanford.edu>
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_WORKER_PHYSICAL_DATA_MAP_H_
-#define NIMBUS_WORKER_PHYSICAL_DATA_MAP_H_
+#include <math.h>
+#include "./scheduler_v2.h"
+#include "./static_load_balancer.h"
 
-#include <boost/unordered_set.hpp>
-#include <boost/unordered_map.hpp>
-#include <pthread.h>
-#include <cassert>
-#include <list>
-#include <utility>
+SchedulerV2::SchedulerV2(unsigned int p)
+: Scheduler(p) {
+}
 
-#include "shared/nimbus_types.h"
+void SchedulerV2::CreateLoadBalancer() {
+  load_balancer_ = new StaticLoadBalancer();
+}
 
-namespace nimbus {
-class Data;
-class PhysicalDataMap {
- public:
-  enum AccessPattern {
-    READ,
-    WRITE,
-    INIT
-  };
-  explicit PhysicalDataMap();
-  virtual ~PhysicalDataMap() {}
-
-  Data* AcquireAccess(
-      physical_data_id_t physical_data_id,
-      job_id_t job_id,
-      AccessPattern access_pattern);
-  bool ReleaseAccess(job_id_t job_id);
-
-  bool AddMapping(
-      physical_data_id_t physical_data_id,
-      Data* data);
-  bool RemoveMapping(
-      physical_data_id_t physical_data_id);
-
- private:
-  static bool print_stat_;
-  size_t sum_;
-  FILE* physical_data_log;
-  void PrintTimeStamp(const char* format, ...);
-  typedef boost::unordered_set<physical_data_id_t> PhysicalDataIdSet;
-  boost::unordered_map<job_id_t, PhysicalDataIdSet> outstanding_used_data_;
-  typedef boost::unordered_map<physical_data_id_t, std::pair<Data*, size_t> >
-      InternalMap;
-  InternalMap internal_map_;
-};
-}  // namespace nimbus
-
-#endif  // NIMBUS_WORKER_PHYSICAL_DATA_MAP_H_

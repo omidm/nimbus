@@ -32,31 +32,37 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Job that executes all the simulation work in one substep, and reads/writes
- * all data.
- * This job is depreciated, and might be removed in the future. It is expected
- * to do all the operations in jobs SUPER_1, SUPER_2, and SUPER_3, for
- * debugging.
- *
- * Author: Hang Qu <quhang@stanford.edu>
- */
+ /*
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_CALCULATE_FRAME_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_CALCULATE_FRAME_H_
+#ifndef NIMBUS_TEST_SCHEDULER_SEPERATE_PROJECTION_SCHEDULER_V2_H_
+#define NIMBUS_TEST_SCHEDULER_SEPERATE_PROJECTION_SCHEDULER_V2_H_
 
+#define DEBUG_MODE
+
+#include <boost/thread.hpp>
+#include <iostream> // NOLINT
+#include <fstream> // NOLINT
+#include <sstream>
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include "shared/dbg.h"
 #include "shared/nimbus.h"
+#include "scheduler/scheduler.h"
 
-namespace application {
+using namespace nimbus; // NOLINT
 
-class JobCalculateFrame : public nimbus::Job {
- public:
-  explicit JobCalculateFrame(nimbus::Application *app);
-  virtual void Execute(nimbus::Parameter params,
-                       const nimbus::DataArray& da);
-  virtual nimbus::Job* Clone();
+class SchedulerV2 : public Scheduler {
+  public:
+    explicit SchedulerV2(unsigned int listening_port);
+
+  protected:
+    virtual void CreateLoadBalancer();
+
+  private:
 };
 
-} // namespace application
-
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_CALCULATE_FRAME_H_
+#endif  // NIMBUS_TEST_SCHEDULER_SEPERATE_PROJECTION_SCHEDULER_V2_H_

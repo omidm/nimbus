@@ -122,17 +122,14 @@ public:
     bool create_destroy_ple;
 
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
-                  bool use_threading,
-                  int core_quota);
+                  nimbus::TaskThreadPool::TaskThreadList* allocated_threads);
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
                   application::AppCacheObjects *cache,
-                  bool use_threading,
-                  int core_quota);
+                  nimbus::TaskThreadPool::TaskThreadList* allocated_threads);
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
                   application::AppCacheObjects *cache,
                   PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple,
-                  bool use_threading,
-                  int core_quota);
+                  nimbus::TaskThreadPool::TaskThreadList* allocated_threads);
     virtual ~WATER_EXAMPLE();
     
     T Time_At_Frame(const int frame) const

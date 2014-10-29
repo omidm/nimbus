@@ -57,6 +57,8 @@
 #define FIRST_UNIQUE_ID 1000
 namespace nimbus {
 
+bool CacheManager::print_stat_ = false;
+
 /**
  * \details
  */
@@ -66,6 +68,7 @@ CacheManager::CacheManager() {
     pool_ = new Pool();
     pthread_mutex_init(&cache_lock, NULL);
     pthread_cond_init(&cache_cond, NULL);
+    alloc_log = fopen("cache_objects.txt", "w");
     block_log = fopen("cache_behavior.txt", "w");
     time_log = fopen("cache_time.txt", "w");
 }
@@ -322,30 +325,30 @@ void CacheManager::ReleaseAccess(CacheObject* cache_object) {
     cache_object->ReleaseAccessInternal();
     pthread_cond_broadcast(&cache_cond);
 
-    /*
-    uint64_t data_id =cache_object->unique_id();
-    size_t new_size = cache_object->memory_size();
-    size_t old_size = 0;
-    if (memory_size_map_.find(data_id) == memory_size_map_.end()) {
-      memory_size_map_[data_id] = 0;
-    } else {
-      old_size = memory_size_map_[data_id];
-      memory_size_map_[data_id] = new_size;
+    if (print_stat_) {
+      uint64_t data_id =cache_object->unique_id();
+      size_t new_size = cache_object->memory_size();
+      size_t old_size = 0;
+      if (memory_size_map_.find(data_id) == memory_size_map_.end()) {
+        memory_size_map_[data_id] = new_size;
+      } else {
+        old_size = memory_size_map_[data_id];
+        memory_size_map_[data_id] = new_size;
+      }
+      if (new_size != old_size) {
+        memory_sum_ = memory_sum_ + new_size - old_size;
+        struct timespec t;
+        clock_gettime(CLOCK_REALTIME, &t);
+        double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
+        fprintf(alloc_log, "%f %"PRIu64" %s %zu\n",
+                time_sum,
+                data_id,
+                cache_object->name().c_str(),
+                new_size);
+        fprintf(alloc_log, "%f %zu\n", time_sum, memory_sum_);
+        // fflush(alloc_log);
+      }
     }
-    if (new_size != old_size) {
-      memory_sum_ = memory_sum_ + new_size - old_size;
-      struct timespec t;
-      clock_gettime(CLOCK_REALTIME, &t);
-      double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
-      fprintf(alloc_log, "%f %"PRIu64" %s %zu\n",
-              time_sum,
-              data_id,
-              cache_object->name().c_str(),
-              new_size);
-      fprintf(alloc_log, "%f %zu\n", time_sum, memory_sum_);
-      fflush(alloc_log);
-    }
-    */
     pthread_mutex_unlock(&cache_lock);
 }
 

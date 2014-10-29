@@ -55,11 +55,11 @@ void LaplaceSolverWrapper::BindLaplaceAndInitialize(
   laplace = laplace_input;
   const int number_of_regions = 1;
   matrix_index_to_cell_index_array.Resize(number_of_regions);
-  cell_index_to_matrix_index.Resize(laplace->grid.Domain_Indices(1));
+  // cell_index_to_matrix_index.Resize(laplace->grid.Domain_Indices(1));
   // Intialize array since it may contain old data/ garbage when read from
   // cache (added by Chinmayee)
-  ARRAYS_COMPUTATIONS::Fill(cell_index_to_matrix_index.array, 0);
-  cell_index_to_matrix_index.hash_code = 0;
+  // ARRAYS_COMPUTATIONS::Fill(cell_index_to_matrix_index.array, 0);
+  // cell_index_to_matrix_index.hash_code = 0;
   A_array.Resize(number_of_regions);
   b_array.Resize(number_of_regions);
 }
@@ -106,6 +106,10 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
   // laplace_mpi->Find_Matrix_Indices(filled_region_cell_count,
   //                                  cell_index_to_matrix_index,
   //                                  matrix_index_to_cell_index_array);
+
+  cell_index_to_matrix_index.Resize(laplace->grid.Domain_Indices(1));
+  ARRAYS_COMPUTATIONS::Fill(cell_index_to_matrix_index.array, 0);
+  cell_index_to_matrix_index.hash_code = 0;
 
   FindMatrixIndices(
       laplace->grid,

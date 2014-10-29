@@ -154,6 +154,7 @@ class CacheManager {
         void PrintTimeStamp(const char *status, const char * message);
 
     private:
+        static bool print_stat_;
         uint64_t unique_id_allocator_;
         typedef boost::unordered_map<uint64_t, size_t> MemorySizeMap;
         MemorySizeMap memory_size_map_;
@@ -164,6 +165,7 @@ class CacheManager {
         Pool *pool_;
         FILE* time_log;
         FILE* block_log;
+        FILE* alloc_log;
 
         void BlockPrintTimeStamp(const char* message);
 };  // class CacheManager

@@ -111,9 +111,9 @@ void ProjectionDriver::LocalInitialize() {
   VECTOR_ND<T>& temp = projection_data.temp;
   VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
   // Initializes vector B and local residual.
-  // A.thread_queue = thread_queue;
+  A.thread_queue = thread_queue;
   A.Times(x, temp);
-  // A.thread_queue = NULL;
+  A.thread_queue = NULL;
   b_interior -= temp_interior;
   projection_data.local_residual = b_interior.Max_Abs();
   // Calculate matrix C.

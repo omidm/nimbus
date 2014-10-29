@@ -56,12 +56,12 @@
 #include "worker/data.h"
 #include "worker/ldo_index_cache.h"
 #include "worker/worker_ldo_map.h"
-#include "worker/thread_queue_proto.h"
 
 namespace nimbus {
 
 class Application;
 class Job;
+class WorkerThread;
 typedef std::list<Job*> JobList;
 typedef std::map<job_id_t, Job*> JobMap;
 typedef std::map<std::string, Job*> JobTable;
@@ -178,21 +178,20 @@ class Job {
     bool use_threading() {
       return use_threading_;
     }
-    void set_thread_queue_hook(ThreadQueueProto** thread_queue_hook) {
-      thread_queue_hook_ = thread_queue_hook;
-    }
-    ThreadQueueProto** thread_queue_hook() {
-      return thread_queue_hook_;
-    }
     virtual bool SupportMultiThread() const {
       return false;
+    }
+    WorkerThread* worker_thread() const {
+      return worker_thread_;
+    }
+    void set_worker_thread(WorkerThread* worker_thread) {
+      worker_thread_ = worker_thread;
     }
 
   private:
     std::map<std::string, LdoIndexCache> query_cache_;
     int core_quota_;
     bool use_threading_;
-    ThreadQueueProto** thread_queue_hook_;
     std::string name_;
     ID<job_id_t> id_;
     IDSet<physical_data_id_t> read_set_;
@@ -208,6 +207,7 @@ class Job {
     double run_time_;
     double wait_time_;
     size_t max_alloc_;
+    WorkerThread* worker_thread_;
 
   protected:
     // TODO(omidm) should remove it later; left them now so the tests

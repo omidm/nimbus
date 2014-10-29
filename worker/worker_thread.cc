@@ -36,20 +36,19 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
+#include <list>
+
 #include "worker/worker_manager.h"
 #include "worker/worker_thread.h"
+
 namespace nimbus {
 
 WorkerThread::WorkerThread(WorkerManager* worker_manager) {
   worker_manager_ = worker_manager;
-  pthread_cond_init(&thread_can_start, NULL);
-  next_job_to_run = NULL;
-  idle = true;
-  job_assigned = false;
+  used_cpu_set_ = NULL;
 }
 
 WorkerThread::~WorkerThread() {
-  pthread_cond_destroy(&thread_can_start);
 }
 
 void WorkerThread::SetLoggingInterface(
@@ -60,6 +59,26 @@ void WorkerThread::SetLoggingInterface(
   data_hash_log_ = data_hash_log;
   cache_log_ = cache_log;
   timer_ = timer;
+}
+
+void WorkerThread::SetThreadAffinity(const cpu_set_t* cpuset) {
+  if (used_cpu_set_ == NULL) {
+    used_cpu_set_ = new cpu_set_t;
+  } else {
+    if (CPU_EQUAL(used_cpu_set_, cpuset)) {
+      return;
+    } else {
+      *used_cpu_set_ = *cpuset;
+    }
+  }
+  pthread_setaffinity_np(thread_id, sizeof(cpu_set_t), cpuset);
+  for (TaskThreadPool::TaskThreadList::iterator iter =
+       allocated_threads.begin();
+       iter != allocated_threads.end();
+       ++iter) {
+    pthread_setaffinity_np((*iter)->thread_handle(),
+                           sizeof(cpu_set_t), cpuset);
+  }
 }
 
 }  // namespace nimbus

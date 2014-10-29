@@ -71,9 +71,6 @@ void JobAdvectRemovedParticles::Execute(nimbus::Parameter params,
   InitConfig init_config;
   init_config.set_boundary_condition = false;
   init_config.use_cache = true;
-  // Threading settings.
-  init_config.use_threading = use_threading();
-  init_config.core_quota = core_quota();
 
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
@@ -94,7 +91,6 @@ void JobAdvectRemovedParticles::Execute(nimbus::Parameter params,
   data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
-  *thread_queue_hook() = example->nimbus_thread_queue;
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in advect removed particles job.");
@@ -113,7 +109,6 @@ void JobAdvectRemovedParticles::Execute(nimbus::Parameter params,
     driver->AdvectRemovedParticlesImpl(this, da, dt);
   }
 
-  *thread_queue_hook() = NULL;
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 
   if (app->translator_log) {

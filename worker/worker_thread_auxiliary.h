@@ -36,53 +36,50 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#ifndef NIMBUS_WORKER_PHYSICAL_DATA_MAP_H_
-#define NIMBUS_WORKER_PHYSICAL_DATA_MAP_H_
+#ifndef NIMBUS_WORKER_WORKER_THREAD_AUXILIARY_H_
+#define NIMBUS_WORKER_WORKER_THREAD_AUXILIARY_H_
 
-#include <boost/unordered_set.hpp>
-#include <boost/unordered_map.hpp>
-#include <pthread.h>
-#include <cassert>
 #include <list>
-#include <utility>
-
-#include "shared/nimbus_types.h"
+#include "shared/nimbus.h"
+#include "worker/task_thread_pool.h"
 
 namespace nimbus {
-class Data;
-class PhysicalDataMap {
+
+class WorkerThreadAuxiliary;
+
+class WorkerTaskThreadAuxiliary {
  public:
-  enum AccessPattern {
-    READ,
-    WRITE,
-    INIT
-  };
-  explicit PhysicalDataMap();
-  virtual ~PhysicalDataMap() {}
+  WorkerTaskThreadAuxiliary() {
+    task_thread_wrapper = NULL;
+    worker_thread_auxiliary = NULL;
+  }
+  ~WorkerTaskThreadAuxiliary() {}
+  TaskThreadWrapper* task_thread_wrapper;
+  WorkerThreadAuxiliary* worker_thread_auxiliary;
+  static void* TaskThreadEntryPoint(void* parameter);
+};
 
-  Data* AcquireAccess(
-      physical_data_id_t physical_data_id,
-      job_id_t job_id,
-      AccessPattern access_pattern);
-  bool ReleaseAccess(job_id_t job_id);
-
-  bool AddMapping(
-      physical_data_id_t physical_data_id,
-      Data* data);
-  bool RemoveMapping(
-      physical_data_id_t physical_data_id);
-
+class WorkerThreadAuxiliary : public WorkerThread {
+ public:
+  explicit WorkerThreadAuxiliary(
+      WorkerManager* worker_manager, TaskThreadPool* task_thread_pool);
+  virtual ~WorkerThreadAuxiliary();
+  virtual void Run();
+  void MainLoop(WorkerTaskThreadAuxiliary* task_thread);
+  void SetThreadNum(const int thread_num);
+  virtual void SetThreadAffinity(const cpu_set_t* cpuset);
  private:
-  static bool print_stat_;
-  size_t sum_;
-  FILE* physical_data_log;
-  void PrintTimeStamp(const char* format, ...);
-  typedef boost::unordered_set<physical_data_id_t> PhysicalDataIdSet;
-  boost::unordered_map<job_id_t, PhysicalDataIdSet> outstanding_used_data_;
-  typedef boost::unordered_map<physical_data_id_t, std::pair<Data*, size_t> >
-      InternalMap;
-  InternalMap internal_map_;
+  pthread_mutex_t lock_for_allocated_threads_;
+  pthread_mutex_t internal_lock_;
+  pthread_cond_t internal_cond_;
+  Job* PullAuxiliaryJob();
+  void ProcessJob(Job* job);
+  TaskThreadPool* task_thread_pool_;
+  int thread_num_;
+  int active_thread_num_;
+  std::list<Job*> ready_job_list_;
+  std::list<WorkerTaskThreadAuxiliary*> stopped_task_threads_;
 };
 }  // namespace nimbus
 
-#endif  // NIMBUS_WORKER_PHYSICAL_DATA_MAP_H_
+#endif  // NIMBUS_WORKER_WORKER_THREAD_AUXILIARY_H_

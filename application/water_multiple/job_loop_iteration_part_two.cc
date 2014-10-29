@@ -46,6 +46,7 @@
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include "worker/job_query.h"
+#include "worker/worker_thread.h"
 #include <sstream>
 #include <string>
 
@@ -68,8 +69,6 @@ void JobLoopIterationPartTwo::Execute(
 
   InitConfig init_config;
   // Threading settings.
-  init_config.use_threading = use_threading();
-  init_config.core_quota = core_quota();
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
   LoadParameter(params_str, &init_config);
@@ -84,7 +83,8 @@ void JobLoopIterationPartTwo::Execute(
 
   // Initialize the state of example and driver.
   PhysBAM::WATER_EXAMPLE<TV>* example =
-      new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())), false, 1);
+      new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
+                                     &worker_thread()->allocated_threads);
 
   // check whether the frame is done or not
   bool done = false;

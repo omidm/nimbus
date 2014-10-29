@@ -52,6 +52,7 @@
 #include "data/physbam/physbam_data.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
+#include "worker/worker_thread.h"
 #include <sstream>
 #include <string>
 
@@ -78,7 +79,8 @@ namespace application {
 
         // get time from frame
         PhysBAM::WATER_EXAMPLE<TV>* example =
-          new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())), false, 1);
+          new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
+                                         &worker_thread()->allocated_threads);
         T time = example->Time_At_Frame(frame);
         delete example;
 

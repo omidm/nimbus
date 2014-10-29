@@ -79,6 +79,15 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
   scheduler_port_(scheduler_port),
   listening_port_(listening_port),
   application_(a) {
+    {
+      struct sched_param param;
+      param.sched_priority = 0;
+      int st = pthread_setschedparam(pthread_self(), SCHED_OTHER, &param);
+      if (st != 0) {
+        // Scheduling setting goes wrong.
+        exit(1);
+      }
+    }
     event_log = fopen("event_fe.txt", "w");
     alloc_log = fopen("data_objects.txt", "w");
     log_.InitTime();
@@ -140,6 +149,7 @@ void Worker::WorkerCoreProcessor() {
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Launching worker threads.\n");
   worker_manager_->StartWorkerThreads();
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Finishes launching worker threads.\n");
+  worker_manager_->TriggerScheduling();
 
   JobList local_job_done_list;
   while (true) {

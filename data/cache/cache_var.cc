@@ -332,6 +332,7 @@ bool CacheVar::CheckPendingFlag(const DataArray &read_set,
     for (size_t i = 0; i < read_set.size(); ++i) {
       Data *d = read_set.at(i);
       if (d->pending_flag() == -1) {
+        // chinmayee: assert this. this branch should never happen.
         return false;
       }
       GeometricRegion dreg = d->region();
@@ -341,6 +342,7 @@ bool CacheVar::CheckPendingFlag(const DataArray &read_set,
           if (d->pending_flag() != 0) {
             return false;
           }
+          // chinmayee: the next branch is not required. we do not want this.
           if (d->dirty_cache_object()->pending_flag()) {
             return false;
           }
@@ -352,6 +354,7 @@ bool CacheVar::CheckPendingFlag(const DataArray &read_set,
             if (d->pending_flag() != 0) {
               return false;
             }
+            // chinmayee: the next branch is not required. we do not want this.
             if (d->dirty_cache_object()->pending_flag()) {
               return false;
             }
@@ -367,6 +370,7 @@ bool CacheVar::CheckPendingFlag(const DataArray &read_set,
     for (size_t i = 0; i < write_set.size(); ++i) {
       Data *d = write_set.at(i);
       if (d->pending_flag() != 0) {
+        // chinmayee: assert this. this branch should never happen.
         return false;
       }
       GeometricRegion dreg = d->region();
@@ -375,6 +379,8 @@ bool CacheVar::CheckPendingFlag(const DataArray &read_set,
         Data *d_old = it->second;
         if (d_old != d) {
           if (write_back_.find(d_old) != write_back_.end()) {
+            // chinmayee: pending flag should never be 1 here.
+            // assert that it is not 1, and wait if it is -1.
             if (d_old->pending_flag() != 0) {
               return false;
             }

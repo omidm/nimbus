@@ -50,12 +50,14 @@ namespace nimbus {
 
 WorkerThreadComputation::WorkerThreadComputation(WorkerManager* worker_manager)
     : WorkerThread(worker_manager) {
-  use_threading_ = false;
-  core_quota_ = 1;
-  thread_queue = NULL;
+  pthread_cond_init(&thread_can_start, NULL);
+  next_job_to_run = NULL;
+  job_assigned = false;
+  used_parallelism = 0;
 }
 
 WorkerThreadComputation::~WorkerThreadComputation() {
+  pthread_cond_destroy(&thread_can_start);
 }
 
 void WorkerThreadComputation::Run() {
@@ -63,12 +65,9 @@ void WorkerThreadComputation::Run() {
   while (true) {
     job = worker_manager_->NextComputationJobToRun(this);
     assert(job != NULL);
-    job->set_use_threading(use_threading_);
-    job->set_core_quota(core_quota_);
-    thread_queue = NULL;
-    job->set_thread_queue_hook(&thread_queue);
+    job->set_worker_thread(this);
     ExecuteJob(job);
-    assert(thread_queue == NULL);
+    job->set_worker_thread(NULL);
     assert(worker_manager_ != NULL);
     bool success_flag = worker_manager_->FinishJob(job);
     assert(success_flag);
