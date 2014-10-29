@@ -119,9 +119,6 @@ namespace application {
         // DIVERGENCE.
         dbg(APP_LOG, "Registering %s\n", APP_DIVERGENCE);
         RegisterData(APP_DIVERGENCE, new DataScalarArray<float>(APP_DIVERGENCE));
-        // U_INTERFACE.
-        dbg(APP_LOG, "Registering %s\n", APP_U_INTERFACE);
-        RegisterData(APP_U_INTERFACE, new DataFaceArray<float>(APP_U_INTERFACE));
 
         // These Nimbus data types are used in internal projection loop. They
         // are derived from boundary conditions and act as the linkage between

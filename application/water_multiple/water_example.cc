@@ -58,7 +58,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     particle_levelset_evolution(*new  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >(mac_grid,number_of_ghost_cells)),
     incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
-    collision_bodies_affecting_fluid(mac_grid)
+    collision_bodies_affecting_fluid(new T_GRID_BASED_COLLISION_GEOMETRY(mac_grid))
 {
     use_cache   = false;
     cache_fv    = NULL;
@@ -105,7 +105,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     particle_levelset_evolution(*new  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >(mac_grid,number_of_ghost_cells)),
     incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
-    collision_bodies_affecting_fluid(mac_grid)
+    collision_bodies_affecting_fluid(new T_GRID_BASED_COLLISION_GEOMETRY(mac_grid))
 {
     use_cache   = false;
     cache_fv    = cache->fv;
@@ -153,7 +153,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     particle_levelset_evolution(*ple),
     incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
-    collision_bodies_affecting_fluid(mac_grid)
+    collision_bodies_affecting_fluid(new T_GRID_BASED_COLLISION_GEOMETRY(mac_grid))
 {
     use_cache   = false;
     cache_fv    = cache->fv;
@@ -187,6 +187,7 @@ template<class TV> WATER_EXAMPLE<TV>::
     if (nimbus_thread_queue) {
       delete nimbus_thread_queue;
     }
+    delete collision_bodies_affecting_fluid;
 }
 
 // Initializes the initial levelset function.

@@ -69,7 +69,7 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
   {
     // policies etc
     // TODO(quhang): remove.
-    example.collision_bodies_affecting_fluid.Initialize_Grids();
+    example.collision_bodies_affecting_fluid->Initialize_Grids();
     // example.incompressible.Set_Custom_Advection(example.advection_scalar);
 
     example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
@@ -86,7 +86,7 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
     example.particle_levelset_evolution.particle_levelset.Store_Unique_Particle_Id();
     example.particle_levelset_evolution.Use_Particle_Levelset(true);
     // TODO: remove.
-    example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(*example.collision_bodies_affecting_fluid);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
     example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
 
@@ -104,10 +104,10 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
 
     // TODO(quhang): remove.
     // Should be able to be commented out.
-    example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
+    example.collision_bodies_affecting_fluid->Update_Intersection_Acceleration_Structures(false);
     // Should be able to be commented out.
-    example.collision_bodies_affecting_fluid.Rasterize_Objects();
-    example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
+    example.collision_bodies_affecting_fluid->Rasterize_Objects();
+    example.collision_bodies_affecting_fluid->Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
     // Initializes for particles_levelset_evolution.phi
     example.Initialize_Phi();
     example.Adjust_Phi_With_Sources(time);
@@ -116,7 +116,7 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
     // example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
 
     // TODO(quhang): remove.
-    example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
+    example.collision_bodies_affecting_fluid->Compute_Grid_Visibility();
     // example.particle_levelset_evolution.Set_Seed(2606);
     // example.particle_levelset_evolution.Seed_Particles(time);
     // example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
@@ -144,7 +144,7 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
   }
   // write, save
 //  Write_Output_Files(example.first_frame);
-  example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,0,0);
+  example.collision_bodies_affecting_fluid->Compute_Occupied_Blocks(true,0,0);
   example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
   example.Save_To_Nimbus_No_Cache(job, da, current_frame);
 }
@@ -197,7 +197,7 @@ template<class TV> void WATER_DRIVER<TV>::Initialize(
         &example.incompressible,
         &example.projection);
     // TODO(quhang): remove.
-    example.collision_bodies_affecting_fluid.Initialize_Grids();
+    example.collision_bodies_affecting_fluid->Initialize_Grids();
     if (example.data_config.GetFlag(DataConfig::VELOCITY)) {
       // NOT THREAD SAFE!!! LOG::Time("Velocity memory allocated.\n");
       example.face_velocities.Resize(example.mac_grid);
@@ -237,15 +237,15 @@ template<class TV> void WATER_DRIVER<TV>::Initialize(
     example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
     // TODO(quhang): remove.
-    example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(*example.collision_bodies_affecting_fluid);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
     example.particle_levelset_evolution.Set_Seed(2606);
 
     // TODO(quhang): remove.
-    example.collision_bodies_affecting_fluid.Rasterize_Objects();
-    example.collision_bodies_affecting_fluid.
+    example.collision_bodies_affecting_fluid->Rasterize_Objects();
+    example.collision_bodies_affecting_fluid->
       Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
-    example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
+    example.collision_bodies_affecting_fluid->Compute_Grid_Visibility();
 
     example.incompressible.Set_Custom_Boundary(*example.boundary);
     example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
@@ -271,7 +271,7 @@ template<class TV> void WATER_DRIVER<TV>::Initialize(
     example.incompressible.projection.Set_Density(1e3);
 
     // TODO(quhang): remove.
-    example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,0,0);
+    example.collision_bodies_affecting_fluid->Compute_Occupied_Blocks(true,0,0);
     example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
   }
 }
@@ -321,7 +321,7 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
   {
     application::ScopeTimer scope_timer("part_2.3");
     // TODO: remove.
-    example.collision_bodies_affecting_fluid.Initialize_Grids();
+    example.collision_bodies_affecting_fluid->Initialize_Grids();
   }
   {
     application::ScopeTimer scope_timer("part_3.1");
@@ -369,7 +369,7 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
     example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
     // TODO: remove.
-    example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(*example.collision_bodies_affecting_fluid);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
     example.particle_levelset_evolution.Set_Seed(2606);
 
@@ -377,10 +377,10 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
   {
     application::ScopeTimer scope_timer("part_4.2");
     // TODO: remove.
-    example.collision_bodies_affecting_fluid.Rasterize_Objects();
-    example.collision_bodies_affecting_fluid.
+    example.collision_bodies_affecting_fluid->Rasterize_Objects();
+    example.collision_bodies_affecting_fluid->
       Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
-    example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
+    example.collision_bodies_affecting_fluid->Compute_Grid_Visibility();
 
     example.incompressible.Set_Custom_Boundary(*example.boundary);
     example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
@@ -430,7 +430,7 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
   {
     application::ScopeTimer scope_timer("part_4.6");
     // TODO: remove.
-    example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,0,0);
+    example.collision_bodies_affecting_fluid->Compute_Occupied_Blocks(true,0,0);
     example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
   }
 }
