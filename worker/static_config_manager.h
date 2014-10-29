@@ -57,6 +57,7 @@ class StaticConfigManager {
                          StaticConfigVariable* config_variable);
   StaticConfigVariable* GetStaticConfigVariable(
       const std::string& config_name, const GeometricRegion& local_region);
+  void ReleasestaticConfigVariable(StaticConfigVariable* config_variable);
   // void Clean();
 
  private:

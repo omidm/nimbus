@@ -85,9 +85,17 @@ StaticConfigVariable* StaticConfigManager::GetStaticConfigVariable(
         prototype_iter->second->CreateNew(local_region);
   }
   StaticConfigVariable* result = (*config_pool)[local_region];
+  result->ChangeUserCount(1);
   pthread_mutex_unlock(&internal_lock_);
 
   return result;
+}
+
+void StaticConfigManager::ReleasestaticConfigVariable(
+    StaticConfigVariable* config_variable) {
+  pthread_mutex_lock(&internal_lock_);
+  config_variable->ChangeUserCount(-1);
+  pthread_mutex_unlock(&internal_lock_);
 }
 
 }  // namespace nimbus

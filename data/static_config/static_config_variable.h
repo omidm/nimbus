@@ -49,6 +49,12 @@ class StaticConfigVariable {
   virtual StaticConfigVariable* CreateNew(const GeometricRegion& local_region)
       const = 0;
   virtual void Destroy() = 0;
+  virtual int ChangeUserCount(int delta) {
+    users_ += delta;
+    return users_;
+  }
+ private:
+  int users_;
 };
 
 }  // namespace nimbus
