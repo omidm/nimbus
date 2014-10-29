@@ -41,6 +41,7 @@
 #include <time.h>
 #include "worker/application.h"
 #include "worker/cache_manager.h"
+#include "worker/static_config_manager.h"
 
 using namespace nimbus; // NOLINT
 
@@ -51,6 +52,7 @@ Application::Application() {
 
 Application::~Application() {
   delete cache_manager_;
+  delete static_config_manager_;
   pthread_mutex_destroy(&lock_job_table_);
   pthread_mutex_destroy(&lock_data_table_);
 }
@@ -67,6 +69,7 @@ void Application::Start(SchedulerClient* client,
   id_maker_ = id_maker;
   ldo_map_ = ldo_map;
   cache_manager_ = new CacheManager();
+  static_config_manager_ = new StaticConfigManager;
   Load();
 }
 
@@ -249,4 +252,8 @@ int Application::GetIntersectingLogicalObjects(CLdoVector* result,
 
 CacheManager* Application::cache_manager() const {
   return cache_manager_;
+}
+
+StaticConfigManager* Application::static_config_manager() const {
+  return static_config_manager_;
 }

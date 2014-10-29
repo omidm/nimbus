@@ -68,6 +68,7 @@ typedef std::map<int, Application*> AppMap;
 
 // forward declaration
 class CacheManager;
+class StaticConfigManager;
 
 class Application {
  public:
@@ -131,6 +132,7 @@ class Application {
                                     const GeometricRegion* r);
 
   CacheManager* cache_manager() const;
+  StaticConfigManager* static_config_manager() const;
 
  private:
   app_id_t id_;
@@ -145,6 +147,7 @@ class Application {
   IDMaker* id_maker_;
   WorkerLdoMap* ldo_map_;
   CacheManager* cache_manager_;
+  StaticConfigManager* static_config_manager_;
   class LockGuard {
    public:
     explicit LockGuard(pthread_mutex_t* lock) {
