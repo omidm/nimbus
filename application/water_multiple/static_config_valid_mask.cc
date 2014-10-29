@@ -36,6 +36,8 @@
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
+#include "application/water_multiple/physbam_utils.h"
+
 #include "application/water_multiple/static_config_valid_mask.h"
 
 namespace application {
@@ -56,8 +58,15 @@ StaticConfigVariable* StaticConfigValidMask::CreateNew(
     const GeometricRegion& local_region) const {
   StaticConfigValidMask* valid_mask = new StaticConfigValidMask(global_region_);
   valid_mask->local_region_ = local_region;
-  // TODO
-  // valid_mask->physbam_data_structure_->?//
+  PhysBAM::GRID<TV> mac_grid;
+  mac_grid.Initialize(TV_INT(local_region.dx(),
+                             local_region.dy(),
+                             local_region.dz()),
+                      GridToRange(global_region_, local_region),
+                      true);
+  valid_mask->physbam_data_structure_ = new DataType;
+  valid_mask->physbam_data_structure_->Resize(
+      mac_grid.Domain_Indices(3), true, true, true);
   return valid_mask;
 }
 

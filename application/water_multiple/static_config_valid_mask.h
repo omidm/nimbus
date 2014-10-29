@@ -48,6 +48,8 @@ using nimbus::GeometricRegion;
 
 class StaticConfigValidMask : public StaticConfigVariable {
  public:
+  typedef PhysBAM::VECTOR<float, 3> TV;
+  typedef PhysBAM::VECTOR<int, 3> TV_INT;
   typedef typename PhysBAM::FACE_INDEX<3> FaceIndex;
   typedef typename PhysBAM::ARRAY<bool, FaceIndex> DataType;
   StaticConfigValidMask(const GeometricRegion& global_region);
