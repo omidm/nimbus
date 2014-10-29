@@ -273,6 +273,9 @@ namespace application {
         RegisterJob(PROJECTION_STEP_FOUR, new JobProjectionStepFour(this));
         RegisterJob(BARRIER_JOB, new JobBarrier(this));
 
+        RegisterStaticConfigPrototype(
+            STATIC_CONFIG_VALID_MASK, new StaticConfigValidMask(kDefaultRegion));
+
         nimbus::TranslatorPhysBAM<float>::log = translator_log;
         nimbus::TranslatorPhysBAMOld<PhysBAM::VECTOR<float, 3> >::log = translator_log;
         dbg(APP_LOG, "Completed loading water application\n");

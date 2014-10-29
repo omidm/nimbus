@@ -68,6 +68,7 @@ typedef std::map<int, Application*> AppMap;
 
 // forward declaration
 class CacheManager;
+class StaticConfigVariable;
 class StaticConfigManager;
 
 class Application {
@@ -80,6 +81,8 @@ class Application {
 
   void RegisterJob(std::string name, Job* job);
   void RegisterData(std::string name, Data* data);
+  void RegisterStaticConfigPrototype(const std::string& name,
+                                     StaticConfigVariable* var);
 
   void SpawnComputeJob(const std::string& name,
                        const job_id_t& id,

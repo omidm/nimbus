@@ -91,7 +91,7 @@ StaticConfigVariable* StaticConfigManager::GetStaticConfigVariable(
   return result;
 }
 
-void StaticConfigManager::ReleasestaticConfigVariable(
+void StaticConfigManager::ReleaseStaticConfigVariable(
     StaticConfigVariable* config_variable) {
   pthread_mutex_lock(&internal_lock_);
   config_variable->ChangeUserCount(-1);

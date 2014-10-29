@@ -46,6 +46,7 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
 
     // data types
     typedef ARRAY<T,FACE_INDEX<TV::dimension> > T_FACE_ARRAY;
+    typedef ARRAY<bool,FACE_INDEX<TV::dimension> > T_FACE_ARRAY_BOOL;
     typedef ARRAY<bool,FACE_INDEX<TV::dimension> > BOOL_FACE_ARRAY;
     typedef ARRAY<T,TV_INT> T_SCALAR_ARRAY;
     typedef ARRAY<bool,TV_INT> BOOL_SCALAR_ARRAY;
@@ -86,6 +87,7 @@ public:
     ARRAY<IMPLICIT_OBJECT<TV>*> sources;
     LaplaceSolverWrapper laplace_solver_wrapper;
 
+    T_FACE_ARRAY_BOOL valid_mask_dummy;
     T_FACE_ARRAY t_face_dummy;
     T_SCALAR_ARRAY t_scalar_dummy;
     BOOL_FACE_ARRAY b_face_dummy;
@@ -97,6 +99,8 @@ public:
     ARRAY<T, TV_INT> phi_ghost_bandwidth_seven;
     ARRAY<T, TV_INT> phi_ghost_bandwidth_eight;
 
+    typedef application::StaticConfigValidMask StaticConfigValidMask;
+    StaticConfigValidMask* static_config_valid_mask;
     // cache objects
     bool use_cache;
     typedef typename application::CacheFaceArray<T> TCacheFaceArray;

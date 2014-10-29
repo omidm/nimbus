@@ -54,6 +54,7 @@
 #include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 #include "worker/worker_thread.h"
+#include "worker/static_config_manager.h"
 #include "worker/task_thread_pool.h"
 
 #define PHYSBAM_INIT_LOG
@@ -391,6 +392,13 @@ void GetAppCacheObjects(
     assert(cache->ple != NULL);
   }
   cm->PrintTimeStamp("end", job.name().c_str());
+
+  nimbus::StaticConfigManager *config_manager = job.GetStaticConfigManager();
+  if (data_config.GetFlag(DataConfig::VALID_MASK)) {
+    cache->static_config_valid_mask = reinterpret_cast<StaticConfigValidMask*>(
+        config_manager->GetStaticConfigVariable(STATIC_CONFIG_VALID_MASK,
+                                                local_region));
+  }
 }
 
 bool InitializeExampleAndDriver(

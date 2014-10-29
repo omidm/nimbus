@@ -444,9 +444,14 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeIncompressibleProjectionHelp
   typedef application::DataConfig DataConfig;
   // T_FACE_ARRAYS_BOOL.
   if (data_config.GetFlag(DataConfig::VALID_MASK)) {
-    // TODO(quhang): removes resizing.
-    incompressible->valid_mask.Resize(
-        grid_input.Domain_Indices(3), true, true, true);
+    if (example.static_config_valid_mask) {
+      incompressible->valid_mask.Nimbus_Delete_Base_Pointer();
+      T_FACE_ARRAYS_BOOL::Nimbus_Copy_Arrays(
+          incompressible->valid_mask, *example.static_config_valid_mask->GetData());
+    } else {
+      incompressible->valid_mask.Resize(
+          grid_input.Domain_Indices(3), true, true, true);
+    }
   }
   incompressible->grid = grid_input.Get_MAC_Grid();
   // Strain is not considered.

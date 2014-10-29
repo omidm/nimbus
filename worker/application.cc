@@ -85,6 +85,11 @@ void Application::RegisterData(std::string name, Data* d) {
   data_table_[name] = d;
 }
 
+void Application::RegisterStaticConfigPrototype(const std::string& name,
+                                                StaticConfigVariable* var) {
+  static_config_manager_->RegisterPrototype(name, var);
+}
+
 // Thread-safe.
 void Application::SpawnComputeJob(const std::string& name,
                                   const job_id_t& id,

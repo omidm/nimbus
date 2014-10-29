@@ -49,4 +49,6 @@
 #include "application/water_multiple/projection/data_raw_vector_nd.h"
 #include "application/water_multiple/projection/data_sparse_matrix.h"
 
+#include "application/water_multiple/static_config_valid_mask.h"
+
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_INCLUDE_H_

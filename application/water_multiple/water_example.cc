@@ -30,6 +30,7 @@
 #include "data/scalar_data.h"
 #include "shared/nimbus.h"
 #include "worker/physical_data_instance.h"
+#include "worker/static_config_manager.h"
 
 // TODO(quhang) In three places where nimbus_thread_queue is introduced.
 
@@ -77,6 +78,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_index_c2m = NULL;
     cache_vector_b = NULL;
     create_destroy_ple = true;
+    static_config_valid_mask = NULL;
     // Initialize_Particles();
     // Initialize_Read_Write_General_Structures();
 }
@@ -124,6 +126,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_index_c2m = cache->index_c2m;
     cache_vector_b = cache->vector_b;
     create_destroy_ple = true;
+    static_config_valid_mask = cache->static_config_valid_mask;
     // Initialize_Particles();
     // Initialize_Read_Write_General_Structures();
 }
@@ -172,6 +175,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_index_c2m = cache->index_c2m;
     cache_vector_b = cache->vector_b;
     create_destroy_ple = false;
+    static_config_valid_mask = cache->static_config_valid_mask;
     // Initialize_Particles();
     // Initialize_Read_Write_General_Structures();
 }
@@ -181,6 +185,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
 template<class TV> WATER_EXAMPLE<TV>::
 ~WATER_EXAMPLE()
 {
+    assert(static_config_valid_mask == NULL);
     delete &projection;
     particle_levelset_evolution.particle_levelset.Set_Thread_Queue(NULL);
     particle_levelset_evolution.particle_levelset.levelset.thread_queue=NULL;
@@ -706,6 +711,14 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (!(use_cache && application::kUseCache)) {
       Save_To_Nimbus_No_Cache(job, da, frame);
       return;
+    }
+
+    nimbus::StaticConfigManager* config_manager = job->GetStaticConfigManager();
+    if (static_config_valid_mask) {
+      T_FACE_ARRAY_BOOL::Nimbus_Copy_Arrays(incompressible.valid_mask,
+                                            valid_mask_dummy);
+      config_manager->ReleaseStaticConfigVariable(static_config_valid_mask);
+      static_config_valid_mask = NULL;
     }
 
     // nimbus::int_dimension_t array_shift[3] = {
