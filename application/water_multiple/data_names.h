@@ -86,5 +86,6 @@
 #define APP_VECTOR_TEMP "vector_temp"
 
 #define STATIC_CONFIG_VALID_MASK "valid_mask"
+#define STATIC_CONFIG_U_INTERFACE "u_interface"
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_NAMES_H_

@@ -79,6 +79,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_vector_b = NULL;
     create_destroy_ple = true;
     static_config_valid_mask = NULL;
+    static_config_u_interface = NULL;
     // Initialize_Particles();
     // Initialize_Read_Write_General_Structures();
 }
@@ -127,6 +128,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_vector_b = cache->vector_b;
     create_destroy_ple = true;
     static_config_valid_mask = cache->static_config_valid_mask;
+    static_config_u_interface = cache->static_config_u_interface;
     // Initialize_Particles();
     // Initialize_Read_Write_General_Structures();
 }
@@ -176,6 +178,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_vector_b = cache->vector_b;
     create_destroy_ple = false;
     static_config_valid_mask = cache->static_config_valid_mask;
+    static_config_u_interface = cache->static_config_u_interface;
     // Initialize_Particles();
     // Initialize_Read_Write_General_Structures();
 }
@@ -719,6 +722,15 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
                                             valid_mask_dummy);
       config_manager->ReleaseStaticConfigVariable(static_config_valid_mask);
       static_config_valid_mask = NULL;
+    }
+    if (static_config_u_interface) {
+      LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >* laplace =
+          dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >*>(
+              projection.laplace);
+      T_FACE_ARRAY::Nimbus_Copy_Arrays(laplace->u_interface,
+                                               u_interface_dummy);
+      config_manager->ReleaseStaticConfigVariable(static_config_u_interface);
+      static_config_u_interface = NULL;
     }
 
     // nimbus::int_dimension_t array_shift[3] = {

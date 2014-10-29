@@ -87,6 +87,7 @@ public:
     ARRAY<IMPLICIT_OBJECT<TV>*> sources;
     LaplaceSolverWrapper laplace_solver_wrapper;
 
+    T_FACE_ARRAY u_interface_dummy;
     T_FACE_ARRAY_BOOL valid_mask_dummy;
     T_FACE_ARRAY t_face_dummy;
     T_SCALAR_ARRAY t_scalar_dummy;
@@ -100,7 +101,9 @@ public:
     ARRAY<T, TV_INT> phi_ghost_bandwidth_eight;
 
     typedef application::StaticConfigValidMask StaticConfigValidMask;
+    typedef application::StaticConfigUInterface StaticConfigUInterface;
     StaticConfigValidMask* static_config_valid_mask;
+    StaticConfigUInterface* static_config_u_interface;
     // cache objects
     bool use_cache;
     typedef typename application::CacheFaceArray<T> TCacheFaceArray;

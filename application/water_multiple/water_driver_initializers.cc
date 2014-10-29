@@ -471,7 +471,14 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeIncompressibleProjectionHelp
     laplace->second_order_cut_cell_method = true;
     if (data_config.GetFlag(DataConfig::U_INTERFACE)) {
       // TODO(quhang): removes resizing.
-      laplace->u_interface.Resize(grid_input);
+      if (example.static_config_u_interface) {
+        laplace->u_interface.Nimbus_Delete_Base_Pointer();
+        T_FACE_ARRAYS_SCALAR::Nimbus_Copy_Arrays(
+            laplace->u_interface,
+            *example.static_config_u_interface->GetData());
+      } else {
+        laplace->u_interface.Resize(grid_input);
+      }
     } else {
       laplace->u_interface.Clean_Memory();
     }

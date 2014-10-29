@@ -399,6 +399,11 @@ void GetAppCacheObjects(
         config_manager->GetStaticConfigVariable(STATIC_CONFIG_VALID_MASK,
                                                 local_region));
   }
+  if (data_config.GetFlag(DataConfig::U_INTERFACE)) {
+    cache->static_config_u_interface = reinterpret_cast<StaticConfigUInterface*>(
+        config_manager->GetStaticConfigVariable(STATIC_CONFIG_U_INTERFACE,
+                                                local_region));
+  }
 }
 
 bool InitializeExampleAndDriver(

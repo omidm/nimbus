@@ -61,6 +61,7 @@ struct AppCacheObjects {
   CacheRawGridArray *index_c2m;
   CacheVector* vector_b;
   StaticConfigValidMask* static_config_valid_mask;
+  StaticConfigUInterface* static_config_u_interface;
 
   AppCacheObjects() {
     fv    = NULL;
@@ -79,6 +80,7 @@ struct AppCacheObjects {
     index_c2m = NULL;
     vector_b = NULL;
     static_config_valid_mask = NULL;
+    static_config_u_interface = NULL;
   }
 };
 
