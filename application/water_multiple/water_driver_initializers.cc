@@ -456,7 +456,6 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeIncompressibleProjectionHelp
     laplace->grid = grid_input;
     laplace->second_order_cut_cell_method = true;
     if (data_config.GetFlag(DataConfig::U_INTERFACE)) {
-      // TODO(quhang): removes resizing.
       if (example.static_config_u_interface) {
         laplace->u_interface.Nimbus_Delete_Base_Pointer();
         T_FACE_ARRAYS_SCALAR::Nimbus_Copy_Arrays(
@@ -602,64 +601,98 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHel
   assert(grid_input.Is_MAC_Grid());
   // If this flag is true, it suggests that the ple is not a cached version.
   if (example.create_destroy_ple) {
-    particle_levelset_evolution->grid = grid_input;
-    // Resizes phi here.
-    if (data_config.GetFlag(DataConfig::LEVELSET)
-        || data_config.GetFlag(DataConfig::LEVELSET_READ)
-        || data_config.GetFlag(DataConfig::LEVELSET_WRITE)) {
-      particle_levelset_evolution->phi.Resize(
-          grid_input.Domain_Indices(particle_levelset->number_of_ghost_cells));
+    {
+      application::ScopeTimer scope_timer("part_2.1.1");
+      particle_levelset_evolution->grid = grid_input;
+      // Resizes phi here.
+      if (data_config.GetFlag(DataConfig::LEVELSET)
+          || data_config.GetFlag(DataConfig::LEVELSET_READ)
+          || data_config.GetFlag(DataConfig::LEVELSET_WRITE)) {
+        if (forced_alloc) {
+          particle_levelset_evolution->phi.Resize(
+              grid_input.Domain_Indices(particle_levelset->number_of_ghost_cells));
+        }
+      }
+      // Resizes particles.
+      particle_levelset_evolution->particle_levelset.Set_Band_Width(6);
+      if (data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
+        if (forced_alloc) {
+          particle_levelset->positive_particles.Resize(
+              particle_levelset->levelset.grid.Block_Indices(
+                  particle_levelset->number_of_ghost_cells));
+        }
+      }
+      if (data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
+        if (forced_alloc) {
+          particle_levelset->negative_particles.Resize(
+              particle_levelset->levelset.grid.Block_Indices(
+                  particle_levelset->number_of_ghost_cells));
+        }
+      }
+      particle_levelset->use_removed_positive_particles=true;
+      particle_levelset->use_removed_negative_particles=true;
+      // Resizes removed particles.
+      if (forced_alloc &&
+          data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
+        particle_levelset->removed_positive_particles.Resize(
+            particle_levelset->levelset.grid.Block_Indices(
+                particle_levelset->number_of_ghost_cells));
+      }
+      if (forced_alloc &&
+          data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
+        particle_levelset->removed_negative_particles.Resize(
+            particle_levelset->levelset.grid.Block_Indices(
+                particle_levelset->number_of_ghost_cells));
+      }
+      particle_levelset->Set_Minimum_Particle_Radius(
+          (T).1*particle_levelset->levelset.grid.Minimum_Edge_Length());
+      particle_levelset->Set_Maximum_Particle_Radius(
+          (T).5*particle_levelset->levelset.grid.Minimum_Edge_Length());
     }
-    // Resizes particles.
-    particle_levelset_evolution->particle_levelset.Set_Band_Width(6);
-    if (data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
-      particle_levelset->positive_particles.Resize(
-          particle_levelset->levelset.grid.Block_Indices(
-            particle_levelset->number_of_ghost_cells));
+    {
+      application::ScopeTimer scope_timer("part_2.1.2");
+      if (particle_levelset->half_band_width &&
+          particle_levelset->levelset.grid.Minimum_Edge_Length()) {
+        particle_levelset->Set_Band_Width(particle_levelset->half_band_width /
+                                          ((T).5*particle_levelset->levelset.grid.Minimum_Edge_Length()));
+      } else {
+        particle_levelset->Set_Band_Width();
+      }
+      if (forced_alloc) {
+        particle_levelset->levelset.Initialize_Levelset_Grid_Values();
+      }
+      if (forced_alloc &&
+          particle_levelset_evolution->
+          levelset_advection.semi_lagrangian_collidable) {
+        particle_levelset->levelset.Initialize_Valid_Masks(grid_input);
+      }
     }
-    if (data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
-      particle_levelset->negative_particles.Resize(
-          particle_levelset->levelset.grid.Block_Indices(
-            particle_levelset->number_of_ghost_cells));
+    {
+      application::ScopeTimer scope_timer("part_2.1.3");
+      particle_levelset_evolution->Set_CFL_Number((T).9);
+      particle_levelset_evolution->Set_Number_Particles_Per_Cell(16);
     }
-    particle_levelset->use_removed_positive_particles=true;
-    particle_levelset->use_removed_negative_particles=true;
-    // Resizes removed particles.
-    if (data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
-      particle_levelset->removed_positive_particles.Resize(
-          particle_levelset->levelset.grid.Block_Indices(
-            particle_levelset->number_of_ghost_cells));
+    {
+      application::ScopeTimer scope_timer("part_2.1.4");
+      particle_levelset_evolution->Initialize_FMM_Initialization_Iterative_Solver(true);
     }
-    if (data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
-      particle_levelset->removed_negative_particles.Resize(
-          particle_levelset->levelset.grid.Block_Indices(
-            particle_levelset->number_of_ghost_cells));
+    {
+      application::ScopeTimer scope_timer("part_2.1.5");
+      particle_levelset_evolution->Bias_Towards_Negative_Particles(false);
+      if (forced_alloc) {
+        particle_levelset_evolution->particle_levelset.Use_Removed_Positive_Particles();
+        particle_levelset_evolution->particle_levelset.Use_Removed_Negative_Particles();
+      } else {
+        particle_levelset_evolution->particle_levelset.use_removed_positive_particles = true;
+        particle_levelset_evolution->particle_levelset.use_removed_negative_particles = true;
+      }
     }
-    particle_levelset->Set_Minimum_Particle_Radius(
-        (T).1*particle_levelset->levelset.grid.Minimum_Edge_Length());
-    particle_levelset->Set_Maximum_Particle_Radius(
-        (T).5*particle_levelset->levelset.grid.Minimum_Edge_Length());
-    if (particle_levelset->half_band_width &&
-        particle_levelset->levelset.grid.Minimum_Edge_Length()) {
-      particle_levelset->Set_Band_Width(particle_levelset->half_band_width /
-          ((T).5*particle_levelset->levelset.grid.Minimum_Edge_Length()));
-    } else {
-      particle_levelset->Set_Band_Width();
+    {
+      application::ScopeTimer scope_timer("part_2.1.6");
+      particle_levelset_evolution->particle_levelset.Store_Unique_Particle_Id();
+      particle_levelset_evolution->Use_Particle_Levelset(true);
+      particle_levelset_evolution->particle_levelset.Set_Collision_Distance_Factors(.1,1);
     }
-    particle_levelset->levelset.Initialize_Levelset_Grid_Values();
-    if (particle_levelset_evolution->
-        levelset_advection.semi_lagrangian_collidable) {
-      particle_levelset->levelset.Initialize_Valid_Masks(grid_input);
-    }
-    particle_levelset_evolution->Set_CFL_Number((T).9);
-    particle_levelset_evolution->Set_Number_Particles_Per_Cell(16);
-    particle_levelset_evolution->Initialize_FMM_Initialization_Iterative_Solver(true);
-    particle_levelset_evolution->Bias_Towards_Negative_Particles(false);
-    particle_levelset_evolution->particle_levelset.Use_Removed_Positive_Particles();
-    particle_levelset_evolution->particle_levelset.Use_Removed_Negative_Particles();
-    particle_levelset_evolution->particle_levelset.Store_Unique_Particle_Id();
-    particle_levelset_evolution->Use_Particle_Levelset(true);
-    particle_levelset_evolution->particle_levelset.Set_Collision_Distance_Factors(.1,1);
   }
   return true;
 }
