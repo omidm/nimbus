@@ -87,5 +87,6 @@
 
 #define STATIC_CONFIG_VALID_MASK "valid_mask"
 #define STATIC_CONFIG_U_INTERFACE "u_interface"
+#define STATIC_CONFIG_COLLISION_BODY "collision_body"
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_NAMES_H_

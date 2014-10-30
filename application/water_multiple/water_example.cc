@@ -39,7 +39,8 @@ using namespace PhysBAM;
 // WATER_EXAMPLE
 //#####################################################################
 template<class TV> WATER_EXAMPLE<TV>::
-WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
+              const STREAM_TYPE stream_type_input,
               nimbus::TaskThreadPool::TaskThreadList* allocated_threads) :
     nimbus_thread_queue(allocated_threads->size() != 0 ?
                         new nimbus::NimbusThreadQueue(allocated_threads) :
@@ -59,7 +60,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     particle_levelset_evolution(*new  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >(mac_grid,number_of_ghost_cells)),
     incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
-    collision_bodies_affecting_fluid(new T_GRID_BASED_COLLISION_GEOMETRY(mac_grid))
+    collision_bodies_affecting_fluid(cache_collision_body?cache_collision_body->GetData():NULL)
 {
     use_cache   = false;
     cache_fv    = NULL;
@@ -80,6 +81,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     create_destroy_ple = true;
     static_config_valid_mask = NULL;
     static_config_u_interface = NULL;
+    static_config_collision_body = cache_collision_body;
     // Initialize_Particles();
     // Initialize_Read_Write_General_Structures();
 }
@@ -87,7 +89,8 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
 // WATER_EXAMPLE
 //#####################################################################
 template<class TV> WATER_EXAMPLE<TV>::
-WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
+              const STREAM_TYPE stream_type_input,
               application::AppCacheObjects *cache,
               nimbus::TaskThreadPool::TaskThreadList* allocated_threads) :
     nimbus_thread_queue(allocated_threads->size() != 0 ?
@@ -108,7 +111,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     particle_levelset_evolution(*new  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >(mac_grid,number_of_ghost_cells)),
     incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
-    collision_bodies_affecting_fluid(new T_GRID_BASED_COLLISION_GEOMETRY(mac_grid))
+    collision_bodies_affecting_fluid(cache_collision_body?cache_collision_body->GetData():NULL)
 {
     use_cache   = false;
     cache_fv    = cache->fv;
@@ -129,6 +132,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     create_destroy_ple = true;
     static_config_valid_mask = cache->static_config_valid_mask;
     static_config_u_interface = cache->static_config_u_interface;
+    static_config_collision_body = cache_collision_body;
     // Initialize_Particles();
     // Initialize_Read_Write_General_Structures();
 }
@@ -136,7 +140,8 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
 // WATER_EXAMPLE
 //#####################################################################
 template<class TV> WATER_EXAMPLE<TV>::
-WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
+              const STREAM_TYPE stream_type_input,
               application::AppCacheObjects *cache,
               PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple,
               nimbus::TaskThreadPool::TaskThreadList* allocated_threads) :
@@ -158,7 +163,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     particle_levelset_evolution(*ple),
     incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
-    collision_bodies_affecting_fluid(new T_GRID_BASED_COLLISION_GEOMETRY(mac_grid))
+    collision_bodies_affecting_fluid(cache_collision_body?cache_collision_body->GetData():NULL)
 {
     use_cache   = false;
     cache_fv    = cache->fv;
@@ -179,6 +184,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     create_destroy_ple = false;
     static_config_valid_mask = cache->static_config_valid_mask;
     static_config_u_interface = cache->static_config_u_interface;
+    static_config_collision_body = cache_collision_body;
     // Initialize_Particles();
     // Initialize_Read_Write_General_Structures();
 }
@@ -195,7 +201,6 @@ template<class TV> WATER_EXAMPLE<TV>::
     if (nimbus_thread_queue) {
       delete nimbus_thread_queue;
     }
-    delete collision_bodies_affecting_fluid;
 }
 
 // Initializes the initial levelset function.
@@ -710,13 +715,19 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
 template<class TV> void WATER_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
+    nimbus::StaticConfigManager* config_manager = job->GetStaticConfigManager();
+    if (static_config_collision_body) {
+      config_manager->ReleaseStaticConfigVariable(static_config_collision_body);
+      static_config_collision_body = NULL;
+      collision_bodies_affecting_fluid = NULL;
+    }
+
     application::ScopeTimer scope_timer("saving_water_example");
     if (!(use_cache && application::kUseCache)) {
       Save_To_Nimbus_No_Cache(job, da, frame);
       return;
     }
 
-    nimbus::StaticConfigManager* config_manager = job->GetStaticConfigManager();
     if (static_config_valid_mask) {
       T_FACE_ARRAY_BOOL::Nimbus_Copy_Arrays(incompressible.valid_mask,
                                             valid_mask_dummy);

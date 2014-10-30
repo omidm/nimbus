@@ -33,22 +33,35 @@
  */
 
 /*
- * Author: Chinmayee Shah <chshah@stanford.edu>
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_
+#include "application/water_multiple/physbam_include.h"
+#include "data/static_config/static_config_variable.h"
 
-#include "application/water_multiple/cache_compressed_scalar_array.h"
-#include "application/water_multiple/cache_face_array.h"
-#include "application/water_multiple/cache_particle_levelset_evolution.h"
-#include "application/water_multiple/cache_scalar_array.h"
-#include "application/water_multiple/projection/cache_sparse_matrix.h"
-#include "application/water_multiple/projection/cache_array_m2c.h"
-#include "application/water_multiple/projection/cache_vector.h"
-#include "application/water_multiple/projection/cache_raw_grid_array.h"
-#include "application/water_multiple/static_config_valid_mask.h"
-#include "application/water_multiple/static_config_u_interface.h"
-#include "application/water_multiple/static_config_collision_body.h"
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_STATIC_CONFIG_COLLISION_BODY_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_STATIC_CONFIG_COLLISION_BODY_
+namespace application {
 
-#endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_
+using nimbus::StaticConfigVariable;
+using nimbus::GeometricRegion;
+
+class StaticConfigCollisionBody : public StaticConfigVariable {
+ public:
+  typedef PhysBAM::VECTOR<float, 3> TV;
+  typedef typename PhysBAM::COLLISION_GEOMETRY_COLLECTION_POLICY<PhysBAM::GRID<TV> >::
+      GRID_BASED_COLLISION_GEOMETRY DataType;
+  StaticConfigCollisionBody(const GeometricRegion& global_region);
+  ~StaticConfigCollisionBody();
+  virtual StaticConfigVariable* CreateNew(const GeometricRegion& local_region)
+      const;
+  virtual void Destroy();
+  DataType* GetData() const;
+ private:
+  GeometricRegion global_region_;
+  GeometricRegion local_region_;
+  DataType* physbam_data_structure_;
+};
+
+}  // namespace application
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_STATIC_CONFIG_COLLISION_BODY_

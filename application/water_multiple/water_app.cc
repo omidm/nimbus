@@ -277,6 +277,9 @@ namespace application {
             STATIC_CONFIG_VALID_MASK, new StaticConfigValidMask(kDefaultRegion));
         RegisterStaticConfigPrototype(
             STATIC_CONFIG_U_INTERFACE, new StaticConfigUInterface(kDefaultRegion));
+        RegisterStaticConfigPrototype(
+            STATIC_CONFIG_COLLISION_BODY,
+            new StaticConfigCollisionBody(kDefaultRegion));
 
         nimbus::TranslatorPhysBAM<float>::log = translator_log;
         nimbus::TranslatorPhysBAMOld<PhysBAM::VECTOR<float, 3> >::log = translator_log;

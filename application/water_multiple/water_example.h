@@ -102,8 +102,10 @@ public:
 
     typedef application::StaticConfigValidMask StaticConfigValidMask;
     typedef application::StaticConfigUInterface StaticConfigUInterface;
+    typedef application::StaticConfigCollisionBody StaticConfigCollisionBody;
     StaticConfigValidMask* static_config_valid_mask;
     StaticConfigUInterface* static_config_u_interface;
+    StaticConfigCollisionBody* static_config_collision_body;
     // cache objects
     bool use_cache;
     typedef typename application::CacheFaceArray<T> TCacheFaceArray;
@@ -128,12 +130,15 @@ public:
     application::CacheVector *cache_vector_b;
     bool create_destroy_ple;
 
-    WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+    WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
+                  const STREAM_TYPE stream_type_input,
                   nimbus::TaskThreadPool::TaskThreadList* allocated_threads);
-    WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+    WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
+                  const STREAM_TYPE stream_type_input,
                   application::AppCacheObjects *cache,
                   nimbus::TaskThreadPool::TaskThreadList* allocated_threads);
-    WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+    WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
+                  const STREAM_TYPE stream_type_input,
                   application::AppCacheObjects *cache,
                   PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple,
                   nimbus::TaskThreadPool::TaskThreadList* allocated_threads);

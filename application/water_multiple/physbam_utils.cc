@@ -395,14 +395,16 @@ void GetAppCacheObjects(
 
   nimbus::StaticConfigManager *config_manager = job.GetStaticConfigManager();
   if (data_config.GetFlag(DataConfig::VALID_MASK)) {
-    cache->static_config_valid_mask = reinterpret_cast<StaticConfigValidMask*>(
+    cache->static_config_valid_mask = dynamic_cast<StaticConfigValidMask*>(
         config_manager->GetStaticConfigVariable(STATIC_CONFIG_VALID_MASK,
                                                 local_region));
+    assert(cache->static_config_valid_mask != NULL);
   }
   if (data_config.GetFlag(DataConfig::U_INTERFACE)) {
-    cache->static_config_u_interface = reinterpret_cast<StaticConfigUInterface*>(
+    cache->static_config_u_interface = dynamic_cast<StaticConfigUInterface*>(
         config_manager->GetStaticConfigVariable(STATIC_CONFIG_U_INTERFACE,
                                                 local_region));
+    assert(cache->static_config_u_interface != NULL);
   }
 }
 
@@ -439,20 +441,35 @@ bool InitializeExampleAndDriver(
       example_scope_timer =
           new application::ScopeTimer("init_example");
 
+      StaticConfigCollisionBody* collision_body
+       = dynamic_cast<StaticConfigCollisionBody*>(
+          job->GetStaticConfigManager()
+          ->GetStaticConfigVariable(STATIC_CONFIG_COLLISION_BODY,
+                                    init_config.local_region));
+      assert(collision_body != NULL);
       if (cache.ple)
-        example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
+        example = new PhysBAM::WATER_EXAMPLE<TV>(collision_body,
+                                                 PhysBAM::STREAM_TYPE((RW())),
                                                  &cache,
                                                  cache.ple->data(),
                                                  &job->worker_thread()->allocated_threads);
       else
-        example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
+        example = new PhysBAM::WATER_EXAMPLE<TV>(collision_body,
+                                                 PhysBAM::STREAM_TYPE((RW())),
                                                  &cache,
                                                  &job->worker_thread()->allocated_threads);
       example->use_cache = true;
     } else {
       example_scope_timer =
           new application::ScopeTimer("init_example");
-      example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
+      StaticConfigCollisionBody* collision_body
+       = dynamic_cast<StaticConfigCollisionBody*>(
+          job->GetStaticConfigManager()
+          ->GetStaticConfigVariable(STATIC_CONFIG_COLLISION_BODY,
+                                    init_config.local_region));
+      assert(collision_body != NULL);
+      example = new PhysBAM::WATER_EXAMPLE<TV>(collision_body,
+                                               PhysBAM::STREAM_TYPE((RW())),
                                                &job->worker_thread()->allocated_threads);
       example->use_cache = false;
     }
