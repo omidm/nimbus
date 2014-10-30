@@ -24,6 +24,7 @@
 #include "application/water_multiple/data_include.h"
 #include "application/water_multiple/options.h"
 #include "application/water_multiple/parameters.h"
+#include "application/water_multiple/physbam_utils.h"
 #include "application/water_multiple/reg_def.h"
 #include "application/water_multiple/water_example.h"
 #include "data/physbam/translator_physbam_old.h"
@@ -60,7 +61,7 @@ WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
     particle_levelset_evolution(*new  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >(mac_grid,number_of_ghost_cells)),
     incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
-    collision_bodies_affecting_fluid(cache_collision_body?cache_collision_body->GetData():NULL)
+    collision_bodies_affecting_fluid(cache_collision_body!=NULL?cache_collision_body->GetData():NULL)
 {
     use_cache   = false;
     cache_fv    = NULL;
@@ -111,7 +112,7 @@ WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
     particle_levelset_evolution(*new  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >(mac_grid,number_of_ghost_cells)),
     incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
-    collision_bodies_affecting_fluid(cache_collision_body?cache_collision_body->GetData():NULL)
+    collision_bodies_affecting_fluid(cache_collision_body!=NULL?cache_collision_body->GetData():NULL)
 {
     use_cache   = false;
     cache_fv    = cache->fv;
@@ -163,7 +164,7 @@ WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
     particle_levelset_evolution(*ple),
     incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
-    collision_bodies_affecting_fluid(cache_collision_body?cache_collision_body->GetData():NULL)
+    collision_bodies_affecting_fluid(cache_collision_body!=NULL?cache_collision_body->GetData():NULL)
 {
     use_cache   = false;
     cache_fv    = cache->fv;
@@ -739,7 +740,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
           dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >*>(
               projection.laplace);
       T_FACE_ARRAY::Nimbus_Copy_Arrays(laplace->u_interface,
-                                               u_interface_dummy);
+                                       u_interface_dummy);
       config_manager->ReleaseStaticConfigVariable(static_config_u_interface);
       static_config_u_interface = NULL;
     }

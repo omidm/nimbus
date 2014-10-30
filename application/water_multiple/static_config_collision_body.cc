@@ -59,21 +59,25 @@ StaticConfigVariable* StaticConfigCollisionBody::CreateNew(
   StaticConfigCollisionBody* collision_body = new StaticConfigCollisionBody(global_region_);
   collision_body->local_region_ = local_region;
 
-  PhysBAM::GRID<TV> mac_grid;
-  mac_grid.Initialize(TV_INT(local_region.dx(),
+  collision_body->mac_grid_.Initialize(
+      TV_INT(),PhysBAM::RANGE<TV>::Unit_Box(),true);
+  collision_body->physbam_data_structure_ = new
+      DataType(collision_body->mac_grid_);
+  collision_body->mac_grid_.Initialize(TV_INT(local_region.dx(),
                              local_region.dy(),
                              local_region.dz()),
                       GridToRange(global_region_, local_region),
                       true);
-  collision_body->physbam_data_structure_ = new DataType(mac_grid);
+  collision_body->physbam_data_structure_->grid = collision_body->mac_grid_;
   collision_body->physbam_data_structure_->Initialize_Grids();
   collision_body->physbam_data_structure_->
       Update_Intersection_Acceleration_Structures(false);
   collision_body->physbam_data_structure_->Rasterize_Objects();
   collision_body->physbam_data_structure_->Compute_Occupied_Blocks(
-      false, (float)2 * mac_grid.Minimum_Edge_Length(), 5);
+      false, (float)2 * collision_body->mac_grid_.Minimum_Edge_Length(), 5);
   collision_body->physbam_data_structure_->Compute_Grid_Visibility();
   collision_body->physbam_data_structure_->Compute_Occupied_Blocks(true,0,0);
+  assert(collision_body->physbam_data_structure_->grid.Is_MAC_Grid());
   return collision_body;
 }
 

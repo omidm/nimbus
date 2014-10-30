@@ -61,6 +61,12 @@
 
 namespace application {
 
+void PrintGridDbg(const PhysBAM::GRID<PhysBAM::VECTOR<float, 3> >& grid) {
+  printf("GRID: %d %d %d %f %f %f %f %f %f\n", grid.counts[1], grid.counts[2], grid.counts[3],
+         grid.domain.min_corner[1], grid.domain.min_corner[2], grid.domain.min_corner[3], 
+         grid.domain.max_corner[1], grid.domain.max_corner[2], grid.domain.max_corner[3]);
+}
+
 Range GridToRange(
     const GeometricRegion& global_region,
     const GeometricRegion& local_region) {

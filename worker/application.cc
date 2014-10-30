@@ -46,6 +46,7 @@
 using namespace nimbus; // NOLINT
 
 Application::Application() {
+  static_config_manager_ = new StaticConfigManager;
   pthread_mutex_init(&lock_job_table_, NULL);
   pthread_mutex_init(&lock_data_table_, NULL);
 }
@@ -69,7 +70,6 @@ void Application::Start(SchedulerClient* client,
   id_maker_ = id_maker;
   ldo_map_ = ldo_map;
   cache_manager_ = new CacheManager();
-  static_config_manager_ = new StaticConfigManager;
   Load();
 }
 

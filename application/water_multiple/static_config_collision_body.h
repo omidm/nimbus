@@ -61,6 +61,7 @@ class StaticConfigCollisionBody : public StaticConfigVariable {
   GeometricRegion global_region_;
   GeometricRegion local_region_;
   DataType* physbam_data_structure_;
+  PhysBAM::GRID<TV> mac_grid_;
 };
 
 }  // namespace application
