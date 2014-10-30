@@ -170,8 +170,8 @@ bool CacheVar::CheckWritePendingFlag(const DataArray &write_set,
 void CacheVar::SetUpWrite(const DataArray &write_set,
                           GeometricRegion &write_region,
                           DataArray* flush) {
-    assert(pending_flag());
-    set_pending_flag();
+    // assert(pending_flag());
+    // set_pending_flag();
     assert(flush != NULL);
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set.at(i);
@@ -343,9 +343,11 @@ bool CacheVar::CheckPendingFlag(const DataArray &read_set,
             return false;
           }
           // chinmayee: the next branch is not required. we do not want this.
+	  /*
           if (d->dirty_cache_object()->pending_flag()) {
             return false;
           }
+	  */
         }
       } else {
         Data *d_old = it->second;
@@ -355,9 +357,11 @@ bool CacheVar::CheckPendingFlag(const DataArray &read_set,
               return false;
             }
             // chinmayee: the next branch is not required. we do not want this.
+	    /*
             if (d->dirty_cache_object()->pending_flag()) {
               return false;
             }
+	    */
           }
           if (write_back_.find(d_old) != write_back_.end()) {
             if (d_old->pending_flag() != 0) {
