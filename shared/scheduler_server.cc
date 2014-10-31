@@ -188,6 +188,9 @@ void SchedulerServer::HandleAccept(SchedulerServerConnection* connection,
     boost::asio::socket_base::receive_buffer_size r_option(SERVER_TCP_RECEIVE_BUF_SIZE);
     connection->socket()->set_option(s_option);
     connection->socket()->set_option(r_option);
+    // Turn of Nagle algorithm.
+    boost::asio::ip::tcp::no_delay nd_option(TCP_NODELAY_OPTION);
+    connection->socket()->set_option(nd_option);
     ListenForNewConnections();
     boost::asio::async_read(*(worker->connection()->socket()),
                             boost::asio::buffer(worker->connection()->read_buffer(),

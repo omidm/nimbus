@@ -44,6 +44,7 @@
 #include "application/water_multiple/water_example.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
+#include "worker/worker_thread.h"
 
 #include "application/water_multiple/projection/job_projection_calculate_boundary_condition_part_two.h"
 

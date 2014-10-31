@@ -36,15 +36,14 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#ifndef NIMBUS_WORKER_THREAD_QUEUE_PROTO_H_
-#define NIMBUS_WORKER_THREAD_QUEUE_PROTO_H_
+#ifndef NIMBUS_WORKER_CORE_CONFIG_H_
+#define NIMBUS_WORKER_CORE_CONFIG_H_
 
-#include "shared/nimbus_types.h"
 namespace nimbus {
-class ThreadQueueProto {
- public:
-  virtual int get_active_threads() = 0;
-};
+const int PHYSICAL_CORE_NUM = 4;
+const int LOGICAL_CORE_X[PHYSICAL_CORE_NUM] = {0, 1, 2, 3};
+const int LOGICAL_CORE_Y[PHYSICAL_CORE_NUM] = {4, 5, 6, 7};
+const int LOGICAL_CORE[PHYSICAL_CORE_NUM * 2] = {0, 4, 1, 5, 2, 6, 3, 7};
 }  // namespace nimbus
 
-#endif  // NIMBUS_WORKER_THREAD_QUEUE_PROTO_H_
+#endif  // NIMBUS_WORKER_CORE_CONFIG_H_

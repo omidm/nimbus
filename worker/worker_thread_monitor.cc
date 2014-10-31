@@ -60,7 +60,6 @@ void WorkerThreadMonitor::Run() {
   int64_t dispatched_computation_job_count_last = 0;
 
   int64_t dispatched_computation_job_count;
-  int idle_computation_threads;
   int64_t ready_job_queue_length;
 
   output << "dispatched_computation_job_count "
@@ -85,13 +84,10 @@ void WorkerThreadMonitor::Run() {
     dispatched_computation_job_count =
         worker_manager_->dispatched_computation_job_count_;
 
-    idle_computation_threads = worker_manager_->idle_computation_threads_;
     ready_job_queue_length = worker_manager_->ready_jobs_count_;
 
     output << dispatched_computation_job_count
               - dispatched_computation_job_count_last
-           << " "
-           << worker_manager_->ActiveComputationThreads()
            << " "
            << ready_job_queue_length
            << std::endl;

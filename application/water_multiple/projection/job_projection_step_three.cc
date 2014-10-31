@@ -51,6 +51,7 @@
 
 #include "data/scalar_data.h"
 #include "application/water_multiple/data_include.h"
+#include "worker/worker_thread.h"
 #include "application/water_multiple/projection/job_projection_step_three.h"
 
 namespace application {
@@ -90,17 +91,13 @@ void JobProjectionStepThree::Execute(
   pcg_temp.cg_restart_iterations = 0;
   pcg_temp.Show_Results();
 
-  init_config.use_threading = use_threading();
-  init_config.core_quota = core_quota();
-
   PhysBAM::ProjectionDriver projection_driver(
-      pcg_temp, init_config, data_config);
+      pcg_temp, init_config, data_config, &worker_thread()->allocated_threads);
   projection_driver.projection_data.iteration = iteration;
   dbg(APP_LOG, "Job PROJECTION_STEP_THREE starts (iteration=%d).\n", iteration);
 
   projection_driver.LoadFromNimbus(this, da);
 
-  *thread_queue_hook() = projection_driver.thread_queue;
   {
     application::ScopeTimer scope_timer(name());
     // Read VECTOR_P(outer region), MATRIX_A.
@@ -109,7 +106,6 @@ void JobProjectionStepThree::Execute(
     projection_driver.UpdateTempVector();
     projection_driver.CalculateLocalAlpha();
   }
-  *thread_queue_hook() = NULL;
 
   projection_driver.SaveToNimbus(this, da);
 

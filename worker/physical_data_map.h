@@ -73,6 +73,7 @@ class PhysicalDataMap {
       physical_data_id_t physical_data_id);
 
  private:
+  static bool print_stat_;
   size_t sum_;
   FILE* physical_data_log;
   void PrintTimeStamp(const char* format, ...);

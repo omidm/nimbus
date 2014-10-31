@@ -67,9 +67,6 @@ void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArr
 
     InitConfig init_config;
     init_config.use_cache = true;
-    // Threading settings.
-    init_config.use_threading = use_threading();
-    init_config.core_quota = core_quota();
     std::string params_str(params.ser_data().data_ptr_raw(),
                            params.ser_data().size());
     LoadParameter(params_str, &init_config);
@@ -93,7 +90,6 @@ void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArr
     data_config.SetFlag(DataConfig::VALID_MASK);
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
-    *thread_queue_hook() = example->nimbus_thread_queue;
 
     {
       //nimbus::Timer timer(std::string("delete_particles_") + id().ToNetworkData());
@@ -101,7 +97,6 @@ void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArr
       driver->DeleteParticlesImpl(this, da, dt);
     }
 
-    *thread_queue_hook() = NULL;
     example->Save_To_Nimbus(this, da, driver->current_frame + 1);
     // free resources
     DestroyExampleAndDriver(example, driver);

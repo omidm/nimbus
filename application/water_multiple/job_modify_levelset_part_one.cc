@@ -66,9 +66,6 @@ void JobModifyLevelsetPartOne::Execute(nimbus::Parameter params, const nimbus::D
     dbg(APP_LOG, "--- Executing modify levelset job -- part one\n");
 
     InitConfig init_config;
-    // Threading settings.
-    init_config.use_threading = use_threading();
-    init_config.core_quota = core_quota();
     init_config.use_cache = true;
     init_config.set_boundary_condition = false;
     std::string params_str(params.ser_data().data_ptr_raw(),
@@ -92,7 +89,6 @@ void JobModifyLevelsetPartOne::Execute(nimbus::Parameter params, const nimbus::D
     data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
-    *thread_queue_hook() = example->nimbus_thread_queue;
 
     {
       //nimbus::Timer timer(std::string("modify_levelset_part_one_")
@@ -101,7 +97,6 @@ void JobModifyLevelsetPartOne::Execute(nimbus::Parameter params, const nimbus::D
       driver->ModifyLevelSetPartOneImpl(this, da, init_config.local_region, dt);
     }
 
-    *thread_queue_hook() = NULL;
     example->Save_To_Nimbus(this, da, driver->current_frame + 1);
     // free resources
     DestroyExampleAndDriver(example, driver);

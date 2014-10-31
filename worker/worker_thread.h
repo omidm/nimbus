@@ -43,9 +43,14 @@
 #ifndef NIMBUS_WORKER_WORKER_THREAD_H_
 #define NIMBUS_WORKER_WORKER_THREAD_H_
 
+#include <pthread.h>
+
+#include <list>
+
 #include "shared/nimbus.h"
 #include "shared/high_resolution_timer.h"
 #include "shared/log.h"
+#include "worker/task_thread_pool.h"
 
 namespace nimbus {
 class WorkerManager;
@@ -57,13 +62,13 @@ class WorkerThread {
       Log* log, Log* version_log, Log* data_hash_log, Log* cache_log,
       HighResolutionTimer* timer);
   virtual void Run() = 0;
-  // TODO(quhang) data member accessor.
+
   pthread_t thread_id;
-  pthread_cond_t thread_can_start;
-  Job* next_job_to_run;
-  bool idle;
-  bool job_assigned;
+  TaskThreadPool::TaskThreadList allocated_threads;
+  virtual void SetThreadAffinity(const cpu_set_t* cpuset);
+
  protected:
+  cpu_set_t* used_cpu_set_;
   WorkerManager* worker_manager_;
   // Logging data structures.
   Log* log_;

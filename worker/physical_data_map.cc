@@ -44,9 +44,13 @@
 
 namespace nimbus {
 
+bool PhysicalDataMap::print_stat_ = false;
+
 PhysicalDataMap::PhysicalDataMap() {
   sum_ = 0;
-  physical_data_log = fopen("physical_data.txt", "w");
+  if (print_stat_) {
+    physical_data_log = fopen("physical_data.txt", "w");
+  }
 }
 
 void PhysicalDataMap::PrintTimeStamp(const char* format, ...) {
@@ -72,24 +76,24 @@ Data* PhysicalDataMap::AcquireAccess(
 
 bool PhysicalDataMap::ReleaseAccess(
     job_id_t job_id) {
-  /*
-  PhysicalDataIdSet& data_set= outstanding_used_data_[job_id];
-  for (PhysicalDataIdSet::iterator i_physical_data_id = data_set.begin();
-       i_physical_data_id != data_set.end();
-       ++i_physical_data_id) {
-    physical_data_id_t physical_data_id= *i_physical_data_id;
-    size_t temp_size = internal_map_[physical_data_id].first->memory_size();
-    if (temp_size != internal_map_[physical_data_id].second) {
-      sum_ = sum_ + temp_size - internal_map_[physical_data_id].second;
-      internal_map_[physical_data_id].second = temp_size;
-      PrintTimeStamp("%s %"PRIu64" %zu\n",
-                     internal_map_[physical_data_id].first->name().c_str(),
-                     physical_data_id,
-                     temp_size);
-      PrintTimeStamp("%zu\n", sum_);
+  if (print_stat_) {
+    PhysicalDataIdSet& data_set= outstanding_used_data_[job_id];
+    for (PhysicalDataIdSet::iterator i_physical_data_id = data_set.begin();
+         i_physical_data_id != data_set.end();
+         ++i_physical_data_id) {
+      physical_data_id_t physical_data_id= *i_physical_data_id;
+      size_t temp_size = internal_map_[physical_data_id].first->memory_size();
+      if (temp_size != internal_map_[physical_data_id].second) {
+        sum_ = sum_ + temp_size - internal_map_[physical_data_id].second;
+        internal_map_[physical_data_id].second = temp_size;
+        PrintTimeStamp("%s %"PRIu64" %zu\n",
+                       internal_map_[physical_data_id].first->name().c_str(),
+                       physical_data_id,
+                       temp_size);
+        PrintTimeStamp("%zu\n", sum_);
+      }
     }
   }
-  */
   outstanding_used_data_.erase(job_id);
   return true;
 }
@@ -100,13 +104,13 @@ bool PhysicalDataMap::AddMapping(
   assert(data != NULL);
   assert(internal_map_.find(physical_data_id) == internal_map_.end());
   internal_map_[physical_data_id].first = data;
-  /*
-  internal_map_[physical_data_id].second = data->memory_size();
-  PrintTimeStamp("%s %"PRIu64" %zu\n",
-                 data->name().c_str(),
-                 physical_data_id,
-                 data->memory_size());
-                 */
+  if (print_stat_) {
+    internal_map_[physical_data_id].second = data->memory_size();
+    PrintTimeStamp("%s %"PRIu64" %zu\n",
+                   data->name().c_str(),
+                   physical_data_id,
+                   data->memory_size());
+  }
   return true;
 }
 
