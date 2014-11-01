@@ -146,11 +146,8 @@ class Job {
     bool StageJobAndLoadBeforeSet(IDSet<job_id_t> *before_set,
                                   const std::string& name,
                                   const job_id_t& id,
-                                  IDSet<logical_data_id_t>& read,
-                                  IDSet<logical_data_id_t>& write,
-                                  const Parameter& params,
-                                  const bool sterile,
-                                  const GeometricRegion& region,
+                                  const IDSet<logical_data_id_t>& read,
+                                  const IDSet<logical_data_id_t>& write,
                                   const bool barrier = false) {return false;}
 
     bool MarkEndOfStage() {return false;}
