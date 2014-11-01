@@ -116,23 +116,44 @@ class Job {
     bool TerminateApplication(const exit_status_t& exit_status_id = NIMBUS_TERMINATE_SUCCESS);
 
     bool GetNewJobID(std::vector<job_id_t>* result, size_t req_num);
+
     bool GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req_num);
 
     bool GetPartition(partition_id_t id, GeometricRegion* r) const;
 
     const LogicalDataObject* GetLogicalObject(logical_data_id_t id) const;
+
     int GetCoveredLogicalObjects(CLdoVector* result,
-         const std::string& variable,
-         const GeometricRegion* r);
+                                 const std::string& variable,
+                                 const GeometricRegion* r);
+
     int GetAdjacentLogicalObjects(CLdoVector* result,
-         const std::string& variable,
-         const GeometricRegion* r);
+                                  const std::string& variable,
+                                  const GeometricRegion* r);
+
     int AddIntersectingLdoIds(const std::string& variable,
-                             const nimbus::GeometricRegion& region,
-                             IDSet<logical_data_id_t>* result);
+                              const nimbus::GeometricRegion& region,
+                              IDSet<logical_data_id_t>* result);
+
     int GetIntersectingLogicalObjects(CLdoVector* result,
-         const std::string& variable,
-         const GeometricRegion* r);
+                                      const std::string& variable,
+                                      const GeometricRegion* r);
+
+    void LoadLogicalIdsInSet(IDSet<logical_data_id_t>* set,
+                             const nimbus::GeometricRegion& region,
+                             ...) {}
+
+    bool StageJobAndLoadBeforeSet(IDSet<job_id_t> *before_set,
+                                  const std::string& name,
+                                  const job_id_t& id,
+                                  IDSet<logical_data_id_t>& read,
+                                  IDSet<logical_data_id_t>& write,
+                                  const Parameter& params,
+                                  const bool sterile,
+                                  const GeometricRegion& region,
+                                  const bool barrier = false) {return false;}
+
+    bool MarkEndOfStage() {return false;}
 
     std::string name() const;
     ID<job_id_t> id() const;
