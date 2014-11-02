@@ -105,6 +105,8 @@ const std::string SchedulerCommand::PARTITION_ADD_NAME = "partitionadd";
 const std::string SchedulerCommand::PARTITION_REMOVE_NAME = "partitionremove";
 const std::string SchedulerCommand::TERMINATE_NAME = "terminate";
 const std::string SchedulerCommand::PROFILE_NAME = "profile";
+const std::string SchedulerCommand::START_TEMPLATE_NAME = "starttemplate";
+const std::string SchedulerCommand::END_TEMPLATE_NAME = "endtemplate";
 
 std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
   std::string str;
@@ -171,6 +173,12 @@ std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
       break;
     case PROFILE:
       str = PROFILE_NAME;
+      break;
+    case START_TEMPLATE:
+      str = START_TEMPLATE_NAME;
+      break;
+    case END_TEMPLATE:
+      str = END_TEMPLATE_NAME;
       break;
   }
   return str;

@@ -91,7 +91,9 @@ class SchedulerCommand {
     PARTITION_ADD    = SchedulerPBuf_Type_PARTITION_ADD,
     PARTITION_REMOVE = SchedulerPBuf_Type_PARTITION_REMOVE,
     TERMINATE        = SchedulerPBuf_Type_TERMINATE,
-    PROFILE          = SchedulerPBuf_Type_PROFILE
+    PROFILE          = SchedulerPBuf_Type_PROFILE,
+    START_TEMPLATE   = SchedulerPBuf_Type_START_TEMPLATE,
+    END_TEMPLATE     = SchedulerPBuf_Type_END_TEMPLATE
   };
 
   typedef std::set<Type> TypeSet;
@@ -158,6 +160,8 @@ class SchedulerCommand {
   static const std::string PARTITION_REMOVE_NAME;
   static const std::string TERMINATE_NAME;
   static const std::string PROFILE_NAME;
+  static const std::string START_TEMPLATE_NAME;
+  static const std::string END_TEMPLATE_NAME;
 
  private:
 };
