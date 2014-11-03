@@ -103,6 +103,7 @@ message SchedulerPBuf{
      START_TEMPLATE   = 22;
      END_TEMPLATE     = 23;
      DEFINED_TEMPLATE = 24;
+     SPAWN_TEMPLATE   = 25;
   }
   required Type type = 1;
 
@@ -131,6 +132,7 @@ message SchedulerPBuf{
   optional StartTemplatePBuf start_template      = 22;
   optional EndTemplatePBuf end_template          = 23;
   optional DefinedTemplatePBuf defined_template  = 24;
+  optional SpawnTemplatePBuf spawn_template      = 25;
 }
 
 message AddComputeJobPBuf {
@@ -177,7 +179,13 @@ message SubmitJobGraphPBuf {
   optional uint64 parent_job_id        = 5;
 }
 
-
+message SpawnTemplatePBuf {
+  optional string job_graph_name       = 1;
+  optional JobIDVector inner_job_ids   = 2; 
+  optional JobIDVector outer_job_ids   = 3; 
+  optional ParameterVector parameters  = 4; 
+  optional uint64 parent_job_id        = 5;
+}
 
 message SubmitComputeJobPBuf {
   optional string name                = 1;

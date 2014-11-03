@@ -94,7 +94,8 @@ class SchedulerCommand {
     PROFILE          = SchedulerPBuf_Type_PROFILE,
     START_TEMPLATE   = SchedulerPBuf_Type_START_TEMPLATE,
     END_TEMPLATE     = SchedulerPBuf_Type_END_TEMPLATE,
-    DEFINED_TEMPLATE = SchedulerPBuf_Type_DEFINED_TEMPLATE
+    DEFINED_TEMPLATE = SchedulerPBuf_Type_DEFINED_TEMPLATE,
+    SPAWN_TEMPLATE = SchedulerPBuf_Type_SPAWN_TEMPLATE
   };
 
   typedef std::set<Type> TypeSet;
@@ -164,6 +165,7 @@ class SchedulerCommand {
   static const std::string START_TEMPLATE_NAME;
   static const std::string END_TEMPLATE_NAME;
   static const std::string DEFINED_TEMPLATE_NAME;
+  static const std::string SPAWN_TEMPLATE_NAME;
 
  private:
 };

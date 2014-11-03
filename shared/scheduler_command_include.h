@@ -64,6 +64,7 @@
 #include "shared/start_template_command.h"
 #include "shared/end_template_command.h"
 #include "shared/defined_template_command.h"
+#include "shared/spawn_template_command.h"
 
 
 #endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
