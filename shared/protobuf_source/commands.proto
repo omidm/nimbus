@@ -102,6 +102,7 @@ message SchedulerPBuf{
      PROFILE          = 21;
      START_TEMPLATE   = 22;
      END_TEMPLATE     = 23;
+     DEFINED_TEMPLATE = 24;
   }
   required Type type = 1;
 
@@ -129,6 +130,7 @@ message SchedulerPBuf{
   optional ProfilePBuf profile                   = 21;
   optional StartTemplatePBuf start_template      = 22;
   optional EndTemplatePBuf end_template          = 23;
+  optional DefinedTemplatePBuf defined_template  = 24;
 }
 
 message AddComputeJobPBuf {
@@ -161,6 +163,10 @@ message StartTemplatePBuf {
 message EndTemplatePBuf {
   optional string job_graph_name       = 1;
   optional uint64 parent_job_id        = 2;
+}
+
+message DefinedTemplatePBuf {
+  optional string job_graph_name       = 1;
 }
 
 message SubmitJobGraphPBuf {

@@ -107,6 +107,7 @@ const std::string SchedulerCommand::TERMINATE_NAME = "terminate";
 const std::string SchedulerCommand::PROFILE_NAME = "profile";
 const std::string SchedulerCommand::START_TEMPLATE_NAME = "starttemplate";
 const std::string SchedulerCommand::END_TEMPLATE_NAME = "endtemplate";
+const std::string SchedulerCommand::DEFINED_TEMPLATE_NAME = "definedtemplate";
 
 std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
   std::string str;
@@ -180,6 +181,12 @@ std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
     case END_TEMPLATE:
       str = END_TEMPLATE_NAME;
       break;
+    case DEFINED_TEMPLATE:
+      str = DEFINED_TEMPLATE_NAME;
+      break;
+    default:
+      std::cout << "Type did not found\n";
+      exit(-1);
   }
   return str;
 }
