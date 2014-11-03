@@ -32,37 +32,50 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * A EndTemplateCommand is a message sent from a worker to the
+  * controller to mark the definition of a job graph template.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
-#define NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+#ifndef NIMBUS_SHARED_END_TEMPLATE_COMMAND_H_
+#define NIMBUS_SHARED_END_TEMPLATE_COMMAND_H_
 
+
+#include <string>
+#include <vector>
 #include "shared/scheduler_command.h"
-#include "shared/handshake_command.h"
-#include "shared/add_compute_job_command.h"
-#include "shared/add_copy_job_command.h"
-#include "shared/spawn_compute_job_command.h"
-#include "shared/spawn_copy_job_command.h"
-#include "shared/spawn_job_graph_command.h"
-#include "shared/compute_job_command.h"
-#include "shared/create_data_command.h"
-#include "shared/remote_copy_send_command.h"
-#include "shared/remote_copy_receive_command.h"
-#include "shared/local_copy_command.h"
-#include "shared/job_done_command.h"
-#include "shared/define_data_command.h"
-#include "shared/define_partition_command.h"
-#include "shared/ldo_add_command.h"
-#include "shared/ldo_remove_command.h"
-#include "shared/partition_add_command.h"
-#include "shared/partition_remove_command.h"
-#include "shared/terminate_command.h"
-#include "shared/profile_command.h"
-#include "shared/start_template_command.h"
-#include "shared/end_template_command.h"
+#include "shared/protobuf_compiled/commands.pb.h"
+
+namespace nimbus {
+class EndTemplateCommand : public SchedulerCommand {
+  public:
+    EndTemplateCommand();
+
+    EndTemplateCommand(const std::string& job_graph_name,
+                         const ID<job_id_t>& parent_job_id);
+
+    ~EndTemplateCommand();
+
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
+    virtual bool Parse(const SchedulerPBuf& buf);
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
+    std::string job_graph_name();
+    ID<job_id_t> parent_job_id();
+
+  private:
+    std::string job_graph_name_;
+    ID<job_id_t> parent_job_id_;
+
+    bool ReadFromProtobuf(const EndTemplatePBuf& buf);
+    bool WriteToProtobuf(EndTemplatePBuf* buf);
+};
 
 
-#endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_END_TEMPLATE_COMMAND_H_
