@@ -101,6 +101,16 @@ bool Application::IsTemplateDefined(std::string name) {
   return (defined_templates_.count(name) != 0 );
 }
 
+void StartTemplate(const std::string& template_name,
+                   const job_id_t& parent_job_id) {
+  // TODO(omidm): Implement!
+}
+
+void EndTemplate(const std::string& template_name,
+                 const job_id_t& parent_job_id) {
+  // TODO(omidm): Implement!
+}
+
 // Thread-safe.
 void Application::SpawnComputeJob(const std::string& name,
                                   const job_id_t& id,

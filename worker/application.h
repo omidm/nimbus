@@ -89,6 +89,12 @@ class Application {
 
   bool IsTemplateDefined(std::string name);
 
+  void StartTemplate(const std::string& template_name,
+                     const job_id_t& parent_job_id);
+
+  void EndTemplate(const std::string& template_name,
+                   const job_id_t& parent_job_id);
+
   void SpawnComputeJob(const std::string& name,
                        const job_id_t& id,
                        const IDSet<logical_data_id_t>& read,

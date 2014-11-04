@@ -80,6 +80,13 @@ class Job {
     virtual void Sleep() {}
     virtual void Cancel() {}
 
+    enum SpawnState {
+      INIT,
+      NORMAL,
+      START_TEMPLATE,
+      END_TEMPLATE
+    };
+
     bool SpawnComputeJob(const std::string& name,
                          const job_id_t& id,
                          const IDSet<logical_data_id_t>& read,
@@ -141,22 +148,22 @@ class Job {
 
     void LoadLogicalIdsInSet(IDSet<logical_data_id_t>* set,
                              const nimbus::GeometricRegion& region,
-                             ...) {}
+                             ...);
 
     bool StageJobAndLoadBeforeSet(IDSet<job_id_t> *before_set,
                                   const std::string& name,
                                   const job_id_t& id,
                                   const IDSet<logical_data_id_t>& read,
                                   const IDSet<logical_data_id_t>& write,
-                                  const bool barrier = false) {return false;}
+                                  const bool barrier = false);
 
-    bool MarkEndOfStage() {return false;}
+    bool MarkEndOfStage();
 
-    void StartTemplate(std::string template_name) {}
+    void StartTemplate(const std::string& template_name);
 
-    void EndTemplate(std::string template_name) {}
+    void EndTemplate(const std::string& template_name);
 
-    bool IsTemplateDefined(std::string template_name) {return false;}
+    bool IsTemplateDefined(const std::string& template_name);
 
     std::string name() const;
     ID<job_id_t> id() const;
@@ -239,6 +246,8 @@ class Job {
     double wait_time_;
     size_t max_alloc_;
     WorkerThread* worker_thread_;
+    SpawnState spawn_state_;
+    bool template_is_defined_;
 
   protected:
     // TODO(omidm) should remove it later; left them now so the tests

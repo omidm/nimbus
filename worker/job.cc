@@ -54,6 +54,8 @@ Job::Job() {
   wait_time_ = 0;
   max_alloc_ = 0;
   worker_thread_ = NULL;
+  spawn_state_ = INIT;
+  template_is_defined_ = false;
 }
 
 Job::~Job() {
@@ -291,6 +293,83 @@ int Job::GetIntersectingLogicalObjects(CLdoVector* result,
   } else {
       std::cout << "Error: GetAdjacentLogicalObjects, application has not been set." << std::endl;
       return -1;
+  }
+}
+
+
+
+void Job::LoadLogicalIdsInSet(IDSet<logical_data_id_t>* set,
+                              const nimbus::GeometricRegion& region,
+                              ...) {
+  CLdoVector result;
+  va_list vl;
+  va_start(vl, region);
+  char* arg = va_arg(vl, char*);
+  while (arg != NULL) {
+    AddIntersectingLdoIds(arg, region, set);
+    // job->GetIntersectingLogicalObjects(&result, arg, &region);
+    // for (size_t i = 0; i < result.size(); ++i) {
+    //   set->insert(result[i]->id());
+    // }
+    arg = va_arg(vl, char*);
+  }
+  va_end(vl);
+}
+
+bool Job::StageJobAndLoadBeforeSet(IDSet<job_id_t> *before_set,
+                                   const std::string& name,
+                                   const job_id_t& id,
+                                   const IDSet<logical_data_id_t>& read,
+                                   const IDSet<logical_data_id_t>& write,
+                                   const bool barrier) {
+  // TODO(omidm): implement!
+  return false;
+}
+
+bool Job::MarkEndOfStage() {
+  // TODO(omidm): implement!
+  return false;
+}
+
+void Job::StartTemplate(const std::string& template_name) {
+  if (!app_is_set_) {
+      std::cout << "Error: StartTEmplate, application has not been set." << std::endl;
+      exit(-1);
+  }
+
+  switch (spawn_state_) {
+    case START_TEMPLATE:
+      dbg(DBG_ERROR, "ERROR: Cannot start a template with in another template.!\n");
+      exit(-1);
+      break;
+    case END_TEMPLATE:
+      dbg(DBG_ERROR, "ERROR: currently we do not support spawning two templates in same non-sterile job.!\n"); // NOLINT
+      exit(-1);
+      break;
+    case NORMAL:
+      dbg(DBG_ERROR, "ERROR: currently we do not support both normal jobs and templates in same non-sterile job.!\n"); // NOLINT
+      exit(-1);
+      break;
+    case INIT:
+      spawn_state_ = START_TEMPLATE;
+      template_is_defined_ = IsTemplateDefined(template_name);
+      if (!template_is_defined_) {
+        application_->StartTemplate(template_name, id_.elem());
+      }
+      break;
+  }
+}
+
+void Job::EndTemplate(const std::string& template_name) {
+  // TODO(omidm): implement!
+}
+
+bool Job::IsTemplateDefined(const std::string& template_name) {
+  if (app_is_set_) {
+    return application_->IsTemplateDefined(template_name);
+  } else {
+      std::cout << "Error: IsTemplateDefined, application has not been set." << std::endl;
+      exit(-1);
   }
 }
 
@@ -562,6 +641,5 @@ void CreateDataJob::Execute(Parameter params, const DataArray& da) {
   da[0]->Create();
   da[0]->set_version(NIMBUS_INIT_DATA_VERSION);
 }
-
 
 
