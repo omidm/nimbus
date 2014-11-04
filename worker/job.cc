@@ -55,7 +55,6 @@ Job::Job() {
   max_alloc_ = 0;
   worker_thread_ = NULL;
   spawn_state_ = INIT;
-  template_is_defined_ = false;
 }
 
 Job::~Job() {
@@ -131,31 +130,6 @@ bool Job::SpawnCopyJob(const job_id_t& id,
     return false;
   }
 }
-
-
-bool Job::SpawnJobGraph(const std::string& job_graph_name,
-                        const std::vector<job_id_t>& inner_job_ids,
-                        const std::vector<job_id_t>& outer_job_ids,
-                        const std::vector<Parameter>& parameters) {
-  if (sterile_) {
-    dbg(DBG_ERROR, "ERROR: the job is sterile, it cannot spawn job graph.\n");
-    return false;
-  }
-  if (app_is_set_) {
-    application_->SpawnJobGraph(job_graph_name,
-                                inner_job_ids,
-                                outer_job_ids,
-                                parameters,
-                                id_.elem());
-    return true;
-  } else {
-    std::cout << "ERROR: SpawnJobGraph, application has not been set." << std::endl;
-    return false;
-  }
-}
-
-
-
 
 bool Job::DefineData(const std::string& name,
                      const logical_data_id_t& logical_data_id,
@@ -332,28 +306,36 @@ bool Job::MarkEndOfStage() {
 }
 
 void Job::StartTemplate(const std::string& template_name) {
+  if (sterile_) {
+    dbg(DBG_ERROR, "ERROR: the job is sterile, it cannot start a template.\n");
+    exit(-1);
+  }
+
   if (!app_is_set_) {
       std::cout << "Error: StartTEmplate, application has not been set." << std::endl;
       exit(-1);
   }
 
   switch (spawn_state_) {
-    case START_TEMPLATE:
-      dbg(DBG_ERROR, "ERROR: Cannot start a template with in another template.!\n");
+    case START_KNOWN_TEMPLATE:
+    case START_UNKNOWN_TEMPLATE:
+      dbg(DBG_ERROR, "ERROR: Cannot start a template with in another template!\n");
       exit(-1);
       break;
     case END_TEMPLATE:
-      dbg(DBG_ERROR, "ERROR: currently we do not support spawning two templates in same non-sterile job.!\n"); // NOLINT
+      dbg(DBG_ERROR, "ERROR: currently we do not support spawning two templates in same non-sterile job!\n"); // NOLINT
       exit(-1);
       break;
     case NORMAL:
-      dbg(DBG_ERROR, "ERROR: currently we do not support both normal jobs and templates in same non-sterile job.!\n"); // NOLINT
+      dbg(DBG_ERROR, "ERROR: currently we do not support both normal jobs and templates in same non-sterile job!\n"); // NOLINT
       exit(-1);
       break;
     case INIT:
-      spawn_state_ = START_TEMPLATE;
-      template_is_defined_ = IsTemplateDefined(template_name);
-      if (!template_is_defined_) {
+      template_name_ = template_name;
+      if (IsTemplateDefined(template_name)) {
+        spawn_state_ = START_KNOWN_TEMPLATE;
+      } else {
+        spawn_state_ = START_UNKNOWN_TEMPLATE;
         application_->StartTemplate(template_name, id_.elem());
       }
       break;
@@ -361,7 +343,41 @@ void Job::StartTemplate(const std::string& template_name) {
 }
 
 void Job::EndTemplate(const std::string& template_name) {
-  // TODO(omidm): implement!
+  if (sterile_) {
+    dbg(DBG_ERROR, "ERROR: the job is sterile, it cannot end a template.\n");
+    exit(-1);
+  }
+
+  if (!app_is_set_) {
+      std::cout << "ERROR: StartTEmplate, application has not been set." << std::endl;
+      exit(-1);
+  }
+
+  if (template_name_ != template_name) {
+      dbg(DBG_ERROR, "ERROR: template name in end does not match the name in start mark!\n");
+      exit(-1);
+  }
+
+  switch (spawn_state_) {
+    case INIT:
+    case NORMAL:
+    case END_TEMPLATE:
+      dbg(DBG_ERROR, "ERROR: Unbalanced end and start template marks!\n");
+      exit(-1);
+      break;
+    case START_UNKNOWN_TEMPLATE:
+      spawn_state_ = END_TEMPLATE;
+      application_->EndTemplate(template_name, id_.elem());
+      break;
+    case START_KNOWN_TEMPLATE:
+      spawn_state_ = END_TEMPLATE;
+      application_->SpawnTemplate(template_name,
+                                  template_inner_job_ids_,
+                                  template_outer_job_ids_,
+                                  template_parameters_,
+                                  id_.elem());
+      break;
+  }
 }
 
 bool Job::IsTemplateDefined(const std::string& template_name) {

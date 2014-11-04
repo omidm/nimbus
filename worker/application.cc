@@ -161,7 +161,7 @@ void Application::SpawnCopyJob(const job_id_t& id,
 }
 
 
-bool Application::SpawnJobGraph(const std::string& job_graph_name,
+bool Application::SpawnTemplate(const std::string& job_graph_name,
                                 const std::vector<job_id_t>& inner_job_ids,
                                 const std::vector<job_id_t>& outer_job_ids,
                                 const std::vector<Parameter>& parameters,

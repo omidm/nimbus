@@ -83,7 +83,8 @@ class Job {
     enum SpawnState {
       INIT,
       NORMAL,
-      START_TEMPLATE,
+      START_KNOWN_TEMPLATE,
+      START_UNKNOWN_TEMPLATE,
       END_TEMPLATE
     };
 
@@ -104,11 +105,6 @@ class Job {
                       const IDSet<job_id_t>& before,
                       const IDSet<job_id_t>& after,
                       const Parameter& params);
-
-    bool SpawnJobGraph(const std::string& job_graph_name,
-                       const std::vector<job_id_t>& inner_job_ids,
-                       const std::vector<job_id_t>& outer_job_ids,
-                       const std::vector<Parameter>& parameters);
 
     bool DefineData(const std::string& name,
                     const logical_data_id_t& logical_data_id,
@@ -246,8 +242,12 @@ class Job {
     double wait_time_;
     size_t max_alloc_;
     WorkerThread* worker_thread_;
+
     SpawnState spawn_state_;
-    bool template_is_defined_;
+    std::string template_name_;
+    std::vector<job_id_t> template_inner_job_ids_;
+    std::vector<job_id_t> template_outer_job_ids_;
+    std::vector<Parameter> template_parameters_;
 
   protected:
     // TODO(omidm) should remove it later; left them now so the tests

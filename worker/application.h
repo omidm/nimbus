@@ -115,7 +115,7 @@ class Application {
                     const IDSet<job_id_t>& after,
                     const job_id_t& parent_id);
 
-  bool SpawnJobGraph(const std::string& job_graph_name,
+  bool SpawnTemplate(const std::string& job_graph_name,
                      const std::vector<job_id_t>& inner_job_ids,
                      const std::vector<job_id_t>& outer_job_ids,
                      const std::vector<Parameter>& parameters,
