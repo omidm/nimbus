@@ -88,26 +88,47 @@ bool Job::SpawnComputeJob(const std::string& name,
                           const job_id_t& future_job_id) {
   if (sterile_) {
     dbg(DBG_ERROR, "ERROR: the job is sterile, it cannot spawn jobs.\n");
+    exit(-1);
     return false;
   }
-  if (app_is_set_) {
-    // 0 for no future job
-    application_->SpawnComputeJob(name,
-                                  id,
-                                  read,
-                                  write,
-                                  before,
-                                  after,
-                                  id_.elem(),
-                                  future_job_id,
-                                  sterile,
-                                  region,
-                                  params);
-    return true;
-  } else {
+
+  if (!app_is_set_) {
     dbg(DBG_ERROR, "ERROR: SpawnComputeJob, application has not been set.\n");
+    exit(-1);
     return false;
   }
+
+  switch (spawn_state_) {
+    case START_KNOWN_TEMPLATE:
+      template_inner_job_ids_.push_back(id);
+      template_parameters_.push_back(params);
+      return true;
+      break;
+    case END_TEMPLATE:
+      dbg(DBG_ERROR, "ERROR: currently we do not support both normal jobs and templates in same non-sterile job!\n"); // NOLINT
+      exit(-1);
+      return false;
+      break;
+    case INIT:
+      spawn_state_ = NORMAL;
+    case NORMAL:
+    case START_UNKNOWN_TEMPLATE:
+      application_->SpawnComputeJob(name,
+                                    id,
+                                    read,
+                                    write,
+                                    before,
+                                    after,
+                                    id_.elem(),
+                                    future_job_id,
+                                    sterile,
+                                    region,
+                                    params);
+      return true;
+      break;
+  }
+
+  return true;
 }
 
 bool Job::SpawnCopyJob(const job_id_t& id,
@@ -275,19 +296,29 @@ int Job::GetIntersectingLogicalObjects(CLdoVector* result,
 void Job::LoadLogicalIdsInSet(IDSet<logical_data_id_t>* set,
                               const nimbus::GeometricRegion& region,
                               ...) {
-  CLdoVector result;
-  va_list vl;
-  va_start(vl, region);
-  char* arg = va_arg(vl, char*);
-  while (arg != NULL) {
-    AddIntersectingLdoIds(arg, region, set);
-    // job->GetIntersectingLogicalObjects(&result, arg, &region);
-    // for (size_t i = 0; i < result.size(); ++i) {
-    //   set->insert(result[i]->id());
-    // }
-    arg = va_arg(vl, char*);
+  switch (spawn_state_) {
+    case START_KNOWN_TEMPLATE:
+      // Neutralize the call - omidm
+      break;
+    case INIT:
+    case NORMAL:
+    case END_TEMPLATE:
+    case START_UNKNOWN_TEMPLATE:
+      CLdoVector result;
+      va_list vl;
+      va_start(vl, region);
+      char* arg = va_arg(vl, char*);
+      while (arg != NULL) {
+        // AddIntersectingLdoIds(arg, region, set);
+        GetIntersectingLogicalObjects(&result, arg, &region);
+        for (size_t i = 0; i < result.size(); ++i) {
+          set->insert(result[i]->id());
+        }
+        arg = va_arg(vl, char*);
+      }
+      va_end(vl);
+      break;
   }
-  va_end(vl);
 }
 
 bool Job::StageJobAndLoadBeforeSet(IDSet<job_id_t> *before_set,
@@ -312,7 +343,7 @@ void Job::StartTemplate(const std::string& template_name) {
   }
 
   if (!app_is_set_) {
-      std::cout << "Error: StartTEmplate, application has not been set." << std::endl;
+      dbg(DBG_ERROR, "ERROR: StartTEmplate, application has not been set.\n");
       exit(-1);
   }
 
@@ -349,7 +380,7 @@ void Job::EndTemplate(const std::string& template_name) {
   }
 
   if (!app_is_set_) {
-      std::cout << "ERROR: StartTEmplate, application has not been set." << std::endl;
+      dbg(DBG_ERROR, "ERROR: EndTemplate, application has not been set.\n");
       exit(-1);
   }
 
@@ -381,12 +412,13 @@ void Job::EndTemplate(const std::string& template_name) {
 }
 
 bool Job::IsTemplateDefined(const std::string& template_name) {
-  if (app_is_set_) {
-    return application_->IsTemplateDefined(template_name);
-  } else {
-      std::cout << "Error: IsTemplateDefined, application has not been set." << std::endl;
+  if (!app_is_set_) {
+      dbg(DBG_ERROR, "ERROR: IsTemplateDefined, application has not been set.\n");
       exit(-1);
+      return false;
   }
+
+  return application_->IsTemplateDefined(template_name);
 }
 
 std::string Job::name() const {
