@@ -48,6 +48,7 @@ Application::Application() {
   pthread_mutex_init(&lock_job_table_, NULL);
   pthread_mutex_init(&lock_data_table_, NULL);
   pthread_mutex_init(&lock_job_graph_table_, NULL);
+  pthread_mutex_init(&lock_defined_templates_pool_, NULL);
 }
 
 Application::~Application() {
@@ -55,6 +56,7 @@ Application::~Application() {
   pthread_mutex_destroy(&lock_job_table_);
   pthread_mutex_destroy(&lock_data_table_);
   pthread_mutex_destroy(&lock_job_graph_table_);
+  pthread_mutex_destroy(&lock_defined_templates_pool_);
 }
 
 void Application::Load() {
@@ -87,6 +89,16 @@ void Application::RegisterData(std::string name, Data* d) {
 void Application::RegisterJobGraph(std::string name, JobGraph *j) {
   LockGuard lock(&lock_job_graph_table_);
   job_graph_table_[name] = j;
+}
+
+void Application::DefinedTemplate(std::string name) {
+  LockGuard lock(&lock_defined_templates_pool_);
+  defined_templates_.insert(name);
+}
+
+bool Application::IsTemplateDefined(std::string name) {
+  LockGuard lock(&lock_defined_templates_pool_);
+  return (defined_templates_.count(name) != 0 );
 }
 
 // Thread-safe.

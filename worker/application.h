@@ -85,6 +85,10 @@ class Application {
 
   void RegisterJobGraph(std::string name, JobGraph* job_graph);
 
+  void DefinedTemplate(std::string name);
+
+  bool IsTemplateDefined(std::string name);
+
   void SpawnComputeJob(const std::string& name,
                        const job_id_t& id,
                        const IDSet<logical_data_id_t>& read,
@@ -176,6 +180,9 @@ class Application {
   // Protects job graph table.
   pthread_mutex_t lock_job_graph_table_;
   JobGraphTable job_graph_table_;
+  // Protects defined template pool.
+  pthread_mutex_t lock_defined_templates_pool_;
+  boost::unordered_set<std::string> defined_templates_;
   SchedulerClient* client_;
   IDMaker* id_maker_;
   WorkerLdoMap* ldo_map_;

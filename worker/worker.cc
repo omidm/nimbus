@@ -273,10 +273,14 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::TERMINATE:
       ProcessTerminateCommand(reinterpret_cast<TerminateCommand*>(cm));
       break;
+    case SchedulerCommand::DEFINED_TEMPLATE:
+      ProcessDefinedTemplateCommand(reinterpret_cast<DefinedTemplateCommand*>(cm));
+      break;
     default:
       std::cout << "ERROR: " << cm->ToNetworkData() <<
         " have not been implemented in ProcessSchedulerCommand yet." <<
         std::endl;
+      exit(-1);
   }
 }
 
@@ -450,6 +454,11 @@ void Worker::ProcessTerminateCommand(TerminateCommand* cm) {
   exit(cm->exit_status().elem());
 }
 
+void Worker::ProcessDefinedTemplateCommand(DefinedTemplateCommand* cm) {
+  application_->DefinedTemplate(cm->job_graph_name());
+}
+
+
 void Worker::SetupDataExchangerInterface() {
   data_exchanger_ = new WorkerDataExchanger(listening_port_);
   data_exchanger_thread_ = new boost::thread(
@@ -482,6 +491,7 @@ void Worker::LoadSchedulerCommands() {
   scheduler_command_table_[SchedulerCommand::PARTITION_ADD] = new PartitionAddCommand();
   scheduler_command_table_[SchedulerCommand::PARTITION_REMOVE] = new PartitionRemoveCommand();
   scheduler_command_table_[SchedulerCommand::TERMINATE] = new TerminateCommand();
+  scheduler_command_table_[SchedulerCommand::DEFINED_TEMPLATE] = new DefinedTemplateCommand();
 }
 
 worker_id_t Worker::id() {

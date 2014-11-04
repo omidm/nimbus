@@ -108,6 +108,7 @@ class Worker {
   virtual void ProcessPartitionAddCommand(PartitionAddCommand* command);
   virtual void ProcessPartitionRemoveCommand(PartitionRemoveCommand* command);
   virtual void ProcessTerminateCommand(TerminateCommand* command);
+  virtual void ProcessDefinedTemplateCommand(DefinedTemplateCommand* command);
 
   worker_id_t id();
   void set_id(worker_id_t id);

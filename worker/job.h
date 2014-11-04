@@ -152,6 +152,12 @@ class Job {
 
     bool MarkEndOfStage() {return false;}
 
+    void StartTemplate(std::string template_name) {}
+
+    void EndTemplate(std::string template_name) {}
+
+    bool IsTemplateDefined(std::string template_name) {return false;}
+
     std::string name() const;
     ID<job_id_t> id() const;
     IDSet<physical_data_id_t> read_set() const;
