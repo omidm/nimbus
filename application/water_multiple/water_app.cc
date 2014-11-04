@@ -278,6 +278,8 @@ namespace application {
         RegisterStaticConfigPrototype(
             STATIC_CONFIG_U_INTERFACE, new StaticConfigUInterface(kDefaultRegion));
         RegisterStaticConfigPrototype(
+            STATIC_CONFIG_FORCE, new StaticConfigForce(kDefaultRegion));
+        RegisterStaticConfigPrototype(
             STATIC_CONFIG_COLLISION_BODY,
             new StaticConfigCollisionBody(kDefaultRegion));
 

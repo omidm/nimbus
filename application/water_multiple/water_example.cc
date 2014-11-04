@@ -82,6 +82,7 @@ WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
     create_destroy_ple = true;
     static_config_valid_mask = NULL;
     static_config_u_interface = NULL;
+    static_config_force = NULL;
     static_config_collision_body = cache_collision_body;
     // Initialize_Particles();
     // Initialize_Read_Write_General_Structures();
@@ -133,6 +134,7 @@ WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
     create_destroy_ple = true;
     static_config_valid_mask = cache->static_config_valid_mask;
     static_config_u_interface = cache->static_config_u_interface;
+    static_config_force = cache->static_config_force;
     static_config_collision_body = cache_collision_body;
     // Initialize_Particles();
     // Initialize_Read_Write_General_Structures();
@@ -185,6 +187,7 @@ WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
     create_destroy_ple = false;
     static_config_valid_mask = cache->static_config_valid_mask;
     static_config_u_interface = cache->static_config_u_interface;
+    static_config_force = cache->static_config_force;
     static_config_collision_body = cache_collision_body;
     // Initialize_Particles();
     // Initialize_Read_Write_General_Structures();
@@ -196,6 +199,7 @@ template<class TV> WATER_EXAMPLE<TV>::
 ~WATER_EXAMPLE()
 {
     assert(static_config_valid_mask == NULL);
+    assert(static_config_force == NULL);
     delete &projection;
     particle_levelset_evolution.particle_levelset.Set_Thread_Queue(NULL);
     particle_levelset_evolution.particle_levelset.levelset.thread_queue=NULL;
@@ -743,6 +747,12 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
                                        u_interface_dummy);
       config_manager->ReleaseStaticConfigVariable(static_config_u_interface);
       static_config_u_interface = NULL;
+    }
+    if (static_config_force) {
+      T_FACE_ARRAY::Nimbus_Copy_Arrays(incompressible.force,
+                                       force_dummy);
+      config_manager->ReleaseStaticConfigVariable(static_config_force);
+      static_config_force = NULL;
     }
 
     // nimbus::int_dimension_t array_shift[3] = {

@@ -33,59 +33,51 @@
  */
 
 /*
- * Author: Chinmayee Shah <chshah@stanford.edu>
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_
+#include "application/water_multiple/physbam_utils.h"
 
-#include "application/water_multiple/cache_data_include.h"
-#include "application/water_multiple/cache_prototypes.h"
+#include "application/water_multiple/static_config_force.h"
 
 namespace application {
 
-struct AppCacheObjects {
-  CacheFaceArray<T> *fv;
-  CacheFaceArray<T> *fvg;
-  CacheFaceArray<bool> *psi_n;
-  CacheScalarArray<T> *phi3;
-  CacheScalarArray<T> *phi7;
-  CacheScalarArray<T> *phi8;
-  CacheScalarArray<bool> *psi_d;
-  CacheParticleLevelsetEvolution<T> *ple;
-  CacheScalarArray<T> *pressure;
-  CacheScalarArray<int> *color;
-  CacheScalarArray<T> *divergence;
-  CacheSparseMatrix *matrix_a;
-  CacheArrayM2C * index_m2c;
-  CacheRawGridArray *index_c2m;
-  CacheVector* vector_b;
-  StaticConfigValidMask* static_config_valid_mask;
-  StaticConfigUInterface* static_config_u_interface;
-  StaticConfigForce* static_config_force;
+StaticConfigForce::StaticConfigForce(
+    const GeometricRegion& global_region) {
+  global_region_ = global_region;
+  physbam_data_structure_ = NULL;
+}
 
-  AppCacheObjects() {
-    fv    = NULL;
-    fvg   = NULL;
-    psi_n = NULL;
-    phi3  = NULL;
-    phi7  = NULL;
-    phi8  = NULL;
-    psi_d = NULL;
-    ple   = NULL;
-    pressure = NULL;
-    color = NULL;
-    divergence = NULL;
-    matrix_a = NULL;
-    index_m2c = NULL;
-    index_c2m = NULL;
-    vector_b = NULL;
-    static_config_valid_mask = NULL;
-    static_config_u_interface = NULL;
-    static_config_force = NULL;
+StaticConfigForce::~StaticConfigForce() {
+  if (physbam_data_structure_) {
+    Destroy();
   }
-};
+}
+
+StaticConfigVariable* StaticConfigForce::CreateNew(
+    const GeometricRegion& local_region) const {
+  StaticConfigForce* force =
+      new StaticConfigForce(global_region_);
+  force->local_region_ = local_region;
+  PhysBAM::GRID<TV> mac_grid;
+  mac_grid.Initialize(TV_INT(local_region.dx(),
+                             local_region.dy(),
+                             local_region.dz()),
+                      GridToRange(global_region_, local_region),
+                      true);
+  force->physbam_data_structure_ = new DataType;
+  force->physbam_data_structure_->Resize(mac_grid, 1);
+  return force;
+}
+
+void StaticConfigForce::Destroy() {
+  if (physbam_data_structure_) {
+    delete physbam_data_structure_;
+  }
+}
+
+StaticConfigForce::DataType* StaticConfigForce::GetData() const {
+  return physbam_data_structure_;
+}
 
 }  // namespace application
-
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_

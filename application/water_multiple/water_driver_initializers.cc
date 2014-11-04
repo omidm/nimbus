@@ -117,7 +117,6 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
 
     //add forces
     example.incompressible.Set_Gravity();
-    // TODO(quhang): remove.
     example.incompressible.Set_Body_Force(true);
     example.incompressible.projection.Use_Non_Zero_Divergence(false);
     example.incompressible.projection.elliptic_solver->Solve_Neumann_Regions(false);
@@ -247,7 +246,6 @@ template<class TV> void WATER_DRIVER<TV>::Initialize(
 
     //add forces
     example.incompressible.Set_Gravity();
-    // TODO(quhang): remove.
     example.incompressible.Set_Body_Force(true);
     example.incompressible.projection.Use_Non_Zero_Divergence(false);
     example.incompressible.projection.elliptic_solver->Solve_Neumann_Regions(false);
@@ -387,8 +385,11 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
   }
   {
     application::ScopeTimer scope_timer("part_4.4.2");
-    // TODO: remove
-    example.incompressible.Set_Body_Force(true);
+    example.incompressible.use_force = true;
+    example.incompressible.force.Nimbus_Delete_Base_Pointer();
+    T_FACE_ARRAYS_SCALAR::Nimbus_Copy_Arrays(
+        example.incompressible.force,
+        *example.static_config_force->GetData());
   }
   {
     application::ScopeTimer scope_timer("part_4.4.3");

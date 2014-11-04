@@ -412,6 +412,10 @@ void GetAppCacheObjects(
                                                 local_region));
     assert(cache->static_config_u_interface != NULL);
   }
+  cache->static_config_force = dynamic_cast<StaticConfigForce*>(
+      config_manager->GetStaticConfigVariable(STATIC_CONFIG_FORCE,
+                                              local_region));
+  assert(cache->static_config_force != NULL);
 }
 
 bool InitializeExampleAndDriver(

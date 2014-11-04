@@ -88,6 +88,7 @@ public:
     LaplaceSolverWrapper laplace_solver_wrapper;
 
     T_FACE_ARRAY u_interface_dummy;
+    T_FACE_ARRAY force_dummy;
     T_FACE_ARRAY_BOOL valid_mask_dummy;
     T_FACE_ARRAY t_face_dummy;
     T_SCALAR_ARRAY t_scalar_dummy;
@@ -102,9 +103,11 @@ public:
 
     typedef application::StaticConfigValidMask StaticConfigValidMask;
     typedef application::StaticConfigUInterface StaticConfigUInterface;
+    typedef application::StaticConfigForce StaticConfigForce;
     typedef application::StaticConfigCollisionBody StaticConfigCollisionBody;
     StaticConfigValidMask* static_config_valid_mask;
     StaticConfigUInterface* static_config_u_interface;
+    StaticConfigForce* static_config_force;
     StaticConfigCollisionBody* static_config_collision_body;
     // cache objects
     bool use_cache;
