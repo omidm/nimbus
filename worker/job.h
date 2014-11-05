@@ -143,9 +143,9 @@ class Job {
                                       const std::string& variable,
                                       const GeometricRegion* r);
 
-    void LoadLogicalIdsInSet(IDSet<logical_data_id_t>* set,
-                             const nimbus::GeometricRegion& region,
-                             ...);
+    void LoadLdoIdsInSet(IDSet<logical_data_id_t>* set,
+                         const nimbus::GeometricRegion& region,
+                         ...);
 
     bool StageJobAndLoadBeforeSet(IDSet<job_id_t> *before_set,
                                   const std::string& name,

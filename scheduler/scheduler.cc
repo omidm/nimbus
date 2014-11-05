@@ -212,6 +212,7 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
     default:
       dbg(DBG_ERROR, "ERROR: %s have not been implemented in ProcessSchedulerCommand yet.\n",
           cm->ToNetworkData().c_str());
+      exit(-1);
   }
 }
 

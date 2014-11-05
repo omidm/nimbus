@@ -295,9 +295,9 @@ int Job::GetIntersectingLogicalObjects(CLdoVector* result,
 
 
 
-void Job::LoadLogicalIdsInSet(IDSet<logical_data_id_t>* set,
-                              const nimbus::GeometricRegion& region,
-                              ...) {
+void Job::LoadLdoIdsInSet(IDSet<logical_data_id_t>* set,
+                          const nimbus::GeometricRegion& region,
+                          ...) {
   switch (spawn_state_) {
     case START_KNOWN_TEMPLATE:
       // Neutralize the call - omidm
