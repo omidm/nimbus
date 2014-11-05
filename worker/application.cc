@@ -103,12 +103,14 @@ bool Application::IsTemplateDefined(std::string name) {
 
 void Application::StartTemplate(const std::string& template_name,
                                 const job_id_t& parent_job_id) {
-  // TODO(omidm): Implement!
+  StartTemplateCommand command(template_name, ID<job_id_t>(parent_job_id));
+  client_->SendCommand(&command);
 }
 
 void Application::EndTemplate(const std::string& template_name,
                               const job_id_t& parent_job_id) {
-  // TODO(omidm): Implement!
+  EndTemplateCommand command(template_name, ID<job_id_t>(parent_job_id));
+  client_->SendCommand(&command);
 }
 
 // Thread-safe.
@@ -166,7 +168,12 @@ bool Application::SpawnTemplate(const std::string& job_graph_name,
                                 const std::vector<job_id_t>& outer_job_ids,
                                 const std::vector<Parameter>& parameters,
                                 const job_id_t& parent_id) {
-  // TODO(omidm): complete the implementation.
+  SpawnTemplateCommand command(job_graph_name,
+                               inner_job_ids,
+                               outer_job_ids,
+                               parameters,
+                               ID<job_id_t>(parent_id));
+  client_->SendCommand(&command);
 }
 
 
