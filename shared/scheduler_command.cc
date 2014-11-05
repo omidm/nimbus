@@ -223,7 +223,7 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
 
   SchedulerCommand::PrototypeTable::iterator it = command_table->find((uint16_t)pBuf.type());
   if (it == command_table->end()) {
-    dbg(DBG_ERROR, "ERROR: Could not find command type of string %s in command table.\n", input.c_str()); // NOLINT
+    dbg(DBG_ERROR, "ERROR: Could not find command type %d in command table.\n", (uint16_t)pBuf.type()); // NOLINT
     exit(-1);
   }
 

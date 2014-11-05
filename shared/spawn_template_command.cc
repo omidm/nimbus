@@ -46,8 +46,8 @@ using boost::tokenizer;
 using boost::char_separator;
 
 SpawnTemplateCommand::SpawnTemplateCommand() {
-  name_ = SPAWN_JOB_GRAPH_NAME;
-  type_ = SPAWN_JOB_GRAPH;
+  name_ = SPAWN_TEMPLATE_NAME;
+  type_ = SPAWN_TEMPLATE;
 }
 
 SpawnTemplateCommand::SpawnTemplateCommand(const std::string& job_graph_name,
@@ -60,8 +60,8 @@ SpawnTemplateCommand::SpawnTemplateCommand(const std::string& job_graph_name,
     outer_job_ids_(inner_job_ids),
     parameters_(parameters),
     parent_job_id_(parent_job_id) {
-  name_ = SPAWN_JOB_GRAPH_NAME;
-  type_ = SPAWN_JOB_GRAPH;
+  name_ = SPAWN_TEMPLATE_NAME;
+  type_ = SPAWN_TEMPLATE;
 }
 
 SpawnTemplateCommand::~SpawnTemplateCommand() {
@@ -100,7 +100,7 @@ std::string SpawnTemplateCommand::ToNetworkData() {
   // First we construct a general scheduler buffer, then
   // add the spawn template field to it, then serialize.
   SchedulerPBuf buf;
-  buf.set_type(SchedulerPBuf_Type_SPAWN_JOB_GRAPH);
+  buf.set_type(SchedulerPBuf_Type_SPAWN_TEMPLATE);
   SpawnTemplatePBuf* cmd = buf.mutable_spawn_template();
   WriteToProtobuf(cmd);
 
