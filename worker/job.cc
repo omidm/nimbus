@@ -55,9 +55,11 @@ Job::Job() {
   max_alloc_ = 0;
   worker_thread_ = NULL;
   spawn_state_ = INIT;
+  dependency_query_ = new DependencyQuery();
 }
 
 Job::~Job() {
+  delete dependency_query_;
 }
 
 // TODO(omidm) should remove this later. left it now so the tests
@@ -327,13 +329,48 @@ bool Job::StageJobAndLoadBeforeSet(IDSet<job_id_t> *before_set,
                                    const IDSet<logical_data_id_t>& read,
                                    const IDSet<logical_data_id_t>& write,
                                    const bool barrier) {
-  // TODO(omidm): implement!
-  return false;
+  switch (spawn_state_) {
+    case START_KNOWN_TEMPLATE:
+      // Neutralize the call - omidm
+      break;
+    case END_TEMPLATE:
+      dbg(DBG_ERROR, "ERROR: currently dependency quey is not valid if template is already ended in a non-sterile job!\n"); // NOLINT
+      exit(-1);
+      return false;
+      break;
+    case INIT:
+    case NORMAL:
+    case START_UNKNOWN_TEMPLATE:
+      return dependency_query_->StageJobAndLoadBeforeSet(before_set,
+                                                         name,
+                                                         id,
+                                                         read,
+                                                         write,
+                                                         barrier);
+      break;
+  }
+
+  return true;
 }
 
 bool Job::MarkEndOfStage() {
-  // TODO(omidm): implement!
-  return false;
+  switch (spawn_state_) {
+    case START_KNOWN_TEMPLATE:
+      // Neutralize the call - omidm
+      break;
+    case END_TEMPLATE:
+      dbg(DBG_ERROR, "ERROR: currently dependency quey is not valid if template is already ended in a non-sterile job!\n"); // NOLINT
+      exit(-1);
+      return false;
+      break;
+    case INIT:
+    case NORMAL:
+    case START_UNKNOWN_TEMPLATE:
+      return dependency_query_->MarkEndOfStage();
+      break;
+  }
+
+  return true;
 }
 
 void Job::StartTemplate(const std::string& template_name) {

@@ -50,8 +50,7 @@
 
 namespace nimbus {
 
-DependencyQuery::DependencyQuery(Job* job) {
-  job_ = job;
+DependencyQuery::DependencyQuery() {
   has_last_barrier_job_ = false;
   group_id_counter_ = 0;
   total_job_ = 0;

@@ -55,6 +55,7 @@
 #include "worker/cache_manager.h"
 #include "worker/data.h"
 #include "worker/ldo_index_cache.h"
+#include "worker/dependency_query.h"
 #include "worker/worker_ldo_map.h"
 
 namespace nimbus {
@@ -248,6 +249,8 @@ class Job {
     std::vector<job_id_t> template_inner_job_ids_;
     std::vector<job_id_t> template_outer_job_ids_;
     std::vector<Parameter> template_parameters_;
+
+    DependencyQuery *dependency_query_;
 
   protected:
     // TODO(omidm) should remove it later; left them now so the tests

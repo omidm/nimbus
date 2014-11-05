@@ -52,9 +52,8 @@
 #include <list>
 #include <string>
 #include <vector>
-#include "shared/nimbus.h"
+#include "shared/nimbus_types.h"
 #include "shared/geometric_region.h"
-#include "worker/job.h"
 
 namespace nimbus {
 
@@ -86,7 +85,7 @@ class DependencyQuery {
 
   typedef boost::unordered_map<logical_data_id_t, OutstandingAccessors> OutstandingAccessorsMap;
 
-  explicit DependencyQuery(Job* job);
+  DependencyQuery();
   ~DependencyQuery();
 
   // Read and write set will be cleared, due to performance consideration.
@@ -116,7 +115,6 @@ class DependencyQuery {
   double e3_time_;
   double e4_time_;
 
-  Job* job_;
   bool has_last_barrier_job_;
   job_id_t last_barrier_job_id_;
   GroupId group_id_counter_;
