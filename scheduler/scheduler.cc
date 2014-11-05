@@ -209,6 +209,15 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
       break;
     case SchedulerCommand::PROFILE:
       break;
+    case SchedulerCommand::SPAWN_TEMPLATE:
+      ProcessSpawnTemplateCommand(reinterpret_cast<SpawnTemplateCommand*>(cm));
+      break;
+    case SchedulerCommand::START_TEMPLATE:
+      ProcessStartTemplateCommand(reinterpret_cast<StartTemplateCommand*>(cm));
+      break;
+    case SchedulerCommand::END_TEMPLATE:
+      ProcessEndTemplateCommand(reinterpret_cast<EndTemplateCommand*>(cm));
+      break;
     default:
       dbg(DBG_ERROR, "ERROR: %s have not been implemented in ProcessSchedulerCommand yet.\n",
           cm->ToNetworkData().c_str());
@@ -345,6 +354,18 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
 void Scheduler::ProcessTerminateCommand(TerminateCommand* cm) {
   terminate_application_flag_ = true;
   terminate_application_status_ = cm->exit_status().elem();
+}
+
+void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
+  // TODO(omidm): Implement!
+}
+
+void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
+  // TODO(omidm): Implement!
+}
+
+void Scheduler::ProcessEndTemplateCommand(EndTemplateCommand* cm) {
+  // TODO(omidm): Implement!
 }
 
 void Scheduler::TerminationProcedure() {
@@ -503,6 +524,9 @@ void Scheduler::LoadWorkerCommands() {
   worker_command_table_[SchedulerCommand::DEFINE_PARTITION]  = new DefinePartitionCommand();
   worker_command_table_[SchedulerCommand::TERMINATE]         = new TerminateCommand();
   worker_command_table_[SchedulerCommand::PROFILE]           = new ProfileCommand();
+  worker_command_table_[SchedulerCommand::SPAWN_TEMPLATE]    = new SpawnTemplateCommand();
+  worker_command_table_[SchedulerCommand::START_TEMPLATE]    = new StartTemplateCommand();
+  worker_command_table_[SchedulerCommand::END_TEMPLATE]      = new EndTemplateCommand();
 }
 
 void Scheduler::LoadUserCommands() {
