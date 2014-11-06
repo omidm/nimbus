@@ -84,9 +84,50 @@ class TemplateEntry {
     bool AddExplicitCopyJob();
 
   private:
+    typedef std::vector<job_id_t*> PtrList;
+    typedef boost::unordered_set<job_id_t*> PtrSet;
+    typedef boost::unordered_map<job_id_t, job_id_t*> PtrMap;
+
+    class ComputeJobEntry {
+      public:
+        ComputeJobEntry(const std::string& job_name,
+                        job_id_t* job_id_ptr,
+                        const IDSet<logical_data_id_t>& read_set,
+                        const IDSet<logical_data_id_t>& write_set,
+                        const PtrSet& before_set_ptrs,
+                        const PtrSet& after_set_ptrs,
+                        job_id_t* future_job_id_ptr,
+                        const bool& sterile,
+                        const GeometricRegion& region)
+          : job_name_(job_name),
+            job_id_ptr_(job_id_ptr),
+            read_set_(read_set),
+            write_set_(write_set),
+            before_set_ptrs_(before_set_ptrs),
+            after_set_ptrs_(after_set_ptrs),
+            future_job_id_ptr_(future_job_id_ptr),
+            sterile_(sterile),
+            region_(region) {}
+
+        ~ComputeJobEntry() {}
+
+        std::string job_name_;
+        job_id_t* job_id_ptr_;
+        IDSet<logical_data_id_t> read_set_;
+        IDSet<logical_data_id_t> write_set_;
+        PtrSet before_set_ptrs_;
+        PtrSet after_set_ptrs_;
+        job_id_t* future_job_id_ptr_;
+        bool sterile_;
+        GeometricRegion region_;
+    };
+
+    typedef std::vector<ComputeJobEntry> EntryList;
+
     bool finalized_;
-    std::vector<job_id_t*> id_ptrs_list_;
-    boost::unordered_map<job_id_t, job_id_t*> id_ptrs_map_;
+    PtrList job_id_ptrs_;
+    PtrMap job_id_ptrs_map_;
+    EntryList entry_list_;
 };
 
 }  // namespace nimbus
