@@ -58,6 +58,7 @@
 #include "shared/scheduler_server.h"
 #include "scheduler/data_manager.h"
 #include "scheduler/job_manager.h"
+#include "scheduler/template_manager.h"
 #include "scheduler/load_balancer.h"
 #include "scheduler/job_assigner.h"
 #include "scheduler/version_manager.h"
@@ -119,6 +120,7 @@ class Scheduler {
     virtual void CreateSchedulerServer();
     virtual void CreateDataManager();
     virtual void CreateJobManager();
+    virtual void CreateTemplateManager();
     virtual void CreateLoadBalancer();
     virtual void CreateJobAssigner();
 
@@ -126,6 +128,7 @@ class Scheduler {
     virtual void SetupSchedulerServer();
     virtual void SetupDataManager();
     virtual void SetupJobManager();
+    virtual void SetupTemplateManager();
     virtual void SetupLoadBalancer();
     virtual void SetupJobAssigner();
     virtual void SetupCleaner();
@@ -143,6 +146,7 @@ class Scheduler {
     AfterMap *after_map_;
     SchedulerServer* server_;
     JobManager* job_manager_;
+    TemplateManager* template_manager_;
     DataManager* data_manager_;
     JobAssigner *job_assigner_;
     LoadBalancer *load_balancer_;

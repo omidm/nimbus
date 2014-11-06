@@ -55,6 +55,7 @@ Scheduler::Scheduler(port_t port) {
   server_ = NULL;
   id_maker_ = NULL;
   job_manager_ = NULL;
+  template_manager_ = NULL;
   data_manager_ = NULL;
   job_assigner_ = NULL;
   load_balancer_ = NULL;
@@ -93,6 +94,7 @@ void Scheduler::Run() {
   CreateSchedulerServer();
   CreateDataManager();
   CreateJobManager();
+  CreateTemplateManager();
   CreateLoadBalancer();
   CreateJobAssigner();
 
@@ -100,6 +102,7 @@ void Scheduler::Run() {
   SetupSchedulerServer();
   SetupDataManager();
   SetupJobManager();
+  SetupTemplateManager();
   SetupLoadBalancer();
   SetupJobAssigner();
   SetupJobDoneBouncer();
@@ -358,6 +361,7 @@ void Scheduler::ProcessTerminateCommand(TerminateCommand* cm) {
 
 void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
   // TODO(omidm): Implement!
+  std::cout << "OMID SPAWN TEMPLATE\n.";
 }
 
 void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
@@ -366,6 +370,9 @@ void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
 
 void Scheduler::ProcessEndTemplateCommand(EndTemplateCommand* cm) {
   // TODO(omidm): Implement!
+  DefinedTemplateCommand command(cm->job_graph_name());
+  server_->BroadcastCommand(&command);
+  std::cout << "OMID END TEMPLATE\n.";
 }
 
 void Scheduler::TerminationProcedure() {
@@ -454,6 +461,10 @@ void Scheduler::CreateJobManager() {
   job_manager_ = new JobManager();
 }
 
+void Scheduler::CreateTemplateManager() {
+  template_manager_ = new TemplateManager();
+}
+
 void Scheduler::CreateLoadBalancer() {
   load_balancer_ = new LoadBalancer();
 }
@@ -478,6 +489,10 @@ void Scheduler::SetupDataManager() {
 void Scheduler::SetupJobManager() {
   job_manager_->set_after_map(after_map_);
   job_manager_->set_ldo_map_p(data_manager_->ldo_map_p());
+}
+
+void Scheduler::SetupTemplateManager() {
+  template_manager_->set_job_manager(job_manager_);
 }
 
 void Scheduler::SetupLoadBalancer() {
