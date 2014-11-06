@@ -167,6 +167,7 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     pthread_mutex_lock(&cache_lock);
     PrintTimeStamp("end", "GAV l2");
     cv->ReleasePendingFlag(&flush, &diff, &sync, &sync_co);
+    cv->unset_pending_flag();
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
     PrintTimeStamp("end", "GAV");
@@ -251,6 +252,7 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
     PrintTimeStamp("end", "GAS l2");
     cs->ReleasePendingFlag(var_type,
                            &flush_sets, &diff_sets, &sync_sets, &sync_co_sets);
+    cs->unset_pending_flag();
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
     PrintTimeStamp("end", "GAS");
@@ -283,16 +285,17 @@ void CacheManager::SyncData(Data *d) {
     }
     // assert(co->IsAvailable(cache::EXCLUSIVE));
     d->set_pending_flag(Data::WRITE);
-    co->set_pending_flag();
-    d->ClearDirtyMappings();
+    // co->set_pending_flag();
+    // d->ClearDirtyMappings();
     pthread_mutex_unlock(&cache_lock);
 
     co->PullData(d);
     PrintTimeStamp("start", "SD l2");
     pthread_mutex_lock(&cache_lock);
     PrintTimeStamp("end", "SD l2");
+    d->ClearDirtyMappings();
     d->unset_pending_flag(Data::WRITE);
-    co->unset_pending_flag();
+    // co->unset_pending_flag();
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
     PrintTimeStamp("end", "SD");
@@ -320,7 +323,7 @@ void CacheManager::InvalidateMappings(Data *d) {
 
 void CacheManager::ReleaseAccess(CacheObject* cache_object) {
     pthread_mutex_lock(&cache_lock);
-    cache_object->unset_pending_flag();
+    // cache_object->unset_pending_flag();
     // TODO(quhang): use private method and mark friend class.
     cache_object->ReleaseAccessInternal();
     pthread_cond_broadcast(&cache_cond);
