@@ -45,9 +45,12 @@ using namespace nimbus; // NOLINT
 
 TemplateEntry::TemplateEntry() {
   finalized_ = false;
+  // TODO(omidm): currently we do not support future job id in templates!
+  future_job_id_ptr_ = boost::shared_ptr<job_id_t>(new job_id_t(0));
 }
 
 TemplateEntry::~TemplateEntry() {
+  // Used shared ptr for allocated pointers. -omidm
 }
 
 bool TemplateEntry::finalized() {
@@ -55,23 +58,99 @@ bool TemplateEntry::finalized() {
 }
 
 bool TemplateEntry::Finalize() {
-  // TODO(omidm): Implement!
-  return false;
+  if (finalized_) {
+    dbg(DBG_WARN, "WARNING: template has been already finalized!\n");
+    return true;
+  }
+
+  if (job_id_ptrs_map_.size() != job_id_ptrs_.size()) {
+    dbg(DBG_ERROR, "ERROR: referenced jobs are not equal to defined jobs!\n");
+    return false;
+  }
+
+  finalized_ = true;
+  return true;
 }
 
-bool CleanPartiallyFilledTemplate() {
-  // TODO(omidm): Implement!
-  return false;
-}
+bool TemplateEntry::CleanPartiallyFilledTemplate() {
+  if (finalized_) {
+    dbg(DBG_ERROR, "ERROR: template has been finalized and cannot get cleaned!\n");
+    return false;
+  }
 
+  entry_list_.clear();
+  job_id_ptrs_.clear();
+  job_id_ptrs_map_.clear();
+  return true;
+}
 
 bool TemplateEntry::Instantiate(JobManager *job_manager,
                                 const std::vector<job_id_t>& inner_job_ids,
                                 const std::vector<job_id_t>& outer_job_ids,
                                 const std::vector<Parameter>& parameters,
                                 const job_id_t& parent_job_id) {
-  // TODO(omidm): Implement!
-  return false;
+  if (!finalized_) {
+    dbg(DBG_ERROR, "ERROR: template has NOT been finalized and cannot get instantiated!\n");
+    return false;
+  }
+
+  assert(entry_list_.size() == job_id_ptrs_.size());
+
+  if (inner_job_ids.size() != job_id_ptrs_.size()) {
+    dbg(DBG_ERROR, "ERROR: number of provided ids does not match the required ids!\n");
+    return false;
+  }
+
+  if (parameters.size() != job_id_ptrs_.size()) {
+    dbg(DBG_ERROR, "ERROR: number of provided parameters does not match the required ids!\n");
+    return false;
+  }
+
+
+  // Set the job_id pointers to the new values.
+  size_t index = 0;
+  PtrList::iterator piter = job_id_ptrs_.begin();
+  for (; piter != job_id_ptrs_.end(); ++piter) {
+    *(*piter) = inner_job_ids[index];
+    ++index;
+  }
+
+  index = 0;
+  EntryList::iterator iter = entry_list_.begin();
+  for (; iter != entry_list_.end(); ++iter) {
+    IDSet<job_id_t> before_set;
+    {
+      // TODO(omidm) Does accesing a field in class make a copy?
+      PtrSet::iterator it = iter->before_set_ptrs_.begin();
+      for (; it != iter->before_set_ptrs_.end(); ++it) {
+        before_set.insert(*(*it));
+      }
+    }
+
+    IDSet<job_id_t> after_set;
+    {
+      // TODO(omidm) Does accesing a field in class make a copy?
+      PtrSet::iterator it = iter->after_set_ptrs_.begin();
+      for (; it != iter->after_set_ptrs_.end(); ++it) {
+        after_set.insert(*(*it));
+      }
+    }
+
+    job_manager->AddComputeJobEntry(iter->job_name_,
+                                    *(job_id_ptrs_[index]),
+                                    iter->read_set_,
+                                    iter->write_set_,
+                                    before_set,
+                                    after_set,
+                                    parent_job_id,
+                                    *(iter->future_job_id_ptr_),
+                                    iter->sterile_,
+                                    iter->region_,
+                                    parameters[index]);
+    ++index;
+  }
+
+  return true;
 }
 
 
@@ -85,8 +164,68 @@ bool TemplateEntry::AddComputeJob(const std::string& job_name,
                                   const job_id_t& future_job_id,
                                   const bool& sterile,
                                   const GeometricRegion& region) {
-  // TODO(omidm): Implement!
-  return false;
+  if (finalized_) {
+    dbg(DBG_ERROR, "ERROR: template has been finalized and cannot add compute job!\n");
+    return false;
+  }
+
+  boost::shared_ptr<job_id_t> job_id_ptr;
+  {
+    PtrMap::iterator iter = job_id_ptrs_map_.find(job_id);
+    if (iter == job_id_ptrs_map_.end()) {
+      job_id_ptr = boost::shared_ptr<job_id_t>(new job_id_t(job_id));
+      job_id_ptrs_map_[job_id] = job_id_ptr;
+    } else {
+      job_id_ptr = iter->second;
+    }
+  }
+
+  PtrSet before_set_ptrs;
+  {
+    IDSet<job_id_t>::IDSetIter it = before_set.begin();
+    for (; it != before_set.end(); ++it) {
+      boost::shared_ptr<job_id_t> ptr;
+      PtrMap::iterator iter = job_id_ptrs_map_.find(*it);
+      if (iter == job_id_ptrs_map_.end()) {
+        ptr = boost::shared_ptr<job_id_t>(new job_id_t(*it));
+        job_id_ptrs_map_[*it] = ptr;
+      } else {
+        ptr = iter->second;
+      }
+      before_set_ptrs.insert(ptr);
+    }
+  }
+
+  PtrSet after_set_ptrs;
+  {
+    IDSet<job_id_t>::IDSetIter it = after_set.begin();
+    for (; it != after_set.end(); ++it) {
+      boost::shared_ptr<job_id_t> ptr;
+      PtrMap::iterator iter = job_id_ptrs_map_.find(*it);
+      if (iter == job_id_ptrs_map_.end()) {
+        ptr = boost::shared_ptr<job_id_t>(new job_id_t(*it));
+        job_id_ptrs_map_[*it] = ptr;
+      } else {
+        ptr = iter->second;
+      }
+      after_set_ptrs.insert(ptr);
+    }
+  }
+
+  ComputeJobEntry entry(job_name,
+                        job_id_ptr,
+                        read_set,
+                        write_set,
+                        before_set_ptrs,
+                        after_set_ptrs,
+                        future_job_id_ptr_,
+                        sterile,
+                        region);
+
+  entry_list_.push_back(entry);
+  job_id_ptrs_.push_back(job_id_ptr);
+
+  return true;
 }
 
 bool TemplateEntry::AddExplicitCopyJob() {

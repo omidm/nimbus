@@ -42,6 +42,7 @@
 #define NIMBUS_SCHEDULER_TEMPLATE_ENTRY_H_
 
 #include <boost/thread.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/unordered_map.hpp>
 #include <iostream> // NOLINT
 #include <fstream> // NOLINT
@@ -88,19 +89,19 @@ class TemplateEntry {
     bool AddExplicitCopyJob();
 
   private:
-    typedef std::vector<job_id_t*> PtrList;
-    typedef boost::unordered_set<job_id_t*> PtrSet;
-    typedef boost::unordered_map<job_id_t, job_id_t*> PtrMap;
+    typedef std::vector<boost::shared_ptr<job_id_t> > PtrList;
+    typedef boost::unordered_set<boost::shared_ptr<job_id_t> > PtrSet;
+    typedef boost::unordered_map<job_id_t, boost::shared_ptr<job_id_t> > PtrMap;
 
     class ComputeJobEntry {
       public:
         ComputeJobEntry(const std::string& job_name,
-                        job_id_t* job_id_ptr,
+                        boost::shared_ptr<job_id_t> job_id_ptr,
                         const IDSet<logical_data_id_t>& read_set,
                         const IDSet<logical_data_id_t>& write_set,
                         const PtrSet& before_set_ptrs,
                         const PtrSet& after_set_ptrs,
-                        job_id_t* future_job_id_ptr,
+                        boost::shared_ptr<job_id_t> future_job_id_ptr,
                         const bool& sterile,
                         const GeometricRegion& region)
           : job_name_(job_name),
@@ -116,12 +117,12 @@ class TemplateEntry {
         ~ComputeJobEntry() {}
 
         std::string job_name_;
-        job_id_t* job_id_ptr_;
+        boost::shared_ptr<job_id_t> job_id_ptr_;
         IDSet<logical_data_id_t> read_set_;
         IDSet<logical_data_id_t> write_set_;
         PtrSet before_set_ptrs_;
         PtrSet after_set_ptrs_;
-        job_id_t* future_job_id_ptr_;
+        boost::shared_ptr<job_id_t> future_job_id_ptr_;
         bool sterile_;
         GeometricRegion region_;
     };
@@ -132,6 +133,8 @@ class TemplateEntry {
     PtrList job_id_ptrs_;
     PtrMap job_id_ptrs_map_;
     EntryList entry_list_;
+    // TODO(omidm): currently we do not support future job id in templates!
+    boost::shared_ptr<job_id_t> future_job_id_ptr_;
 };
 
 }  // namespace nimbus
