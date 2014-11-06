@@ -62,7 +62,7 @@ class TemplateEntry {
     TemplateEntry();
     ~TemplateEntry();
 
-    bool finalaized();
+    bool finalized();
 
     bool Finalize();
 

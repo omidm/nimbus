@@ -50,7 +50,7 @@ TemplateEntry::TemplateEntry() {
 TemplateEntry::~TemplateEntry() {
 }
 
-bool TemplateEntry::finalaized() {
+bool TemplateEntry::finalized() {
   return finalized_;
 }
 

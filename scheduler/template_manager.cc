@@ -50,6 +50,11 @@ TemplateManager::TemplateManager() {
 }
 
 TemplateManager::~TemplateManager() {
+  boost::unique_lock<boost::mutex> lock(mutex_);
+  TemplateMap::iterator iter = template_map_.begin();
+  for (; iter != template_map_.end(); ++iter) {
+    delete iter->second;
+  }
 }
 
 void TemplateManager::set_job_manager(JobManager* job_manager) {
@@ -57,13 +62,38 @@ void TemplateManager::set_job_manager(JobManager* job_manager) {
 }
 
 bool TemplateManager::DetectNewTemplate(const std::string& template_name) {
-  // TODO(omidm): Implement!
-  return false;
+  boost::unique_lock<boost::mutex> lock(mutex_);
+  TemplateMap::iterator iter = template_map_.find(template_name);
+  if (iter == template_map_.end()) {
+    template_map_[template_name] = new TemplateEntry();
+  } else {
+    if (!iter->second->finalized()) {
+      if (iter->second->CleanPartiallyFilledTemplate()) {
+        dbg(DBG_WARN, "WARNING: cleaned up partially filled template.\n");
+      } else {
+        dbg(DBG_ERROR, "ERROR: could not clean partially filled template!\n");
+        return false;
+      }
+    } else {
+      dbg(DBG_ERROR, "ERROR: template already has been detected and finalized!\n");
+      return false;
+    }
+  }
+
+  return true;
 }
 
 bool TemplateManager::FinalizeNewTemplate(const std::string& template_name) {
-  // TODO(omidm): Implement!
-  return false;
+  boost::unique_lock<boost::mutex> lock(mutex_);
+  TemplateMap::iterator iter = template_map_.find(template_name);
+  if (iter != template_map_.end()) {
+    return iter->second->Finalize();
+  } else {
+    dbg(DBG_ERROR, "ERROR: template has NOT been detected to get finalized!\n");
+    return false;
+  }
+
+  return true;
 }
 
 bool TemplateManager::InstantiateTemplate(const std::string& template_name,
@@ -71,8 +101,29 @@ bool TemplateManager::InstantiateTemplate(const std::string& template_name,
                                           const std::vector<job_id_t>& outer_job_ids,
                                           const std::vector<Parameter>& parameters,
                                           const job_id_t& parent_job_id) {
-  // TODO(omidm): Implement!
-  return false;
+  boost::unique_lock<boost::mutex> lock(mutex_);
+  TemplateMap::iterator iter = template_map_.find(template_name);
+  if (iter != template_map_.end()) {
+    if (job_manager_ == NULL) {
+      dbg(DBG_ERROR, "ERROR: job manager is not initialized!\n");
+      return false;
+    }
+    if (iter->second->finalized()) {
+      return iter->second->Instantiate(job_manager_,
+                                      inner_job_ids,
+                                      outer_job_ids,
+                                      parameters,
+                                      parent_job_id);
+    } else {
+      dbg(DBG_ERROR, "ERROR: template has NOT been finalized to get instantiated!\n");
+      return false;
+    }
+  } else {
+    dbg(DBG_ERROR, "ERROR: template has NOT been detected to get instantiated!\n");
+    return false;
+  }
+
+  return true;
 }
 
 
@@ -87,11 +138,38 @@ bool TemplateManager::AddComputeJobToTemplate(const std::string& template_name,
                                               const job_id_t& future_job_id,
                                               const bool& sterile,
                                               const GeometricRegion& region) {
-  // TODO(omidm): Implement!
-  return false;
+  boost::unique_lock<boost::mutex> lock(mutex_);
+  TemplateMap::iterator iter = template_map_.find(template_name);
+  if (iter != template_map_.end()) {
+    if (job_manager_ == NULL) {
+      dbg(DBG_ERROR, "ERROR: job manager is not initialized!\n");
+      return false;
+    }
+    if (!iter->second->finalized()) {
+      return iter->second->AddComputeJob(job_name,
+                                         job_id,
+                                         read_set,
+                                         write_set,
+                                         before_set,
+                                         after_set,
+                                         parent_job_id,
+                                         future_job_id,
+                                         sterile,
+                                         region);
+    } else {
+      dbg(DBG_ERROR, "ERROR: template has been finalized and cannot add compute job!\n");
+      return false;
+    }
+  } else {
+    dbg(DBG_ERROR, "ERROR: template has NOT been detected to add compute job!\n");
+    return false;
+  }
+
+  return true;
 }
 
 bool TemplateManager::AddExplicitCopyJobToTemplate() {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   dbg(DBG_ERROR, "ERROR: explicit copy jobs from application are not supported yet!.\n");
   exit(-1);
   return false;

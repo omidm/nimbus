@@ -95,6 +95,7 @@ class TemplateManager {
     Log log_;
     JobManager *job_manager_;
     TemplateMap template_map_;
+    boost::mutex mutex_;
 };
 
 }  // namespace nimbus
