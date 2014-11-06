@@ -33,16 +33,16 @@
  */
 
  /*
-  * This is TemplateManager module. This module serves the controller by providing
-  * facilities to detect, save, and instantiate templates in runtime. 
+  * This is TemplateEntry module to hold and instantiate the templates.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_TEMPLATE_MANAGER_H_
-#define NIMBUS_SCHEDULER_TEMPLATE_MANAGER_H_
+#ifndef NIMBUS_SCHEDULER_TEMPLATE_ENTRY_H_
+#define NIMBUS_SCHEDULER_TEMPLATE_ENTRY_H_
 
 #include <boost/thread.hpp>
+#include <boost/unordered_map.hpp>
 #include <iostream> // NOLINT
 #include <fstream> // NOLINT
 #include <sstream>
@@ -55,47 +55,39 @@
 #include "shared/dbg.h"
 #include "shared/log.h"
 #include "scheduler/job_manager.h"
-#include "scheduler/template_entry.h"
 
 namespace nimbus {
-class TemplateManager {
+class TemplateEntry {
   public:
-    typedef boost::unordered_map<std::string, TemplateEntry*> TemplateMap;
-    TemplateManager();
-    ~TemplateManager();
+    TemplateEntry();
+    ~TemplateEntry();
 
-    void set_job_manager(JobManager* job_manager);
+    bool Finalize();
 
-    bool DetectNewTemplate(const std::string& template_name);
+    bool Instantiate(JobManager *job_manager,
+                     const std::vector<job_id_t>& inner_job_ids,
+                     const std::vector<job_id_t>& outer_job_ids,
+                     const std::vector<Parameter>& parameters,
+                     const job_id_t& parent_job_id);
 
-    bool FinalizeNewTemplate(const std::string& template_name);
+    bool AddComputeJob(const std::string& job_name,
+                       const job_id_t& job_id,
+                       const IDSet<logical_data_id_t>& read_set,
+                       const IDSet<logical_data_id_t>& write_set,
+                       const IDSet<job_id_t>& before_set,
+                       const IDSet<job_id_t>& after_set,
+                       const job_id_t& parent_job_id,
+                       const job_id_t& future_job_id,
+                       const bool& sterile,
+                       const GeometricRegion& region);
 
-    bool InstantiateTemplate(const std::string& template_name,
-                             const std::vector<job_id_t>& inner_job_ids,
-                             const std::vector<job_id_t>& outer_job_ids,
-                             const std::vector<Parameter>& parameters,
-                             const job_id_t& parent_job_id);
-
-    bool AddComputeJobToTemplate(const std::string& template_name,
-                                 const std::string& job_name,
-                                 const job_id_t& job_id,
-                                 const IDSet<logical_data_id_t>& read_set,
-                                 const IDSet<logical_data_id_t>& write_set,
-                                 const IDSet<job_id_t>& before_set,
-                                 const IDSet<job_id_t>& after_set,
-                                 const job_id_t& parent_job_id,
-                                 const job_id_t& future_job_id,
-                                 const bool& sterile,
-                                 const GeometricRegion& region);
-
-    bool AddExplicitCopyJobToTemplate();
-
+    bool AddExplicitCopyJob();
 
   private:
-    Log log_;
-    JobManager *job_manager_;
-    TemplateMap template_map_;
+    bool finalized_;
+    std::vector<job_id_t*> id_ptrs_list_;
+    boost::unordered_map<job_id_t, job_id_t*> id_ptrs_map_;
 };
 
 }  // namespace nimbus
-#endif  // NIMBUS_SCHEDULER_TEMPLATE_MANAGER_H_
+#endif  // NIMBUS_SCHEDULER_TEMPLATE_ENTRY_H_
