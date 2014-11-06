@@ -247,6 +247,22 @@ void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
                                    cm->region(),
                                    cm->params());
 
+  std::map<job_id_t, std::string>::iterator iter =
+    template_spawner_map_.find(cm->parent_job_id().elem());
+  if (iter != template_spawner_map_.end()) {
+    template_manager_->AddComputeJobToTemplate(iter->second,
+                                               cm->job_name(),
+                                               cm->job_id().elem(),
+                                               cm->read_set(),
+                                               cm->write_set(),
+                                               cm->before_set(),
+                                               cm->after_set(),
+                                               cm->parent_job_id().elem(),
+                                               cm->future_job_id().elem(),
+                                               cm->sterile(),
+                                               cm->region());
+  }
+
   snprintf(buff, sizeof(buff), "%10.9f JE id: %lu n: %s.",
       Log::GetRawTime(), cm->job_id().elem(), cm->job_name().c_str());
   log_receive_stamp_.log_WriteToFile(std::string(buff));
@@ -361,15 +377,27 @@ void Scheduler::ProcessTerminateCommand(TerminateCommand* cm) {
 
 void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
   // TODO(omidm): Implement!
-  std::cout << "OMID SPAWN TEMPLATE\n.";
+  Log log(Log::NO_FILE);
+  log.StartTimer();
+  template_manager_->InstantiateTemplate(cm->job_graph_name(),
+                                         cm->inner_job_ids(),
+                                         cm->outer_job_ids(),
+                                         cm->parameters(),
+                                         cm->parent_job_id().elem());
+  log.StopTimer();
+  std::cout << "OMID SPAWN TEMPLATE. " << log.timer() << std::endl;
 }
 
 void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
   // TODO(omidm): Implement!
+  template_manager_->DetectNewTemplate(cm->job_graph_name());
+  template_spawner_map_[cm->parent_job_id().elem()] = cm->job_graph_name();
+  std::cout << "OMID START TEMPLATE\n.";
 }
 
 void Scheduler::ProcessEndTemplateCommand(EndTemplateCommand* cm) {
   // TODO(omidm): Implement!
+  template_manager_->FinalizeNewTemplate(cm->job_graph_name());
   DefinedTemplateCommand command(cm->job_graph_name());
   server_->BroadcastCommand(&command);
   std::cout << "OMID END TEMPLATE\n.";

@@ -151,6 +151,8 @@ class Scheduler {
     JobAssigner *job_assigner_;
     LoadBalancer *load_balancer_;
 
+    std::map<job_id_t, std::string> template_spawner_map_;
+
     boost::thread* cleaner_thread_;
     boost::thread* user_interface_thread_;
     boost::thread* job_done_bouncer_thread_;
