@@ -50,10 +50,20 @@ TemplateEntry::TemplateEntry() {
 TemplateEntry::~TemplateEntry() {
 }
 
+bool TemplateEntry::finalaized() {
+  return finalized_;
+}
+
 bool TemplateEntry::Finalize() {
   // TODO(omidm): Implement!
   return false;
 }
+
+bool CleanPartiallyFilledTemplate() {
+  // TODO(omidm): Implement!
+  return false;
+}
+
 
 bool TemplateEntry::Instantiate(JobManager *job_manager,
                                 const std::vector<job_id_t>& inner_job_ids,

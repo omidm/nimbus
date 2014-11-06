@@ -62,7 +62,11 @@ class TemplateEntry {
     TemplateEntry();
     ~TemplateEntry();
 
+    bool finalaized();
+
     bool Finalize();
+
+    bool CleanPartiallyFilledTemplate();
 
     bool Instantiate(JobManager *job_manager,
                      const std::vector<job_id_t>& inner_job_ids,
