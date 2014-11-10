@@ -45,6 +45,7 @@
 #include <ctime>
 #include <map>
 #include <vector>
+#include <string>
 
 #include "data/cache/cache_defs.h"
 #include "data/cache/cache_object.h"
@@ -153,6 +154,17 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
 
     GeometricRegion write_region_old = cv->write_region_;
     cv->write_region_ = write_region;
+    size_t write_bytes = 0;
+    for (size_t i = 0; i < flush.size(); ++i) {
+      Data *d = flush[i];
+      write_bytes += d->memory_size();
+    }
+    for (size_t i = 0; i < sync.size(); ++i) {
+      Data *d = sync[i];
+      write_bytes += d->memory_size();
+    }
+    PrintSizeStamp("GAV wfcsize", write_bytes);
+
     PrintTimeStamp("start", "GAV wfc");
     cv->WriteFromCache(flush, write_region_old);
     for (size_t i = 0; i < sync.size(); ++i) {
@@ -160,6 +172,13 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
         sync_co[i]->PullData(sync[i]);
     }
     PrintTimeStamp("end", "GAV wfc");
+    size_t read_bytes = 0;
+    for (size_t i = 0; i < diff.size(); ++i) {
+      Data *d = diff[i];
+      read_bytes += d->memory_size();
+    }
+    PrintSizeStamp("GAV rfcsize", read_bytes);
+
     PrintTimeStamp("start", "GAV rfc");
     cv->ReadToCache(diff, read_region);
     PrintTimeStamp("end", "GAV rfc");
@@ -233,6 +252,24 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
 
     GeometricRegion write_region_old = cs->write_region_;
     cs->write_region_ = write_region;
+
+    size_t write_bytes = 0;
+    for (size_t i = 0; i < num_var; ++i) {
+      DataArray &flush_t = flush_sets[i];
+      for (size_t j = 0; j < flush_t.size(); ++j) {
+        Data *d = flush_t[j];
+        write_bytes += d->memory_size();
+      }
+    }
+    for (size_t i = 0; i < num_var; ++i) {
+      DataArray &sync_t = sync_sets[i];
+      for (size_t j = 0; j < sync_t.size(); ++j) {
+        Data *d = sync_t[j];
+        write_bytes += d->memory_size();
+      }
+    }
+    PrintSizeStamp("GAS wfcsize", write_bytes);
+
     PrintTimeStamp("start", "GAS wfc");
     cs->WriteFromCache(var_type, flush_sets, write_region_old);
     for (size_t t = 0; t < num_var; ++t) {
@@ -244,6 +281,17 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
         }
     }
     PrintTimeStamp("end", "GAS wfc");
+
+    size_t read_bytes = 0;
+    for (size_t i = 0; i < num_var; ++i) {
+      DataArray &diff_t = diff_sets[i];
+      for (size_t j = 0; j < diff_t.size(); ++j) {
+        Data *d = diff_t[j];
+        read_bytes += d->memory_size();
+      }
+    }
+    PrintSizeStamp("GAS rfcsize", read_bytes);
+
     PrintTimeStamp("start", "GAS rfc");
     cs->ReadToCache(var_type, diff_sets, read_region);
     PrintTimeStamp("end", "GAS rfc");
@@ -289,7 +337,12 @@ void CacheManager::SyncData(Data *d) {
     // d->ClearDirtyMappings();
     pthread_mutex_unlock(&cache_lock);
 
+    size_t write_bytes = d->memory_size();
+    PrintSizeStamp("SD wfcsize", write_bytes);
+
+    PrintTimeStamp("start", "SD pdata");
     co->PullData(d);
+    PrintTimeStamp("end", "SD pdata");
     PrintTimeStamp("start", "SD l2");
     pthread_mutex_lock(&cache_lock);
     PrintTimeStamp("end", "SD l2");
@@ -381,6 +434,14 @@ void CacheManager::BlockPrintTimeStamp(const char* message) {
   clock_gettime(CLOCK_REALTIME, &t);
   double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
   fprintf(block_log, "%f : %s\n", time_sum, message);
+}
+
+void CacheManager::PrintSizeStamp(const char *message, size_t num_bytes) {
+  struct timespec t;
+  clock_gettime(CLOCK_REALTIME, &t);
+  double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
+  pid_t tid = syscall(SYS_gettid);
+  fprintf(time_log, "%d ; %s ; %zu ; %f\n", tid, message, num_bytes, time_sum);
 }
 
 }  // namespace nimbus
