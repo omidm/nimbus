@@ -85,4 +85,9 @@
 #define APP_VECTOR_P_META_FORMAT "vector_p_meta_format"
 #define APP_VECTOR_TEMP "vector_temp"
 
+#define STATIC_CONFIG_VALID_MASK "valid_mask"
+#define STATIC_CONFIG_U_INTERFACE "u_interface"
+#define STATIC_CONFIG_FORCE "force"
+#define STATIC_CONFIG_COLLISION_BODY "collision_body"
+
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_NAMES_H_

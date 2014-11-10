@@ -33,59 +33,45 @@
  */
 
 /*
- * Author: Chinmayee Shah <chshah@stanford.edu>
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_
+#ifndef NIMBUS_WORKER_STATIC_CONFIG_MANAGER_H_
+#define NIMBUS_WORKER_STATIC_CONFIG_MANAGER_H_
 
-#include "application/water_multiple/cache_data_include.h"
-#include "application/water_multiple/cache_prototypes.h"
+#include <pthread.h>
+#include <map>
+#include <string>
 
-namespace application {
+#include "data/static_config/static_config_variable.h"
+#include "shared/geometric_region.h"
+#include "shared/nimbus_types.h"
 
-struct AppCacheObjects {
-  CacheFaceArray<T> *fv;
-  CacheFaceArray<T> *fvg;
-  CacheFaceArray<bool> *psi_n;
-  CacheScalarArray<T> *phi3;
-  CacheScalarArray<T> *phi7;
-  CacheScalarArray<T> *phi8;
-  CacheScalarArray<bool> *psi_d;
-  CacheParticleLevelsetEvolution<T> *ple;
-  CacheScalarArray<T> *pressure;
-  CacheScalarArray<int> *color;
-  CacheScalarArray<T> *divergence;
-  CacheSparseMatrix *matrix_a;
-  CacheArrayM2C * index_m2c;
-  CacheRawGridArray *index_c2m;
-  CacheVector* vector_b;
-  StaticConfigValidMask* static_config_valid_mask;
-  StaticConfigUInterface* static_config_u_interface;
-  StaticConfigForce* static_config_force;
+namespace nimbus {
 
-  AppCacheObjects() {
-    fv    = NULL;
-    fvg   = NULL;
-    psi_n = NULL;
-    phi3  = NULL;
-    phi7  = NULL;
-    phi8  = NULL;
-    psi_d = NULL;
-    ple   = NULL;
-    pressure = NULL;
-    color = NULL;
-    divergence = NULL;
-    matrix_a = NULL;
-    index_m2c = NULL;
-    index_c2m = NULL;
-    vector_b = NULL;
-    static_config_valid_mask = NULL;
-    static_config_u_interface = NULL;
-    static_config_force = NULL;
-  }
+class StaticConfigManager {
+ public:
+  StaticConfigManager();
+  ~StaticConfigManager();
+  void RegisterPrototype(const std::string& config_name,
+                         StaticConfigVariable* config_variable);
+  StaticConfigVariable* GetStaticConfigVariable(
+      const std::string& config_name, const GeometricRegion& local_region);
+  void ReleaseStaticConfigVariable(StaticConfigVariable* config_variable);
+  // void Clean();
+
+ private:
+  pthread_mutex_t internal_lock_;
+  typedef std::map<std::string, StaticConfigVariable*> PrototypeMap;
+  typedef std::map<GeometricRegion, StaticConfigVariable*>
+      StaticConfigPool;
+  typedef std::map<std::string, StaticConfigPool*>
+      StaticConfigPoolMap;
+
+  PrototypeMap prototype_map_;
+  StaticConfigPoolMap static_config_pool_map_;
 };
 
-}  // namespace application
+}  // namespace nimbus
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_
+#endif  // NIMBUS_WORKER_STATIC_CONFIG_MANAGER_H_

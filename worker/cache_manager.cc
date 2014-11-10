@@ -58,7 +58,7 @@
 #define FIRST_UNIQUE_ID 1000
 namespace nimbus {
 
-bool CacheManager::print_stat_ = false;
+bool CacheManager::print_stat_ = true;
 
 /**
  * \details

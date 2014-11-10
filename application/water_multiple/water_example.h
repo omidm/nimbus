@@ -46,6 +46,7 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
 
     // data types
     typedef ARRAY<T,FACE_INDEX<TV::dimension> > T_FACE_ARRAY;
+    typedef ARRAY<bool,FACE_INDEX<TV::dimension> > T_FACE_ARRAY_BOOL;
     typedef ARRAY<bool,FACE_INDEX<TV::dimension> > BOOL_FACE_ARRAY;
     typedef ARRAY<T,TV_INT> T_SCALAR_ARRAY;
     typedef ARRAY<bool,TV_INT> BOOL_SCALAR_ARRAY;
@@ -82,10 +83,13 @@ public:
     BOUNDARY_UNIFORM<GRID<TV>,T> *boundary,*phi_boundary;
     T_BOUNDARY_PHI_WATER phi_boundary_water;
     VECTOR<VECTOR<bool,2>,TV::dimension> domain_boundary;
-    T_GRID_BASED_COLLISION_GEOMETRY collision_bodies_affecting_fluid;
+    T_GRID_BASED_COLLISION_GEOMETRY* collision_bodies_affecting_fluid;
     ARRAY<IMPLICIT_OBJECT<TV>*> sources;
     LaplaceSolverWrapper laplace_solver_wrapper;
 
+    T_FACE_ARRAY u_interface_dummy;
+    T_FACE_ARRAY force_dummy;
+    T_FACE_ARRAY_BOOL valid_mask_dummy;
     T_FACE_ARRAY t_face_dummy;
     T_SCALAR_ARRAY t_scalar_dummy;
     BOOL_FACE_ARRAY b_face_dummy;
@@ -97,6 +101,14 @@ public:
     ARRAY<T, TV_INT> phi_ghost_bandwidth_seven;
     ARRAY<T, TV_INT> phi_ghost_bandwidth_eight;
 
+    typedef application::StaticConfigValidMask StaticConfigValidMask;
+    typedef application::StaticConfigUInterface StaticConfigUInterface;
+    typedef application::StaticConfigForce StaticConfigForce;
+    typedef application::StaticConfigCollisionBody StaticConfigCollisionBody;
+    StaticConfigValidMask* static_config_valid_mask;
+    StaticConfigUInterface* static_config_u_interface;
+    StaticConfigForce* static_config_force;
+    StaticConfigCollisionBody* static_config_collision_body;
     // cache objects
     bool use_cache;
     typedef typename application::CacheFaceArray<T> TCacheFaceArray;
@@ -121,12 +133,15 @@ public:
     application::CacheVector *cache_vector_b;
     bool create_destroy_ple;
 
-    WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+    WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
+                  const STREAM_TYPE stream_type_input,
                   nimbus::TaskThreadPool::TaskThreadList* allocated_threads);
-    WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+    WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
+                  const STREAM_TYPE stream_type_input,
                   application::AppCacheObjects *cache,
                   nimbus::TaskThreadPool::TaskThreadList* allocated_threads);
-    WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+    WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
+                  const STREAM_TYPE stream_type_input,
                   application::AppCacheObjects *cache,
                   PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple,
                   nimbus::TaskThreadPool::TaskThreadList* allocated_threads);

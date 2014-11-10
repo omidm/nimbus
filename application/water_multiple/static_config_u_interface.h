@@ -33,59 +33,36 @@
  */
 
 /*
- * Author: Chinmayee Shah <chshah@stanford.edu>
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_
+#include "application/water_multiple/physbam_include.h"
+#include "data/static_config/static_config_variable.h"
 
-#include "application/water_multiple/cache_data_include.h"
-#include "application/water_multiple/cache_prototypes.h"
-
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_STATIC_CONFIG_U_INTERFACE_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_STATIC_CONFIG_U_INTERFACE_
 namespace application {
 
-struct AppCacheObjects {
-  CacheFaceArray<T> *fv;
-  CacheFaceArray<T> *fvg;
-  CacheFaceArray<bool> *psi_n;
-  CacheScalarArray<T> *phi3;
-  CacheScalarArray<T> *phi7;
-  CacheScalarArray<T> *phi8;
-  CacheScalarArray<bool> *psi_d;
-  CacheParticleLevelsetEvolution<T> *ple;
-  CacheScalarArray<T> *pressure;
-  CacheScalarArray<int> *color;
-  CacheScalarArray<T> *divergence;
-  CacheSparseMatrix *matrix_a;
-  CacheArrayM2C * index_m2c;
-  CacheRawGridArray *index_c2m;
-  CacheVector* vector_b;
-  StaticConfigValidMask* static_config_valid_mask;
-  StaticConfigUInterface* static_config_u_interface;
-  StaticConfigForce* static_config_force;
+using nimbus::StaticConfigVariable;
+using nimbus::GeometricRegion;
 
-  AppCacheObjects() {
-    fv    = NULL;
-    fvg   = NULL;
-    psi_n = NULL;
-    phi3  = NULL;
-    phi7  = NULL;
-    phi8  = NULL;
-    psi_d = NULL;
-    ple   = NULL;
-    pressure = NULL;
-    color = NULL;
-    divergence = NULL;
-    matrix_a = NULL;
-    index_m2c = NULL;
-    index_c2m = NULL;
-    vector_b = NULL;
-    static_config_valid_mask = NULL;
-    static_config_u_interface = NULL;
-    static_config_force = NULL;
-  }
+class StaticConfigUInterface : public StaticConfigVariable {
+ public:
+  typedef PhysBAM::VECTOR<float, 3> TV;
+  typedef PhysBAM::VECTOR<int, 3> TV_INT;
+  typedef typename PhysBAM::FACE_INDEX<3> FaceIndex;
+  typedef typename PhysBAM::ARRAY<float, FaceIndex> DataType;
+  StaticConfigUInterface(const GeometricRegion& global_region);
+  ~StaticConfigUInterface();
+  virtual StaticConfigVariable* CreateNew(const GeometricRegion& local_region)
+      const;
+  virtual void Destroy();
+  DataType* GetData() const;
+ private:
+  GeometricRegion global_region_;
+  GeometricRegion local_region_;
+  DataType* physbam_data_structure_;
 };
 
 }  // namespace application
-
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_STATIC_CONFIG_U_INTERFACE_

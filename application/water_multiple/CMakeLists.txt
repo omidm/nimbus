@@ -109,6 +109,10 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/nimbus_thread_queue.cc
     ${PROJECT_SOURCE_DIR}/physbam_tools.cc
     ${PROJECT_SOURCE_DIR}/physbam_utils.cc
+    ${PROJECT_SOURCE_DIR}/static_config_collision_body.cc
+    ${PROJECT_SOURCE_DIR}/static_config_force.cc
+    ${PROJECT_SOURCE_DIR}/static_config_u_interface.cc
+    ${PROJECT_SOURCE_DIR}/static_config_valid_mask.cc
     ${PROJECT_SOURCE_DIR}/water_app.cc
     ${PROJECT_SOURCE_DIR}/water_driver.cc
     ${PROJECT_SOURCE_DIR}/water_driver_initializers.cc
@@ -193,6 +197,10 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/physbam_include.h
     ${PROJECT_SOURCE_DIR}/physbam_tools.h
     ${PROJECT_SOURCE_DIR}/physbam_utils.h
+    ${PROJECT_SOURCE_DIR}/static_config_collision_body.h
+    ${PROJECT_SOURCE_DIR}/static_config_force.h
+    ${PROJECT_SOURCE_DIR}/static_config_valid_mask.h
+    ${PROJECT_SOURCE_DIR}/static_config_u_interface.h
     ${PROJECT_SOURCE_DIR}/water_app.h
     ${PROJECT_SOURCE_DIR}/water_driver.h
     ${PROJECT_SOURCE_DIR}/water_example.h

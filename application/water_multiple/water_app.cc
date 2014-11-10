@@ -119,9 +119,6 @@ namespace application {
         // DIVERGENCE.
         dbg(APP_LOG, "Registering %s\n", APP_DIVERGENCE);
         RegisterData(APP_DIVERGENCE, new DataScalarArray<float>(APP_DIVERGENCE));
-        // U_INTERFACE.
-        dbg(APP_LOG, "Registering %s\n", APP_U_INTERFACE);
-        RegisterData(APP_U_INTERFACE, new DataFaceArray<float>(APP_U_INTERFACE));
 
         // These Nimbus data types are used in internal projection loop. They
         // are derived from boundary conditions and act as the linkage between
@@ -275,6 +272,16 @@ namespace application {
                     new JobProjectionReduceAlpha(this));
         RegisterJob(PROJECTION_STEP_FOUR, new JobProjectionStepFour(this));
         RegisterJob(BARRIER_JOB, new JobBarrier(this));
+
+        RegisterStaticConfigPrototype(
+            STATIC_CONFIG_VALID_MASK, new StaticConfigValidMask(kDefaultRegion));
+        RegisterStaticConfigPrototype(
+            STATIC_CONFIG_U_INTERFACE, new StaticConfigUInterface(kDefaultRegion));
+        RegisterStaticConfigPrototype(
+            STATIC_CONFIG_FORCE, new StaticConfigForce(kDefaultRegion));
+        RegisterStaticConfigPrototype(
+            STATIC_CONFIG_COLLISION_BODY,
+            new StaticConfigCollisionBody(kDefaultRegion));
 
         nimbus::TranslatorPhysBAM<float>::log = translator_log;
         nimbus::TranslatorPhysBAMOld<PhysBAM::VECTOR<float, 3> >::log = translator_log;

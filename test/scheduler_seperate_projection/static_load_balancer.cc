@@ -171,6 +171,33 @@ bool StaticLoadBalancer::SetWorkerToAssignJob(JobEntry* job) {
 
   // quhang: Add.
   bool isProjectionJob = false;
+  if (job->job_name() == "projection_main") {
+    isProjectionJob = true;
+  }
+  if (job->job_name() == "projection_calculate_boundary_condition_part_one")
+  {
+    isProjectionJob = true;
+  }
+  if (job->job_name() ==
+      "projection_calculate_boundary_condition_part_two") {
+    isProjectionJob = true;
+  }
+  if (job->job_name() == "projection_construct_matrix") {
+    isProjectionJob = true;
+  }
+  if (job->job_name() == "projection_global_initialize") {
+    isProjectionJob = true;
+  }
+  if (job->job_name() == "projection_local_initialize") {
+    isProjectionJob = true;
+  }
+  if (job->job_name() == "projection_transform_pressure") {
+    isProjectionJob = true;
+  }
+  if (job->job_name() == "projection_wrapup") {
+    isProjectionJob = true;
+  }
+
   if (job->job_name() == "projection_step_one") {
     isProjectionJob = true;
   }
