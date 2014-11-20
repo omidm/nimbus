@@ -33,6 +33,20 @@ void PrintTimeStamp(const char* comment) {
   double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
   fprintf(log_file, "%f %s\n", time_sum, comment);
 }
+
+FILE* pack_log_file = NULL;
+void SetPackLogFile(FILE* in) {
+  pack_log_file = in;
+}
+void PrintPackTimeStamp(const char* comment) {
+  if (!pack_log_file) {
+    return;
+  }
+  struct timespec t;
+  clock_gettime(CLOCK_REALTIME, &t);
+  double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
+  fprintf(pack_log_file, "%f %s\n", time_sum, comment);
+}
 //#####################################################################
 // Function RLE_Run_Datatype
 //#####################################################################
@@ -170,13 +184,21 @@ template<class T> int Pack_Size(const VECTOR_ND<T>& data,const MPI::Comm& comm)
 {return Pack_Size<int>(comm)+Datatype<T>().Pack_size(data.n,comm);}
 
 template<class T> void Pack(const VECTOR_ND<T>& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
-{assert(Pack_Size(data,comm)<=buffer.Size()-position);
-Pack(data.n,buffer,position,comm);
-Datatype<T>().Pack(data.Get_Array_Pointer(),data.n,&buffer(1),buffer.Size(),position,comm);}
+{
+  PrintPackTimeStamp("PACK START 25");
+  assert(Pack_Size(data,comm)<=buffer.Size()-position);
+  Pack(data.n,buffer,position,comm);
+  Datatype<T>().Pack(data.Get_Array_Pointer(),data.n,&buffer(1),buffer.Size(),position,comm);
+  PrintPackTimeStamp("PACK END 25");
+}
 
 template<class T> void Unpack(VECTOR_ND<T>& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
-{int n;Unpack(n,buffer,position,comm);data.Resize(n);
-Datatype<T>().Unpack(&buffer(1),buffer.Size(),data.Get_Array_Pointer(),data.n,position,comm);}
+{
+  PrintPackTimeStamp("UNPACK START 26");
+  int n;Unpack(n,buffer,position,comm);data.Resize(n);
+  Datatype<T>().Unpack(&buffer(1),buffer.Size(),data.Get_Array_Pointer(),data.n,position,comm);
+  PrintPackTimeStamp("UNPACK END 26");
+}
 //#####################################################################
 // Pack/Unpack for SPARSE_MATRIX_FLAT_NXN
 //#####################################################################
@@ -184,10 +206,18 @@ template<class T> int Pack_Size(const SPARSE_MATRIX_FLAT_NXN<T>& data,const MPI:
 {return Pack_Size(data.n,data.offsets,data.A,comm);}
 
 template<class T> void Pack(const SPARSE_MATRIX_FLAT_NXN<T>& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
-{Pack(data.n,data.offsets,data.A,buffer,position,comm);}
+{
+  PrintPackTimeStamp("PACK START 27");
+  Pack(data.n,data.offsets,data.A,buffer,position,comm);
+  PrintPackTimeStamp("PACK END 27");
+}
 
 template<class T> void Unpack(SPARSE_MATRIX_FLAT_NXN<T>& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
-{Unpack(data.n,data.offsets,data.A,buffer,position,comm);}
+{
+  PrintPackTimeStamp("UNPACK START 28");
+  Unpack(data.n,data.offsets,data.A,buffer,position,comm);
+  PrintPackTimeStamp("UNPACK END 28");
+}
 //#####################################################################
 // Pack/Unpack for SPARSE_MATRIX_FLAT_MXN
 //#####################################################################
@@ -195,10 +225,16 @@ template<class T> int Pack_Size(const SPARSE_MATRIX_FLAT_MXN<T>& data,const MPI:
 {return Pack_Size(data.m,data.n,data.offsets,data.A,comm);}
 
 template<class T> void Pack(const SPARSE_MATRIX_FLAT_MXN<T>& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
-{Pack(data.m,data.n,data.offsets,data.A,buffer,position,comm);}
+{
+  PrintPackTimeStamp("PACK START 29");
+  Pack(data.m,data.n,data.offsets,data.A,buffer,position,comm);
+  PrintPackTimeStamp("PACK END 29");}
 
 template<class T> void Unpack(SPARSE_MATRIX_FLAT_MXN<T>& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
-{Unpack(data.m,data.n,data.offsets,data.A,buffer,position,comm);}
+{
+  PrintPackTimeStamp("UNPACK START 30");
+  Unpack(data.m,data.n,data.offsets,data.A,buffer,position,comm);
+  PrintPackTimeStamp("UNPACK END 30");}
 //#####################################################################
 // Pack/Unpack for SPARSE_MATRIX_PARTITION
 //#####################################################################
@@ -208,12 +244,20 @@ for(int s=1;s<=data.number_of_sides;s++)size+=Pack_Size(data.boundary_indices(s)
 return size;}
 
 void Pack(const SPARSE_MATRIX_PARTITION& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
-{Pack(data.number_of_sides,data.interior_indices,data.ghost_indices,data.neighbor_ranks,buffer,position,comm);
-for(int s=1;s<=data.number_of_sides;s++)Pack(data.boundary_indices(s),buffer,position,comm);}
+{
+  PrintPackTimeStamp("PACK START 31");
+  Pack(data.number_of_sides,data.interior_indices,data.ghost_indices,data.neighbor_ranks,buffer,position,comm);
+  for(int s=1;s<=data.number_of_sides;s++)Pack(data.boundary_indices(s),buffer,position,comm);
+  PrintPackTimeStamp("PACK END 31");
+}
 
 void Unpack(SPARSE_MATRIX_PARTITION& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
-{Unpack(data.number_of_sides,data.interior_indices,data.ghost_indices,data.neighbor_ranks,buffer,position,comm);data.neighbors.Resize(data.number_of_sides);
-data.boundary_indices.Resize(data.number_of_sides);for(int s=1;s<=data.number_of_sides;s++)Unpack(data.boundary_indices(s),buffer,position,comm);}
+{
+  PrintPackTimeStamp("UNPACK START 32");
+  Unpack(data.number_of_sides,data.interior_indices,data.ghost_indices,data.neighbor_ranks,buffer,position,comm);data.neighbors.Resize(data.number_of_sides);
+  data.boundary_indices.Resize(data.number_of_sides);for(int s=1;s<=data.number_of_sides;s++)Unpack(data.boundary_indices(s),buffer,position,comm);
+  PrintPackTimeStamp("UNPACK END 32");
+}
 //#####################################################################
 // Pack/Unpack for ARRAY<ARRAY<int> >
 //#####################################################################
@@ -221,13 +265,21 @@ int Pack_Size(const ARRAY<ARRAY<int> >& data,const MPI::Comm& comm)
 {int size=Pack_Size<int>(comm);for(int i=1;i<=data.m;i++) size+=Pack_Size(data(i),comm);return size;}
 
 void Pack(const ARRAY<ARRAY<int> >& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
-{assert(Pack_Size(data,comm)<=buffer.Size()-position);
-Pack(data.m,buffer,position,comm);
-for(int i=1;i<=data.m;i++) Pack(data(i),buffer,position,comm);}
+{
+  PrintPackTimeStamp("PACK START 33");
+  assert(Pack_Size(data,comm)<=buffer.Size()-position);
+  Pack(data.m,buffer,position,comm);
+  for(int i=1;i<=data.m;i++) Pack(data(i),buffer,position,comm);
+  PrintPackTimeStamp("PACK END 33");
+}
 
 void Unpack(ARRAY<ARRAY<int> >& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
-{int m;Unpack(m,buffer,position,comm);data.Resize(m);
-for(int i=1;i<=data.m;i++) Unpack(data(i),buffer,position,comm);}
+{
+  PrintPackTimeStamp("UNPACK START 34");
+  int m;Unpack(m,buffer,position,comm);data.Resize(m);
+  for(int i=1;i<=data.m;i++) Unpack(data(i),buffer,position,comm);
+  PrintPackTimeStamp("UNPACK END 34");
+}
 //#####################################################################
 // Pack/Unpack for UNION_FIND
 //#####################################################################
@@ -235,10 +287,16 @@ int Pack_Size(const UNION_FIND<>& data,const MPI::Comm& comm)
 {return Pack_Size(data.parents,comm)+Pack_Size(data.ranks,comm);}
 
 void Pack(const UNION_FIND<>& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
-{Pack(data.parents,data.ranks,buffer,position,comm);}
+{
+  PrintPackTimeStamp("PACK START 35");
+  Pack(data.parents,data.ranks,buffer,position,comm);
+  PrintPackTimeStamp("PACK END 35");}
 
 void Unpack(UNION_FIND<>& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
-{Unpack(data.parents,data.ranks,buffer,position,comm);}
+{
+  PrintPackTimeStamp("UNPACK START 36");
+  Unpack(data.parents,data.ranks,buffer,position,comm);
+  PrintPackTimeStamp("UNPACK END 36");}
 //#####################################################################
 #define INSTANTIATION_HELPER(T) \
     template struct DATATYPE_HELPER<PAIR<VECTOR<int,2>,VECTOR<T,2> > >; \
