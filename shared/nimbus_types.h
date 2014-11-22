@@ -81,6 +81,7 @@ namespace nimbus {
   typedef uint64_t physical_data_id_t;
   typedef uint64_t logical_data_id_t;
   typedef uint64_t job_id_t;
+  typedef uint64_t checkpoint_id_t;
   typedef uint64_t command_id_t;
   typedef uint64_t partition_id_t;
   typedef uint64_t param_id_t;
