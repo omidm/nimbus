@@ -68,6 +68,9 @@ DistributedDB::~DistributedDB() {
 
 void DistributedDB::Initialize(const std::string& ip_address,
                                const worker_id_t& worker_id) {
+  ip_address_ = ip_address;
+  worker_id_ = worker_id;
+  initialized_ = true;
   return;
 }
 
@@ -88,8 +91,50 @@ bool DistributedDB::RemoveCheckpoint(checkpoint_id_t checkpoint_id) {
 }
 
 
+leveldb::DB* DistributedDB::GetDB(const std::string& ip_address,
+                                  const std::string& leveldb_root) {
+  Map::iterator iter = db_map_.find(leveldb_root);
+  if (iter != db_map_.end()) {
+    return iter->second;
+  }
+
+  if (ip_address != ip_address_) {
+    RetrieveDBFromOtherNode(ip_address, leveldb_root);
+  }
+
+  leveldb::DB* db;
+  leveldb::Options options;
+  options.create_if_missing = false;
+  leveldb::Status status = leveldb::DB::Open(options, leveldb_root, &db);
+  assert(status.ok());
+
+  db_map_[leveldb_root] = db;
+  return db;
+}
+
 bool DistributedDB::RetrieveDBFromOtherNode(const std::string& ip_address,
                                             const std::string& leveldb_root) {
-  return false;
+  /* 
+     1. generate rsa key pair and add to nimbus repository.
+
+     2. Add the script to do the following:
+      1. update  ~/.ssh/config file
+
+       StrictHostKeyChecking=no
+       Host *
+         dentityFile <path to to the private key/private-key>
+
+      2. update ~/.ssh/authorized_keys to have the public key. 
+
+   */
+  std::string command = "scp -r ";
+  command += ip_address;
+  command += ":";
+  command += leveldb_root;
+  command += " ";
+  command += leveldb_root;
+
+  int i = system(command.c_str());
+  return true;
 }
 

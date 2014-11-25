@@ -57,7 +57,9 @@
 #define NIMBUS_SHARED_DISTRIBUTED_DB_H_
 
 #include <boost/thread.hpp>
+#include <stdlib.h>
 #include <iostream> // NOLINT
+#include <map>
 #include <vector>
 #include <string>
 #include "shared/nimbus_types.h"
@@ -90,7 +92,12 @@ class DistributedDB {
     bool initialized_;
     std::string ip_address_;
     worker_id_t worker_id_;
-    job_id_t last_job_id_;
+
+    typedef std::map<std::string, leveldb::DB*> Map;
+    Map db_map_;
+
+    leveldb::DB* GetDB(const std::string& ip_address,
+                       const std::string& leveldb_root);
 
     bool RetrieveDBFromOtherNode(const std::string& ip_address,
                                  const std::string& leveldb_root);
