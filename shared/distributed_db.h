@@ -59,6 +59,7 @@
 #include <boost/thread.hpp>
 #include <stdlib.h>
 #include <iostream> // NOLINT
+#include <fstream> // NOLINT
 #include <map>
 #include <vector>
 #include <string>
@@ -98,6 +99,8 @@ class DistributedDB {
 
     leveldb::DB* GetDB(const std::string& ip_address,
                        const std::string& leveldb_root);
+
+    bool DBExistsLocally(std::string leveldb_root);
 
     bool RetrieveDBFromOtherNode(const std::string& ip_address,
                                  const std::string& leveldb_root);

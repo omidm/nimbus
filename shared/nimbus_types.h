@@ -48,6 +48,8 @@
 #include <string>
 #include "shared/address_book.h"
 
+#define NIMBUS_LEVELDB_PRIVATE_KEY "../scripts/nimbus-rsa-key-pair"
+
 #define TCP_NODELAY_OPTION true
 
 #define NIMBUS_TERMINATE_SUCCESS (exit_status_t)(0)

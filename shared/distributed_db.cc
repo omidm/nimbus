@@ -98,7 +98,7 @@ leveldb::DB* DistributedDB::GetDB(const std::string& ip_address,
     return iter->second;
   }
 
-  if (ip_address != ip_address_) {
+  if (!DBExistsLocally(leveldb_root)) {
     RetrieveDBFromOtherNode(ip_address, leveldb_root);
   }
 
@@ -112,27 +112,31 @@ leveldb::DB* DistributedDB::GetDB(const std::string& ip_address,
   return db;
 }
 
+bool DistributedDB::DBExistsLocally(std::string leveldb_root) {
+  std::ifstream f(leveldb_root.c_str());
+
+  if (f.good()) {
+    f.close();
+    return true;
+  } else {
+    f.close();
+    return false;
+  }
+}
+
 bool DistributedDB::RetrieveDBFromOtherNode(const std::string& ip_address,
                                             const std::string& leveldb_root) {
   /* 
      1. generate rsa key pair and add to nimbus repository.
 
      2. Add the script to do the following:
-      1. update  ~/.ssh/config file
-
-       StrictHostKeyChecking=no
-       Host *
-         dentityFile <path to to the private key/private-key>
-
-      2. update ~/.ssh/authorized_keys to have the public key. 
+      a. update ~/.ssh/authorized_keys to have the public key. 
 
    */
-  std::string command = "scp -r ";
-  command += ip_address;
-  command += ":";
-  command += leveldb_root;
-  command += " ";
-  command += leveldb_root;
+  std::string command = "scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ";
+  command += NIMBUS_LEVELDB_PRIVATE_KEY;
+  command += " " + ip_address + ":" + leveldb_root;
+  command += " " + leveldb_root;
 
   int i = system(command.c_str());
   return true;
