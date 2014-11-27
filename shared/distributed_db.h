@@ -123,10 +123,11 @@ class DistributedDB {
     Map db_map_;
 
     leveldb::DB* GetDB(const std::string& ip_address,
-                       const std::string& leveldb_root);
+                       const std::string& db_root);
 
     bool RetrieveDBFromOtherNode(const std::string& ip_address,
-                                 const std::string& leveldb_root);
+                                 const std::string& db_root,
+                                 std::string *new_db_root);
 };
 
 

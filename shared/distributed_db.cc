@@ -132,38 +132,40 @@ bool DistributedDB::RemoveCheckpoint(checkpoint_id_t checkpoint_id) {
 
 
 leveldb::DB* DistributedDB::GetDB(const std::string& ip_address,
-                                  const std::string& leveldb_root) {
-  Map::iterator iter = db_map_.find(leveldb_root);
+                                  const std::string& db_root) {
+  Map::iterator iter = db_map_.find(db_root);
   if (iter != db_map_.end()) {
     return iter->second;
   }
-  std::cout << "Create new DB\n";
 
-  std::string path = leveldb_root.substr(0, leveldb_root.find_last_of("/") + 1);
+  std::string path = db_root.substr(0, db_root.find_last_of("/") + 1);
 
   bool create;
+  std::string new_db_root;
 
   if (path == path_) {
     create = true;
+    new_db_root = db_root;
     dbg(DBG_SCHED, "Creating new db locally ...\n");
   } else {
     create = false;
-    RetrieveDBFromOtherNode(ip_address, leveldb_root);
+    RetrieveDBFromOtherNode(ip_address, db_root, &new_db_root);
     dbg(DBG_SCHED, "Getting db from other node ...\n");
   }
 
   leveldb::DB* db;
   leveldb::Options options;
   options.create_if_missing = create;
-  leveldb::Status status = leveldb::DB::Open(options, leveldb_root, &db);
+  leveldb::Status status = leveldb::DB::Open(options, new_db_root, &db);
   assert(status.ok());
 
-  db_map_[leveldb_root] = db;
+  db_map_[db_root] = db;
   return db;
 }
 
 bool DistributedDB::RetrieveDBFromOtherNode(const std::string& ip_address,
-                                            const std::string& leveldb_root) {
+                                            const std::string& db_root,
+                                            std::string *new_db_root) {
   /* 
      1. generate rsa key pair and add to nimbus repository.
 
@@ -171,17 +173,21 @@ bool DistributedDB::RetrieveDBFromOtherNode(const std::string& ip_address,
       a. update ~/.ssh/authorized_keys to have the public key. 
 
    */
+
+  std::string name = db_root.substr(db_root.find_last_of("/") + 1);
+  *new_db_root = path_ + name;
+
   if (ip_address == ip_address_) {
-    std::string command = "cp -r " + leveldb_root + " " + path_;
-    std::cout << exec(command.c_str()) << std::endl;
+    std::string command = "cp -r " + db_root + " " + path_;
+    exec(command.c_str());
     dbg(DBG_SCHED, "Copied db locally.\n");
 
   } else {
-    std::string command = "scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ";
+    std::string command = "scp -r -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ";
     command += NIMBUS_LEVELDB_PRIVATE_KEY;
-    command += " " + ip_address + ":" + leveldb_root;
+    command += " " + ip_address + ":" + db_root;
     command += " " + path_;
-    std::cout << exec(command.c_str()) << std::endl;
+    exec(command.c_str());
     dbg(DBG_SCHED, "Copied db remotely.\n");
   }
 
