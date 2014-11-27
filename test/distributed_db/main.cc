@@ -50,133 +50,75 @@ void PrintUsage() {
   std::cout << "Usage:\n";
   std::cout << "./worker\n";
   std::cout << "REQUIRED ARGUMENTS:\n";
-  std::cout << "\t-sip [scheduler ip] -sport [scheduler port] -port [listening port]\n";
+  std::cout << "\t-ip [ip_address] -id [worker_id]\n";
   std::cout << "OPTIONIAL:\n";
-  std::cout << "\t-ip [ip address]\n";
-  std::cout << "\t-lc [loop counter]\n";
-  std::cout << "\t-pn [part num]\n";
-  std::cout << "\t-cpp [chunk per part]\n";
-  std::cout << "\t-cs [chunk size]\n";
-  std::cout << "\t-bw [bandwidth]\n";
+  std::cout << "\t-? [?]\n";
 }
 
 int main(int argc, char *argv[]) {
-//  port_t listening_port, scheduler_port;
-//  std::string scheduler_ip, ip_address;
-//  bool ip_address_given = false;
-//  bool listening_port_given = false;
-//  bool scheduler_ip_given = false;
-//  bool scheduler_port_given = false;
-//
-//  size_t counter = 150;
-//  size_t part_num = 4;
-//  size_t chunk_per_part = 4;
-//  size_t chunk_size = 5;
-//  size_t bandwidth = 1;
-//
-//
-//
-//  if (((argc - 1) % 2 != 0) || (argc < 3)) {
-//    PrintUsage();
-//    exit(-1);
-//  }
-//
-//  for (int i = 1; i < argc; i = i + 2) {
-//    std::string tag = argv[i];
-//    std::string val = argv[i+1];
-//    if (tag == "-sip") {
-//      scheduler_ip = val;
-//      scheduler_ip_given = true;
-//    } else if (tag == "-ip") {
-//      ip_address = val;
-//      ip_address_given = true;
-//    } else if (tag == "-sport") {
-//      std::stringstream ss(val);
-//      ss >> scheduler_port;
-//      if (ss.fail()) {
-//        PrintUsage();
-//        exit(-1);
-//      }
-//      scheduler_port_given = true;
-//    } else if (tag == "-port") {
-//      std::stringstream ss(val);
-//      ss >> listening_port;
-//      if (ss.fail()) {
-//        PrintUsage();
-//        exit(-1);
-//      }
-//      listening_port_given = true;
-//    } else if (tag == "-lc") {
-//      std::stringstream ss(val);
-//      ss >> counter;
-//      if (ss.fail()) {
-//        PrintUsage();
-//        exit(-1);
-//      }
-//    } else if (tag == "-pn") {
-//      std::stringstream ss(val);
-//      ss >> part_num;
-//      if (ss.fail()) {
-//        PrintUsage();
-//        exit(-1);
-//      }
-//    } else if (tag == "-cpp") {
-//      std::stringstream ss(val);
-//      ss >> chunk_per_part;
-//      if (ss.fail()) {
-//        PrintUsage();
-//        exit(-1);
-//      }
-//    } else if (tag == "-cs") {
-//      std::stringstream ss(val);
-//      ss >> chunk_size;
-//      if (ss.fail()) {
-//        PrintUsage();
-//        exit(-1);
-//      }
-//    } else if (tag == "-bw") {
-//      std::stringstream ss(val);
-//      ss >> bandwidth;
-//      if (ss.fail()) {
-//        PrintUsage();
-//        exit(-1);
-//      }
-//    } else {
-//      PrintUsage();
-//      exit(-1);
-//    }
-//  }
-//
-//  if (!scheduler_ip_given || !scheduler_port_given || !listening_port_given) {
-//    PrintUsage();
-//    exit(-1);
-//  }
-//
-//
-//  leveldb::DB* db;
-//  leveldb::Options options;
-//  options.create_if_missing = true;
-//  leveldb::Status status = leveldb::DB::Open(options, "/tmp/testdb", &db);
-//  assert(status.ok());
-//
-//  std::string value;
-//  db->Put(leveldb::WriteOptions(), "key-1", "value of key 1");
-//  db->Get(leveldb::ReadOptions(), "key-1", &value);
-//  std::cout << "******key-1: " << value << std::endl;
-//
-//  delete db;
+  worker_id_t worker_id;
+  std::string ip_address;
+  bool ip_address_given = false;
+  bool worker_id_given = false;
+
+  std::cout << argc << std::endl;
+
+
+  if (((argc - 1) % 2 != 0) || (argc != 5)) {
+    PrintUsage();
+    exit(-1);
+  }
+
+  for (int i = 1; i < argc; i = i + 2) {
+    std::string tag = argv[i];
+    std::string val = argv[i+1];
+    if (tag == "-ip") {
+      ip_address = val;
+      ip_address_given = true;
+    } else if (tag == "-id") {
+      std::stringstream ss(val);
+      ss >> worker_id;
+      if (ss.fail()) {
+        PrintUsage();
+        exit(-1);
+      }
+      worker_id_given = true;
+    } else {
+      PrintUsage();
+      exit(-1);
+    }
+  }
+
+  if (!ip_address_given || !worker_id_given) {
+    PrintUsage();
+    exit(-1);
+  }
 
   DistributedDB ddb;
-  ddb.Initialize("127.0.0.1", 1);
+  ddb.Initialize("localhost", worker_id);
+
+  std::cout << "Inserting key-value pair ...\n";
 
   std::string h1, h2;
   ddb.Put("key1", "value1", 3, &h1);
   ddb.Put("key2", "value2", 4, &h2);
 
+  std::cout << "Looking up from same node ...\n";
+
   std::string v1, v2;
   ddb.Get(h1, &v1);
   std::cout << v1 << std::endl;
   ddb.Get(h2, &v2);
+  std::cout << v2 << std::endl;
+
+  std::cout << "Looking up from another node ...\n";
+
+  DistributedDB ddb2;
+  ddb2.Initialize("127.0.0.1", worker_id + 1);
+
+  ddb2.Get(h1, &v1);
+  std::cout << v1 << std::endl;
+  ddb2.Get(h2, &v2);
   std::cout << v2 << std::endl;
 
   std::cout << "END\n";
