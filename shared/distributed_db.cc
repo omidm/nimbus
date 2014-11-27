@@ -58,6 +58,30 @@
 
 using namespace nimbus; // NOLINT
 
+std::string exec(const char* cmd) {
+  FILE* pipe = popen(cmd, "r");
+  if (!pipe) return "ERROR";
+  char buffer[128];
+  std::string result = "";
+  while (!feof(pipe)) {
+    if (fgets(buffer, 128, pipe) != NULL)
+      result += buffer;
+  }
+  pclose(pipe);
+  if (result.size() > 0) {
+    if (*result.rbegin() == '\n') {
+      result.erase(--result.end());
+    }
+  }
+  return result;
+}
+
+std::string int2string(uint64_t num) {
+  std::stringstream ss;
+  ss << num;
+  return ss.str();
+}
+
 DistributedDB::DistributedDB() {
   initialized_ = false;
 }
@@ -70,6 +94,9 @@ void DistributedDB::Initialize(const std::string& ip_address,
                                const worker_id_t& worker_id) {
   ip_address_ = ip_address;
   worker_id_ = worker_id;
+  path_ = exec("pwd") + "/_db_"+ int2string(worker_id) + "_" + exec("date +%T") + "/";
+  exec(("rm -rf " + path_).c_str());
+  exec(("mkdir -p " + path_).c_str());
   initialized_ = true;
   return;
 }
@@ -78,12 +105,24 @@ bool DistributedDB::Put(const std::string& key,
                         const std::string& value,
                         const checkpoint_id_t& checkpoint_id,
                         std::string *handle) {
-  return false;
+  std::string leveldb_name =
+    int2string(checkpoint_id) + "_" + int2string(worker_id_);
+
+  leveldb::DB *db = GetDB(ip_address_, path_ + leveldb_name);
+  db->Put(leveldb::WriteOptions(), key, value);
+
+  std::string val;
+  db->Get(leveldb::ReadOptions(), key, &val);
+  std::cout << "******" << key << " : " << val << std::endl;
+
+  return true;
 }
 
 bool DistributedDB::Get(const std::string& handle,
                         std::string *value) {
-  return false;
+  // leveldb::DB *db = GetDB(ip_address_, leveldb_root);
+  // db->Get(leveldb::ReadOptions(), key, value);
+  return true;
 }
 
 bool DistributedDB::RemoveCheckpoint(checkpoint_id_t checkpoint_id) {
@@ -97,14 +136,24 @@ leveldb::DB* DistributedDB::GetDB(const std::string& ip_address,
   if (iter != db_map_.end()) {
     return iter->second;
   }
+  std::cout << "Create new DB\n";
 
-  if (!DBExistsLocally(leveldb_root)) {
+  std::string path = leveldb_root.substr(0, leveldb_root.find_last_of("/") + 1);
+
+  bool create;
+
+  if (path == path_) {
+    create = true;
+    dbg(DBG_SCHED, "Creating new db locally ...\n");
+  } else {
+    create = false;
     RetrieveDBFromOtherNode(ip_address, leveldb_root);
+    dbg(DBG_SCHED, "Getting db from other node ...\n");
   }
 
   leveldb::DB* db;
   leveldb::Options options;
-  options.create_if_missing = false;
+  options.create_if_missing = create;
   leveldb::Status status = leveldb::DB::Open(options, leveldb_root, &db);
   assert(status.ok());
 
@@ -133,12 +182,20 @@ bool DistributedDB::RetrieveDBFromOtherNode(const std::string& ip_address,
       a. update ~/.ssh/authorized_keys to have the public key. 
 
    */
-  std::string command = "scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ";
-  command += NIMBUS_LEVELDB_PRIVATE_KEY;
-  command += " " + ip_address + ":" + leveldb_root;
-  command += " " + leveldb_root;
+  if (ip_address == ip_address_) {
+    std::string command = "cp -r " + leveldb_root + " " + path_;
+    std::cout << exec(command.c_str()) << std::endl;
+    dbg(DBG_SCHED, "Copied db locally.\n");
 
-  int i = system(command.c_str());
+  } else {
+    std::string command = "scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ";
+    command += NIMBUS_LEVELDB_PRIVATE_KEY;
+    command += " " + ip_address + ":" + leveldb_root;
+    command += " " + path_;
+    std::cout << exec(command.c_str()) << std::endl;
+    dbg(DBG_SCHED, "Copied db remotely.\n");
+  }
+
   return true;
 }
 

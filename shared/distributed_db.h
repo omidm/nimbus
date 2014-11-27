@@ -60,9 +60,12 @@
 #include <stdlib.h>
 #include <iostream> // NOLINT
 #include <fstream> // NOLINT
+#include <sstream> // NOLINT
 #include <map>
 #include <vector>
 #include <string>
+#include "shared/log.h"
+#include "shared/dbg.h"
 #include "shared/nimbus_types.h"
 #include "leveldb/db.h"
 
@@ -91,6 +94,7 @@ class DistributedDB {
   private:
     boost::mutex mutex_;
     bool initialized_;
+    std::string path_;
     std::string ip_address_;
     worker_id_t worker_id_;
 
