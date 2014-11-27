@@ -105,23 +105,24 @@ bool DistributedDB::Put(const std::string& key,
                         const std::string& value,
                         const checkpoint_id_t& checkpoint_id,
                         std::string *handle) {
-  std::string leveldb_name =
-    int2string(checkpoint_id) + "_" + int2string(worker_id_);
+  std::string db_root =
+    path_ + int2string(checkpoint_id) + "_" + int2string(worker_id_);
 
-  leveldb::DB *db = GetDB(ip_address_, path_ + leveldb_name);
+  leveldb::DB *db = GetDB(ip_address_, db_root);
   db->Put(leveldb::WriteOptions(), key, value);
 
-  std::string val;
-  db->Get(leveldb::ReadOptions(), key, &val);
-  std::cout << "******" << key << " : " << val << std::endl;
 
-  return true;
+  Handle h(ip_address_, db_root, key);
+  return h.Serialize(handle);
 }
 
 bool DistributedDB::Get(const std::string& handle,
                         std::string *value) {
-  // leveldb::DB *db = GetDB(ip_address_, leveldb_root);
-  // db->Get(leveldb::ReadOptions(), key, value);
+  Handle h;
+  h.Parse(handle);
+
+  leveldb::DB *db = GetDB(h.ip_address(), h.db_root());
+  db->Get(leveldb::ReadOptions(), h.key(), value);
   return true;
 }
 
@@ -161,18 +162,6 @@ leveldb::DB* DistributedDB::GetDB(const std::string& ip_address,
   return db;
 }
 
-bool DistributedDB::DBExistsLocally(std::string leveldb_root) {
-  std::ifstream f(leveldb_root.c_str());
-
-  if (f.good()) {
-    f.close();
-    return true;
-  } else {
-    f.close();
-    return false;
-  }
-}
-
 bool DistributedDB::RetrieveDBFromOtherNode(const std::string& ip_address,
                                             const std::string& leveldb_root) {
   /* 
@@ -197,5 +186,60 @@ bool DistributedDB::RetrieveDBFromOtherNode(const std::string& ip_address,
   }
 
   return true;
+}
+
+DistributedDB::Handle::Handle() {
+}
+
+DistributedDB::Handle::Handle(const std::string& ip_address,
+                              const std::string& db_root,
+                              const std::string& key) {
+  ip_address_ = ip_address;
+  db_root_ = db_root;
+  key_ = key;
+}
+
+DistributedDB::Handle::~Handle() {
+}
+
+std::string DistributedDB::Handle::ip_address() {
+  return ip_address_;
+}
+
+std::string DistributedDB::Handle::db_root() {
+  return db_root_;
+}
+
+std::string DistributedDB::Handle::key() {
+  return key_;
+}
+
+bool DistributedDB::Handle::Parse(const std::string& handle) {
+  DBHandlePBuf buf;
+  bool result = buf.ParseFromString(handle);
+
+  if (!result) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse db handle.\n");
+    return false;
+  } else {
+    ip_address_ = buf.ip_address();
+    db_root_ = buf.db_root();
+    key_ = buf.key();
+    return true;
+  }
+}
+
+bool DistributedDB::Handle::Serialize(std::string *result) {
+  DBHandlePBuf buf;
+  buf.set_ip_address(ip_address_);
+  buf.set_db_root(db_root_);
+  buf.set_key(key_);
+
+  if (!buf.SerializeToString(result)) {
+    dbg(DBG_ERROR, "ERROR: Failed to serilaize db handle.\n");
+    return false;
+  } else {
+    return true;
+  }
 }
 

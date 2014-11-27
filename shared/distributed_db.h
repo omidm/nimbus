@@ -68,6 +68,7 @@
 #include "shared/dbg.h"
 #include "shared/nimbus_types.h"
 #include "leveldb/db.h"
+#include "protobuf_compiled/db_handle.pb.h"
 
 namespace nimbus {
 
@@ -90,8 +91,28 @@ class DistributedDB {
 
     bool RemoveCheckpoint(checkpoint_id_t checkpoint_id);
 
-
   private:
+    class Handle {
+      public:
+        Handle();
+        Handle(const std::string& ip_address,
+               const std::string& db_root,
+               const std::string& key);
+        ~Handle();
+
+        std::string ip_address();
+        std::string db_root();
+        std::string key();
+
+        bool Parse(const std::string& handle);
+        bool Serialize(std::string *result);
+
+      private:
+        std::string ip_address_;
+        std::string db_root_;
+        std::string key_;
+    };
+
     boost::mutex mutex_;
     bool initialized_;
     std::string path_;
@@ -103,8 +124,6 @@ class DistributedDB {
 
     leveldb::DB* GetDB(const std::string& ip_address,
                        const std::string& leveldb_root);
-
-    bool DBExistsLocally(std::string leveldb_root);
 
     bool RetrieveDBFromOtherNode(const std::string& ip_address,
                                  const std::string& leveldb_root);
