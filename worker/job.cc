@@ -660,6 +660,88 @@ void RemoteCopyReceiveJob::set_data_version(data_version_t version) {
   data_version_ = version;
 }
 
+SaveDataJob::SaveDataJob(DistributedDB *ddb, Application *app) {
+  ddb_ = ddb;
+  set_application(app);
+}
+
+SaveDataJob::~SaveDataJob() {
+}
+
+void SaveDataJob::Execute(Parameter params, const DataArray& da) {
+  CacheManager *cm = GetCacheManager();
+  cm->PrintTimeStamp("start", "RCS");
+  cm->SyncData(da[0]);
+
+  SerializedData ser_data;
+  da[0]->Serialize(&ser_data);
+
+  std::string key = int2string(id().elem());
+  std::string value(ser_data.data_ptr().get(), ser_data.size());
+  if (!ddb_->Put(key, value, checkpoint_id_, &handle_)) {
+    dbg(DBG_ERROR, "ERROR: could not save the data in ddb!\n");
+    exit(-1);
+  }
+
+  // delete ser_data.data_ptr(); // Not needed with shared pointer.
+  cm->PrintTimeStamp("end", "RCS");
+}
+
+Job* SaveDataJob::Clone() {
+  return new SaveDataJob(ddb_, application());
+}
+
+std::string SaveDataJob::handle() {
+  return handle_;
+}
+
+void SaveDataJob::set_checkpoint_id(checkpoint_id_t checkpoint_id) {
+  checkpoint_id_ = checkpoint_id;
+}
+
+LoadDataJob::LoadDataJob(DistributedDB *ddb, Application *app) {
+  ddb_ = ddb;
+  set_application(app);
+}
+
+LoadDataJob::~LoadDataJob() {
+}
+
+void LoadDataJob::Execute(Parameter params, const DataArray& da) {
+  CacheManager *cm = GetCacheManager();
+  cm->PrintTimeStamp("start", "RCR");
+  cm->InvalidateMappings(da[0]);
+
+  std::string value;
+  if (!ddb_->Get(handle_, &value)) {
+    dbg(DBG_ERROR, "ERROR: could not load the data from ddb!\n");
+    exit(-1);
+  }
+  SerializedData serialized_data_(value);
+
+  Data * data_copy = NULL;
+  da[0]->DeSerialize(serialized_data_, &data_copy);
+  da[0]->Copy(data_copy);
+  da[0]->set_version(data_version_);
+
+  data_copy->Destroy();
+  // delete serialized_data_->data_ptr(); // Not needed with shared pointer.
+  // delete serialized_data; // Not needed, goes out of context.
+  cm->PrintTimeStamp("end", "RCR");
+}
+
+Job* LoadDataJob::Clone() {
+  return new LoadDataJob(ddb_, application());
+}
+
+void LoadDataJob::set_handle(std::string handle) {
+  handle_ = handle;
+}
+
+void LoadDataJob::set_data_version(data_version_t version) {
+  data_version_ = version;
+}
+
 LocalCopyJob::LocalCopyJob(Application *app) {
   set_application(app);
 }

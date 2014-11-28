@@ -46,12 +46,14 @@
 #include <set>
 #include <map>
 #include <list>
+#include "shared/helpers.h"
 #include "shared/nimbus_types.h"
 #include "shared/id.h"
 #include "shared/idset.h"
 #include "shared/geometric_region.h"
 #include "shared/serialized_data.h"
 #include "shared/worker_data_exchanger.h"
+#include "shared/distributed_db.h"
 #include "worker/cache_manager.h"
 #include "worker/data.h"
 #include "worker/ldo_index_cache.h"
@@ -302,6 +304,45 @@ class RemoteCopyReceiveJob : public Job {
   private:
     SerializedData * serialized_data_;
     data_version_t data_version_;
+};
+
+class SaveDataJob : public Job {
+  public:
+    explicit SaveDataJob(DistributedDB *ddb, Application *app);
+    ~SaveDataJob();
+
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job* Clone();
+    virtual void Sleep() {}
+    virtual void Cancel() {}
+
+    std::string handle();
+
+    void set_checkpoint_id(checkpoint_id_t checkpoint_id);
+
+  private:
+    std::string handle_;
+    checkpoint_id_t checkpoint_id_;
+    DistributedDB *ddb_;
+};
+
+class LoadDataJob : public Job {
+  public:
+    explicit LoadDataJob(DistributedDB *ddb, Application *app);
+    ~LoadDataJob();
+
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job* Clone();
+    virtual void Sleep() {}
+    virtual void Cancel() {}
+
+    void set_handle(std::string handle);
+    void set_data_version(data_version_t version);
+
+  private:
+    std::string handle_;
+    data_version_t data_version_;
+    DistributedDB *ddb_;
 };
 
 class LocalCopyJob : public Job {

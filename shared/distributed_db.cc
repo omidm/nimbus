@@ -58,30 +58,6 @@
 
 using namespace nimbus; // NOLINT
 
-std::string exec(const char* cmd) {
-  FILE* pipe = popen(cmd, "r");
-  if (!pipe) return "ERROR";
-  char buffer[128];
-  std::string result = "";
-  while (!feof(pipe)) {
-    if (fgets(buffer, 128, pipe) != NULL)
-      result += buffer;
-  }
-  pclose(pipe);
-  if (result.size() > 0) {
-    if (*result.rbegin() == '\n') {
-      result.erase(--result.end());
-    }
-  }
-  return result;
-}
-
-std::string int2string(uint64_t num) {
-  std::stringstream ss;
-  ss << num;
-  return ss.str();
-}
-
 DistributedDB::DistributedDB() {
   initialized_ = false;
 }

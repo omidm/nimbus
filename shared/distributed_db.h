@@ -66,6 +66,7 @@
 #include <string>
 #include "shared/log.h"
 #include "shared/dbg.h"
+#include "shared/helpers.h"
 #include "shared/nimbus_types.h"
 #include "leveldb/db.h"
 #include "protobuf_compiled/db_handle.pb.h"
