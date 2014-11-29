@@ -62,6 +62,7 @@
 #include "shared/scheduler_client.h"
 #include "shared/scheduler_command_include.h"
 #include "shared/worker_data_exchanger.h"
+#include "shared/distributed_db.h"
 #include "shared/cluster.h"
 #include "shared/parser.h"
 #include "shared/log.h"
@@ -109,6 +110,8 @@ class Worker {
   virtual void ProcessPartitionRemoveCommand(PartitionRemoveCommand* command);
   virtual void ProcessTerminateCommand(TerminateCommand* command);
   virtual void ProcessDefinedTemplateCommand(DefinedTemplateCommand* command);
+  virtual void ProcessSaveDataCommand(SaveDataCommand* command);
+  virtual void ProcessLoadDataCommand(LoadDataCommand* command);
 
   worker_id_t id();
   void set_id(worker_id_t id);
@@ -125,6 +128,7 @@ class Worker {
  protected:
   SchedulerClient* client_;
   WorkerDataExchanger* data_exchanger_;
+  DistributedDB *ddb_;
   WorkerLdoMap* ldo_map_;
   IDMaker id_maker_;
   SchedulerCommand::PrototypeTable scheduler_command_table_;

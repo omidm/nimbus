@@ -95,6 +95,7 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     ip_address_ = NIMBUS_RECEIVER_KNOWN_IP;
     cache_log = NULL;
     worker_manager_ = new WorkerManager();
+    ddb_ = new DistributedDB();
     DUMB_JOB_ID = std::numeric_limits<job_id_t>::max();
     worker_job_graph_.AddVertex(
         DUMB_JOB_ID,
@@ -108,6 +109,7 @@ Worker::~Worker() {
   delete vertex->entry();
   worker_job_graph_.RemoveVertex(DUMB_JOB_ID);
   delete worker_manager_;
+  delete ddb_;
 }
 
 void Worker::PrintTimeStamp(const char* format, ...) {
@@ -276,6 +278,12 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::DEFINED_TEMPLATE:
       ProcessDefinedTemplateCommand(reinterpret_cast<DefinedTemplateCommand*>(cm));
       break;
+    case SchedulerCommand::SAVE_DATA:
+      ProcessSaveDataCommand(reinterpret_cast<SaveDataCommand*>(cm));
+      break;
+    case SchedulerCommand::LOAD_DATA:
+      ProcessLoadDataCommand(reinterpret_cast<LoadDataCommand*>(cm));
+      break;
     default:
       std::cout << "ERROR: " << cm->ToNetworkData() <<
         " have not been implemented in ProcessSchedulerCommand yet." <<
@@ -402,6 +410,38 @@ void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {
   AddJobToGraph(job);
 }
 
+void Worker::ProcessSaveDataCommand(SaveDataCommand* cm) {
+  SaveDataJob * job = new SaveDataJob(ddb_, application_);
+  job->set_name("SaveData");
+  job->set_id(cm->job_id());
+  PrintTimeStamp("save_job %s %lu\n", job->name().c_str(), job->id().elem());
+  job->set_checkpoint_id(cm->checkpoint_id().elem());
+  IDSet<physical_data_id_t> read_set;
+  read_set.insert(cm->from_physical_data_id().elem());
+  job->set_read_set(read_set);
+  job->set_before_set(cm->before_set());
+#ifndef MUTE_LOG
+  timer_.Start(job->id().elem());
+#endif  // MUTE_LOG
+  AddJobToGraph(job);
+}
+
+void Worker::ProcessLoadDataCommand(LoadDataCommand* cm) {
+  LoadDataJob * job = new LoadDataJob(ddb_, application_);
+  job->set_name("LoadData");
+  job->set_id(cm->job_id());
+  PrintTimeStamp("load_job %s %lu\n", job->name().c_str(), job->id().elem());
+  job->set_handle(cm->handle());
+  IDSet<physical_data_id_t> write_set;
+  write_set.insert(cm->to_physical_data_id().elem());
+  job->set_write_set(write_set);
+  job->set_before_set(cm->before_set());
+#ifndef MUTE_LOG
+  timer_.Start(job->id().elem());
+#endif  // MUTE_LOG
+  AddJobToGraph(job);
+}
+
 void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
   Job * job = new LocalCopyJob(application_);
   job->set_name("LocalCopy");
@@ -492,6 +532,8 @@ void Worker::LoadSchedulerCommands() {
   scheduler_command_table_[SchedulerCommand::PARTITION_REMOVE] = new PartitionRemoveCommand();
   scheduler_command_table_[SchedulerCommand::TERMINATE] = new TerminateCommand();
   scheduler_command_table_[SchedulerCommand::DEFINED_TEMPLATE] = new DefinedTemplateCommand();
+  scheduler_command_table_[SchedulerCommand::SAVE_DATA] = new SaveDataCommand();
+  scheduler_command_table_[SchedulerCommand::LOAD_DATA] = new LoadDataCommand();
 }
 
 worker_id_t Worker::id() {
