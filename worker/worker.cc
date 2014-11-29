@@ -695,7 +695,11 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
 
 void Worker::NotifyLocalJobDone(Job* job) {
   Parameter params;
-  if ((!IDMaker::SchedulerProducedJobID(job->id().elem())) || (!job->sterile())) {
+  SaveDataJob *j = dynamic_cast<SaveDataJob*>(job); // NOLINT
+  if (j != NULL) {
+    SaveDataJobDoneCommand cm(job->id(), job->run_time(), job->wait_time(), job->max_alloc(), j->handle()); // NOLINT
+    client_->SendCommand(&cm);
+  } else if ((!IDMaker::SchedulerProducedJobID(job->id().elem())) || (!job->sterile())) {
     JobDoneCommand cm(job->id(), job->run_time(), job->wait_time(), job->max_alloc(), false);
     client_->SendCommand(&cm);
   }
