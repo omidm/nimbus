@@ -110,6 +110,7 @@ const std::string SchedulerCommand::END_TEMPLATE_NAME = "endtemplate";
 const std::string SchedulerCommand::DEFINED_TEMPLATE_NAME = "definedtemplate";
 const std::string SchedulerCommand::SPAWN_TEMPLATE_NAME = "spawntemplate";
 const std::string SchedulerCommand::SAVE_DATA_NAME = "savedata";
+const std::string SchedulerCommand::LOAD_DATA_NAME = "loaddata";
 
 std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
   std::string str;
@@ -191,6 +192,9 @@ std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
       break;
     case SAVE_DATA:
       str = SAVE_DATA_NAME;
+      break;
+    case LOAD_DATA:
+      str = LOAD_DATA_NAME;
       break;
     default:
       std::cout << "Type did not found\n";

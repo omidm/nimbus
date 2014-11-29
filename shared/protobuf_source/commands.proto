@@ -105,6 +105,7 @@ message SchedulerPBuf{
      DEFINED_TEMPLATE = 24;
      SPAWN_TEMPLATE   = 25;
      SAVE_DATA        = 26;
+     LOAD_DATA        = 27;
   }
   required Type type = 1;
 
@@ -135,6 +136,7 @@ message SchedulerPBuf{
   optional DefinedTemplatePBuf defined_template  = 24;
   optional SpawnTemplatePBuf spawn_template      = 25;
   optional SaveDataPBuf save_data                = 26;
+  optional LoadDataPBuf load_data                = 27;
 }
 
 message AddComputeJobPBuf {
@@ -286,6 +288,13 @@ message SaveDataPBuf {
   optional uint64 job_id           = 1;
   optional uint64 from_physical_id = 2;
   optional uint64 checkpoint_id    = 3;
+  optional JobIDSet before_set     = 4;
+}
+
+message LoadDataPBuf {
+  optional uint64 job_id           = 1;
+  optional uint64 to_physical_id   = 2;
+  optional string handle           = 3;
   optional JobIDSet before_set     = 4;
 }
 

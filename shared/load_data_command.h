@@ -32,41 +32,51 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * A command sent from the controller to a worker to load a physical data from
+  * non-volatile memory. This command is used to rewind from a  distributed
+  * checkpoint in the system in case of failure.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
-#define NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+#ifndef NIMBUS_SHARED_LOAD_DATA_COMMAND_H_
+#define NIMBUS_SHARED_LOAD_DATA_COMMAND_H_
 
+
+#include <string>
 #include "shared/scheduler_command.h"
-#include "shared/handshake_command.h"
-#include "shared/add_compute_job_command.h"
-#include "shared/add_copy_job_command.h"
-#include "shared/spawn_compute_job_command.h"
-#include "shared/spawn_copy_job_command.h"
-#include "shared/spawn_job_graph_command.h"
-#include "shared/compute_job_command.h"
-#include "shared/create_data_command.h"
-#include "shared/remote_copy_send_command.h"
-#include "shared/remote_copy_receive_command.h"
-#include "shared/local_copy_command.h"
-#include "shared/job_done_command.h"
-#include "shared/define_data_command.h"
-#include "shared/define_partition_command.h"
-#include "shared/ldo_add_command.h"
-#include "shared/ldo_remove_command.h"
-#include "shared/partition_add_command.h"
-#include "shared/partition_remove_command.h"
-#include "shared/terminate_command.h"
-#include "shared/profile_command.h"
-#include "shared/start_template_command.h"
-#include "shared/end_template_command.h"
-#include "shared/defined_template_command.h"
-#include "shared/spawn_template_command.h"
-#include "shared/save_date_command.h"
-#include "shared/load_date_command.h"
 
+namespace nimbus {
+class LoadDataCommand : public SchedulerCommand {
+  public:
+    LoadDataCommand();
+    LoadDataCommand(const ID<job_id_t>& job_id,
+                    const ID<physical_data_id_t>& to_physical_data_id,
+                    const std::string& handle,
+                    const IDSet<job_id_t>& before);
+    ~LoadDataCommand();
 
-#endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& data);
+    virtual bool Parse(const SchedulerPBuf& buf);
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
+    ID<job_id_t> job_id();
+    ID<physical_data_id_t> to_physical_data_id();
+    std::string handle();
+    IDSet<job_id_t> before_set();
+
+  private:
+    ID<job_id_t> job_id_;
+    ID<physical_data_id_t> to_physical_data_id_;
+    std::string handle_;
+    IDSet<job_id_t> before_set_;
+
+    bool ReadFromProtobuf(const LoadDataPBuf& buf);
+    bool WriteToProtobuf(LoadDataPBuf* buf);
+};
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_LOAD_DATA_COMMAND_H_

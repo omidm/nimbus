@@ -64,7 +64,6 @@ class SaveDataCommand : public SchedulerCommand {
     virtual std::string ToString();
     ID<job_id_t> job_id();
     ID<physical_data_id_t> from_physical_data_id();
-    ID<physical_data_id_t> to_physical_data_id();
     ID<checkpoint_id_t> checkpoint_id();
     IDSet<job_id_t> before_set();
 
