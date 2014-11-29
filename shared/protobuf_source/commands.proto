@@ -79,64 +79,66 @@ message LdoPBuf {
 
 message SchedulerPBuf{
   enum Type {
-     BASE             =  1;
-     ADD_COMPUTE      =  2;
-     ADD_COPY         =  3;
-     SPAWN_JOB_GRAPH  =  4;
-     SPAWN_COMPUTE    =  5;
-     SPAWN_COPY       =  6;
-     DEFINE_DATA      =  7;
-     HANDSHAKE        =  8;
-     JOB_DONE         =  9;
-     EXECUTE_COMPUTE  = 10;
-     CREATE_DATA      = 11;
-     REMOTE_RECEIVE   = 12;
-     REMOTE_SEND      = 13;
-     LOCAL_COPY       = 14;
-     DEFINE_PARTITION = 15;
-     LDO_ADD          = 16;
-     LDO_REMOVE       = 17;
-     PARTITION_ADD    = 18;
-     PARTITION_REMOVE = 19;
-     TERMINATE        = 20;
-     PROFILE          = 21;
-     START_TEMPLATE   = 22;
-     END_TEMPLATE     = 23;
-     DEFINED_TEMPLATE = 24;
-     SPAWN_TEMPLATE   = 25;
-     SAVE_DATA        = 26;
-     LOAD_DATA        = 27;
+     BASE               =  1;
+     ADD_COMPUTE        =  2;
+     ADD_COPY           =  3;
+     SPAWN_JOB_GRAPH    =  4;
+     SPAWN_COMPUTE      =  5;
+     SPAWN_COPY         =  6;
+     DEFINE_DATA        =  7;
+     HANDSHAKE          =  8;
+     JOB_DONE           =  9;
+     EXECUTE_COMPUTE    = 10;
+     CREATE_DATA        = 11;
+     REMOTE_RECEIVE     = 12;
+     REMOTE_SEND        = 13;
+     LOCAL_COPY         = 14;
+     DEFINE_PARTITION   = 15;
+     LDO_ADD            = 16;
+     LDO_REMOVE         = 17;
+     PARTITION_ADD      = 18;
+     PARTITION_REMOVE   = 19;
+     TERMINATE          = 20;
+     PROFILE            = 21;
+     START_TEMPLATE     = 22;
+     END_TEMPLATE       = 23;
+     DEFINED_TEMPLATE   = 24;
+     SPAWN_TEMPLATE     = 25;
+     SAVE_DATA          = 26;
+     LOAD_DATA          = 27;
+     SAVE_DATA_JOB_DONE = 28;
   }
   required Type type = 1;
 
 // Note that the field type should agree with the type
 // value, to simplify reading.
-  optional AddComputeJobPBuf add_compute         =  2;
-  optional AddCopyJobPBuf add_copy               =  3;
-  optional SubmitJobGraphPBuf submit_job_graph   =  4;
-  optional SubmitComputeJobPBuf submit_compute   =  5;
-  optional SubmitCopyJobPBuf submit_copy         =  6;
-  optional DefineDataPBuf define_data            =  7;
-  optional HandshakePBuf handshake               =  8;
-  optional JobDonePBuf job_done                  =  9;
-  optional ExecuteComputeJobPBuf execute_compute = 10;
-  optional CreateDataPBuf create_data            = 11;
-  optional RemoteCopySendPBuf remote_send        = 12;
-  optional RemoteCopyReceivePBuf remote_receive  = 13;
-  optional LocalCopyPBuf local_copy              = 14;
-  optional DefinePartitionPBuf define_partition  = 15;
-  optional LdoAddPBuf ldo_add                    = 16;
-  optional LdoRemovePBuf ldo_remove              = 17;
-  optional PartitionAddPBuf partition_add        = 18;
-  optional PartitionRemovePBuf partition_remove  = 19;
-  optional TerminatePBuf terminate               = 20;
-  optional ProfilePBuf profile                   = 21;
-  optional StartTemplatePBuf start_template      = 22;
-  optional EndTemplatePBuf end_template          = 23;
-  optional DefinedTemplatePBuf defined_template  = 24;
-  optional SpawnTemplatePBuf spawn_template      = 25;
-  optional SaveDataPBuf save_data                = 26;
-  optional LoadDataPBuf load_data                = 27;
+  optional AddComputeJobPBuf add_compute          =  2;
+  optional AddCopyJobPBuf add_copy                =  3;
+  optional SubmitJobGraphPBuf submit_job_graph    =  4;
+  optional SubmitComputeJobPBuf submit_compute    =  5;
+  optional SubmitCopyJobPBuf submit_copy          =  6;
+  optional DefineDataPBuf define_data             =  7;
+  optional HandshakePBuf handshake                =  8;
+  optional JobDonePBuf job_done                   =  9;
+  optional ExecuteComputeJobPBuf execute_compute  = 10;
+  optional CreateDataPBuf create_data             = 11;
+  optional RemoteCopySendPBuf remote_send         = 12;
+  optional RemoteCopyReceivePBuf remote_receive   = 13;
+  optional LocalCopyPBuf local_copy               = 14;
+  optional DefinePartitionPBuf define_partition   = 15;
+  optional LdoAddPBuf ldo_add                     = 16;
+  optional LdoRemovePBuf ldo_remove               = 17;
+  optional PartitionAddPBuf partition_add         = 18;
+  optional PartitionRemovePBuf partition_remove   = 19;
+  optional TerminatePBuf terminate                = 20;
+  optional ProfilePBuf profile                    = 21;
+  optional StartTemplatePBuf start_template       = 22;
+  optional EndTemplatePBuf end_template           = 23;
+  optional DefinedTemplatePBuf defined_template   = 24;
+  optional SpawnTemplatePBuf spawn_template       = 25;
+  optional SaveDataPBuf save_data                 = 26;
+  optional LoadDataPBuf load_data                 = 27;
+  optional SaveDataJobDonePBuf save_data_job_done = 28;
 }
 
 message AddComputeJobPBuf {
@@ -238,6 +240,14 @@ message JobDonePBuf {
   optional double wait_time       = 3;
   optional uint64 max_alloc       = 4;
   optional bool final             = 5;
+}
+
+message SaveDataJobDonePBuf {
+  optional uint64 job_id          = 1;
+  optional double run_time        = 2;
+  optional double wait_time       = 3;
+  optional uint64 max_alloc       = 4;
+  optional string handle          = 5;
 }
 
 message ExecuteComputeJobPBuf {

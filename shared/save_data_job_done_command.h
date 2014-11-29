@@ -32,42 +32,55 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * SaveDataJobDone command to signal completion of a save data job.
+  * In addition to normal job done it also sends the controller a handle that
+  * can be used to load the data later.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
-#define NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+#ifndef NIMBUS_SHARED_SAVE_DATA_JOB_DONE_COMMAND_H_
+#define NIMBUS_SHARED_SAVE_DATA_JOB_DONE_COMMAND_H_
 
+
+#include <list>
+#include <string>
 #include "shared/scheduler_command.h"
-#include "shared/handshake_command.h"
-#include "shared/add_compute_job_command.h"
-#include "shared/add_copy_job_command.h"
-#include "shared/spawn_compute_job_command.h"
-#include "shared/spawn_copy_job_command.h"
-#include "shared/spawn_job_graph_command.h"
-#include "shared/compute_job_command.h"
-#include "shared/create_data_command.h"
-#include "shared/remote_copy_send_command.h"
-#include "shared/remote_copy_receive_command.h"
-#include "shared/local_copy_command.h"
-#include "shared/job_done_command.h"
-#include "shared/define_data_command.h"
-#include "shared/define_partition_command.h"
-#include "shared/ldo_add_command.h"
-#include "shared/ldo_remove_command.h"
-#include "shared/partition_add_command.h"
-#include "shared/partition_remove_command.h"
-#include "shared/terminate_command.h"
-#include "shared/profile_command.h"
-#include "shared/start_template_command.h"
-#include "shared/end_template_command.h"
-#include "shared/defined_template_command.h"
-#include "shared/spawn_template_command.h"
-#include "shared/save_data_command.h"
-#include "shared/load_data_command.h"
-#include "shared/save_data_job_done_command.h"
 
+namespace nimbus {
+class SaveDataJobDoneCommand : public SchedulerCommand {
+  public:
+    SaveDataJobDoneCommand();
+    SaveDataJobDoneCommand(const ID<job_id_t>& job_id,
+                           const double run_time,
+                           const double wait_time,
+                           const size_t max_alloc,
+                           const std::string& handle);
+    ~SaveDataJobDoneCommand();
 
-#endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& data);
+    virtual bool Parse(const SchedulerPBuf& buf);
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
+    ID<job_id_t> job_id();
+    double run_time();
+    double wait_time();
+    size_t max_alloc();
+    std::string handle();
+
+  private:
+    ID<job_id_t> job_id_;
+    double run_time_;
+    double wait_time_;
+    size_t max_alloc_;
+    std::string handle_;
+
+    bool ReadFromProtobuf(const SaveDataJobDonePBuf& buf);
+    bool WriteToProtobuf(SaveDataJobDonePBuf* buf);
+};
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_SAVE_DATA_JOB_DONE_COMMAND_H_
