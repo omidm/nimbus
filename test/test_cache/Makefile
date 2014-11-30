@@ -3,7 +3,7 @@
 # ENTER application target here #
 #################################
 
-TARGET_WATER = worker
+TARGET_WATER = test_cache
 
 ##########
 # common #

@@ -1,8 +1,4 @@
-opengl_2d
-opengl_3d
 *output*
 *.o
-worker
-*.dot
-*.pdf
+test_cache
 *.txt

@@ -36,8 +36,8 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_SCALAR_ARRAY_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_SCALAR_ARRAY_H_
+#ifndef NIMBUS_APPLICATION_TEST_CACHE_CACHE_SCALAR_ARRAY_H_
+#define NIMBUS_APPLICATION_TEST_CACHE_CACHE_SCALAR_ARRAY_H_
 
 #include <string>
 
@@ -99,4 +99,4 @@ class CacheScalarArray : public nimbus::CacheVar {
 
 } // namespace application
 
-#endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_SCALAR_ARRAY_H_
+#endif // NIMBUS_APPLICATION_TEST_CACHE_CACHE_SCALAR_ARRAY_H_

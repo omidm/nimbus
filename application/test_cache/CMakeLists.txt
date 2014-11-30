@@ -26,21 +26,21 @@ LINK_DIRECTORIES(${NIMBUS_ROOT})
 
 #Manually list your cpp and h files here - do NOT use GLOB/GLOB_RECURSE
 SET(${PROJECT_NAME}_cpp
+    ${PROJECT_SOURCE_DIR}/cache_face_array.cc
     # ${PROJECT_SOURCE_DIR}/cache_scalar_array.cc
-    # ${PROJECT_SOURCE_DIR}/data_face_array.cc
+    ${PROJECT_SOURCE_DIR}/cache_test.cc
+    ${PROJECT_SOURCE_DIR}/data_face_array.cc
     # ${PROJECT_SOURCE_DIR}/data_scalar_array.cc
     ${PROJECT_SOURCE_DIR}/physbam_tools.cc
-    ${PROJECT_SOURCE_DIR}/cache_test.cc
-    ${PROJECT_SOURCE_DIR}/cache_face_array.cc
     )
 SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/cache_face_array.h
     # ${PROJECT_SOURCE_DIR}/cache_scalar_array.h
-    # ${PROJECT_SOURCE_DIR}/data_face_array.h
+    ${PROJECT_SOURCE_DIR}/cache_test.h
+    ${PROJECT_SOURCE_DIR}/data_face_array.h
     # ${PROJECT_SOURCE_DIR}/data_scalar_array.h
     ${PROJECT_SOURCE_DIR}/physbam_include.h
     ${PROJECT_SOURCE_DIR}/physbam_tools.h
-    ${PROJECT_SOURCE_DIR}/cache_test.h
     )
 
 #List the libraries you want to link against - including a higher-level
