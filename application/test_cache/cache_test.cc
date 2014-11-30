@@ -18,6 +18,7 @@ const nimbus::GeometricRegion test_region(1, 1, 1, scale, scale, scale);
 const int ghost_width = 3;
 const int data_partitions = 3;
 const int ghost_start[] = {1, 1 + ghost_width, scale - ghost_width + 1};
+const int ghost_ls[] = {ghost_width, scale - 2 * ghost_width, ghost_width};
 
 CacheFaceArray<float> cache_fa_proto(test_region, ghost_width, true, "face_array");
 DataFaceArray<float> data_fa_proto("face_array");
@@ -37,7 +38,7 @@ void CacheTest::GetWriteTime(CacheAppVar &cache_proto, nimbus::PhysBAMData &data
 	  continue;
         nimbus::Data *d = data_proto.Clone();
 	d->set_region(nimbus::GeometricRegion(ghost_start[i], ghost_start[j], ghost_start[k],
-	                                      ghost_width, ghost_width, ghost_width));
+	                                      ghost_ls[i], ghost_ls[j], ghost_ls[k]));
         d->Create();
 	data.push_back(d);
       }
