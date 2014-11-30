@@ -44,17 +44,49 @@
 using namespace nimbus; // NOLINT
 
 CheckpointEntry::CheckpointEntry(checkpoint_id_t checkpoint_id) {
+  checkpoint_id_ = checkpoint_id;
 }
 
 CheckpointEntry::~CheckpointEntry() {
+  JobEntryMap::iterator it = jobs_.begin();
+  for (; it != jobs_.end(); ++it) {
+    delete it->second;
+  }
 }
 
 bool CheckpointEntry::AddJob(const JobEntry *job) {
+  JobEntry* j =
+    new ComputeJobEntry(job->job_name(),
+                        job->job_id(),
+                        job->read_set(),
+                        job->write_set(),
+                        job->before_set(),
+                        job->after_set(),
+                        job->parent_job_id(),
+                        job->future_job_id(),
+                        job->sterile(),
+                        job->region(),
+                        job->params());
+
+  jobs_[j->job_id()] = j;
+
   return false;
 }
 
 bool CheckpointEntry::CompleteJob(const JobEntry *job) {
-  return false;
+  job_id_t job_id = job->job_id()
+  JobEntryMap it = jobs_.find(job_id);
+  if (it == jobs_.end()) {
+    dbg(DBG_ERROR, "ERROR: job with id %lu is not in job map!\n", job_id);
+    exit(-1);
+    return false;
+  }
+
+  //TODO(omidm): maybe another flag like entire_context_versioned()
+  assert(job->versioned());
+  it->second->set_vmap_read(job->vmap_read());
+
+  return true;
 }
 
 bool CheckpointEntry::AddSaveDataJob(job_id_t job_id,

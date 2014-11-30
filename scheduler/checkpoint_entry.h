@@ -56,7 +56,10 @@ namespace nimbus {
 
 class CheckpointEntry {
   public:
-    typedef boost::unordered_map<checkpoint_id_t, CheckpointEntry*> Index;
+    typedef std::pair<logical_data_id_t, data_version_t> VLD;
+    typedef boost::unordered_map<job_id_t, VLD> Map;
+    typedef boost::unordered_map<data_version_t, std::string> HandleIndex;
+    typedef boost::unordered_map<logical_data_id_t, HandleIndex> Index;
 
     explicit CheckpointEntry(checkpoint_id_t checkpoint_id);
     virtual ~CheckpointEntry();
@@ -80,7 +83,9 @@ class CheckpointEntry {
 
   private:
     Log log_;
+    Map map_;
     Index index_;
+    JobEntryMap jobs_;
     checkpoint_id_t checkpoint_id_;
 };
 
