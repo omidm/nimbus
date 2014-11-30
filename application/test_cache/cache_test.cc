@@ -13,14 +13,14 @@ typedef typename PhysBAM::FACE_INDEX<3> FaceIndex;
 typedef typename PhysBAM::ARRAY<float, FaceIndex> PhysBAMFaceArray;
 
 // constants
-const int scale = 32;
+const int scale = 64;
 const nimbus::GeometricRegion test_region(1, 1, 1, scale, scale, scale);
 const int ghost_width = 3;
 const int data_partitions = 3;
 const int ghost_start[] = {1, 1 + ghost_width, scale - ghost_width + 1};
 const int ghost_ls[] = {ghost_width, scale - 2 * ghost_width, ghost_width};
 
-CacheFaceArray<float> cache_fa_proto(test_region, ghost_width, true, "face_array");
+CacheFaceArray<float> cache_fa_proto(test_region, 0, true, "face_array");
 DataFaceArray<float> data_fa_proto("face_array");
 
 void CacheTest::GetWriteTime(CacheAppVar &cache_proto, nimbus::PhysBAMData &data_proto) {
