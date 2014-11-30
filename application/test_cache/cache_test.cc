@@ -18,7 +18,7 @@ typedef std::vector<nimbus::Data*> DataArray;
     const nimbus::GeometricRegion kDefaultRegion(1, 1, 1, kScale, kScale, kScale);
     const nimbus::GeometricRegion region(0, 0, 0, 66, 66, 66);
     int ghost_width = 3;
-    CacheFaceArray<int> prototype(kDefaultRegion, ghost_width, true, "face_array");
+    CacheFaceArray<float> prototype(kDefaultRegion, ghost_width, true, "face_array");
     nimbus::CacheVar* cv = prototype.CreateNew(region);
     DataArray write_set;
     nimbus::PhysBAMData d = nimbus::PhysBAMData();
@@ -32,7 +32,8 @@ typedef std::vector<nimbus::Data*> DataArray;
 	}
       }
     }
-    cv->WriteFromCache(write_set, region);
+    CacheFaceArray<float> *cf = dynamic_cast< CacheFaceArray<float> * >(cv);
+    cf->Write(write_set, region);
     printf("Exiting from test cache face array...\n");
   }
 

@@ -79,15 +79,25 @@ class CacheFaceArray : public nimbus::CacheVar {
 
 	virtual nimbus::CacheVar *CreateNew(const nimbus::GeometricRegion &ob_reg) const;
 
-	virtual void ReadToCache(const nimbus::DataArray &read_set,
-                                 const nimbus::GeometricRegion &read_reg);
-        virtual void WriteFromCache(const nimbus::DataArray &write_set,
-                                    const nimbus::GeometricRegion &write_reg) const;
+	virtual void Read(const nimbus::DataArray &read_set,
+                          const nimbus::GeometricRegion &read_reg) {
+	    this->ReadToCache(read_set, read_reg);
+	}
+
+        virtual void Write(const nimbus::DataArray &write_set,
+                           const nimbus::GeometricRegion &write_reg) const {
+	    this->WriteFromCache(write_set, write_reg);
+	}
 
     protected:
         explicit CacheFaceArray(const nimbus::GeometricRegion &global_reg,
                                 const nimbus::GeometricRegion &ob_reg,
                                 const int ghost_width);
+	virtual void ReadToCache(const nimbus::DataArray &read_set,
+                                 const nimbus::GeometricRegion &read_reg);
+        virtual void WriteFromCache(const nimbus::DataArray &write_set,
+                                    const nimbus::GeometricRegion &write_reg) const;
+
 
 	/*
         virtual nimbus::CacheVar *CreateNew(const nimbus::GeometricRegion &ob_reg) const;
