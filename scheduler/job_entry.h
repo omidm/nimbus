@@ -106,6 +106,7 @@ class JobEntry {
     bool assigned() const;
     bool done() const;
     bool future() const;
+    checkpoint_id_t checkpoint_id() const;
 
     const IDSet<logical_data_id_t>* read_set_p() const;
     const IDSet<logical_data_id_t>* write_set_p() const;
@@ -140,6 +141,7 @@ class JobEntry {
     void set_assigned(bool flag);
     void set_done(bool flag);
     void set_future(bool flag);
+    void set_checkpoint_id(checkpoint_id_t checkpoint_id);
 
     void set_physical_table_entry(logical_data_id_t l_id, physical_data_id_t p_id);
 
@@ -193,6 +195,7 @@ class JobEntry {
     bool read_region_valid_;
     bool write_region_valid_;
     bool union_region_valid_;
+    checkpoint_id_t checkpoint_id_;
 
   private:
     void Initialize();

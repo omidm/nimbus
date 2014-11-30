@@ -53,6 +53,7 @@ JobEntry::JobEntry() {
   assigned_ = false;
   done_ = false;
   future_ = false;
+  checkpoint_id_ = NIMBUS_INIT_CHECKPOINT_ID;
   read_region_valid_ = false;
   write_region_valid_ = false;
   union_region_valid_ = false;
@@ -195,6 +196,10 @@ bool JobEntry::done() const {
 
 bool JobEntry::future() const {
   return future_;
+}
+
+checkpoint_id_t JobEntry::checkpoint_id() const {
+  return checkpoint_id_;
 }
 
 const IDSet<logical_data_id_t>* JobEntry::read_set_p() const {
@@ -344,6 +349,10 @@ void JobEntry::set_done(bool flag) {
 
 void JobEntry::set_future(bool flag) {
   future_ = flag;
+}
+
+void JobEntry::set_checkpoint_id(checkpoint_id_t checkpoint_id) {
+  checkpoint_id_ = checkpoint_id;
 }
 
 bool JobEntry::GetPhysicalReadSet(IDSet<physical_data_id_t>* set) {

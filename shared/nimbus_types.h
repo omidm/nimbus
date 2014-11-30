@@ -76,6 +76,9 @@
 
 #define NIMBUS_RECEIVER_KNOWN_IP "receiver_known_ip"
 
+#define DEFAULT_CHECKPOINT_CREATION_RATE 2
+#define NIMBUS_INIT_CHECKPOINT_ID 0
+
 namespace nimbus {
   typedef uint32_t port_t;
   typedef uint32_t worker_id_t;

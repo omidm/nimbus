@@ -154,6 +154,11 @@ class JobManager {
     JobEntryList jobs_done_;
     boost::mutex jobs_done_mutex_;
 
+    checkpoint_id_t checkpoint_id_;
+    counter_t checkpoint_creation_rate_;
+    counter_t non_sterile_counter_;
+    JobEntryMap non_sterile_jobs_;
+
     JobEntryMap jobs_ready_to_assign_;
     JobEntryMap jobs_pending_to_assign_;
     boost::recursive_mutex job_queue_mutex_;

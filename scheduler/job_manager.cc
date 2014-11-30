@@ -54,6 +54,9 @@ JobManager::JobManager() {
   ldo_map_p_ = NULL;
   after_map_ = NULL;
   log_.set_file_name("log_job_manager");
+  checkpoint_id_ = NIMBUS_INIT_CHECKPOINT_ID;
+  checkpoint_creation_rate_ = DEFAULT_CHECKPOINT_CREATION_RATE;
+  non_sterile_counter_ = 0;
 }
 
 JobManager::~JobManager() {
@@ -148,6 +151,10 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
   PassMetaBeforeSetDepthVersioningDependency(job);
 
   version_manager_.AddJobEntry(job);
+
+  if (!job->sterile()) {
+    non_sterile_jobs_[job_id] = job;
+  }
 
   return job;
 }
@@ -501,6 +508,24 @@ void JobManager::NotifyJobDone(JobEntry *job) {
       j->remove_assignment_dependency(job_id);
       if (j->IsReadyToAssign()) {
         jobs_ready_to_assign_[j->job_id()] = j;
+      }
+    }
+  }
+
+
+  if (!job->sterile()) {
+    non_sterile_jobs_.erase(job_id);
+    if ((++non_sterile_counter_) == checkpoint_creation_rate_) {
+      // Initiate checkpoint creation.
+      ++checkpoint_id_;
+      non_sterile_counter_ = 0;
+      JobEntryMap::iterator it = non_sterile_jobs_.begin();
+      for (; it != non_sterile_jobs_.end(); ++it) {
+        // TODO(omidm): these checks may not necessarily pass, need general way
+        // to enforce these constraints. leave it like this for now, since the
+        // job graphs are not complicated.
+        assert(!it->second->assigned());
+        it->second->set_checkpoint_id(checkpoint_id_);
       }
     }
   }
