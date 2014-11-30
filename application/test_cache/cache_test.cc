@@ -52,13 +52,16 @@ void CacheTest::GetWriteTime(CacheAppVar &cache_proto, nimbus::PhysBAMData &data
     printf("Typecast to face array ...\n");
     CacheFaceArray<float> *cf = dynamic_cast< CacheFaceArray<float> * >(cv);
     PhysBAMFaceArray *pfa = cf->data();
-    for (int i = 1; i <= scale; ++i) {
-      for (int j = 1; j <= scale; ++j) {
-        for (int k = 1; k <= scale; ++k) {
-          typename PhysBAM::VECTOR<int, 3> index(i, j, k);
-          (*pfa)(1, index) = (i + j + k);
-          (*pfa)(2, index) = 2 * (i + j + k);
-          (*pfa)(3, index) = 3 * (i + j + k);
+    for (int dim = 1; dim <= 3; ++dim) {
+      int scalei = dim==1? scale + 1 : scale;
+      int scalej = dim==2? scale + 1 : scale;
+      int scalek = dim==3? scale + 1 : scale;
+      for (int i = 1; i <= scalei; ++i) {
+        for (int j = 1; j <= scalej; ++j) {
+          for (int k = 1; k <= scalek; ++k) {
+            typename PhysBAM::VECTOR<int, 3> index(i, j, k);
+            (*pfa)(dim, index) = dim * (i + j + k);
+          }
         }
       }
     }
