@@ -46,36 +46,72 @@ using namespace nimbus; // NOLINT
 
 
 CheckpointManager::CheckpointManager() {
+  checkpoint_id_ = NIMBUS_INIT_CHECKPOINT_ID;
 }
 
 CheckpointManager::~CheckpointManager() {
 }
 
 bool CheckpointManager::CreatNewCheckpoint(checkpoint_id_t *checkpoint_id) {
-  return false;
+  ++checkpoint_id_;
+  index_[checkpoint_id_] = new CheckpointEntry(checkpoint_id_);
+  *checkpoint_id = checkpoint_id_;
+  return true;
 }
 
 bool CheckpointManager::AddJobToCheckpoint(checkpoint_id_t checkpoint_id,
                                            const JobEntry *job) {
-  return false;
+  Index::iterator iter = index_.find(checkpoint_id);
+  if (iter == index_.end()) {
+    dbg(DBG_ERROR, "ERROR: checkpoint with id %lu does not exist!\n", checkpoint_id);
+    exit(-1);
+    return false;
+  } else {
+    iter->second->AddJob(job);
+    return true;
+  }
 }
 
 bool CheckpointManager::CompleteJobForCheckpoint(checkpoint_id_t checkpoint_id,
                                                  const JobEntry *job) {
-  return false;
+  Index::iterator iter = index_.find(checkpoint_id);
+  if (iter == index_.end()) {
+    dbg(DBG_ERROR, "ERROR: checkpoint with id %lu does not exist!\n", checkpoint_id);
+    exit(-1);
+    return false;
+  } else {
+    iter->second->CompleteJob(job);
+    return true;
+  }
 }
 
 bool CheckpointManager::AddSaveDataJobToCheckpoint(checkpoint_id_t checkpoint_id,
                                                    job_id_t job_id,
                                                    logical_data_id_t ldid,
                                                    data_version_t version) {
-  return false;
+  Index::iterator iter = index_.find(checkpoint_id);
+  if (iter == index_.end()) {
+    dbg(DBG_ERROR, "ERROR: checkpoint with id %lu does not exist!\n", checkpoint_id);
+    exit(-1);
+    return false;
+  } else {
+    iter->second->AddSaveDataJob(job_id, ldid, version);
+    return true;
+  }
 }
 
 bool CheckpointManager::NotifySaveDataJobDoneForCheckpoint(checkpoint_id_t checkpoint_id,
                                                            job_id_t job_id,
                                                            std::string handle) {
-  return false;
+  Index::iterator iter = index_.find(checkpoint_id);
+  if (iter == index_.end()) {
+    dbg(DBG_ERROR, "ERROR: checkpoint with id %lu does not exist!\n", checkpoint_id);
+    exit(-1);
+    return false;
+  } else {
+    iter->second->NotifySaveDataJobDone(job_id, handle);
+    return true;
+  }
 }
 
 bool CheckpointManager::GetCheckpointToRewind(checkpoint_id_t *checkpoint_id) {
@@ -84,14 +120,30 @@ bool CheckpointManager::GetCheckpointToRewind(checkpoint_id_t *checkpoint_id) {
 
 bool CheckpointManager::GetJobListFromCheckpoint(checkpoint_id_t checkpoint_id,
                                                  JobEntryList *list) {
-  return false;
+  Index::iterator iter = index_.find(checkpoint_id);
+  if (iter == index_.end()) {
+    dbg(DBG_ERROR, "ERROR: checkpoint with id %lu does not exist!\n", checkpoint_id);
+    exit(-1);
+    return false;
+  } else {
+    iter->second->GetJobList(list);
+    return true;
+  }
 }
 
 bool CheckpointManager::GetHandleToLoadData(checkpoint_id_t checkpoint_id,
                                             logical_data_id_t ldid,
                                             data_version_t version,
                                             std::string *handle) {
-  return false;
+  Index::iterator iter = index_.find(checkpoint_id);
+  if (iter == index_.end()) {
+    dbg(DBG_ERROR, "ERROR: checkpoint with id %lu does not exist!\n", checkpoint_id);
+    exit(-1);
+    return false;
+  } else {
+    iter->second->GetHandleToLoadData(ldid, version, handle);
+    return true;
+  }
 }
 
 bool CheckpointManager::RemoveObsoleteCheckpoints(std::list<checkpoint_id_t> *removed_list) {

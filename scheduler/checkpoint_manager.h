@@ -51,6 +51,7 @@
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "scheduler/job_entry.h"
+#include "scheduler/checkpoint_entry.h"
 
 namespace nimbus {
 
