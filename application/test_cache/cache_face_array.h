@@ -41,6 +41,7 @@
 
 #include <string>
 
+#include "application/test_cache/cache_app_var.h"
 #include "application/test_cache/physbam_include.h"
 #include "data/cache/cache_var.h"
 #include "data/physbam/translator_physbam.h"
@@ -50,7 +51,7 @@
 namespace application {
 
 template<class T, class TS = float>
-class CacheFaceArray : public nimbus::CacheVar {
+class CacheFaceArray : public CacheAppVar {
         typedef typename PhysBAM::VECTOR<TS, 3> TV;
         typedef typename PhysBAM::VECTOR<int, 3> TV_INT;
         typedef typename PhysBAM::RANGE<TV> Range;
@@ -78,16 +79,6 @@ class CacheFaceArray : public nimbus::CacheVar {
         virtual void DumpData(std::string file_name);
 
 	virtual nimbus::CacheVar *CreateNew(const nimbus::GeometricRegion &ob_reg) const;
-
-	virtual void Read(const nimbus::DataArray &read_set,
-                          const nimbus::GeometricRegion &read_reg) {
-	    this->ReadToCache(read_set, read_reg);
-	}
-
-        virtual void Write(const nimbus::DataArray &write_set,
-                           const nimbus::GeometricRegion &write_reg) const {
-	    this->WriteFromCache(write_set, write_reg);
-	}
 
     protected:
         explicit CacheFaceArray(const nimbus::GeometricRegion &global_reg,

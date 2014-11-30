@@ -41,6 +41,7 @@
 
 #include <string>
 
+#include "application/water_multiple/cache_app_var.h"
 #include "application/water_multiple/physbam_include.h"
 #include "data/cache/cache_var.h"
 #include "data/physbam/translator_physbam.h"
@@ -50,7 +51,7 @@
 namespace application {
 
 template<class T, class TS = float>
-class CacheScalarArray : public nimbus::CacheVar {
+class CacheScalarArray : public CacheAppVar {
         typedef typename PhysBAM::VECTOR<TS, 3> TV;
         typedef typename PhysBAM::VECTOR<int, 3> TV_INT;
         typedef typename PhysBAM::RANGE<TV> Range;

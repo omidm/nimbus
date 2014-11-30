@@ -32,19 +32,28 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * A Nimbus worker. 
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  * Modified: Chinmayee Shah <chinmayee.shah@stanford.edu>
-  */
+/*
+ * Author: Chinmayee Shah <chshah@stanford.edu>
+ */
 
-#include <iostream>  // NOLINT
-#include <pthread.h>
-#include <string>
+#include "application/test_cache/cache_app_var.h"
+#include "data/cache/cache_var.h"
+#include "shared/nimbus.h"
 
-#include "application/test_cache/cache_test.h"
+namespace application {
 
-int main(int argc, char *argv[]) {
-  application::CacheTest::GetWriteTimes();
+CacheAppVar::CacheAppVar() {}
+
+CacheAppVar::CacheAppVar(nimbus::GeometricRegion obreg) : CacheVar(obreg) {}
+
+void CacheAppVar::Read(const nimbus::DataArray &read_set,
+                       const nimbus::GeometricRegion &read_reg) {
+  this->ReadToCache(read_set, read_reg);
 }
+
+void CacheAppVar::Write(const nimbus::DataArray &write_set,
+                        const nimbus::GeometricRegion &write_reg) const {
+  this->WriteFromCache(write_set, write_reg);
+}
+
+} // namespace application

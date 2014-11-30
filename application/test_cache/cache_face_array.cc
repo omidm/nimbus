@@ -64,7 +64,7 @@ template<class T, class TS> CacheFaceArray<T, TS>::
 CacheFaceArray(const nimbus::GeometricRegion &global_reg,
                const nimbus::GeometricRegion &ob_reg,
                const int ghost_width)
-    : CacheVar(ob_reg),
+    : CacheAppVar(ob_reg),
       global_region_(global_reg),
       local_region_(ob_reg.NewEnlarged(-ghost_width)),
       ghost_width_(ghost_width) {
