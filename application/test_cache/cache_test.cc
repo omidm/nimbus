@@ -1,3 +1,4 @@
+#include <ctime>
 #include "application/test_cache/cache_app_var.h"
 #include "application/test_cache/cache_face_array.h"
 #include "application/test_cache/cache_test.h"
@@ -68,20 +69,31 @@ void CacheTest::GetWriteTime(CacheAppVar &cache_proto, nimbus::PhysBAMData &data
   }
 
   // Test aggregate copy time
-  // TODO: BEGIN TIMER
+  // BEGIN TIMER
+  struct timespec t;
+  clock_gettime(CLOCK_REALTIME, &t);
+  double start_time = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
   ca->Write(data, test_region);
-  // TODO: END TIMER
-  printf("%s, Aggregate, %i\n", data_proto.name().c_str(), 0);
+  // END TIMER
+  clock_gettime(CLOCK_REALTIME, &t);
+  double end_time = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
+  double diff_time = end_time - start_time;
+  printf("%s, Aggregate, %f s\n", data_proto.name().c_str(), diff_time);
 
   // Test total of inidividual copy times
-  // TODO: BEGIN TIMER
+  // BEGIN TIMER
+  clock_gettime(CLOCK_REALTIME, &t);
+  start_time = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
   for (int i = 0; i < data_partitions * data_partitions * data_partitions - 1; ++i) {
     DataArray data_single;
     data_single.push_back(data[i]);
     ca->Write(data_single, data[i]->region());
   }
-  // TODO: END TIMER
-  printf("%s, Individual, %i\n", data_proto.name().c_str(), 0);
+  // END TIMER
+  clock_gettime(CLOCK_REALTIME, &t);
+  end_time = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
+  diff_time = end_time - start_time;
+  printf("%s, Individual, %f s\n", data_proto.name().c_str(), diff_time);
 }
 
 void CacheTest::GetWriteTimes() {
