@@ -119,6 +119,15 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     if (pool_->find(prototype.id()) == pool_->end()) {
         CacheTable *ct = new CacheTable(cache::VAR);
         (*pool_)[prototype.id()] = ct;
+        char msg[2048];
+        int64_t area = static_cast<int64_t>(region.GetSurfaceArea());
+        int64_t dx = region.dx();
+        int64_t dy = region.dy();
+        int64_t dz = region.dz();
+        std::string reg_str = region.ToNetworkData() + " ; " + prototype.name();
+        snprintf(msg, sizeof(msg), "Region: %" PRId64 " ; %" PRId64 " ; %" PRId64 " ; %s",
+                 dx, dy, dz, prototype.name().c_str());
+        PrintTimeStamp("GAV Create", reg_str.c_str());
         cv = prototype.CreateNew(region);
         cv->set_unique_id(unique_id_allocator_++);
         assert(cv != NULL);
@@ -127,6 +136,11 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
         CacheTable *ct = (*pool_)[prototype.id()];
         cv = ct->GetClosestAvailable(region, read_set, access);
         if (cv == NULL) {
+            char msg[2048];
+            int64_t area = static_cast<int64_t>(region.GetSurfaceArea());
+            snprintf(msg, sizeof(msg), "Region: %" PRId64 " ; %s", area, prototype.name().c_str());
+            std::string reg_str = region.ToNetworkData() + " ; " + prototype.name();
+            PrintTimeStamp("GAV Create", reg_str.c_str());
             cv = prototype.CreateNew(region);
             cv->set_unique_id(unique_id_allocator_++);
             assert(cv != NULL);
@@ -321,6 +335,9 @@ void CacheManager::SyncData(Data *d) {
     while (d->pending_flag() != 0 ||
            (d->dirty_cache_object()
             && d->dirty_cache_object()->pending_flag())) {
+       if (d->dirty_cache_object()) {
+         PrintTimeStamp("block", d->dirty_cache_object()->name().c_str());
+       }
        pthread_cond_wait(&cache_cond, &cache_lock);
     }
     PrintTimeStamp("end", "SD check");

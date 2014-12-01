@@ -96,7 +96,10 @@ template<class T> inline int Pack_Size(const T& data,typename ENABLE_IF<HAS_DATA
 
 template<class T> inline void Pack(const T& data,ARRAY_VIEW<char> buffer,int& position,typename ENABLE_IF<HAS_DATATYPE<T>::value,const MPI::Comm&>::TYPE comm)
 {
-  PrintPackTimeStamp("PACK START 1");
+  int pack_size = Pack_Size(data,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 1 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   assert(Pack_Size(data,comm)<=buffer.Size()-position);
   Datatype<T>().Pack(&data,1,buffer.Get_Array_Pointer(),buffer.Size(),position,comm);
   PrintPackTimeStamp("PACK END 1");
@@ -104,7 +107,10 @@ template<class T> inline void Pack(const T& data,ARRAY_VIEW<char> buffer,int& po
 
 template<class T> inline void Unpack(T& data,ARRAY_VIEW<const char> buffer,int& position,typename ENABLE_IF<HAS_DATATYPE<T>::value,const MPI::Comm&>::TYPE comm)
 {
-  PrintPackTimeStamp("UNPACK START 2");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 2 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   Datatype<T>().Unpack(buffer.Get_Array_Pointer(),buffer.Size(),&data,1,position,comm);
   PrintPackTimeStamp("UNPACK END 2");
 }
@@ -125,7 +131,10 @@ template<class T,class ID> inline int Pack_Size(const ARRAY<T,ID>& data,const MP
 
 template<class T> inline void Pack(const ARRAY_VIEW<T>& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("PACK START 3");
+  int pack_size = Pack_Size(data,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 3 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   assert(Pack_Size(data,comm)<=buffer.Size()-position);
   Pack(data.Size(),buffer,position,comm);
   Datatype<T>().Pack(data.Get_Array_Pointer(),data.Size(),&buffer(1),buffer.Size(),position,comm);
@@ -134,7 +143,10 @@ template<class T> inline void Pack(const ARRAY_VIEW<T>& data,ARRAY_VIEW<char> bu
 
 template<class T_ARRAY,class T_INDICES> inline void Pack(const INDIRECT_ARRAY<T_ARRAY,T_INDICES>& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("PACK START 4");
+  int pack_size = Pack_Size(data,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 4 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   assert(Pack_Size(data,comm)<=buffer.Size()-position);
   Pack(data.Size(),buffer,position,comm);MPI::Datatype type=Datatype<typename T_ARRAY::ELEMENT>();
   for(int i=1;i<=data.Size();i++) type.Pack(&data(i),1,&buffer(1),buffer.Size(),position,comm);
@@ -143,21 +155,30 @@ template<class T_ARRAY,class T_INDICES> inline void Pack(const INDIRECT_ARRAY<T_
 
 template<class T> inline void Pack(const ARRAY<T>& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("PACK START 5");
+  int pack_size = Pack_Size(data,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 5 ; %d",pack_size);
+  PrintPackTimeStamp(msg);
   Pack(ARRAY_VIEW<const T>(data),buffer,position,comm);
   PrintPackTimeStamp("PACK END 5");
 }
 
 template<class T,class ID> inline void Pack(const ARRAY<T,ID>& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("PACK START 6");
+  int pack_size = Pack_Size(data,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 6 ; %d",pack_size);
+  PrintPackTimeStamp(msg);
   Pack(ARRAY_VIEW<const T>(data),buffer,position,comm);
   PrintPackTimeStamp("PACK END 6");
 }
 
 template<class T> inline void Unpack(ARRAY_VIEW<T> data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("UNPACK START 7");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 7 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   int m;Unpack(m,buffer,position,comm);PHYSBAM_ASSERT(m==data.Size());
   Datatype<T>().Unpack(&buffer(1),buffer.Size(),data.Get_Array_Pointer(),data.Size(),position,comm);
   PrintPackTimeStamp("UNPACK END 7");
@@ -165,7 +186,10 @@ template<class T> inline void Unpack(ARRAY_VIEW<T> data,ARRAY_VIEW<const char> b
 
 template<class T> inline void Unpack(ARRAY<T>& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("UNPACK START 8");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 8 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   int m;Unpack(m,buffer,position,comm);data.Resize(m);
   Datatype<T>().Unpack(&buffer(1),buffer.Size(),data.Get_Array_Pointer(),data.Size(),position,comm);
   PrintPackTimeStamp("UNPACK END 8");
@@ -173,7 +197,10 @@ template<class T> inline void Unpack(ARRAY<T>& data,ARRAY_VIEW<const char> buffe
 
 template<class T,class ID> inline void Unpack(ARRAY<T,ID>& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("UNPACK START 9");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 9 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   int m;Unpack(m,buffer,position,comm);data.Resize(ID(m));
   Datatype<T>().Unpack(&buffer(1),buffer.Size(),data.Get_Array_Pointer(),Value(data.Size()),position,comm);
   PrintPackTimeStamp("UNPACK END 9");
@@ -181,7 +208,10 @@ template<class T,class ID> inline void Unpack(ARRAY<T,ID>& data,ARRAY_VIEW<const
 
 template<class T_ARRAY,class T_INDICES> inline void Unpack(INDIRECT_ARRAY<T_ARRAY,T_INDICES>& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("UNPACK START 10");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 10 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   int m;Unpack(m,buffer,position,comm);PHYSBAM_ASSERT(m==data.Size());
   MPI::Datatype type=Datatype<typename T_ARRAY::ELEMENT>();
   for(int i=1;i<=data.Size();i++) type.Unpack(&buffer(1),buffer.Size(),&data(i),1,position,comm);
@@ -204,14 +234,21 @@ Pack_Size(const T_POINT_CLOUD& particles,const MPI::Comm& comm)
 #endif
 
 template<class T_POINT_CLOUD> void Pack(const T_POINT_CLOUD& particles,int index,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
-{ PrintPackTimeStamp("PACK START 11");
+{ 
+  int pack_size = Pack_Size(particles,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 11 ; %d",pack_size);
+  PrintPackTimeStamp(msg);
   particles.array_collection->Pack(buffer,position,index);
   PrintPackTimeStamp("PACK END 11");
 } // valid as long as the assertion in Pack_Size succeeds
 
 template<class T_POINT_CLOUD> void Unpack(T_POINT_CLOUD& particles,int index,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("UNPACK START 12");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 12 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   particles.array_collection->Unpack(buffer,position,index);
   PrintPackTimeStamp("UNPACK END 12");
 } // valid as long as the assertion in Pack_Size succeeds
@@ -248,7 +285,10 @@ void Pack(const SPARSE_MATRIX_PARTITION& data,ARRAY_VIEW<char> buffer,int& posit
 void Pack(const ARRAY<ARRAY<int> >& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm); // TODO: generalize ARRAY<T> to handle this
 template<class ID> void Pack(const ARRAY<ARRAY<int>,ID>& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm) // TODO: generalize ARRAY<T> to handle this
 { 
-  PrintPackTimeStamp("PACK START 13");
+  int pack_size = Pack_Size(data,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 13 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   Pack(reinterpret_cast<const ARRAY<ARRAY<int> >&>(data),buffer,position,comm);
   PrintPackTimeStamp("PACK END 13");
 }
@@ -257,31 +297,46 @@ void Pack(const UNION_FIND<>& data,ARRAY_VIEW<char> buffer,int& position,const M
 
 template<class T1,class T2> inline void Pack(const T1& d1,const T2& d2,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("PACK START 14");
+  int pack_size = Pack_Size(d1,comm) + Pack_Size(d2,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 14 ; %d",pack_size);
+  PrintPackTimeStamp(msg);
   Pack(d1,buffer,position,comm);Pack(d2,buffer,position,comm);
   PrintPackTimeStamp("PACK END 14");
 }
 template<class T1,class T2,class T3> inline void Pack(const T1& d1,const T2& d2,const T3& d3,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("PACK START 15");
+  int pack_size = Pack_Size(d1,comm) + Pack_Size(d2,comm) + Pack_Size(d3,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 15 ; %d",pack_size);
+  PrintPackTimeStamp(msg);
   Pack(d1,buffer,position,comm);Pack(d2,buffer,position,comm);Pack(d3,buffer,position,comm);
   PrintPackTimeStamp("PACK END 15");
 }
 template<class T1,class T2,class T3,class T4> inline void Pack(const T1& d1,const T2& d2,const T3& d3,const T4& d4,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("PACK START 16");
+  int pack_size = Pack_Size(d1,comm) + Pack_Size(d2,comm) + Pack_Size(d3,comm) + Pack_Size(d4,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 16 ; %d",pack_size);
+  PrintPackTimeStamp(msg);
   Pack(d1,buffer,position,comm);Pack(d2,buffer,position,comm);Pack(d3,buffer,position,comm);Pack(d4,buffer,position,comm);
   PrintPackTimeStamp("PACK END 16");
 }
 template<class T1,class T2,class T3,class T4,class T5> inline void Pack(const T1& d1,const T2& d2,const T3& d3,const T4& d4,const T5& d5,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("PACK START 17");
+  int pack_size = Pack_Size(d1,comm) + Pack_Size(d2,comm) + Pack_Size(d3,comm) + Pack_Size(d4,comm) + Pack_Size(d5,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 17 ; %d",pack_size);
+  PrintPackTimeStamp(msg);
   Pack(d1,buffer,position,comm);Pack(d2,buffer,position,comm);Pack(d3,buffer,position,comm);Pack(d4,buffer,position,comm);Pack(d5,buffer,position,comm);
   PrintPackTimeStamp("PACK END 17");
 }
 template<class T1,class T2,class T3,class T4,class T5,class T6> inline void Pack(const T1& d1,const T2& d2,const T3& d3,const T4& d4,const T5& d5,const T6& d6,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("PACK START 18");
+  int pack_size = Pack_Size(d1,comm) + Pack_Size(d2,comm) + Pack_Size(d3,comm) + Pack_Size(d4,comm) + Pack_Size(d5,comm) + Pack_Size(d6,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 18 ; %d",pack_size);
+  PrintPackTimeStamp(msg);
   Pack(d1,buffer,position,comm);Pack(d2,buffer,position,comm);Pack(d3,buffer,position,comm);Pack(d4,buffer,position,comm);Pack(d5,buffer,position,comm);Pack(d6,buffer,position,comm);
   PrintPackTimeStamp("PACK END 18");
 }
@@ -295,7 +350,10 @@ void Unpack(SPARSE_MATRIX_PARTITION& data,ARRAY_VIEW<const char> buffer,int& pos
 void Unpack(ARRAY<ARRAY<int> >& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm); // TODO: generalize ARRAY<T> to handle this
 template<class ID> void Unpack(ARRAY<ARRAY<int>,ID>& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm) // TODO: generalize ARRAY<T> to handle this
 {
-  PrintPackTimeStamp("UNPACK START 19");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 19 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   Unpack(reinterpret_cast<ARRAY<ARRAY<int> >&>(data),buffer,position,comm);
   PrintPackTimeStamp("UNPACK END 19");
 }
@@ -303,31 +361,46 @@ void Unpack(UNION_FIND<>& data,ARRAY_VIEW<const char> buffer,int& position,const
 
 template<class T1,class T2> inline void Unpack(T1& d1,T2& d2,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("UNPACK START 20");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 20 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   Unpack(d1,buffer,position,comm);Unpack(d2,buffer,position,comm);
   PrintPackTimeStamp("UNPACK END 20");
 }
 template<class T1,class T2,class T3> inline void Unpack(T1& d1,T2& d2,T3& d3,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 { 
-  PrintPackTimeStamp("UNPACK START 21");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 21 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   Unpack(d1,buffer,position,comm);Unpack(d2,buffer,position,comm);Unpack(d3,buffer,position,comm);
   PrintPackTimeStamp("UNPACK END 21");
 }
 template<class T1,class T2,class T3,class T4> inline void Unpack(T1& d1,T2& d2,T3& d3,T4& d4,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("UNPACK START 22");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 22 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   Unpack(d1,buffer,position,comm);Unpack(d2,buffer,position,comm);Unpack(d3,buffer,position,comm);Unpack(d4,buffer,position,comm);
   PrintPackTimeStamp("UNPACK END 22");
 }
 template<class T1,class T2,class T3,class T4,class T5> inline void Unpack(T1& d1,T2& d2,T3& d3,T4& d4,T5& d5,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("UNPACK START 23");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 23 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   Unpack(d1,buffer,position,comm);Unpack(d2,buffer,position,comm);Unpack(d3,buffer,position,comm);Unpack(d4,buffer,position,comm);Unpack(d5,buffer,position,comm);
   PrintPackTimeStamp("UNPACK END 23");
 }
 template<class T1,class T2,class T3,class T4,class T5,class T6> inline void Unpack(T1& d1,T2& d2,T3& d3,T4& d4,T5& d5,T6& d6,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("UNPACK START 24");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 24 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   Unpack(d1,buffer,position,comm);Unpack(d2,buffer,position,comm);Unpack(d3,buffer,position,comm);Unpack(d4,buffer,position,comm);Unpack(d5,buffer,position,comm);Unpack(d6,buffer,position,comm);
   PrintPackTimeStamp("UNPACK END 24");
 }

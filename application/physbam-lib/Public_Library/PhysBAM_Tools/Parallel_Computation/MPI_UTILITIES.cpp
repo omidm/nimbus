@@ -45,7 +45,7 @@ void PrintPackTimeStamp(const char* comment) {
   struct timespec t;
   clock_gettime(CLOCK_REALTIME, &t);
   double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
-  fprintf(pack_log_file, "%f %s\n", time_sum, comment);
+  fprintf(pack_log_file, "%f ; %s\n", time_sum, comment);
 }
 //#####################################################################
 // Function RLE_Run_Datatype
@@ -185,7 +185,10 @@ template<class T> int Pack_Size(const VECTOR_ND<T>& data,const MPI::Comm& comm)
 
 template<class T> void Pack(const VECTOR_ND<T>& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("PACK START 25");
+  int pack_size = Pack_Size(data,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 25 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   assert(Pack_Size(data,comm)<=buffer.Size()-position);
   Pack(data.n,buffer,position,comm);
   Datatype<T>().Pack(data.Get_Array_Pointer(),data.n,&buffer(1),buffer.Size(),position,comm);
@@ -194,7 +197,10 @@ template<class T> void Pack(const VECTOR_ND<T>& data,ARRAY_VIEW<char> buffer,int
 
 template<class T> void Unpack(VECTOR_ND<T>& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("UNPACK START 26");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 26 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   int n;Unpack(n,buffer,position,comm);data.Resize(n);
   Datatype<T>().Unpack(&buffer(1),buffer.Size(),data.Get_Array_Pointer(),data.n,position,comm);
   PrintPackTimeStamp("UNPACK END 26");
@@ -207,14 +213,20 @@ template<class T> int Pack_Size(const SPARSE_MATRIX_FLAT_NXN<T>& data,const MPI:
 
 template<class T> void Pack(const SPARSE_MATRIX_FLAT_NXN<T>& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("PACK START 27");
+  int pack_size = Pack_Size(data,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 27 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   Pack(data.n,data.offsets,data.A,buffer,position,comm);
   PrintPackTimeStamp("PACK END 27");
 }
 
 template<class T> void Unpack(SPARSE_MATRIX_FLAT_NXN<T>& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("UNPACK START 28");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 28 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   Unpack(data.n,data.offsets,data.A,buffer,position,comm);
   PrintPackTimeStamp("UNPACK END 28");
 }
@@ -226,13 +238,19 @@ template<class T> int Pack_Size(const SPARSE_MATRIX_FLAT_MXN<T>& data,const MPI:
 
 template<class T> void Pack(const SPARSE_MATRIX_FLAT_MXN<T>& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("PACK START 29");
+  int pack_size = Pack_Size(data,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 29 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   Pack(data.m,data.n,data.offsets,data.A,buffer,position,comm);
   PrintPackTimeStamp("PACK END 29");}
 
 template<class T> void Unpack(SPARSE_MATRIX_FLAT_MXN<T>& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("UNPACK START 30");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 30 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   Unpack(data.m,data.n,data.offsets,data.A,buffer,position,comm);
   PrintPackTimeStamp("UNPACK END 30");}
 //#####################################################################
@@ -245,7 +263,10 @@ return size;}
 
 void Pack(const SPARSE_MATRIX_PARTITION& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("PACK START 31");
+  int pack_size = Pack_Size(data,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 31 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   Pack(data.number_of_sides,data.interior_indices,data.ghost_indices,data.neighbor_ranks,buffer,position,comm);
   for(int s=1;s<=data.number_of_sides;s++)Pack(data.boundary_indices(s),buffer,position,comm);
   PrintPackTimeStamp("PACK END 31");
@@ -253,7 +274,10 @@ void Pack(const SPARSE_MATRIX_PARTITION& data,ARRAY_VIEW<char> buffer,int& posit
 
 void Unpack(SPARSE_MATRIX_PARTITION& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("UNPACK START 32");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 32 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   Unpack(data.number_of_sides,data.interior_indices,data.ghost_indices,data.neighbor_ranks,buffer,position,comm);data.neighbors.Resize(data.number_of_sides);
   data.boundary_indices.Resize(data.number_of_sides);for(int s=1;s<=data.number_of_sides;s++)Unpack(data.boundary_indices(s),buffer,position,comm);
   PrintPackTimeStamp("UNPACK END 32");
@@ -266,7 +290,10 @@ int Pack_Size(const ARRAY<ARRAY<int> >& data,const MPI::Comm& comm)
 
 void Pack(const ARRAY<ARRAY<int> >& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("PACK START 33");
+  int pack_size = Pack_Size(data,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 33 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   assert(Pack_Size(data,comm)<=buffer.Size()-position);
   Pack(data.m,buffer,position,comm);
   for(int i=1;i<=data.m;i++) Pack(data(i),buffer,position,comm);
@@ -275,7 +302,10 @@ void Pack(const ARRAY<ARRAY<int> >& data,ARRAY_VIEW<char> buffer,int& position,c
 
 void Unpack(ARRAY<ARRAY<int> >& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("UNPACK START 34");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 34 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   int m;Unpack(m,buffer,position,comm);data.Resize(m);
   for(int i=1;i<=data.m;i++) Unpack(data(i),buffer,position,comm);
   PrintPackTimeStamp("UNPACK END 34");
@@ -288,13 +318,19 @@ int Pack_Size(const UNION_FIND<>& data,const MPI::Comm& comm)
 
 void Pack(const UNION_FIND<>& data,ARRAY_VIEW<char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("PACK START 35");
+  int pack_size = Pack_Size(data,comm);
+  char msg[100];
+  snprintf(msg, sizeof(msg), "PACK START 35 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   Pack(data.parents,data.ranks,buffer,position,comm);
   PrintPackTimeStamp("PACK END 35");}
 
 void Unpack(UNION_FIND<>& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  PrintPackTimeStamp("UNPACK START 36");
+  int pack_size = buffer.Size();
+  char msg[100];
+  snprintf(msg, sizeof(msg), "UNPACK START 36 ; %d", pack_size);
+  PrintPackTimeStamp(msg);
   Unpack(data.parents,data.ranks,buffer,position,comm);
   PrintPackTimeStamp("UNPACK END 36");}
 //#####################################################################
