@@ -50,6 +50,7 @@ JobEntry::JobEntry() {
   region_ = GeometricRegion();
   partial_versioned_ = false;
   versioned_ = false;
+  versioned_entire_context_ = false;
   assigned_ = false;
   done_ = false;
   future_ = false;
@@ -184,6 +185,10 @@ bool JobEntry::partial_versioned() const {
 
 bool JobEntry::versioned() const {
   return versioned_;
+}
+
+bool JobEntry::versioned_entire_context() const {
+  return versioned_entire_context_;
 }
 
 bool JobEntry::assigned() const {
@@ -337,6 +342,10 @@ void JobEntry::set_partial_versioned(bool flag) {
 
 void JobEntry::set_versioned(bool flag) {
   versioned_ = flag;
+}
+
+void JobEntry::set_versioned_entire_context(bool flag) {
+  versioned_entire_context_ = flag;
 }
 
 void JobEntry::set_assigned(bool flag) {

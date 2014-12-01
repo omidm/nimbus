@@ -128,6 +128,8 @@ class JobManager {
 
     bool ResolveJobDataVersions(JobEntry *job);
 
+    bool ResolveEntireContextForJob(JobEntry *job);
+
     size_t GetJobsNeedDataVersion(JobEntryList* list,
                                   VersionedLogicalData vld);
 

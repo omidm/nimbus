@@ -84,6 +84,8 @@ class VersionManager {
 
     bool ResolveJobDataVersions(JobEntry *job);
 
+    bool ResolveEntireContextForJob(JobEntry *job);
+
     bool DefineData(
         const logical_data_id_t ldid,
         const job_id_t& job_id,
@@ -108,8 +110,6 @@ class VersionManager {
     bool LookUpVersion(JobEntry *job,
                        logical_data_id_t ldid,
                        data_version_t *version);
-
-    bool ResolveEntireContextForJob(JobEntry *job);
 
     bool CreateCheckPoint(JobEntry *job);
 

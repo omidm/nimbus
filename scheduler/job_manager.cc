@@ -411,6 +411,25 @@ bool JobManager::ResolveJobDataVersions(JobEntry *job) {
   }
 }
 
+
+bool JobManager::ResolveEntireContextForJob(JobEntry *job) {
+  if (!job->IsReadyForCompleteVersioning()) {
+    dbg(DBG_ERROR, "ERROR: job %lu is not reaqdy for complete versioing.\n", job->job_id());
+    exit(-1);
+    return false;
+  }
+
+  if (version_manager_.ResolveEntireContextForJob(job)) {
+    job->set_versioned_entire_context(true);
+    return true;
+  } else {
+    dbg(DBG_ERROR, "ERROR: could not version job %lu for entire context.\n", job->job_id());
+    exit(-1);
+    return false;
+  }
+}
+
+
 size_t JobManager::NumJobsReadyToAssign() {
   return jobs_ready_to_assign_.size();
 }
@@ -526,6 +545,7 @@ void JobManager::NotifyJobDone(JobEntry *job) {
         // job graphs are not complicated.
         assert(!it->second->assigned());
         it->second->set_checkpoint_id(checkpoint_id);
+        checkpoint_manager_.AddJobToCheckpoint(checkpoint_id, it->second);
       }
     }
   }

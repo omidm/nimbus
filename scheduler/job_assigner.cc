@@ -426,6 +426,11 @@ bool JobAssigner::AllocateLdoInstanceToJob(JobEntry* job,
   return true;
 }
 
+
+bool JobAssigner::SaveJobContextFroCheckpoint(JobEntry *job) {
+  job_manager_->ResolveEntireContextForJob(job);
+}
+
 size_t JobAssigner::GetObsoleteLdoInstancesAtWorker(SchedulerWorker* worker,
                                                     LogicalDataObject* ldo,
                                                     PhysicalDataVector* dest) {
