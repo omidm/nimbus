@@ -70,19 +70,19 @@ bool CheckpointEntry::AddJob(const JobEntry *job) {
 
   jobs_[j->job_id()] = j;
 
-  return false;
+  return true;
 }
 
 bool CheckpointEntry::CompleteJob(const JobEntry *job) {
-  job_id_t job_id = job->job_id()
-  JobEntryMap it = jobs_.find(job_id);
+  job_id_t job_id = job->job_id();
+  JobEntryMap::iterator it = jobs_.find(job_id);
   if (it == jobs_.end()) {
-    dbg(DBG_ERROR, "ERROR: job with id %lu is not in job map!\n", job_id);
+    dbg(DBG_ERROR, "ERROR: job with id %lu is not in jobs!\n", job_id);
     exit(-1);
     return false;
   }
 
-  //TODO(omidm): maybe another flag like entire_context_versioned()
+  // TODO(omidm): maybe another flag like entire_context_versioned()
   assert(job->versioned());
   it->second->set_vmap_read(job->vmap_read());
 
@@ -92,21 +92,53 @@ bool CheckpointEntry::CompleteJob(const JobEntry *job) {
 bool CheckpointEntry::AddSaveDataJob(job_id_t job_id,
                                      logical_data_id_t ldid,
                                      data_version_t version) {
-  return false;
+  map_[job_id] = std::make_pair(ldid, version);
+  return true;
 }
 
 bool CheckpointEntry::NotifySaveDataJobDone(job_id_t job_id,
                                             std::string handle) {
-  return false;
+  Map::iterator it = map_.find(job_id);
+  if (it == map_.end()) {
+    dbg(DBG_ERROR, "ERROR: save job with id %lu is not in map!\n", job_id);
+    exit(-1);
+    return false;
+  }
+
+  index_[(it->second).first][it->second.second] = handle;
+
+  return true;
 }
 
 bool CheckpointEntry::GetJobList(JobEntryList *list) {
-  return false;
+  list->clear();
+  JobEntryMap::iterator it = jobs_.begin();
+  for (; it != jobs_.end(); ++it) {
+    list->push_back(it->second);
+  }
+
+  return true;
 }
 
 bool CheckpointEntry::GetHandleToLoadData(logical_data_id_t ldid,
                                           data_version_t version,
                                           std::string *handle) {
-  return false;
+  Index::iterator iter = index_.find(ldid);
+  if (iter == index_.end()) {
+    dbg(DBG_ERROR, "ERROR: ldid %lu is not in index!\n", ldid);
+    exit(-1);
+    return false;
+  }
+
+  HandleIndex::iterator it = iter->second.find(version);
+  if (it == iter->second.end()) {
+    dbg(DBG_ERROR, "ERROR: version %lu is not in index for ldid %lu!\n", version, ldid);
+    exit(-1);
+    return false;
+  }
+
+  *handle = it->second;
+
+  return true;
 }
 
