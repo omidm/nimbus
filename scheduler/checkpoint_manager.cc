@@ -52,7 +52,7 @@ CheckpointManager::CheckpointManager() {
 CheckpointManager::~CheckpointManager() {
 }
 
-bool CheckpointManager::CreatNewCheckpoint(checkpoint_id_t *checkpoint_id) {
+bool CheckpointManager::CreateNewCheckpoint(checkpoint_id_t *checkpoint_id) {
   ++checkpoint_id_;
   index_[checkpoint_id_] = new CheckpointEntry(checkpoint_id_);
   *checkpoint_id = checkpoint_id_;

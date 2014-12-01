@@ -61,6 +61,7 @@
 #include "scheduler/after_map.h"
 #include "shared/logical_data_object.h"
 #include "scheduler/version_manager.h"
+#include "scheduler/checkpoint_manager.h"
 #include "scheduler/physical_data.h"
 #include "shared/log.h"
 
@@ -147,6 +148,7 @@ class JobManager {
     AfterMap *after_map_;
     const LdoMap *ldo_map_p_;
     VersionManager version_manager_;
+    CheckpointManager checkpoint_manager_;
 
     Graph<JobEntry, job_id_t> job_graph_;
     boost::mutex job_graph_mutex_;
@@ -154,7 +156,6 @@ class JobManager {
     JobEntryList jobs_done_;
     boost::mutex jobs_done_mutex_;
 
-    checkpoint_id_t checkpoint_id_;
     counter_t checkpoint_creation_rate_;
     counter_t non_sterile_counter_;
     JobEntryMap non_sterile_jobs_;

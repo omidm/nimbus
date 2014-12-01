@@ -54,7 +54,6 @@ JobManager::JobManager() {
   ldo_map_p_ = NULL;
   after_map_ = NULL;
   log_.set_file_name("log_job_manager");
-  checkpoint_id_ = NIMBUS_INIT_CHECKPOINT_ID;
   checkpoint_creation_rate_ = DEFAULT_CHECKPOINT_CREATION_RATE;
   non_sterile_counter_ = 0;
 }
@@ -517,15 +516,16 @@ void JobManager::NotifyJobDone(JobEntry *job) {
     non_sterile_jobs_.erase(job_id);
     if ((++non_sterile_counter_) == checkpoint_creation_rate_) {
       // Initiate checkpoint creation.
-      ++checkpoint_id_;
       non_sterile_counter_ = 0;
+      checkpoint_id_t checkpoint_id;
+      checkpoint_manager_.CreateNewCheckpoint(&checkpoint_id);
       JobEntryMap::iterator it = non_sterile_jobs_.begin();
       for (; it != non_sterile_jobs_.end(); ++it) {
         // TODO(omidm): these checks may not necessarily pass, need general way
         // to enforce these constraints. leave it like this for now, since the
         // job graphs are not complicated.
         assert(!it->second->assigned());
-        it->second->set_checkpoint_id(checkpoint_id_);
+        it->second->set_checkpoint_id(checkpoint_id);
       }
     }
   }

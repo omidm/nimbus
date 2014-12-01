@@ -64,7 +64,7 @@ class CheckpointManager {
     CheckpointManager();
     virtual ~CheckpointManager();
 
-    bool CreatNewCheckpoint(checkpoint_id_t *checkpoint_id);
+    bool CreateNewCheckpoint(checkpoint_id_t *checkpoint_id);
 
     bool AddJobToCheckpoint(checkpoint_id_t checkpoint_id,
                             const JobEntry *job);
