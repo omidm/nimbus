@@ -41,8 +41,8 @@
 
 #include <string>
 
-#include "application/water_multiple/cache_app_var.h"
-#include "application/water_multiple/physbam_include.h"
+#include "application/test_cache/cache_app_var.h"
+#include "application/test_cache/physbam_include.h"
 #include "data/cache/cache_var.h"
 #include "data/physbam/translator_physbam.h"
 #include "shared/geometric_region.h"

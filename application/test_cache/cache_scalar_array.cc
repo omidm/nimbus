@@ -39,9 +39,9 @@
 #include <fstream>
 #include <string>
 
-#include "application/water_multiple/cache_scalar_array.h"
-#include "application/water_multiple/physbam_include.h"
-#include "application/water_multiple/physbam_tools.h"
+#include "application/test_cache/cache_scalar_array.h"
+#include "application/test_cache/physbam_include.h"
+#include "application/test_cache/physbam_tools.h"
 #include "data/cache/cache_var.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"

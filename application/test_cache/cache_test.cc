@@ -1,8 +1,10 @@
 #include <ctime>
 #include "application/test_cache/cache_app_var.h"
 #include "application/test_cache/cache_face_array.h"
+#include "application/test_cache/cache_scalar_array.h"
 #include "application/test_cache/cache_test.h"
 #include "application/test_cache/data_face_array.h"
+#include "application/test_cache/data_scalar_array.h"
 #include "data/physbam/physbam_data.h"
 #include "shared/nimbus.h"
 
@@ -12,6 +14,9 @@ namespace application {
 typedef std::vector<nimbus::Data*> DataArray;
 typedef typename PhysBAM::FACE_INDEX<3> FaceIndex;
 typedef typename PhysBAM::ARRAY<float, FaceIndex> PhysBAMFaceArray;
+
+typedef typename PhysBAM::VECTOR<int, 3> ScalarIndex;
+typedef typename PhysBAM::ARRAY<float, ScalarIndex> PhysBAMScalarArray;
 
 // constants
 const int scale = 64;
@@ -23,6 +28,9 @@ const int ghost_ls[] = {ghost_width, scale - 2 * ghost_width, ghost_width};
 
 CacheFaceArray<float> cache_fa_proto(test_region, 0, true, "face_array");
 DataFaceArray<float> data_fa_proto("face_array");
+
+CacheScalarArray<float> cache_sa_proto(test_region, 0, true, "scalar_array");
+DataScalarArray<float> data_sa_proto("scalar_array");
 
 void CacheTest::GetWriteTime(CacheAppVar &cache_proto, nimbus::PhysBAMData &data_proto) {
   printf("Running %s ...\n", data_proto.name().c_str());
@@ -68,6 +76,20 @@ void CacheTest::GetWriteTime(CacheAppVar &cache_proto, nimbus::PhysBAMData &data
     }
   }
 
+  if (dynamic_cast< CacheScalarArray<float> * >(cv)) {
+    printf("Typecast to scalar array ...\n");
+    CacheScalarArray<float> *cf = dynamic_cast< CacheScalarArray<float> * >(cv);
+    PhysBAMScalarArray *psa = cf->data();
+    for (int i = 1; i <= scale; ++i) {
+      for (int j = 1; j <= scale; ++j) {
+	for (int k = 1; k <= scale; ++k) {
+	  typename PhysBAM::VECTOR<int, 3> index(i, j, k);
+	  (*psa)(index) = (i + j + k);
+	}
+      }
+    }
+  }
+
   // Test aggregate copy time
   // BEGIN TIMER
   struct timespec t;
@@ -97,7 +119,10 @@ void CacheTest::GetWriteTime(CacheAppVar &cache_proto, nimbus::PhysBAMData &data
 }
 
 void CacheTest::GetWriteTimes() {
+  printf("***********Get Write Times: FACE_ARRAY...***********\n");
   GetWriteTime(cache_fa_proto, data_fa_proto);
+  printf("***********Get Write Times: SCALAR_ARRAY...***********\n");
+  GetWriteTime(cache_sa_proto, data_sa_proto);
 }
 
 } // namespace application
