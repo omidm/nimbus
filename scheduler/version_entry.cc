@@ -304,4 +304,8 @@ bool VersionEntry::CleanLdl(const IDSet<job_id_t>& snap_shot) {
   return ldl_.CleanChain(snap_shot);
 }
 
+void VersionEntry::ReinitializeLdl() {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  return ldl_.Reinitialize();
+}
 

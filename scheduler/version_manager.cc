@@ -397,6 +397,12 @@ bool VersionManager::CleanUp() {
   return true;
 }
 
+void VersionManager::Reinitialize() {
+  Index::iterator it = index_.begin();
+  for (; it != index_.end(); ++it) {
+    it->second->ReinitializeLdl();
+  }
+}
 
 void VersionManager::set_ldo_map_p(const LdoMap* ldo_map_p) {
   ldo_map_p_ = ldo_map_p;

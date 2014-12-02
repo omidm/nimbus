@@ -89,6 +89,8 @@ class VersionEntry {
 
     bool CleanLdl(const IDSet<job_id_t>& snap_shot_);
 
+    void ReinitializeLdl();
+
     bool InsertCheckPointLdlEntry(
         const job_id_t& job_id,
         const data_version_t& version,

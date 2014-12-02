@@ -71,6 +71,13 @@ LogicalDataLineage::LogicalDataLineage(
   last_version_ = other.last_version_;
 }
 
+void LogicalDataLineage::Reinitialize() {
+  chain_.clear();
+  parents_index_.clear();
+  last_version_ = NIMBUS_UNDEFINED_DATA_VERSION;
+}
+
+
 LogicalDataLineage::~LogicalDataLineage() {
 }
 

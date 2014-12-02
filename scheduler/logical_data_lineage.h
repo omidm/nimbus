@@ -69,6 +69,8 @@ namespace nimbus {
     LogicalDataLineage(
         const LogicalDataLineage& other);
 
+    void Reinitialize();
+
     virtual ~LogicalDataLineage();
 
     logical_data_id_t ldid() const;
@@ -98,7 +100,6 @@ namespace nimbus {
         const job_depth_t& job_depth);
 
     bool CleanChain(const IDSet<job_id_t>& snap_shot);
-
 
     bool LookUpVersion(
         boost::shared_ptr<MetaBeforeSet> mbs,

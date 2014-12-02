@@ -93,6 +93,8 @@ class VersionManager {
 
     bool CleanUp();
 
+    void Reinitialize();
+
     void set_ldo_map_p(const LdoMap* ldo_map_p);
 
   private:
