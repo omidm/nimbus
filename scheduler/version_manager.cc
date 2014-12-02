@@ -397,10 +397,33 @@ bool VersionManager::CleanUp() {
   return true;
 }
 
-void VersionManager::Reinitialize() {
-  Index::iterator it = index_.begin();
-  for (; it != index_.end(); ++it) {
-    it->second->ReinitializeLdl();
+void VersionManager::Reinitialize(const JobEntryList *list) {
+  {
+    Index::iterator iter = index_.begin();
+    for (; iter != index_.end(); ++iter) {
+      iter->second->ReinitializeLdl();
+    }
+  }
+
+  JobEntryList iter = list->begin();
+  for (; iter != list->end(); ++iter) {
+    // Add the checkpoint to each ldl.
+    LdoMap::const_iterator it;
+    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+      data_version_t version;
+      if ((*iter)->vmap_read()->query_entry(it->first, &version)) {
+        if ((*iter)->write_set_p()->contains(it->first)) {
+          version = version + 1;
+        }
+      } else {
+        dbg(DBG_ERROR, "ERROR: Version Manager: ldid %lu is not versioned for checkpoint job %lu.\n",
+            it->first, (*iter)->job_id());
+        exit(-1);
+      }
+
+      InsertCheckPointLdlEntry(
+          it->first, (*iter)->job_id(), version, (*iter)->job_depth());
+    }
   }
 }
 

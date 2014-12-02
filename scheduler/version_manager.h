@@ -93,7 +93,7 @@ class VersionManager {
 
     bool CleanUp();
 
-    void Reinitialize();
+    void Reinitialize(const JobEntryList *list);
 
     void set_ldo_map_p(const LdoMap* ldo_map_p);
 
