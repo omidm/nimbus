@@ -34,6 +34,7 @@
 
 /***********************************************************************
  * AUTHOR: Philip Levis <pal>
+ * AUTHOR: Omid Mashayekhi <omidm@stanford.edu>
  *   FILE: .//data_manager.cc
  *   DATE: Sun Nov  3 10:34:57 2013
  *  DESCR:
@@ -346,6 +347,11 @@ bool nimbus::DataManager::AddPhysicalInstance(LogicalDataObject *object,
 bool nimbus::DataManager::RemovePhysicalInstance(LogicalDataObject *object,
                                                  const PhysicalData& instance) {
   return physical_object_map_.RemovePhysicalInstance(object, instance);
+}
+
+
+size_t nimbus::DataManager::RemoveAllInstanceByWorker(worker_id_t worker_id) {
+  return physical_object_map_.RemoveAllInstanceByWorker(worker_id);
 }
 
 /**

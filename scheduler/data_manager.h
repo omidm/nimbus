@@ -93,6 +93,9 @@ namespace nimbus {
                              const PhysicalData& instance);
     bool RemovePhysicalInstance(LogicalDataObject* object,
                                 const PhysicalData& instance);
+
+    virtual size_t RemoveAllInstanceByWorker(worker_id_t worker_id);
+
     bool UpdatePhysicalInstance(LogicalDataObject* object,
                                 const PhysicalData& old_instance,
                                 const PhysicalData& new_instance);
