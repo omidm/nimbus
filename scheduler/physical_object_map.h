@@ -73,6 +73,8 @@ namespace nimbus {
 
     virtual size_t RemoveAllInstanceByWorker(worker_id_t worker_id);
 
+    virtual size_t ResetVersionForAllInstances();
+
     virtual bool UpdatePhysicalInstance(LogicalDataObject* object,
                                         const PhysicalData& old_instance,
                                         const PhysicalData& new_instance);

@@ -162,6 +162,23 @@ size_t nimbus::PhysicalObjectMap::RemoveAllInstanceByWorker(worker_id_t worker_i
   return count;
 }
 
+size_t nimbus::PhysicalObjectMap::ResetVersionForAllInstances() {
+  size_t count = 0;
+
+  PhysicalObjectMapType::iterator iter = data_map_.begin();
+  for (; iter != data_map_.end(); ++iter) {
+    PhysicalDataVector *pdv = iter->second;
+    PhysicalDataVector::iterator it = pdv->begin();
+    for (; it != pdv->end();) {
+      it->set_version(NIMBUS_INIT_DATA_VERSION);
+      ++count;
+    }
+  }
+
+  return count;
+}
+
+
 /**
  * \fn void nimbus::PhysicalObjectMap::UpdatePhysicalInstance(PhysicalData *instance)
  * \brief Brief description.
