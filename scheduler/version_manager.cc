@@ -405,7 +405,7 @@ void VersionManager::Reinitialize(const JobEntryList *list) {
     }
   }
 
-  JobEntryList iter = list->begin();
+  JobEntryList::const_iterator iter = list->begin();
   for (; iter != list->end(); ++iter) {
     // Add the checkpoint to each ldl.
     LdoMap::const_iterator it;
@@ -416,7 +416,7 @@ void VersionManager::Reinitialize(const JobEntryList *list) {
           version = version + 1;
         }
       } else {
-        dbg(DBG_ERROR, "ERROR: Version Manager: ldid %lu is not versioned for checkpoint job %lu.\n",
+        dbg(DBG_ERROR, "ERROR: Version Manager: ldid %lu is not versioned for checkpoint job %lu.\n", // NOLINT
             it->first, (*iter)->job_id());
         exit(-1);
       }
