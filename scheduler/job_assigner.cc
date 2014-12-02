@@ -429,6 +429,68 @@ bool JobAssigner::AllocateLdoInstanceToJob(JobEntry* job,
 
 bool JobAssigner::SaveJobContextFroCheckpoint(JobEntry *job) {
   job_manager_->ResolveEntireContextForJob(job);
+  job_manager_->CompleteJobForCheckpoint(job->checkpoint_id(), job);
+  VersionMap::ConstIter iter = job->vmap_read()->content_p()->begin();
+  for (; iter != job->vmap_read()->content_p()->end(); ++iter) {
+    logical_data_id_t ldid = iter->first;
+    data_version_t version = iter->second;
+    LogicalDataObject* ldo =
+      const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(ldid));
+
+    PhysicalDataVector instances_in_system;
+    data_manager_->InstancesByVersion(ldo, version, &instances_in_system);
+    assert(instances_in_system.size() >= 1);
+
+    PhysicalDataVector::iterator it = instances_in_system.begin();
+    for (; it != instances_in_system.end(); ++it) {
+      worker_id_t worker_id = it->worker();
+      SchedulerWorker* worker;
+      if (!server_->GetSchedulerWorkerById(worker, worker_id)) {
+        dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", worker_id);
+        exit(-1);
+      }
+      SaveData(worker, ldo, &(*it), job->checkpoint_id());
+    }
+  }
+
+  return true;
+}
+
+
+bool JobAssigner::SaveData(SchedulerWorker* worker,
+                           LogicalDataObject* ldo,
+                           PhysicalData* from_data,
+                           checkpoint_id_t checkpoint_id) {
+  assert(worker->worker_id() == from_data->worker());
+
+  std::vector<job_id_t> j;
+  id_maker_->GetNewJobID(&j, 1);
+  IDSet<job_id_t> before;
+
+  // Update data table.
+  PhysicalData from_data_new = *from_data;
+  from_data_new.add_to_list_job_read(j[0]);
+  data_manager_->UpdatePhysicalInstance(ldo, *from_data, from_data_new);
+
+  // find the before set.
+  before.insert(from_data->last_job_write());
+  job_manager_->UpdateBeforeSet(&before);
+
+  job_manager_->AddSaveDataJobToCheckpoint(checkpoint_id,
+                                           j[0],
+                                           ldo->id(),
+                                           from_data->version());
+
+  // send save data command to worker.
+  SaveDataCommand cm(ID<job_id_t>(j[0]),
+                     ID<physical_data_id_t>(from_data->id()),
+                     ID<checkpoint_id_t>(checkpoint_id),
+                     before);
+  server_->SendCommand(worker, &cm);
+
+  *from_data = from_data_new;
+
+  return true;
 }
 
 size_t JobAssigner::GetObsoleteLdoInstancesAtWorker(SchedulerWorker* worker,

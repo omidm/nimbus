@@ -222,6 +222,13 @@ class ComputeJobEntry : public JobEntry {
     ~ComputeJobEntry();
 };
 
+class SaveDataJobEntry : public JobEntry {
+  public:
+    SaveDataJobEntry(
+        const job_id_t& job_id,
+        const IDSet<logical_data_id_t>& read_set);
+    ~SaveDataJobEntry();
+};
 
 class KernelJobEntry : public JobEntry {
   public:

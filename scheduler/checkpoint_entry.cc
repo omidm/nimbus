@@ -82,8 +82,7 @@ bool CheckpointEntry::CompleteJob(const JobEntry *job) {
     return false;
   }
 
-  // TODO(omidm): maybe another flag like entire_context_versioned()
-  assert(job->versioned());
+  assert(job->versioned_entire_context());
   it->second->set_vmap_read(job->vmap_read());
 
   return true;

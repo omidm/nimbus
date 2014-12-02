@@ -136,6 +136,11 @@ namespace nimbus {
                                PhysicalData* created_data,
                                PhysicalData* to_data);
 
+    virtual bool SaveData(SchedulerWorker* worker,
+                          LogicalDataObject* ldo,
+                          PhysicalData* from_data,
+                          checkpoint_id_t checkpoint_id);
+
     virtual bool GetFreeDataAtWorker(SchedulerWorker* worker,
                                      LogicalDataObject* ldo,
                                      PhysicalData* free_data);

@@ -530,6 +530,17 @@ ComputeJobEntry::ComputeJobEntry(
 ComputeJobEntry::~ComputeJobEntry() {
 }
 
+SaveDataJobEntry::SaveDataJobEntry(
+    const job_id_t& job_id,
+    const IDSet<logical_data_id_t>& read_set) {
+    job_type_ = JOB_SAVE;
+    job_name_ = NIMBUS_SAVE_DATA_JOB_NAME;
+    job_id_ = job_id;
+    read_set_ = read_set;
+}
+
+SaveDataJobEntry::~SaveDataJobEntry() {
+}
 
 KernelJobEntry::KernelJobEntry() {
   job_type_ = JOB_SCHED;

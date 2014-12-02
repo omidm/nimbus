@@ -90,6 +90,8 @@ namespace nimbus {
 
     virtual void NotifyRegisteredWorker(SchedulerWorker *worker);
 
+    virtual bool SetWorkerToAssignJob(JobEntry *job);
+
   protected:
     ClusterMap* cluster_map_;
     JobManager *job_manager_;
@@ -105,8 +107,6 @@ namespace nimbus {
     WorkerMap worker_map_;
 
     void Initialize();
-
-    bool SetWorkerToAssignJob(JobEntry *job);
   };
 
 }  // namespace nimbus

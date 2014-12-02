@@ -133,6 +133,14 @@ class JobManager {
     size_t GetJobsNeedDataVersion(JobEntryList* list,
                                   VersionedLogicalData vld);
 
+    bool CompleteJobForCheckpoint(checkpoint_id_t checkpoint_id,
+                                  const JobEntry *job);
+
+    bool AddSaveDataJobToCheckpoint(checkpoint_id_t checkpoint_id,
+                                    job_id_t job_id,
+                                    logical_data_id_t ldid,
+                                    data_version_t version);
+
     bool AllJobsAreDone();
 
     void UpdateJobBeforeSet(JobEntry* job);
