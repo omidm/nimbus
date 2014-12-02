@@ -73,6 +73,8 @@
 #define NIMBUS_REMOTE_COPY_SEND_JOB_NAME "remotecopysend"
 #define NIMBUS_REMOTE_COPY_RECEIVE_JOB_NAME "remotecopyreceive"
 #define NIMBUS_CREATE_DATA_JOB_NAME "createdata"
+#define NIMBUS_SAVE_DATA_JOB_NAME "savedata"
+#define NIMBUS_LOAD_DATA_JOB_NAME "loaddata"
 
 #define NIMBUS_RECEIVER_KNOWN_IP "receiver_known_ip"
 
@@ -114,7 +116,9 @@ namespace nimbus {
     JOB_COPY   = 2,
     JOB_CREATE = 3,
     JOB_SCHED  = 4,
-    JOB_FUTURE = 5
+    JOB_FUTURE = 5,
+    JOB_SAVE   = 6,
+    JOB_LOAD   = 7
   };
 
 

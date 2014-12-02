@@ -303,8 +303,12 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
       ip_address_, port, time);
   client_->SendCommand(&new_cm);
 
+  if (ip_address_ == NIMBUS_RECEIVER_KNOWN_IP) {
+    ip_address_ = cm->ip();
+  }
   id_ = cm->worker_id().elem();
   id_maker_.Initialize(id_);
+  ddb_->Initialize(ip_address_, id_);
 
   std::ostringstream ss;
   ss << id_;

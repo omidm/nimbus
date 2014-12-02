@@ -171,6 +171,12 @@ bool JobAssigner::AssignJob(JobEntry *job) {
   job_manager_->ResolveJobDataVersions(job);
   log_version_manager_.log_StopTimer();
 
+
+  if (job->checkpoint_id() > NIMBUS_INIT_CHECKPOINT_ID) {
+    SaveJobContextForCheckpoint(job);
+  }
+
+
   log_prepare_.log_ResumeTimer();
   bool prepared_data = true;
   IDSet<logical_data_id_t>::ConstIter it;
@@ -427,7 +433,9 @@ bool JobAssigner::AllocateLdoInstanceToJob(JobEntry* job,
 }
 
 
-bool JobAssigner::SaveJobContextFroCheckpoint(JobEntry *job) {
+bool JobAssigner::SaveJobContextForCheckpoint(JobEntry *job) {
+  assert(job->checkpoint_id() > NIMBUS_INIT_CHECKPOINT_ID);
+
   job_manager_->ResolveEntireContextForJob(job);
   job_manager_->CompleteJobForCheckpoint(job->checkpoint_id(), job);
   VersionMap::ConstIter iter = job->vmap_read()->content_p()->begin();

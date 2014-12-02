@@ -221,6 +221,9 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::END_TEMPLATE:
       ProcessEndTemplateCommand(reinterpret_cast<EndTemplateCommand*>(cm));
       break;
+    case SchedulerCommand::SAVE_DATA_JOB_DONE:
+      ProcessSaveDataJobDoneCommand(reinterpret_cast<SaveDataJobDoneCommand*>(cm));
+      break;
     default:
       dbg(DBG_ERROR, "ERROR: %s have not been implemented in ProcessSchedulerCommand yet.\n",
           cm->ToNetworkData().c_str());
@@ -333,6 +336,10 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
       break;
     }
   }
+}
+
+void Scheduler::ProcessSaveDataJobDoneCommand(SaveDataJobDoneCommand* cm) {
+  // TODO(omidm): implement!
 }
 
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
@@ -451,7 +458,9 @@ size_t Scheduler::RegisterPendingWorkers() {
     if (!(*iter)->handshake_done()) {
       ++registered_num;
       ID<worker_id_t> worker_id((*iter)->worker_id());
-      std::string ip("you-know");
+      // std::string ip("you-know");
+      std::string ip =
+        (*iter)->connection()->socket()->remote_endpoint().address().to_string();
       ID<port_t> port(0);
       {
         HandshakeCommand cm(worker_id, ip, port, Log::GetRawTime());
@@ -559,17 +568,18 @@ void Scheduler::SetupUserInterface() {
 }
 
 void Scheduler::LoadWorkerCommands() {
-  worker_command_table_[SchedulerCommand::SPAWN_COMPUTE]     = new SpawnComputeJobCommand();
-  worker_command_table_[SchedulerCommand::SPAWN_COPY]        = new SpawnCopyJobCommand();
-  worker_command_table_[SchedulerCommand::DEFINE_DATA]       = new DefineDataCommand();
-  worker_command_table_[SchedulerCommand::HANDSHAKE]         = new HandshakeCommand();
-  worker_command_table_[SchedulerCommand::JOB_DONE]          = new JobDoneCommand();
-  worker_command_table_[SchedulerCommand::DEFINE_PARTITION]  = new DefinePartitionCommand();
-  worker_command_table_[SchedulerCommand::TERMINATE]         = new TerminateCommand();
-  worker_command_table_[SchedulerCommand::PROFILE]           = new ProfileCommand();
-  worker_command_table_[SchedulerCommand::SPAWN_TEMPLATE]    = new SpawnTemplateCommand();
-  worker_command_table_[SchedulerCommand::START_TEMPLATE]    = new StartTemplateCommand();
-  worker_command_table_[SchedulerCommand::END_TEMPLATE]      = new EndTemplateCommand();
+  worker_command_table_[SchedulerCommand::SPAWN_COMPUTE]      = new SpawnComputeJobCommand();
+  worker_command_table_[SchedulerCommand::SPAWN_COPY]         = new SpawnCopyJobCommand();
+  worker_command_table_[SchedulerCommand::DEFINE_DATA]        = new DefineDataCommand();
+  worker_command_table_[SchedulerCommand::HANDSHAKE]          = new HandshakeCommand();
+  worker_command_table_[SchedulerCommand::JOB_DONE]           = new JobDoneCommand();
+  worker_command_table_[SchedulerCommand::DEFINE_PARTITION]   = new DefinePartitionCommand();
+  worker_command_table_[SchedulerCommand::TERMINATE]          = new TerminateCommand();
+  worker_command_table_[SchedulerCommand::PROFILE]            = new ProfileCommand();
+  worker_command_table_[SchedulerCommand::SPAWN_TEMPLATE]     = new SpawnTemplateCommand();
+  worker_command_table_[SchedulerCommand::START_TEMPLATE]     = new StartTemplateCommand();
+  worker_command_table_[SchedulerCommand::END_TEMPLATE]       = new EndTemplateCommand();
+  worker_command_table_[SchedulerCommand::SAVE_DATA_JOB_DONE] = new SaveDataJobDoneCommand();
 }
 
 void Scheduler::LoadUserCommands() {

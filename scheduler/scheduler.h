@@ -114,6 +114,7 @@ class Scheduler {
     virtual void ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm);
     virtual void ProcessStartTemplateCommand(StartTemplateCommand* cm);
     virtual void ProcessEndTemplateCommand(EndTemplateCommand* cm);
+    virtual void ProcessSaveDataJobDoneCommand(SaveDataJobDoneCommand* cm);
 
     virtual void CreateIDMaker();
     virtual void CreateAfterMap();

@@ -119,7 +119,7 @@ namespace nimbus {
                                           LogicalDataObject* ldo,
                                           PhysicalData pd);
 
-    virtual bool SaveJobContextFroCheckpoint(JobEntry *job);
+    virtual bool SaveJobContextForCheckpoint(JobEntry *job);
 
     virtual bool CreateDataAtWorker(SchedulerWorker* worker,
                                     LogicalDataObject* ldo,

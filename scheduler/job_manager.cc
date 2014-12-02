@@ -438,7 +438,7 @@ bool JobManager::AddSaveDataJobToCheckpoint(checkpoint_id_t checkpoint_id,
                                             job_id_t job_id,
                                             logical_data_id_t ldid,
                                             data_version_t version) {
-  return AddSaveDataJobToCheckpoint(checkpoint_id, job_id, ldid, version);
+  return checkpoint_manager_.AddSaveDataJobToCheckpoint(checkpoint_id, job_id, ldid, version);
 }
 
 size_t JobManager::NumJobsReadyToAssign() {
