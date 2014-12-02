@@ -485,7 +485,12 @@ bool JobEntry::GetWriteSetRegion(DataManager *data_manager, GeometricRegion *reg
   }
 }
 
-
+void JobEntry::MarkJobAsCompletelyResolved() {
+    assignment_dependencies_.clear();
+    versioning_dependencies_.clear();
+    versioned_ = true;
+    versioned_entire_context_ = true;
+}
 
 
 

@@ -156,6 +156,8 @@ class JobEntry {
     bool IsReadyForCompleteVersioning();
     void remove_versioning_dependency(job_id_t job_id);
 
+    void MarkJobAsCompletelyResolved();
+
     bool GetRegion(GeometricRegion *region);
     bool GetReadSetRegion(DataManager *data_manager, GeometricRegion *region);
     bool GetWriteSetRegion(DataManager *data_manager, GeometricRegion *region);

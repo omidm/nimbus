@@ -83,7 +83,11 @@ bool CheckpointEntry::CompleteJob(const JobEntry *job) {
   }
 
   assert(job->versioned_entire_context());
+
   it->second->set_vmap_read(job->vmap_read());
+  it->second->set_vmap_write(job->vmap_write());
+  it->second->set_job_depth(job->job_depth());
+  it->second->MarkJobAsCompletelyResolved();
 
   return true;
 }
