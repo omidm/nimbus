@@ -141,6 +141,26 @@ bool nimbus::PhysicalObjectMap::RemovePhysicalInstance(LogicalDataObject* obj,
   return false;
 }
 
+size_t nimbus::PhysicalObjectMap::RemoveAllInstanceByWorker(worker_id_t worker_id) {
+  size_t count = 0;
+
+  PhysicalObjectMapType::iterator iter = data_map_.begin();
+  for (; iter != data_map_.end(); ++iter) {
+    PhysicalDataVector *pdv = iter->second;
+    PhysicalDataVector::iterator it = pdv->begin();
+    for (; it != pdv->end();) {
+      PhysicalData pd = *it;
+      if (pd.worker() == worker_id) {
+        pdv->erase(it++);
+        ++count;
+      } else {
+        ++it;
+      }
+    }
+  }
+
+  return count;
+}
 
 /**
  * \fn void nimbus::PhysicalObjectMap::UpdatePhysicalInstance(PhysicalData *instance)

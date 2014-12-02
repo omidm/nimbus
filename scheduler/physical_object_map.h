@@ -62,24 +62,34 @@ namespace nimbus {
     virtual ~PhysicalObjectMap();
 
     virtual bool AddLogicalObject(LogicalDataObject* object);
+
     virtual bool RemoveLogicalObject(logical_data_id_t id);
+
     virtual bool AddPhysicalInstance(LogicalDataObject* object,
                                      const PhysicalData& instance);
+
     virtual bool RemovePhysicalInstance(LogicalDataObject* object,
                                         const PhysicalData& instance);
+
+    virtual size_t RemoveAllInstanceByWorker(worker_id_t worker_id);
+
     virtual bool UpdatePhysicalInstance(LogicalDataObject* object,
                                         const PhysicalData& old_instance,
                                         const PhysicalData& new_instance);
 
     virtual const PhysicalDataVector* AllInstances(LogicalDataObject* object);
+
     virtual int AllInstances(LogicalDataObject* object,
                              PhysicalDataVector* dest);
+
     virtual int InstancesByWorker(LogicalDataObject* object,
                                   worker_id_t worker,
                                   PhysicalDataVector* dest);
+
     virtual int InstancesByVersion(LogicalDataObject* object,
                                    data_version_t version,
                                    PhysicalDataVector* dest);
+
     virtual int InstancesByWorkerAndVersion(LogicalDataObject* object,
                                   worker_id_t worker,
                                   data_version_t version,
