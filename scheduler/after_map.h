@@ -90,6 +90,7 @@ class AfterMap {
 
     static void DestroyMap(Map *map);
 
+    void Clear();
 
   private:
     Map *map_;

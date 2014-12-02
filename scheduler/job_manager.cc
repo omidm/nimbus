@@ -89,6 +89,26 @@ bool JobManager::RemoveJobEntryFromJobGraph(job_id_t job_id) {
   return job_graph_.RemoveVertex(job_id);
 }
 
+bool JobManager::ClearJobGraph() {
+  boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
+  std::list<job_id_t> list_to_remove;
+  typename Vertex<JobEntry, job_id_t>::Iter iter = job_graph_.begin();
+  for (; iter != job_graph_.end(); ++iter) {
+    JobEntry* job = iter->second->entry();
+    if (job->job_id() != NIMBUS_KERNEL_JOB_ID) {
+      list_to_remove.push_back(job->job_id());
+      delete job;
+    }
+  }
+
+  std::list<job_id_t>::iterator it = list_to_remove.begin();
+  for (; it != list_to_remove.end(); ++it) {
+    job_graph_.RemoveVertex(*it);
+  }
+
+  return true;
+}
+
 JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
                                          const job_id_t& job_id,
                                          const IDSet<logical_data_id_t>& read_set,
@@ -443,6 +463,75 @@ bool JobManager::AddSaveDataJobToCheckpoint(checkpoint_id_t checkpoint_id,
                                                         job_id,
                                                         ldid, version,
                                                         worker_id);
+}
+
+bool JobManager::RewindFromLastCheckpoint(checkpoint_id_t *checkpoint_id) {
+  if (!checkpoint_manager_.GetCheckpointToRewind(checkpoint_id)) {
+    dbg(DBG_ERROR, "ERROR: could not get any checkpoint to rewind!\n");
+    exit(-1);
+    return false;
+  }
+
+  JobEntryList list;
+  checkpoint_manager_.GetJobListFromCheckpoint(*checkpoint_id, &list);
+
+  after_map_->Clear();
+
+  version_manager_.Reinitialize(&list);
+
+  ClearJobGraph();
+
+  {
+    boost::unique_lock<boost::mutex> lock(jobs_done_mutex_);
+    jobs_done_.clear();
+    non_sterile_jobs_.clear();
+  }
+
+  {
+    boost::unique_lock<boost::recursive_mutex> lock(job_queue_mutex_);
+    jobs_ready_to_assign_.clear();
+    jobs_pending_to_assign_.clear();
+    JobEntryList::iterator iter = list.begin();
+    for (; iter != list.end(); ++iter) {
+      IDSet<job_id_t> empty_set;
+
+
+      JobEntry* job =
+        new ComputeJobEntry((*iter)->job_name(),
+                            (*iter)->job_id(),
+                            (*iter)->read_set(),
+                            (*iter)->write_set(),
+                            empty_set,
+                            empty_set,
+                            NIMBUS_KERNEL_JOB_ID,
+                            (*iter)->future_job_id(),
+                            (*iter)->sterile(),
+                            (*iter)->region(),
+                            (*iter)->params());
+
+      if (!AddJobEntryToJobGraph((*iter)->job_id(), job)) {
+          dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) to job graph.\n", (*iter)->job_id());
+          exit(-1);
+          return false;
+      }
+
+      assert((*iter)->versioned_entire_context());
+      job->set_vmap_read((*iter)->vmap_read());
+      job->set_vmap_write((*iter)->vmap_write());
+      job->set_job_depth((*iter)->job_depth());
+      job->MarkJobAsCompletelyResolved();
+
+      jobs_ready_to_assign_[(*iter)->job_id()] = job;
+
+      // Data they need is already saved on disk, and they are already versioned.
+      // version_manager_.AddJobEntry(job);
+
+      assert(!job->sterile());
+      non_sterile_jobs_[(*iter)->job_id()] = job;
+    }
+  }
+
+  return true;
 }
 
 size_t JobManager::NumJobsReadyToAssign() {

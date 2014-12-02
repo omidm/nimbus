@@ -142,6 +142,8 @@ class JobManager {
                                     data_version_t version,
                                     worker_id_t worker_id);
 
+    bool RewindFromLastCheckpoint(checkpoint_id_t *checkpoint_id);
+
     bool AllJobsAreDone();
 
     void UpdateJobBeforeSet(JobEntry* job);
@@ -178,6 +180,8 @@ class JobManager {
     bool AddJobEntryToJobGraph(job_id_t job_id, JobEntry *job);
 
     bool RemoveJobEntryFromJobGraph(job_id_t job_id);
+
+    bool ClearJobGraph();
 
     Edge<JobEntry, job_id_t>* AddEdgeToJobGraph(job_id_t from, job_id_t to);
 };

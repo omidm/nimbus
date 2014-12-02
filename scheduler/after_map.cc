@@ -208,3 +208,10 @@ bool AfterMap::JobIsDone(job_id_t job_id) {
   return  (job_done_pool_.find(job_id) != job_done_pool_.end());
 }
 
+void AfterMap::Clear() {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  map_->clear();
+  late_map_->clear();
+}
+
+
