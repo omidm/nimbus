@@ -45,6 +45,7 @@
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/thread.hpp>
+#include <boost/tuple/tuple.hpp>
 #include <utility>
 #include <list>
 #include <string>
@@ -54,12 +55,15 @@
 
 namespace nimbus {
 
+typedef std::pair<worker_id_t, std::string> WorkerHandle;
+typedef std::list<WorkerHandle> WorkerHandleList;
+
 class CheckpointEntry {
   public:
-    typedef std::pair<logical_data_id_t, data_version_t> VLD;
-    typedef boost::unordered_map<job_id_t, VLD> Map;
-    typedef boost::unordered_map<data_version_t, std::string> HandleIndex;
-    typedef boost::unordered_map<logical_data_id_t, HandleIndex> Index;
+    typedef boost::tuple<logical_data_id_t, data_version_t, worker_id_t> LVW;
+    typedef boost::unordered_map<job_id_t, LVW> Map;
+    typedef boost::unordered_map<data_version_t, WorkerHandleList> VersionIndex;
+    typedef boost::unordered_map<logical_data_id_t, VersionIndex> Index;
 
     explicit CheckpointEntry(checkpoint_id_t checkpoint_id);
     virtual ~CheckpointEntry();
@@ -70,7 +74,8 @@ class CheckpointEntry {
 
     bool AddSaveDataJob(job_id_t job_id,
                         logical_data_id_t ldid,
-                        data_version_t version);
+                        data_version_t version,
+                        worker_id_t worker_id);
 
     bool NotifySaveDataJobDone(job_id_t job_id,
                                std::string handle);
@@ -79,7 +84,7 @@ class CheckpointEntry {
 
     bool GetHandleToLoadData(logical_data_id_t ldid,
                              data_version_t version,
-                             std::string *handle);
+                             WorkerHandleList *handles);
 
   private:
     Log log_;

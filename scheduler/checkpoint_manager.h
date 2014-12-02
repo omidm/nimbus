@@ -75,7 +75,8 @@ class CheckpointManager {
     bool AddSaveDataJobToCheckpoint(checkpoint_id_t checkpoint_id,
                                     job_id_t job_id,
                                     logical_data_id_t ldid,
-                                    data_version_t version);
+                                    data_version_t version,
+                                    worker_id_t worker_id);
 
     bool NotifySaveDataJobDoneForCheckpoint(checkpoint_id_t checkpoint_id,
                                             job_id_t job_id,
@@ -89,7 +90,7 @@ class CheckpointManager {
     bool GetHandleToLoadData(checkpoint_id_t checkpoint_id,
                              logical_data_id_t ldid,
                              data_version_t version,
-                             std::string *handle);
+                             WorkerHandleList *handles);
 
     bool RemoveObsoleteCheckpoints(std::list<checkpoint_id_t> *removed_list);
 

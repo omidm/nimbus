@@ -484,10 +484,12 @@ bool JobAssigner::SaveData(SchedulerWorker* worker,
   before.insert(from_data->last_job_write());
   job_manager_->UpdateBeforeSet(&before);
 
+  // Add the entru for the checkpoint
   job_manager_->AddSaveDataJobToCheckpoint(checkpoint_id,
                                            j[0],
                                            ldo->id(),
-                                           from_data->version());
+                                           from_data->version(),
+                                           worker->worker_id());
 
   // send save data command to worker.
   SaveDataCommand cm(ID<job_id_t>(j[0]),

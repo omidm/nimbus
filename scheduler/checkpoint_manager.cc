@@ -88,14 +88,15 @@ bool CheckpointManager::CompleteJobForCheckpoint(checkpoint_id_t checkpoint_id,
 bool CheckpointManager::AddSaveDataJobToCheckpoint(checkpoint_id_t checkpoint_id,
                                                    job_id_t job_id,
                                                    logical_data_id_t ldid,
-                                                   data_version_t version) {
+                                                   data_version_t version,
+                                                   worker_id_t worker_id) {
   Index::iterator iter = index_.find(checkpoint_id);
   if (iter == index_.end()) {
     dbg(DBG_ERROR, "ERROR: checkpoint with id %lu does not exist!\n", checkpoint_id);
     exit(-1);
     return false;
   } else {
-    iter->second->AddSaveDataJob(job_id, ldid, version);
+    iter->second->AddSaveDataJob(job_id, ldid, version, worker_id);
     return true;
   }
 }
@@ -134,14 +135,14 @@ bool CheckpointManager::GetJobListFromCheckpoint(checkpoint_id_t checkpoint_id,
 bool CheckpointManager::GetHandleToLoadData(checkpoint_id_t checkpoint_id,
                                             logical_data_id_t ldid,
                                             data_version_t version,
-                                            std::string *handle) {
+                                            WorkerHandleList *handles) {
   Index::iterator iter = index_.find(checkpoint_id);
   if (iter == index_.end()) {
     dbg(DBG_ERROR, "ERROR: checkpoint with id %lu does not exist!\n", checkpoint_id);
     exit(-1);
     return false;
   } else {
-    iter->second->GetHandleToLoadData(ldid, version, handle);
+    iter->second->GetHandleToLoadData(ldid, version, handles);
     return true;
   }
 }

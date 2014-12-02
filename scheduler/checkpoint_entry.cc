@@ -90,8 +90,9 @@ bool CheckpointEntry::CompleteJob(const JobEntry *job) {
 
 bool CheckpointEntry::AddSaveDataJob(job_id_t job_id,
                                      logical_data_id_t ldid,
-                                     data_version_t version) {
-  map_[job_id] = std::make_pair(ldid, version);
+                                     data_version_t version,
+                                     worker_id_t worker_id) {
+  map_[job_id] = LVW(ldid, version, worker_id);
   return true;
 }
 
@@ -104,7 +105,11 @@ bool CheckpointEntry::NotifySaveDataJobDone(job_id_t job_id,
     return false;
   }
 
-  index_[(it->second).first][it->second.second] = handle;
+  logical_data_id_t ldid = boost::get<0>(it->second);
+  data_version_t version = boost::get<1>(it->second);
+  worker_id_t worker_id = boost::get<2>(it->second);
+
+  index_[ldid][version].push_back(std::make_pair(worker_id, handle));
 
   return true;
 }
@@ -120,8 +125,8 @@ bool CheckpointEntry::GetJobList(JobEntryList *list) {
 }
 
 bool CheckpointEntry::GetHandleToLoadData(logical_data_id_t ldid,
-                                          data_version_t version,
-                                          std::string *handle) {
+                                              data_version_t version,
+                                              WorkerHandleList *handles) {
   Index::iterator iter = index_.find(ldid);
   if (iter == index_.end()) {
     dbg(DBG_ERROR, "ERROR: ldid %lu is not in index!\n", ldid);
@@ -129,14 +134,18 @@ bool CheckpointEntry::GetHandleToLoadData(logical_data_id_t ldid,
     return false;
   }
 
-  HandleIndex::iterator it = iter->second.find(version);
+  VersionIndex::iterator it = iter->second.find(version);
   if (it == iter->second.end()) {
     dbg(DBG_ERROR, "ERROR: version %lu is not in index for ldid %lu!\n", version, ldid);
     exit(-1);
     return false;
   }
 
-  *handle = it->second;
+  handles->clear();
+  WorkerHandleList::iterator i = it->second.begin();
+  for (; i != it->second.end(); ++i) {
+    handles->push_back(*i);
+  }
 
   return true;
 }
