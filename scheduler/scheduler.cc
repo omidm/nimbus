@@ -358,7 +358,8 @@ void Scheduler::ProcessWorkerDownCommand(WorkerDownCommand* cm) {
   data_manager_->RemoveAllInstanceByWorker(worker_id);
   data_manager_->ResetVersionForAllInstances();
 
-  // checkpoint_id_t checkpoint_id;
+  checkpoint_id_t checkpoint_id;
+  job_manager_->RewindFromLastCheckpoint(&checkpoint_id);
 }
 
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {

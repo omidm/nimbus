@@ -169,7 +169,7 @@ size_t nimbus::PhysicalObjectMap::ResetVersionForAllInstances() {
   for (; iter != data_map_.end(); ++iter) {
     PhysicalDataList *pdv = iter->second;
     PhysicalDataList::iterator it = pdv->begin();
-    for (; it != pdv->end();) {
+    for (; it != pdv->end(); ++it) {
       it->set_version(NIMBUS_INIT_DATA_VERSION);
       ++count;
     }
