@@ -394,7 +394,7 @@ void Scheduler::WaitForAllPrepareRewindResponses() {
             pending_workers.erase(reinterpret_cast<PrepareRewindCommand*>(comm)->worker_id().elem()); // NOLINT
             break;
           default:
-            dbg(DBG_WARN, "WARNING: Ignored command %s in rewind perion.\n",
+            dbg(DBG_WARN, "WARNING: Ignored command %s in rewind period.\n",
                 comm->ToString().c_str());
         }
         delete comm;

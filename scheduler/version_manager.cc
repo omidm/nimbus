@@ -193,7 +193,8 @@ bool VersionManager::CreateCheckPoint(JobEntry *job) {
 
 bool VersionManager::DetectNewJob(JobEntry *job) {
   boost::unique_lock<boost::recursive_mutex> lock(snap_shot_mutex_);
-  if (job->job_name() != NIMBUS_MAIN_JOB_NAME) {
+  // if (job->job_name() != NIMBUS_MAIN_JOB_NAME) {
+  if (job->parent_job_id() != NIMBUS_KERNEL_JOB_ID) {
     ChildCounter::iterator it = child_counter_.find(job->parent_job_id());
     assert(it != child_counter_.end());
     ++it->second;
@@ -210,7 +211,8 @@ bool VersionManager::DetectNewJob(JobEntry *job) {
 
 bool VersionManager::DetectVersionedJob(JobEntry *job) {
   boost::unique_lock<boost::recursive_mutex> lock(snap_shot_mutex_);
-  if (job->job_name() != NIMBUS_MAIN_JOB_NAME) {
+  // if (job->job_name() != NIMBUS_MAIN_JOB_NAME) {
+  if (job->parent_job_id() != NIMBUS_KERNEL_JOB_ID) {
     ChildCounter::iterator it = child_counter_.find(job->parent_job_id());
     assert(it != child_counter_.end());
     --it->second;
@@ -425,6 +427,8 @@ void VersionManager::Reinitialize(const JobEntryList *list) {
           it->first, (*iter)->job_id(), version, (*iter)->job_depth());
     }
   }
+
+  non_sterile_counter_ = 0;
 }
 
 void VersionManager::set_ldo_map_p(const LdoMap* ldo_map_p) {

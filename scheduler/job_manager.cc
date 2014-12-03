@@ -534,8 +534,7 @@ bool JobManager::RewindFromLastCheckpoint(checkpoint_id_t *checkpoint_id) {
 
       jobs_ready_to_assign_[(*iter)->job_id()] = job;
 
-      // Data they need is already saved on disk, and they are already versioned.
-      // version_manager_.AddJobEntry(job);
+      version_manager_.AddJobEntry(job);
 
       assert(!job->sterile());
       non_sterile_jobs_[(*iter)->job_id()] = job;
