@@ -79,6 +79,7 @@ namespace nimbus {
     virtual void set_data_manager(DataManager *data_manager);
     virtual void set_load_balancer(LoadBalancer *load_balancer);
     virtual void set_thread_num(size_t thread_num);
+    virtual void set_checkpoint_id(checkpoint_id_t checkpoint_id);
 
     virtual void AssignJobs(const JobEntryList& list);
 
@@ -97,6 +98,7 @@ namespace nimbus {
     DataManager *data_manager_;
     LoadBalancer *load_balancer_;
     size_t thread_num_;
+    checkpoint_id_t checkpoint_id_;
 
     JobEntryList job_queue_;
     boost::recursive_mutex job_queue_mutex_;
@@ -140,6 +142,12 @@ namespace nimbus {
                           LogicalDataObject* ldo,
                           PhysicalData* from_data,
                           checkpoint_id_t checkpoint_id);
+
+    virtual bool LoadData(SchedulerWorker* worker,
+                          LogicalDataObject* ldo,
+                          data_version_t version,
+                          PhysicalData* to_data,
+                          std::string handle);
 
     virtual bool GetFreeDataAtWorker(SchedulerWorker* worker,
                                      LogicalDataObject* ldo,

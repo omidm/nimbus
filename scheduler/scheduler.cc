@@ -365,6 +365,8 @@ void Scheduler::ProcessWorkerDownCommand(WorkerDownCommand* cm) {
   // TODO(omidm): implement!
   job_manager_->RewindFromLastCheckpoint(&checkpoint_id);
 
+  job_assigner_->set_checkpoint_id(checkpoint_id);
+
   PrepareRewindCommand command =
     PrepareRewindCommand(ID<worker_id_t>(1),
                          ID<checkpoint_id_t>(checkpoint_id));

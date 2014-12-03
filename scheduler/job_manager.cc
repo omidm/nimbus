@@ -465,6 +465,16 @@ bool JobManager::AddSaveDataJobToCheckpoint(checkpoint_id_t checkpoint_id,
                                                         worker_id);
 }
 
+bool JobManager::GetHandleToLoadData(checkpoint_id_t checkpoint_id,
+                                     logical_data_id_t ldid,
+                                     data_version_t version,
+                                     WorkerHandleList *handles) {
+    return checkpoint_manager_.GetHandleToLoadData(checkpoint_id,
+                                                   ldid,
+                                                   version,
+                                                   handles);
+}
+
 
 bool JobManager::NotifySaveDataJobDoneForCheckpoint(checkpoint_id_t checkpoint_id,
                                                     job_id_t job_id,

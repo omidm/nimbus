@@ -57,6 +57,7 @@ JobAssigner::JobAssigner() {
 
 void JobAssigner::Initialize() {
   thread_num_ = 0;
+  checkpoint_id_ = NIMBUS_INIT_CHECKPOINT_ID;
   pending_assignment_ = 0;
   server_ = NULL;
   id_maker_ = NULL;
@@ -93,6 +94,10 @@ void JobAssigner::set_load_balancer(LoadBalancer *load_balancer) {
 
 void JobAssigner::set_thread_num(size_t thread_num) {
   thread_num_ = thread_num;
+}
+
+void JobAssigner::set_checkpoint_id(checkpoint_id_t checkpoint_id) {
+  checkpoint_id_ = checkpoint_id;
 }
 
 void JobAssigner::Run() {
@@ -391,6 +396,30 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     return true;
   }
 
+  // If you are here, you may find the version in checkpoint.
+  dbg(DBG_WARN, "WARNING: looking in to checkpoint to load the data.\n");
+
+  WorkerHandleList handles;
+  job_manager_->GetHandleToLoadData(checkpoint_id_, l_id, version, &handles);
+
+  if (handles.size() > 0) {
+    std::string handle = handles.begin()->second;
+    WorkerHandleList::iterator iter = handles.begin();
+    for (; iter != handles.end(); ++iter) {
+      if (iter->first == worker->worker_id()) {
+        handle = iter->second;
+        break;
+      }
+    }
+
+    PhysicalData target_instance;
+    GetFreeDataAtWorker(worker, ldo, &target_instance);
+    LoadData(worker, ldo, version, &target_instance, handle);
+
+    AllocateLdoInstanceToJob(job, ldo, target_instance);
+    return true;
+  }
+
   dbg(DBG_ERROR, "ERROR: the version (%lu) of logical data %s (%lu) needed for job %s (%lu) does not exist.\n", // NOLINT
       version, ldo->variable().c_str(), l_id, job->job_name().c_str(), job->job_id());
   assert(instances_in_system.size() >= 1);
@@ -464,6 +493,41 @@ bool JobAssigner::SaveJobContextForCheckpoint(JobEntry *job) {
   return true;
 }
 
+bool JobAssigner::LoadData(SchedulerWorker* worker,
+                           LogicalDataObject* ldo,
+                           data_version_t version,
+                           PhysicalData* to_data,
+                           std::string handle) {
+  assert(worker->worker_id() == to_data->worker());
+
+  std::vector<job_id_t> j;
+  id_maker_->GetNewJobID(&j, 1);
+  IDSet<job_id_t> before;
+
+  // Update data table.
+  PhysicalData to_data_new = *to_data;
+  to_data_new.set_version(version);
+  to_data_new.set_last_job_write(j[0]);
+  to_data_new.clear_list_job_read();
+  data_manager_->UpdatePhysicalInstance(ldo, *to_data, to_data_new);
+
+  // find the before set.
+  before.insert(to_data->list_job_read());
+  before.insert(to_data->last_job_write());
+  job_manager_->UpdateBeforeSet(&before);
+
+  // send the load command to worker.
+  LoadDataCommand cm(ID<job_id_t>(j[0]),
+                     ID<physical_data_id_t>(to_data->id()),
+                     handle,
+                     before);
+  server_->SendCommand(worker, &cm);
+
+  *to_data = to_data_new;
+
+  return true;
+}
+
 
 bool JobAssigner::SaveData(SchedulerWorker* worker,
                            LogicalDataObject* ldo,
@@ -484,7 +548,7 @@ bool JobAssigner::SaveData(SchedulerWorker* worker,
   before.insert(from_data->last_job_write());
   job_manager_->UpdateBeforeSet(&before);
 
-  // Add the entru for the checkpoint
+  // Add the entry for the checkpoint
   job_manager_->AddSaveDataJobToCheckpoint(checkpoint_id,
                                            j[0],
                                            ldo->id(),

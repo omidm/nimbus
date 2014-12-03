@@ -146,6 +146,11 @@ class JobManager {
                                             job_id_t job_id,
                                             std::string handle);
 
+    bool GetHandleToLoadData(checkpoint_id_t checkpoint_id,
+                             logical_data_id_t ldid,
+                             data_version_t version,
+                             WorkerHandleList *handles);
+
     bool RewindFromLastCheckpoint(checkpoint_id_t *checkpoint_id);
 
     bool AllJobsAreDone();
