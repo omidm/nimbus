@@ -86,12 +86,19 @@ class CheckpointEntry {
                              data_version_t version,
                              WorkerHandleList *handles);
 
+    bool IsComplete();
+
   private:
     Log log_;
     Map map_;
     Index index_;
     JobEntryMap jobs_;
     checkpoint_id_t checkpoint_id_;
+    int pending_count_;
+
+    void IncreasePendingCounter();
+
+    void DecreasePendingCounter();
 };
 
 }  // namespace nimbus

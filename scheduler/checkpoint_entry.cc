@@ -45,6 +45,7 @@ using namespace nimbus; // NOLINT
 
 CheckpointEntry::CheckpointEntry(checkpoint_id_t checkpoint_id) {
   checkpoint_id_ = checkpoint_id;
+  pending_count_ = -1;
 }
 
 CheckpointEntry::~CheckpointEntry() {
@@ -70,6 +71,7 @@ bool CheckpointEntry::AddJob(const JobEntry *job) {
 
   jobs_[j->job_id()] = j;
 
+  IncreasePendingCounter();
   return true;
 }
 
@@ -89,6 +91,7 @@ bool CheckpointEntry::CompleteJob(const JobEntry *job) {
   it->second->set_job_depth(job->job_depth());
   it->second->MarkJobAsCompletelyResolved();
 
+  DecreasePendingCounter();
   return true;
 }
 
@@ -97,6 +100,7 @@ bool CheckpointEntry::AddSaveDataJob(job_id_t job_id,
                                      data_version_t version,
                                      worker_id_t worker_id) {
   map_[job_id] = LVW(ldid, version, worker_id);
+  IncreasePendingCounter();
   return true;
 }
 
@@ -115,6 +119,7 @@ bool CheckpointEntry::NotifySaveDataJobDone(job_id_t job_id,
 
   index_[ldid][version].push_back(std::make_pair(worker_id, handle));
 
+  DecreasePendingCounter();
   return true;
 }
 
@@ -153,4 +158,21 @@ bool CheckpointEntry::GetHandleToLoadData(logical_data_id_t ldid,
 
   return true;
 }
+
+bool CheckpointEntry::IsComplete() {
+  return (pending_count_ == 0);
+}
+
+void CheckpointEntry::IncreasePendingCounter() {
+  if (pending_count_ == -1) {
+    pending_count_ = 1;
+  } else {
+    ++pending_count_;
+  }
+}
+
+void CheckpointEntry::DecreasePendingCounter() {
+    --pending_count_;
+}
+
 

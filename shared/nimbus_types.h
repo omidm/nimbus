@@ -78,7 +78,7 @@
 
 #define NIMBUS_RECEIVER_KNOWN_IP "receiver_known_ip"
 
-#define DEFAULT_CHECKPOINT_CREATION_RATE 2
+#define DEFAULT_CHECKPOINT_CREATION_RATE 30
 #define NIMBUS_INIT_CHECKPOINT_ID 0
 
 namespace nimbus {

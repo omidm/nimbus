@@ -47,6 +47,7 @@
 #include <boost/thread.hpp>
 #include <utility>
 #include <list>
+#include <map>
 #include <string>
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
@@ -59,7 +60,7 @@ class CheckpointEntry;
 
 class CheckpointManager {
   public:
-    typedef boost::unordered_map<checkpoint_id_t, CheckpointEntry*> Index;
+    typedef std::map<checkpoint_id_t, CheckpointEntry*> Index;
 
     CheckpointManager();
     virtual ~CheckpointManager();

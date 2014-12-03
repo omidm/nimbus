@@ -116,6 +116,14 @@ bool CheckpointManager::NotifySaveDataJobDoneForCheckpoint(checkpoint_id_t check
 }
 
 bool CheckpointManager::GetCheckpointToRewind(checkpoint_id_t *checkpoint_id) {
+  Index::reverse_iterator iter = index_.rbegin();
+  for (; iter != index_.rend(); ++iter) {
+    if (iter->second->IsComplete()) {
+      *checkpoint_id = iter->first;
+      return true;
+    }
+  }
+
   return false;
 }
 
