@@ -48,7 +48,7 @@ namespace nimbus {
 #define DEFAULT_MAX_JOB_TO_REMOVE 1
 #define DEFAULT_MIN_WORKER_TO_JOIN 2
 #define DEFAULT_JOB_ASSIGNER_THREAD_NUM 0
-#define DEFAULT_MAX_COMMAND_PROCESS_NUM 1
+#define DEFAULT_MAX_COMMAND_PROCESS_NUM 10000
 #define DEFAULT_MAX_JOB_DONE_COMMAND_PROCESS_NUM 10000
 
 Scheduler::Scheduler(port_t port) {
@@ -175,11 +175,23 @@ size_t Scheduler::ProcessQueuedSchedulerCommands() {
   size_t count = 0;
   SchedulerCommandList storage;
   if (server_->ReceiveCommands(&storage, max_command_process_num_)) {
+    bool flush = false;
     SchedulerCommandList::iterator iter = storage.begin();
     for (; iter != storage.end(); iter++) {
       SchedulerCommand* comm = *iter;
-      dbg(DBG_SCHED, "Processing command: %s.\n", comm->ToString().c_str());
-      ProcessSchedulerCommand(comm);
+      SchedulerCommand::Type type = comm->type();
+
+      if (!flush || (type == SchedulerCommand::WORKER_DOWN)) {
+        dbg(DBG_SCHED, "Processing command: %s.\n", comm->ToString().c_str());
+        ProcessSchedulerCommand(comm);
+      } else {
+        dbg(DBG_SCHED, "Flushed command: %s.\n", comm->ToString().c_str());
+      }
+
+      if (type == SchedulerCommand::WORKER_DOWN) {
+        flush = true;
+      }
+
       delete comm;
       ++count;
     }
@@ -624,14 +636,14 @@ void Scheduler::SetupJobAssigner() {
 }
 
 void Scheduler::SetupJobDoneBouncer() {
-  // job_done_bouncer_thread_ = new boost::thread(
-  //     boost::bind(&Scheduler::JobDoneBouncerThread, this));
+  job_done_bouncer_thread_ = new boost::thread(
+      boost::bind(&Scheduler::JobDoneBouncerThread, this));
 }
 
 void Scheduler::SetupCleaner() {
-  cleaner_thread_active_ = false;
-  // cleaner_thread_ = new boost::thread(
-  //     boost::bind(&Scheduler::CleanerThread, this));
+  cleaner_thread_active_ = true;
+  cleaner_thread_ = new boost::thread(
+      boost::bind(&Scheduler::CleanerThread, this));
 }
 
 void Scheduler::SetupUserInterface() {
