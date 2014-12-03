@@ -377,26 +377,26 @@ bool nimbus::DataManager::UpdatePhysicalInstance(LogicalDataObject *object,
 
 
 /**
- * \fn const PhysicalDataVector * nimbus::DataManager::AllInstances(LogicalDataObject *object)
+ * \fn const PhysicalDataList * nimbus::DataManager::AllInstances(LogicalDataObject *object)
  * \brief Brief description.
  * \param object
  * \return
 */
-const PhysicalDataVector * nimbus::DataManager::AllInstances(LogicalDataObject *object) {
+const PhysicalDataList * nimbus::DataManager::AllInstances(LogicalDataObject *object) {
   return physical_object_map_.AllInstances(object);
 }
 
 
 /**
  * \fn int nimbus::DataManager::AllInstances(LogicalDataObject *object,
-                                  PhysicalDataVector *dest)
+                                  PhysicalDataList *dest)
  * \brief Brief description.
  * \param object
  * \param dest
  * \return
 */
 int nimbus::DataManager::AllInstances(LogicalDataObject *object,
-                                  PhysicalDataVector *dest) {
+                                  PhysicalDataList *dest) {
   return physical_object_map_.AllInstances(object, dest);
 }
 
@@ -404,7 +404,7 @@ int nimbus::DataManager::AllInstances(LogicalDataObject *object,
 /**
  * \fn int nimbus::DataManager::InstancesByWorker(LogicalDataObject *object,
                                           worker_id_t worker,
-                                          PhysicalDataVector *dest)
+                                          PhysicalDataList *dest)
  * \brief Brief description.
  * \param object
  * \param worker
@@ -413,14 +413,14 @@ int nimbus::DataManager::AllInstances(LogicalDataObject *object,
 */
 int nimbus::DataManager::InstancesByWorker(LogicalDataObject *object,
                                           worker_id_t worker,
-                                          PhysicalDataVector *dest) {
+                                          PhysicalDataList *dest) {
   return physical_object_map_.InstancesByWorker(object, worker, dest);
 }
 
 /**
  * \fn int nimbus::DataManager::InstancesByVersion(LogicalDataObject *object,
                                            data_version_t version,
-                                           PhysicalDataVector *dest)
+                                           PhysicalDataList *dest)
  * \brief Brief description.
  * \param object
  * \param version
@@ -429,7 +429,7 @@ int nimbus::DataManager::InstancesByWorker(LogicalDataObject *object,
 */
 int nimbus::DataManager::InstancesByVersion(LogicalDataObject *object,
                                            data_version_t version,
-                                           PhysicalDataVector *dest) {
+                                           PhysicalDataList *dest) {
   return physical_object_map_.InstancesByVersion(object, version, dest);
 }
 
@@ -437,7 +437,7 @@ int nimbus::DataManager::InstancesByVersion(LogicalDataObject *object,
  * \fn int nimbus::DataManager::InstancesByWorkerAndVersion(LogicalDataObject *object,
                                           worker_id_t worker,
                                           data_version_t version,
-                                          PhysicalDataVector *dest)
+                                          PhysicalDataList *dest)
  * \brief Brief description.
  * \param object
  * \param worker
@@ -448,7 +448,7 @@ int nimbus::DataManager::InstancesByVersion(LogicalDataObject *object,
 int nimbus::DataManager::InstancesByWorkerAndVersion(LogicalDataObject *object,
                                           worker_id_t worker,
                                           data_version_t version,
-                                          PhysicalDataVector *dest) {
+                                          PhysicalDataList *dest) {
   return physical_object_map_.InstancesByWorkerAndVersion(object, worker, version, dest);
 }
 

@@ -278,7 +278,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     return true;
   }
 
-  PhysicalDataVector instances_at_worker;
+  PhysicalDataList instances_at_worker;
   log_data_manager_.log_ResumeTimer();
   data_manager_->InstancesByWorkerAndVersion(
       ldo, worker->worker_id(), version, &instances_at_worker);
@@ -297,7 +297,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     PhysicalData target_instance;
 
     bool found = false;
-    PhysicalDataVector::iterator iter;
+    PhysicalDataList::iterator iter;
     for (iter = instances_at_worker.begin(); iter != instances_at_worker.end(); iter++) {
       log_job_manager_.log_ResumeTimer();
       if (!job_manager_->CausingUnwantedSerialization(job, l_id, *iter)) {
@@ -312,7 +312,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     if (!found) {
       dbg(DBG_SCHED, "Avoiding unwanted serialization for data %lu (1).\n", l_id);
       GetFreeDataAtWorker(worker, ldo, &target_instance);
-      LocalCopyData(worker, ldo, &instances_at_worker[0], &target_instance);
+      LocalCopyData(worker, ldo, &(*instances_at_worker.begin()), &target_instance);
     }
 
     AllocateLdoInstanceToJob(job, ldo, target_instance);
@@ -324,14 +324,14 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     PhysicalData target_instance;
 
     log_job_manager_.log_ResumeTimer();
-    if (!job_manager_->CausingUnwantedSerialization(job, l_id, instances_at_worker[0])) {
+    if (!job_manager_->CausingUnwantedSerialization(job, l_id, *instances_at_worker.begin())) {
       log_job_manager_.log_StopTimer();
-      target_instance = instances_at_worker[0];
+      target_instance = *instances_at_worker.begin();
     } else {
       log_job_manager_.log_StopTimer();
       dbg(DBG_SCHED, "Avoiding unwanted serialization for data %lu (2).\n", l_id);
       GetFreeDataAtWorker(worker, ldo, &target_instance);
-      LocalCopyData(worker, ldo, &instances_at_worker[0], &target_instance);
+      LocalCopyData(worker, ldo, &(*instances_at_worker.begin()), &target_instance);
     }
 
     AllocateLdoInstanceToJob(job, ldo, target_instance);
@@ -343,9 +343,9 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     PhysicalData target_instance;
 
     log_job_manager_.log_ResumeTimer();
-    if (!job_manager_->CausingUnwantedSerialization(job, l_id, instances_at_worker[0])) {
+    if (!job_manager_->CausingUnwantedSerialization(job, l_id, *instances_at_worker.begin())) {
       log_job_manager_.log_StopTimer();
-      target_instance = instances_at_worker[0];
+      target_instance = *instances_at_worker.begin();
       PhysicalData copy_data;
       GetFreeDataAtWorker(worker, ldo, &copy_data);
       LocalCopyData(worker, ldo, &target_instance, &copy_data);
@@ -353,7 +353,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
       log_job_manager_.log_StopTimer();
       dbg(DBG_SCHED, "Avoiding unwanted serialization for data %lu (3).\n", l_id);
       GetFreeDataAtWorker(worker, ldo, &target_instance);
-      LocalCopyData(worker, ldo, &instances_at_worker[0], &target_instance);
+      LocalCopyData(worker, ldo, &(*instances_at_worker.begin()), &target_instance);
     }
 
     AllocateLdoInstanceToJob(job, ldo, target_instance);
@@ -369,13 +369,13 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     return true;
   }
 
-  PhysicalDataVector instances_in_system;
+  PhysicalDataList instances_in_system;
   log_data_manager_.log_ResumeTimer();
   data_manager_->InstancesByVersion(ldo, version, &instances_in_system);
   log_data_manager_.log_StopTimer();
 
   if ((instances_at_worker.size() == 0) && (instances_in_system.size() >= 1)) {
-    PhysicalData from_instance = instances_in_system[0];
+    PhysicalData from_instance = *instances_in_system.begin();
     worker_id_t sender_id = from_instance.worker();
     SchedulerWorker* worker_sender;
     if (!server_->GetSchedulerWorkerById(worker_sender, sender_id)) {
@@ -445,11 +445,11 @@ bool JobAssigner::SaveJobContextForCheckpoint(JobEntry *job) {
     LogicalDataObject* ldo =
       const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(ldid));
 
-    PhysicalDataVector instances_in_system;
+    PhysicalDataList instances_in_system;
     data_manager_->InstancesByVersion(ldo, version, &instances_in_system);
     assert(instances_in_system.size() >= 1);
 
-    PhysicalDataVector::iterator it = instances_in_system.begin();
+    PhysicalDataList::iterator it = instances_in_system.begin();
     for (; it != instances_in_system.end(); ++it) {
       worker_id_t worker_id = it->worker();
       SchedulerWorker* worker;
@@ -505,14 +505,14 @@ bool JobAssigner::SaveData(SchedulerWorker* worker,
 
 size_t JobAssigner::GetObsoleteLdoInstancesAtWorker(SchedulerWorker* worker,
                                                     LogicalDataObject* ldo,
-                                                    PhysicalDataVector* dest) {
+                                                    PhysicalDataList* dest) {
   size_t count = 0;
   dest->clear();
-  PhysicalDataVector pv;
+  PhysicalDataList pv;
   log_data_manager_.log_ResumeTimer();
   data_manager_->InstancesByWorker(ldo, worker->worker_id(), &pv);
   log_data_manager_.log_StopTimer();
-  PhysicalDataVector::iterator iter = pv.begin();
+  PhysicalDataList::iterator iter = pv.begin();
   for (; iter != pv.end(); ++iter) {
     JobEntryList list;
     VersionedLogicalData vld(ldo->id(), iter->version());
@@ -708,9 +708,9 @@ bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
 
 bool JobAssigner::GetFreeDataAtWorker(SchedulerWorker* worker,
     LogicalDataObject* ldo, PhysicalData* free_data) {
-  PhysicalDataVector obsolete_instances;
+  PhysicalDataList obsolete_instances;
   if (GetObsoleteLdoInstancesAtWorker(worker, ldo, &obsolete_instances) > 0) {
-    *free_data = obsolete_instances[0];
+    *free_data = *obsolete_instances.begin();
     return true;
   }
 

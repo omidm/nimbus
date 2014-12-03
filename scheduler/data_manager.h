@@ -101,19 +101,19 @@ namespace nimbus {
     bool UpdatePhysicalInstance(LogicalDataObject* object,
                                 const PhysicalData& old_instance,
                                 const PhysicalData& new_instance);
-    const PhysicalDataVector* AllInstances(LogicalDataObject* object);
+    const PhysicalDataList* AllInstances(LogicalDataObject* object);
     int AllInstances(LogicalDataObject* object,
-                     PhysicalDataVector* dest);
+                     PhysicalDataList* dest);
     int InstancesByWorker(LogicalDataObject* object,
                           worker_id_t worker,
-                          PhysicalDataVector* dest);
+                          PhysicalDataList* dest);
     int InstancesByVersion(LogicalDataObject* object,
                            data_version_t version,
-                           PhysicalDataVector* dest);
+                           PhysicalDataList* dest);
     int InstancesByWorkerAndVersion(LogicalDataObject* object,
                           worker_id_t worker,
                           data_version_t version,
-                          PhysicalDataVector* dest);
+                          PhysicalDataList* dest);
 
     partition_id_t max_defined_partition();
 

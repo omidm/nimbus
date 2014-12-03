@@ -54,7 +54,7 @@
 
 namespace nimbus {
 
-  typedef boost::unordered_map<logical_data_id_t, PhysicalDataVector*> PhysicalObjectMapType;
+  typedef boost::unordered_map<logical_data_id_t, PhysicalDataList*> PhysicalObjectMapType;
 
   class PhysicalObjectMap {
   public:
@@ -79,23 +79,23 @@ namespace nimbus {
                                         const PhysicalData& old_instance,
                                         const PhysicalData& new_instance);
 
-    virtual const PhysicalDataVector* AllInstances(LogicalDataObject* object);
+    virtual const PhysicalDataList* AllInstances(LogicalDataObject* object);
 
     virtual int AllInstances(LogicalDataObject* object,
-                             PhysicalDataVector* dest);
+                             PhysicalDataList* dest);
 
     virtual int InstancesByWorker(LogicalDataObject* object,
                                   worker_id_t worker,
-                                  PhysicalDataVector* dest);
+                                  PhysicalDataList* dest);
 
     virtual int InstancesByVersion(LogicalDataObject* object,
                                    data_version_t version,
-                                   PhysicalDataVector* dest);
+                                   PhysicalDataList* dest);
 
     virtual int InstancesByWorkerAndVersion(LogicalDataObject* object,
                                   worker_id_t worker,
                                   data_version_t version,
-                                  PhysicalDataVector* dest);
+                                  PhysicalDataList* dest);
 
   private:
     PhysicalObjectMapType data_map_;

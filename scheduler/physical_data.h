@@ -40,7 +40,7 @@
 #ifndef NIMBUS_SCHEDULER_PHYSICAL_DATA_H_
 #define NIMBUS_SCHEDULER_PHYSICAL_DATA_H_
 
-#include <vector>
+#include <list>
 #include "shared/nimbus_types.h"
 #include "shared/idset.h"
 
@@ -89,7 +89,7 @@ namespace nimbus {
     job_id_t last_job_write_;
   };
 
-  typedef std::vector<PhysicalData> PhysicalDataVector;
+  typedef std::list<PhysicalData> PhysicalDataList;
 }  // namespace nimbus
 
 #endif  // NIMBUS_SCHEDULER_PHYSICAL_DATA_H_

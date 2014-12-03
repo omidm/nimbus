@@ -59,7 +59,7 @@ nimbus::PhysicalObjectMap::PhysicalObjectMap() {}
 nimbus::PhysicalObjectMap::~PhysicalObjectMap() {
   PhysicalObjectMapType::iterator it = data_map_.begin();
   for (; it != data_map_.end(); ++it) {
-    std::pair<physical_data_id_t, PhysicalDataVector*> pair = *it;
+    std::pair<physical_data_id_t, PhysicalDataList*> pair = *it;
     dbg(DBG_DATA_OBJECTS, "Freeing physical vector 0x%llx\n", pair.second);
     delete pair.second;
   }
@@ -77,7 +77,7 @@ bool nimbus::PhysicalObjectMap::AddLogicalObject(LogicalDataObject *object) {
 
   // Does not exist, insert
   if (data_map_.find(id) == data_map_.end()) {
-    PhysicalDataVector* v = new PhysicalDataVector();
+    PhysicalDataList* v = new PhysicalDataList();
     dbg(DBG_MEMORY, "Allocating physical vector 0x%llx\n", v);
     data_map_[id] = v;
     return true;
@@ -90,7 +90,7 @@ bool nimbus::PhysicalObjectMap::RemoveLogicalObject(logical_data_id_t id) {
   if (data_map_.find(id) == data_map_.end()) {  // Exists
     return false;
   } else {
-    PhysicalDataVector* v = data_map_[id];
+    PhysicalDataList* v = data_map_[id];
     dbg(DBG_MEMORY, "Freeing physical vector 0x%llx\n", v);
     delete v;
     data_map_.erase(id);
@@ -109,7 +109,7 @@ bool nimbus::PhysicalObjectMap::AddPhysicalInstance(LogicalDataObject* obj,
   if (iter == data_map_.end()) {
     return false;
   } else {
-    PhysicalDataVector* v = iter->second;
+    PhysicalDataList* v = iter->second;
     v->push_back(instance);
     return true;
   }
@@ -128,8 +128,8 @@ bool nimbus::PhysicalObjectMap::RemovePhysicalInstance(LogicalDataObject* obj,
   if (iter == data_map_.end()) {
     return false;
   } else {
-    PhysicalDataVector* v = iter->second;
-    PhysicalDataVector::iterator it = v->begin();
+    PhysicalDataList* v = iter->second;
+    PhysicalDataList::iterator it = v->begin();
     for (; it != v->end(); ++it) {
       PhysicalData pd = *it;
       if (pd.id() == instance.id()) {
@@ -146,8 +146,8 @@ size_t nimbus::PhysicalObjectMap::RemoveAllInstanceByWorker(worker_id_t worker_i
 
   PhysicalObjectMapType::iterator iter = data_map_.begin();
   for (; iter != data_map_.end(); ++iter) {
-    PhysicalDataVector *pdv = iter->second;
-    PhysicalDataVector::iterator it = pdv->begin();
+    PhysicalDataList *pdv = iter->second;
+    PhysicalDataList::iterator it = pdv->begin();
     for (; it != pdv->end();) {
       PhysicalData pd = *it;
       if (pd.worker() == worker_id) {
@@ -167,8 +167,8 @@ size_t nimbus::PhysicalObjectMap::ResetVersionForAllInstances() {
 
   PhysicalObjectMapType::iterator iter = data_map_.begin();
   for (; iter != data_map_.end(); ++iter) {
-    PhysicalDataVector *pdv = iter->second;
-    PhysicalDataVector::iterator it = pdv->begin();
+    PhysicalDataList *pdv = iter->second;
+    PhysicalDataList::iterator it = pdv->begin();
     for (; it != pdv->end();) {
       it->set_version(NIMBUS_INIT_DATA_VERSION);
       ++count;
@@ -194,8 +194,8 @@ bool nimbus::PhysicalObjectMap::UpdatePhysicalInstance(LogicalDataObject* obj,
   if (iter == data_map_.end()) {
     return false;
   } else {
-    PhysicalDataVector* v = iter->second;
-    PhysicalDataVector::iterator it = v->begin();
+    PhysicalDataList* v = iter->second;
+    PhysicalDataList::iterator it = v->begin();
     for (; it != v->end(); ++it) {
       if (it->id() == old_instance.id()) {
         it->set_worker(new_instance.worker());
@@ -210,17 +210,17 @@ bool nimbus::PhysicalObjectMap::UpdatePhysicalInstance(LogicalDataObject* obj,
 }
 
 /**
- * \fn const PhysicalDataVector * nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object)
+ * \fn const PhysicalDataList * nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object)
  * \brief Brief description.
  * \param object
  * \return
 */
-const PhysicalDataVector * nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object) {
+const PhysicalDataList * nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object) {
   PhysicalObjectMapType::iterator iter = data_map_.find(object->id());
   if (iter == data_map_.end()) {
     return NULL;
   } else {
-    PhysicalDataVector* v = iter->second;
+    PhysicalDataList* v = iter->second;
     return v;
   }
 }
@@ -228,25 +228,25 @@ const PhysicalDataVector * nimbus::PhysicalObjectMap::AllInstances(LogicalDataOb
 
 /**
  * \fn int nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object,
-                              PhysicalDataVector *dest)
+                              PhysicalDataList *dest)
  * \brief Brief description.
  * \param object
  * \param dest
  * \return
 */
 int nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object,
-                                  PhysicalDataVector *dest) {
+                                  PhysicalDataList *dest) {
   dest->clear();
   PhysicalObjectMapType::iterator iter = data_map_.find(object->id());
   if (iter == data_map_.end()) {
     return 0;
   } else {
-    PhysicalDataVector* v = iter->second;
-    int len = v->size();
-    for (int i = 0; i < len; ++i) {
-      dest->push_back((*v)[i]);
+    PhysicalDataList* v = iter->second;
+    PhysicalDataList::iterator it = v->begin();
+    for (; it != v->end(); ++it) {
+      dest->push_back(*it);
     }
-    return len;
+    return v->size();
   }
 }
 
@@ -254,7 +254,7 @@ int nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object,
 /**
  * \fn int nimbus::PhysicalObjectMap::InstancesByWorker(LogicalDataObject *object,
                                    worker_id_t worker,
-                                   PhysicalDataVector *dest)
+                                   PhysicalDataList *dest)
  * \brief Brief description.
  * \param object
  * \param worker
@@ -263,14 +263,14 @@ int nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object,
 */
 int nimbus::PhysicalObjectMap::InstancesByWorker(LogicalDataObject *object,
                                    worker_id_t worker,
-                                   PhysicalDataVector *dest) {
+                                   PhysicalDataList *dest) {
   dest->clear();
   PhysicalObjectMapType::iterator iter = data_map_.find(object->id());
   if (iter == data_map_.end()) {
     return 0;
   } else {
-    PhysicalDataVector* v = iter->second;
-    PhysicalDataVector::iterator it = v->begin();
+    PhysicalDataList* v = iter->second;
+    PhysicalDataList::iterator it = v->begin();
     int count = 0;
 
     for (; it != v->end(); ++it) {
@@ -288,7 +288,7 @@ int nimbus::PhysicalObjectMap::InstancesByWorker(LogicalDataObject *object,
 /**
  * \fn int nimbus::PhysicalObjectMap::InstancesByVersion(LogicalDataObject *object,
                                     data_version_t version,
-                                    PhysicalDataVector *dest)
+                                    PhysicalDataList *dest)
  * \brief Brief description.
  * \param object
  * \param version
@@ -297,14 +297,14 @@ int nimbus::PhysicalObjectMap::InstancesByWorker(LogicalDataObject *object,
 */
 int nimbus::PhysicalObjectMap::InstancesByVersion(LogicalDataObject *object,
                                         data_version_t version,
-                                        PhysicalDataVector *dest) {
+                                        PhysicalDataList *dest) {
   dest->clear();
   PhysicalObjectMapType::iterator iter = data_map_.find(object->id());
   if (iter == data_map_.end()) {
     return 0;
   } else {
-    PhysicalDataVector* v = iter->second;
-    PhysicalDataVector::iterator it = v->begin();
+    PhysicalDataList* v = iter->second;
+    PhysicalDataList::iterator it = v->begin();
     int count = 0;
     for (; it != v->end(); ++it) {
       if (it->version() == version) {
@@ -320,7 +320,7 @@ int nimbus::PhysicalObjectMap::InstancesByVersion(LogicalDataObject *object,
  * \fn int nimbus::PhysicalObjectMap::InstancesByWorkerAndVersion(LogicalDataObject *object,
                                    worker_id_t worker,
                                    data_version_t version,
-                                   PhysicalDataVector *dest)
+                                   PhysicalDataList *dest)
  * \brief Brief description.
  * \param object
  * \param worker
@@ -331,14 +331,14 @@ int nimbus::PhysicalObjectMap::InstancesByVersion(LogicalDataObject *object,
 int nimbus::PhysicalObjectMap::InstancesByWorkerAndVersion(LogicalDataObject *object,
                                    worker_id_t worker,
                                    data_version_t version,
-                                   PhysicalDataVector *dest) {
+                                   PhysicalDataList *dest) {
   dest->clear();
   PhysicalObjectMapType::iterator iter = data_map_.find(object->id());
   if (iter == data_map_.end()) {
     return 0;
   } else {
-    PhysicalDataVector* v = iter->second;
-    PhysicalDataVector::iterator it = v->begin();
+    PhysicalDataList* v = iter->second;
+    PhysicalDataList::iterator it = v->begin();
     int count = 0;
 
     for (; it != v->end(); ++it) {

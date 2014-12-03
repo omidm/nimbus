@@ -147,7 +147,7 @@ namespace nimbus {
 
     virtual size_t GetObsoleteLdoInstancesAtWorker(SchedulerWorker* worker,
                                                    LogicalDataObject* ldo,
-                                                   PhysicalDataVector* dest);
+                                                   PhysicalDataList* dest);
 
 
 
