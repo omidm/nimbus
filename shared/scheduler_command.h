@@ -99,7 +99,8 @@ class SchedulerCommand {
     SAVE_DATA          = SchedulerPBuf_Type_SAVE_DATA,
     LOAD_DATA          = SchedulerPBuf_Type_LOAD_DATA,
     SAVE_DATA_JOB_DONE = SchedulerPBuf_Type_SAVE_DATA_JOB_DONE,
-    PREPARE_REWIND     = SchedulerPBuf_Type_PREPARE_REWIND
+    PREPARE_REWIND     = SchedulerPBuf_Type_PREPARE_REWIND,
+    WORKER_DOWN        = SchedulerPBuf_Type_WORKER_DOWN
   };
 
   typedef std::set<Type> TypeSet;
@@ -174,6 +175,7 @@ class SchedulerCommand {
   static const std::string LOAD_DATA_NAME;
   static const std::string SAVE_DATA_JOB_DONE_NAME;
   static const std::string PREPARE_REWIND_NAME;
+  static const std::string WORKER_DOWN_NAME;
 
  private:
 };
