@@ -242,3 +242,4 @@ LIST(APPEND LIBRARIES_TO_LINK ${BOOST_SYSTEM})
 #SET(PHYSBAM_USE_CUDA ON CACHE BOOL ON FORCE)
 
 INCLUDE(${NIMBUS_ROOT}/application/physbam-lib/Scripts/CMake/Nimbus_Application_Library.cmake)
+include_directories(${NIMBUS_ROOT}/leveldb/include/)
