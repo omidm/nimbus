@@ -138,4 +138,18 @@ void LoadBalancer::NotifyRegisteredWorker(SchedulerWorker *worker) {
   }
 }
 
+bool LoadBalancer::NotifyDownWorker(worker_id_t worker_id) {
+  dbg(DBG_WARN, "WARNING: Base load balancer is being used!!!\n");
+  WorkerMap::iterator iter = worker_map_.find(worker_id);
+  if (iter != worker_map_.end()) {
+    worker_map_.erase(iter);
+    return true;
+  } else {
+    dbg(DBG_ERROR, "ERROR: LoadBalancer: worker id %lu has not been registered.\n", // NOLINT
+        worker_id);
+    exit(-1);
+    return false;
+  }
+}
+
 }  // namespace nimbus

@@ -275,8 +275,8 @@ void StaticLoadBalancer::SplitDimensions(size_t worker_num,
       *num_z = 1;
       break;
     case 2 :
-      *num_x = 1;
-      *num_y = 2;
+      *num_x = 2;
+      *num_y = 1;
       *num_z = 1;
       break;
     case 3 :
@@ -353,5 +353,21 @@ void StaticLoadBalancer::NotifyRegisteredWorker(SchedulerWorker *worker) {
         worker_id);
   }
 }
+
+
+bool StaticLoadBalancer::NotifyDownWorker(worker_id_t worker_id) {
+  WorkerMap::iterator iter = worker_map_.find(worker_id);
+  if (iter != worker_map_.end()) {
+    worker_map_.erase(iter);
+    worker_num_ = worker_map_.size();
+    return true;
+  } else {
+    dbg(DBG_ERROR, "ERROR: StaticLoadBalancer: worker id %lu has not been registered.\n", // NOLINT
+        worker_id);
+    exit(-1);
+    return false;
+  }
+}
+
 
 }  // namespace nimbus

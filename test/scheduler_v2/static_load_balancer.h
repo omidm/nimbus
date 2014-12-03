@@ -78,6 +78,8 @@ namespace nimbus {
 
     virtual void NotifyRegisteredWorker(SchedulerWorker *worker);
 
+    virtual bool NotifyDownWorker(worker_id_t worker_id);
+
 
   private:
     typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;

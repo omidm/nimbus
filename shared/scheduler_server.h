@@ -113,11 +113,13 @@ class SchedulerServer {
    *  therefore involves locks for thread safety. */
   SchedulerWorkerList* workers();
 
-  bool GetSchedulerWorkerById(SchedulerWorker*& worker, worker_id_t w_id);
+  virtual bool GetSchedulerWorkerById(SchedulerWorker*& worker, worker_id_t w_id);
 
-  size_t worker_num();
+  virtual size_t worker_num();
 
-  void set_worker_command_table(SchedulerCommand::PrototypeTable* cmt);
+  virtual void set_worker_command_table(SchedulerCommand::PrototypeTable* cmt);
+
+  virtual bool RemoveWorker(worker_id_t worker_id);
 
  private:
   port_t listening_port_;

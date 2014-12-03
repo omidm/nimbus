@@ -90,6 +90,8 @@ namespace nimbus {
 
     virtual void NotifyRegisteredWorker(SchedulerWorker *worker);
 
+    virtual bool NotifyDownWorker(worker_id_t worker_id);
+
     virtual bool SetWorkerToAssignJob(JobEntry *job);
 
   protected:

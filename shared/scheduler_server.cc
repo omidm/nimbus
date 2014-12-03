@@ -299,6 +299,11 @@ void SchedulerServer::HandleRead(SchedulerWorker* worker,
     dbg(DBG_NET|DBG_ERROR,
         "Error %s receiving %i bytes from worker %i.\n",
         error.message().c_str(), bytes_transferred, worker->worker_id());
+
+    // Signal controller about the down worker bu pushing a nitification.
+    SchedulerCommand *command = new WorkerDownCommand(ID<worker_id_t>(worker->worker_id()));
+    boost::mutex::scoped_lock lock(command_queue_mutex_);
+    received_commands_.push_back(command);
     return;
   }
 
@@ -381,6 +386,26 @@ bool SchedulerServer::GetSchedulerWorkerById(SchedulerWorker*& worker, worker_id
   }
   return false;
 }
+
+
+bool SchedulerServer::RemoveWorker(worker_id_t worker_id) {
+  SchedulerWorkerList::iterator iter = workers_.begin();
+  for (; iter != workers_.end(); ++iter) {
+    if ((*iter)->worker_id() == worker_id) {
+      SchedulerWorker *worker = *iter;
+      worker->MarkDead();
+      workers_.erase(iter);
+      delete worker;
+      return true;
+    }
+  }
+
+  dbg(DBG_WARN, "WARNING: could not find worker %lu to remove!\n", worker_id);
+  exit(-1);
+  return false;
+}
+
+
 
 size_t SchedulerServer::worker_num() {
   return workers_.size();

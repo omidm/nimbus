@@ -224,6 +224,9 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::SAVE_DATA_JOB_DONE:
       ProcessSaveDataJobDoneCommand(reinterpret_cast<SaveDataJobDoneCommand*>(cm));
       break;
+    case SchedulerCommand::WORKER_DOWN:
+      ProcessWorkerDownCommand(reinterpret_cast<WorkerDownCommand*>(cm));
+      break;
     default:
       dbg(DBG_ERROR, "ERROR: %s have not been implemented in ProcessSchedulerCommand yet.\n",
           cm->ToNetworkData().c_str());
@@ -342,6 +345,20 @@ void Scheduler::ProcessSaveDataJobDoneCommand(SaveDataJobDoneCommand* cm) {
   job_manager_->NotifySaveDataJobDoneForCheckpoint(cm->checkpoint_id().elem(),
                                                    cm->job_id().elem(),
                                                    cm->handle());
+}
+
+void Scheduler::ProcessWorkerDownCommand(WorkerDownCommand* cm) {
+  // Cleanup the state and rewind from a checkpoint.
+  worker_id_t worker_id = cm->worker_id().elem();
+
+  load_balancer_->NotifyDownWorker(worker_id);
+
+  server_->RemoveWorker(worker_id);
+
+  data_manager_->RemoveAllInstanceByWorker(worker_id);
+  data_manager_->ResetVersionForAllInstances();
+
+  // checkpoint_id_t checkpoint_id;
 }
 
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
@@ -582,6 +599,7 @@ void Scheduler::LoadWorkerCommands() {
   worker_command_table_[SchedulerCommand::START_TEMPLATE]     = new StartTemplateCommand();
   worker_command_table_[SchedulerCommand::END_TEMPLATE]       = new EndTemplateCommand();
   worker_command_table_[SchedulerCommand::SAVE_DATA_JOB_DONE] = new SaveDataJobDoneCommand();
+  worker_command_table_[SchedulerCommand::WORKER_DOWN]        = new WorkerDownCommand();
 }
 
 void Scheduler::LoadUserCommands() {
@@ -600,7 +618,7 @@ void Scheduler::CleanerThread() {
   while (true) {
     // TODO(omid): remove the busy loop!
 
-    size_t count = job_manager_->RemoveObsoleteJobEntries(max_job_to_remove_);
+    job_manager_->RemoveObsoleteJobEntries(max_job_to_remove_);
   }
 }
 
