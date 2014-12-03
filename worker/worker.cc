@@ -284,6 +284,9 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::LOAD_DATA:
       ProcessLoadDataCommand(reinterpret_cast<LoadDataCommand*>(cm));
       break;
+    case SchedulerCommand::PREPARE_REWIND:
+      ProcessPrepareRewindCommand(reinterpret_cast<PrepareRewindCommand*>(cm));
+      break;
     default:
       std::cout << "ERROR: " << cm->ToNetworkData() <<
         " have not been implemented in ProcessSchedulerCommand yet." <<
@@ -446,6 +449,33 @@ void Worker::ProcessLoadDataCommand(LoadDataCommand* cm) {
   AddJobToGraph(job);
 }
 
+void Worker::ProcessPrepareRewindCommand(PrepareRewindCommand* cm) {
+  // First remove all blocked jobs.
+  ClearBlockedJobs(&worker_job_graph_);
+
+  IsEmptyGraph(&worker_job_graph_);
+
+  // Wait untill all runing jobs finish.
+  while (!IsEmptyGraph(&worker_job_graph_)) {
+    JobList local_job_done_list;
+    worker_manager_->GetLocalJobDoneList(&local_job_done_list);
+    bool new_done = false;
+    while (!local_job_done_list.empty()) {
+      Job* job = local_job_done_list.front();
+      local_job_done_list.pop_front();
+      PrintTimeStamp("local_done %lu\n", job->id().elem());
+      new_done = true;
+      NotifyLocalJobDone(job);
+    }
+    if (!new_done) {
+      usleep(10);
+    }
+  }
+
+  PrepareRewindCommand command(ID<worker_id_t>(id_), cm->checkpoint_id());
+  client_->SendCommand(&command);
+}
+
 void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
   Job * job = new LocalCopyJob(application_);
   job->set_name("LocalCopy");
@@ -538,6 +568,7 @@ void Worker::LoadSchedulerCommands() {
   scheduler_command_table_[SchedulerCommand::DEFINED_TEMPLATE] = new DefinedTemplateCommand();
   scheduler_command_table_[SchedulerCommand::SAVE_DATA] = new SaveDataCommand();
   scheduler_command_table_[SchedulerCommand::LOAD_DATA] = new LoadDataCommand();
+  scheduler_command_table_[SchedulerCommand::PREPARE_REWIND] = new PrepareRewindCommand();
 }
 
 worker_id_t Worker::id() {

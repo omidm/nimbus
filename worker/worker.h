@@ -112,6 +112,7 @@ class Worker {
   virtual void ProcessDefinedTemplateCommand(DefinedTemplateCommand* command);
   virtual void ProcessSaveDataCommand(SaveDataCommand* command);
   virtual void ProcessLoadDataCommand(LoadDataCommand* command);
+  virtual void ProcessPrepareRewindCommand(PrepareRewindCommand* command);
 
   worker_id_t id();
   void set_id(worker_id_t id);
