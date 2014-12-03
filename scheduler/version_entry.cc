@@ -304,8 +304,24 @@ bool VersionEntry::CleanLdl(const IDSet<job_id_t>& snap_shot) {
   return ldl_.CleanChain(snap_shot);
 }
 
+void VersionEntry::Reinitialize() {
+  seen_parent_jobs_.clear();
+  pending_reader_jobs_.clear();
+  pending_writer_jobs_.clear();
+  ClearIndex();
+  ReinitializeLdl();
+}
+
 void VersionEntry::ReinitializeLdl() {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   return ldl_.Reinitialize();
+}
+
+void VersionEntry::ClearIndex() {
+  IndexIter it = index_.begin();
+  for (; it != index_.end(); ++it) {
+    delete it->second;
+  }
+  index_.clear();
 }
 

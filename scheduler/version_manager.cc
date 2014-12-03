@@ -400,10 +400,17 @@ bool VersionManager::CleanUp() {
 }
 
 void VersionManager::Reinitialize(const JobEntryList *list) {
+  snap_shot_pending_ = false;
+  non_sterile_counter_ = 0;
+  snap_shot_.clear();
+  parent_map_.clear();
+  child_counter_.clear();
+
   {
     Index::iterator iter = index_.begin();
     for (; iter != index_.end(); ++iter) {
-      iter->second->ReinitializeLdl();
+      iter->second->Reinitialize();
+      assert(iter->second->is_empty());
     }
   }
 
@@ -427,8 +434,6 @@ void VersionManager::Reinitialize(const JobEntryList *list) {
           it->first, (*iter)->job_id(), version, (*iter)->job_depth());
     }
   }
-
-  non_sterile_counter_ = 0;
 }
 
 void VersionManager::set_ldo_map_p(const LdoMap* ldo_map_p) {

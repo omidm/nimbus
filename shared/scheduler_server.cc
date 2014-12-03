@@ -297,7 +297,7 @@ void SchedulerServer::HandleRead(SchedulerWorker* worker,
                                  size_t bytes_transferred) {
   if (error) {
     dbg(DBG_NET|DBG_ERROR,
-        "Error %s receiving %i bytes from worker %i.\n",
+        "\n*\n*\n****************** Error %s receiving %i bytes from worker %i.\n*\n*\n",
         error.message().c_str(), bytes_transferred, worker->worker_id());
 
     // Signal controller about the down worker bu pushing a nitification.

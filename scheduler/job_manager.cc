@@ -404,7 +404,8 @@ bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
 bool JobManager::RemoveJobEntry(JobEntry* job) {
   if (RemoveJobEntryFromJobGraph(job->job_id())) {
     if (job->parent_job_id() != NIMBUS_KERNEL_JOB_ID ||
-        job->job_name() == NIMBUS_MAIN_JOB_NAME) {
+        // job->job_name() == NIMBUS_MAIN_JOB_NAME) {
+        !job->sterile()) {
       version_manager_.RemoveJobEntry(job);
     }
     delete job;

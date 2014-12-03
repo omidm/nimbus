@@ -89,7 +89,7 @@ class VersionEntry {
 
     bool CleanLdl(const IDSet<job_id_t>& snap_shot_);
 
-    void ReinitializeLdl();
+    void Reinitialize();
 
     bool InsertCheckPointLdlEntry(
         const job_id_t& job_id,
@@ -108,6 +108,10 @@ class VersionEntry {
     boost::recursive_mutex mutex_;
 
     bool UpdateLdl();
+
+    void ReinitializeLdl();
+
+    void ClearIndex();
 };
 
 typedef std::list<VersionEntry> VersionEntryList;

@@ -453,8 +453,6 @@ void Worker::ProcessPrepareRewindCommand(PrepareRewindCommand* cm) {
   // First remove all blocked jobs.
   ClearBlockedJobs(&worker_job_graph_);
 
-  IsEmptyGraph(&worker_job_graph_);
-
   // Wait untill all runing jobs finish.
   while (!IsEmptyGraph(&worker_job_graph_)) {
     JobList local_job_done_list;
