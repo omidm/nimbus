@@ -317,6 +317,7 @@ class SaveDataJob : public Job {
     virtual void Cancel() {}
 
     std::string handle();
+    checkpoint_id_t checkpoint_id();
 
     void set_checkpoint_id(checkpoint_id_t checkpoint_id);
 

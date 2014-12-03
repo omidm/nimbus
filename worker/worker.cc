@@ -732,7 +732,8 @@ void Worker::NotifyLocalJobDone(Job* job) {
   Parameter params;
   SaveDataJob *j = dynamic_cast<SaveDataJob*>(job); // NOLINT
   if (j != NULL) {
-    SaveDataJobDoneCommand cm(job->id(), job->run_time(), job->wait_time(), job->max_alloc(), j->handle()); // NOLINT
+    SaveDataJobDoneCommand cm(j->id(), j->run_time(), j->wait_time(), j->max_alloc(),
+                              ID<checkpoint_id_t>(j->checkpoint_id()), j->handle());
     client_->SendCommand(&cm);
   } else if ((!IDMaker::SchedulerProducedJobID(job->id().elem())) || (!job->sterile())) {
     JobDoneCommand cm(job->id(), job->run_time(), job->wait_time(), job->max_alloc(), false);

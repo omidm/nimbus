@@ -339,7 +339,9 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
 }
 
 void Scheduler::ProcessSaveDataJobDoneCommand(SaveDataJobDoneCommand* cm) {
-  // TODO(omidm): implement!
+  job_manager_->NotifySaveDataJobDoneForCheckpoint(cm->checkpoint_id().elem(),
+                                                   cm->job_id().elem(),
+                                                   cm->handle());
 }
 
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {

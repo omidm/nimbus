@@ -695,6 +695,10 @@ std::string SaveDataJob::handle() {
   return handle_;
 }
 
+checkpoint_id_t SaveDataJob::checkpoint_id() {
+  return checkpoint_id_;
+}
+
 void SaveDataJob::set_checkpoint_id(checkpoint_id_t checkpoint_id) {
   checkpoint_id_ = checkpoint_id;
 }

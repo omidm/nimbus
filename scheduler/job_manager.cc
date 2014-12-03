@@ -465,6 +465,17 @@ bool JobManager::AddSaveDataJobToCheckpoint(checkpoint_id_t checkpoint_id,
                                                         worker_id);
 }
 
+
+bool JobManager::NotifySaveDataJobDoneForCheckpoint(checkpoint_id_t checkpoint_id,
+                                                    job_id_t job_id,
+                                                    std::string handle) {
+  return checkpoint_manager_.NotifySaveDataJobDoneForCheckpoint(checkpoint_id,
+                                                                job_id,
+                                                                handle);
+}
+
+
+
 bool JobManager::RewindFromLastCheckpoint(checkpoint_id_t *checkpoint_id) {
   if (!checkpoint_manager_.GetCheckpointToRewind(checkpoint_id)) {
     dbg(DBG_ERROR, "ERROR: could not get any checkpoint to rewind!\n");

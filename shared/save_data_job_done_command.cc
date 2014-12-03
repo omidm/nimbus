@@ -59,11 +59,13 @@ SaveDataJobDoneCommand::SaveDataJobDoneCommand(const ID<job_id_t>& job_id,
                                                const double run_time,
                                                const double wait_time,
                                                const size_t max_alloc,
+                                               const ID<checkpoint_id_t>& checkpoint_id,
                                                const std::string& handle)
   : job_id_(job_id),
     run_time_(run_time),
     wait_time_(wait_time),
     max_alloc_(max_alloc),
+    checkpoint_id_(checkpoint_id),
     handle_(handle) {
   name_ = SAVE_DATA_JOB_DONE_NAME;
   type_ = SAVE_DATA_JOB_DONE;
@@ -120,6 +122,7 @@ std::string SaveDataJobDoneCommand::ToString() {
   str += ("run_time: " + boost::lexical_cast<std::string>(run_time_) + " ");
   str += ("wait_time: " + boost::lexical_cast<std::string>(wait_time_) + " ");
   str += ("max_alloc: " + boost::lexical_cast<std::string>(max_alloc_) + " ");
+  str += ("checkpoint_id:" + checkpoint_id_.ToNetworkData() + " ");
   str += ("handle: " + handle_);
   return str;
 }
@@ -140,6 +143,10 @@ size_t SaveDataJobDoneCommand::max_alloc() {
   return max_alloc_;
 }
 
+ID<checkpoint_id_t> SaveDataJobDoneCommand::checkpoint_id() {
+  return checkpoint_id_;
+}
+
 std::string SaveDataJobDoneCommand::handle() {
   return handle_;
 }
@@ -149,6 +156,7 @@ bool SaveDataJobDoneCommand::ReadFromProtobuf(const SaveDataJobDonePBuf& buf) {
   run_time_ = buf.run_time();
   wait_time_ = buf.wait_time();
   max_alloc_ = buf.max_alloc();
+  checkpoint_id_.set_elem(buf.checkpoint_id());
   handle_ = buf.handle();
   return true;
 }
@@ -158,6 +166,7 @@ bool SaveDataJobDoneCommand::WriteToProtobuf(SaveDataJobDonePBuf* buf) {
   buf->set_run_time(run_time());
   buf->set_wait_time(wait_time());
   buf->set_max_alloc(max_alloc());
+  buf->set_checkpoint_id(checkpoint_id().elem());
   buf->set_handle(handle());
   return true;
 }

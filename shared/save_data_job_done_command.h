@@ -56,6 +56,7 @@ class SaveDataJobDoneCommand : public SchedulerCommand {
                            const double run_time,
                            const double wait_time,
                            const size_t max_alloc,
+                           const ID<checkpoint_id_t>& checkpoint_id,
                            const std::string& handle);
     ~SaveDataJobDoneCommand();
 
@@ -68,6 +69,7 @@ class SaveDataJobDoneCommand : public SchedulerCommand {
     double run_time();
     double wait_time();
     size_t max_alloc();
+    ID<checkpoint_id_t> checkpoint_id();
     std::string handle();
 
   private:
@@ -75,6 +77,7 @@ class SaveDataJobDoneCommand : public SchedulerCommand {
     double run_time_;
     double wait_time_;
     size_t max_alloc_;
+    ID<checkpoint_id_t> checkpoint_id_;
     std::string handle_;
 
     bool ReadFromProtobuf(const SaveDataJobDonePBuf& buf);
