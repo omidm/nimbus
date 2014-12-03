@@ -840,4 +840,39 @@ bool Worker::InFinishHintSet(const job_id_t job_id) {
   return hint_set_.find(job_id) != hint_set_.end();
 }
 
+
+void Worker::ClearBlockedJobs(WorkerJobGraph* job_graph) {
+  std::list<job_id_t> list_to_remove;
+  typename WorkerJobVertex::Iter iter = job_graph->begin();
+  for (; iter != job_graph->end(); ++iter) {
+    WorkerJobEntry* job_entry = iter->second->entry();
+    if (job_entry->get_state() != WorkerJobEntry::CONTROL &&
+        job_entry->get_state() != WorkerJobEntry::READY) {
+      list_to_remove.push_back(job_entry->get_job_id());
+      if (job_entry->get_job()) {
+        delete job_entry->get_job();
+      }
+      job_entry->set_job(NULL);
+      delete job_entry;
+    }
+  }
+
+  std::list<job_id_t>::iterator it = list_to_remove.begin();
+  for (; it != list_to_remove.end(); ++it) {
+    job_graph->RemoveVertex(*it);
+  }
+}
+
+bool Worker::IsEmptyGraph(WorkerJobGraph* job_graph) {
+  typename WorkerJobVertex::Iter iter = job_graph->begin();
+  for (; iter != job_graph->end(); ++iter) {
+    WorkerJobEntry* job_entry = iter->second->entry();
+    if (job_entry->get_state() != WorkerJobEntry::CONTROL) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
 }  // namespace nimbus

@@ -181,6 +181,9 @@ class Worker {
 
   void PrintTimeStamp(const char* format, ...);
 
+  virtual void ClearBlockedJobs(WorkerJobGraph* job_graph);
+  virtual bool IsEmptyGraph(WorkerJobGraph* job_graph);
+
  public:
   void ResolveDataArray(Job* job);
 };
