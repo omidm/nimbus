@@ -107,6 +107,7 @@ message SchedulerPBuf{
      SAVE_DATA          = 26;
      LOAD_DATA          = 27;
      SAVE_DATA_JOB_DONE = 28;
+     PREPARE_REWIND     = 29;
   }
   required Type type = 1;
 
@@ -139,6 +140,7 @@ message SchedulerPBuf{
   optional SaveDataPBuf save_data                 = 26;
   optional LoadDataPBuf load_data                 = 27;
   optional SaveDataJobDonePBuf save_data_job_done = 28;
+  optional PrepareRewindPBuf prepare_rewind       = 29;
 }
 
 message AddComputeJobPBuf {
@@ -240,6 +242,11 @@ message JobDonePBuf {
   optional double wait_time       = 3;
   optional uint64 max_alloc       = 4;
   optional bool final             = 5;
+}
+
+message PrepareRewindPBuf {
+  optional uint64 worker_id       = 1;
+  optional uint64 checkpoint_id   = 2;
 }
 
 message SaveDataJobDonePBuf {
