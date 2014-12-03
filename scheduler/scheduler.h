@@ -116,6 +116,9 @@ class Scheduler {
     virtual void ProcessEndTemplateCommand(EndTemplateCommand* cm);
     virtual void ProcessSaveDataJobDoneCommand(SaveDataJobDoneCommand* cm);
     virtual void ProcessWorkerDownCommand(WorkerDownCommand* cm);
+    virtual void ProcessPrepareRewindCommand(PrepareRewindCommand* cm);
+
+    virtual void WaitForAllPrepareRewindResponses();
 
     virtual void CreateIDMaker();
     virtual void CreateAfterMap();

@@ -227,6 +227,9 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::WORKER_DOWN:
       ProcessWorkerDownCommand(reinterpret_cast<WorkerDownCommand*>(cm));
       break;
+    case SchedulerCommand::PREPARE_REWIND:
+      ProcessPrepareRewindCommand(reinterpret_cast<PrepareRewindCommand*>(cm));
+      break;
     default:
       dbg(DBG_ERROR, "ERROR: %s have not been implemented in ProcessSchedulerCommand yet.\n",
           cm->ToNetworkData().c_str());
@@ -358,8 +361,57 @@ void Scheduler::ProcessWorkerDownCommand(WorkerDownCommand* cm) {
   data_manager_->RemoveAllInstanceByWorker(worker_id);
   data_manager_->ResetVersionForAllInstances();
 
-  checkpoint_id_t checkpoint_id;
-  job_manager_->RewindFromLastCheckpoint(&checkpoint_id);
+  checkpoint_id_t checkpoint_id = 0;
+  // TODO(omidm): implement!
+  // job_manager_->RewindFromLastCheckpoint(&checkpoint_id);
+
+  PrepareRewindCommand command =
+    PrepareRewindCommand(ID<worker_id_t>(1),
+                         ID<checkpoint_id_t>(checkpoint_id));
+  server_->BroadcastCommand(&command);
+  WaitForAllPrepareRewindResponses();
+  exit(-1);
+}
+
+void Scheduler::WaitForAllPrepareRewindResponses() {
+  std::set<worker_id_t> pending_workers;
+  SchedulerWorkerList::iterator it = server_->workers()->begin();
+  for (; it != server_->workers()->end(); ++it) {
+    pending_workers.insert((*it)->worker_id());
+  }
+  assert(pending_workers.size() > 0);
+
+  while (pending_workers.size() > 0) {
+    size_t count = 0;
+    SchedulerCommandList storage;
+    if (server_->ReceiveCommands(&storage, max_command_process_num_)) {
+      SchedulerCommandList::iterator iter = storage.begin();
+      for (; iter != storage.end(); iter++) {
+        SchedulerCommand* comm = *iter;
+        dbg(DBG_SCHED, "Wait For All Prepare Rewind Responses: considering command: %s.\n",
+            comm->ToString().c_str());
+        switch (comm->type()) {
+          case SchedulerCommand::PREPARE_REWIND:
+            pending_workers.erase(reinterpret_cast<PrepareRewindCommand*>(comm)->worker_id().elem()); // NOLINT
+            break;
+          default:
+            dbg(DBG_WARN, "WARNING: Ignored command %s in rewind perion.\n",
+                comm->ToString().c_str());
+        }
+        delete comm;
+        ++count;
+      }
+    }
+    if (count == 0) {
+      usleep(10);
+    }
+  }
+}
+
+void Scheduler::ProcessPrepareRewindCommand(PrepareRewindCommand* cm) {
+  dbg(DBG_WARN, "WARNING: unexpected PrepareRewind command from worker %lu.\n",
+      cm->worker_id().elem());
+  exit(-1);
 }
 
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
@@ -601,6 +653,7 @@ void Scheduler::LoadWorkerCommands() {
   worker_command_table_[SchedulerCommand::END_TEMPLATE]       = new EndTemplateCommand();
   worker_command_table_[SchedulerCommand::SAVE_DATA_JOB_DONE] = new SaveDataJobDoneCommand();
   worker_command_table_[SchedulerCommand::WORKER_DOWN]        = new WorkerDownCommand();
+  worker_command_table_[SchedulerCommand::PREPARE_REWIND]     = new PrepareRewindCommand();
 }
 
 void Scheduler::LoadUserCommands() {
