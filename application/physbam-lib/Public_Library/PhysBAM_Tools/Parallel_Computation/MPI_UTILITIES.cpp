@@ -197,7 +197,7 @@ template<class T> void Pack(const VECTOR_ND<T>& data,ARRAY_VIEW<char> buffer,int
 
 template<class T> void Unpack(VECTOR_ND<T>& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  int pack_size = buffer.Size();
+  int pack_size = Pack_Size(data,comm);
   char msg[100];
   snprintf(msg, sizeof(msg), "UNPACK START 26 ; %d", pack_size);
   PrintPackTimeStamp(msg);
@@ -223,7 +223,7 @@ template<class T> void Pack(const SPARSE_MATRIX_FLAT_NXN<T>& data,ARRAY_VIEW<cha
 
 template<class T> void Unpack(SPARSE_MATRIX_FLAT_NXN<T>& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  int pack_size = buffer.Size();
+  int pack_size = Pack_Size(data, comm);
   char msg[100];
   snprintf(msg, sizeof(msg), "UNPACK START 28 ; %d", pack_size);
   PrintPackTimeStamp(msg);
@@ -247,7 +247,7 @@ template<class T> void Pack(const SPARSE_MATRIX_FLAT_MXN<T>& data,ARRAY_VIEW<cha
 
 template<class T> void Unpack(SPARSE_MATRIX_FLAT_MXN<T>& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  int pack_size = buffer.Size();
+  int pack_size = Pack_Size(data, comm);
   char msg[100];
   snprintf(msg, sizeof(msg), "UNPACK START 30 ; %d", pack_size);
   PrintPackTimeStamp(msg);
@@ -274,7 +274,7 @@ void Pack(const SPARSE_MATRIX_PARTITION& data,ARRAY_VIEW<char> buffer,int& posit
 
 void Unpack(SPARSE_MATRIX_PARTITION& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  int pack_size = buffer.Size();
+  int pack_size = Pack_Size(data, comm);
   char msg[100];
   snprintf(msg, sizeof(msg), "UNPACK START 32 ; %d", pack_size);
   PrintPackTimeStamp(msg);
@@ -302,7 +302,7 @@ void Pack(const ARRAY<ARRAY<int> >& data,ARRAY_VIEW<char> buffer,int& position,c
 
 void Unpack(ARRAY<ARRAY<int> >& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  int pack_size = buffer.Size();
+  int pack_size = Pack_Size(data, comm);
   char msg[100];
   snprintf(msg, sizeof(msg), "UNPACK START 34 ; %d", pack_size);
   PrintPackTimeStamp(msg);
@@ -327,7 +327,7 @@ void Pack(const UNION_FIND<>& data,ARRAY_VIEW<char> buffer,int& position,const M
 
 void Unpack(UNION_FIND<>& data,ARRAY_VIEW<const char> buffer,int& position,const MPI::Comm& comm)
 {
-  int pack_size = buffer.Size();
+  int pack_size = Pack_Size(data, comm);
   char msg[100];
   snprintf(msg, sizeof(msg), "UNPACK START 36 ; %d", pack_size);
   PrintPackTimeStamp(msg);
