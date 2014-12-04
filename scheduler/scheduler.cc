@@ -482,17 +482,17 @@ void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
 
 void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
   // TODO(omidm): Implement!
-  template_manager_->DetectNewTemplate(cm->job_graph_name());
-  template_spawner_map_[cm->parent_job_id().elem()] = cm->job_graph_name();
-  std::cout << "OMID START TEMPLATE\n.";
+  // template_manager_->DetectNewTemplate(cm->job_graph_name());
+  // template_spawner_map_[cm->parent_job_id().elem()] = cm->job_graph_name();
+  // std::cout << "OMID START TEMPLATE\n.";
 }
 
 void Scheduler::ProcessEndTemplateCommand(EndTemplateCommand* cm) {
   // TODO(omidm): Implement!
-  template_manager_->FinalizeNewTemplate(cm->job_graph_name());
-  DefinedTemplateCommand command(cm->job_graph_name());
-  server_->BroadcastCommand(&command);
-  std::cout << "OMID END TEMPLATE\n.";
+  // template_manager_->FinalizeNewTemplate(cm->job_graph_name());
+  // DefinedTemplateCommand command(cm->job_graph_name());
+  // server_->BroadcastCommand(&command);
+  // std::cout << "OMID END TEMPLATE\n.";
 }
 
 void Scheduler::TerminationProcedure() {

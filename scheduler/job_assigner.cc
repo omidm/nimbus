@@ -476,18 +476,53 @@ bool JobAssigner::SaveJobContextForCheckpoint(JobEntry *job) {
 
     PhysicalDataList instances_in_system;
     data_manager_->InstancesByVersion(ldo, version, &instances_in_system);
-    assert(instances_in_system.size() >= 1);
 
-    PhysicalDataList::iterator it = instances_in_system.begin();
-    for (; it != instances_in_system.end(); ++it) {
-      worker_id_t worker_id = it->worker();
-      SchedulerWorker* worker;
-      if (!server_->GetSchedulerWorkerById(worker, worker_id)) {
-        dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", worker_id);
-        exit(-1);
+
+    if (instances_in_system.size() >= 1) {
+      PhysicalDataList::iterator it = instances_in_system.begin();
+      for (; it != instances_in_system.end(); ++it) {
+        worker_id_t worker_id = it->worker();
+        SchedulerWorker* worker;
+        if (!server_->GetSchedulerWorkerById(worker, worker_id)) {
+          dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", worker_id);
+          exit(-1);
+        }
+        SaveData(worker, ldo, &(*it), job->checkpoint_id());
       }
-      SaveData(worker, ldo, &(*it), job->checkpoint_id());
+
+      continue;
     }
+
+    // If you are here, you may find the version in checkpoint.
+    dbg(DBG_WARN, "WARNING: looking in to checkpoint to load the data for next checkpoint!.\n");
+
+    WorkerHandleList handles;
+    job_manager_->GetHandleToLoadData(checkpoint_id_, ldid, version, &handles);
+
+    if (handles.size() > 0) {
+      WorkerHandleList::iterator iter = handles.begin();
+      for (; iter != handles.end(); ++iter) {
+        worker_id_t worker_id = iter->first;
+        std::string handle = iter->second;
+        SchedulerWorker* worker;
+        if (!server_->GetSchedulerWorkerById(worker, worker_id)) {
+          // Worker could be down so you may not find it there
+          worker = *(server_->workers()->begin());
+        }
+
+        PhysicalData target_instance;
+        GetFreeDataAtWorker(worker, ldo, &target_instance);
+        LoadData(worker, ldo, version, &target_instance, handle);
+        SaveData(worker, ldo, &target_instance, job->checkpoint_id());
+      }
+
+      continue;
+    }
+
+
+    dbg(DBG_ERROR, "ERROR: version (%lu) of logical data %s (%lu) needed for CHECKPOINT job %s (%lu) does not exist.\n", // NOLINT
+        version, ldo->variable().c_str(), ldid, job->job_name().c_str(), job->job_id());
+    assert(instances_in_system.size() >= 1);
   }
 
   return true;
