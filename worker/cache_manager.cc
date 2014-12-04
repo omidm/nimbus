@@ -77,20 +77,40 @@ CacheManager::CacheManager() {
 void CacheManager::DoSetUpWrite(CacheVar* cache_var,
                                 const DataArray &write_set,
                                 GeometricRegion &write_region) {
+    PrintTimeStamp("start", "DSW");
     DataArray flush;
+    PrintTimeStamp("start", "DSW l1");
     pthread_mutex_lock(&cache_lock);
+    PrintTimeStamp("end", "DSW l1");
     BlockPrintTimeStamp("enter");
+    PrintTimeStamp("start", "DSW check");
     while (!cache_var->CheckWritePendingFlag(write_set, write_region)) {
         pthread_cond_wait(&cache_cond, &cache_lock);
     }
+    PrintTimeStamp("end", "DSW check");
     BlockPrintTimeStamp("leave");
+    PrintTimeStamp("start", "DSW suw");
     cache_var->SetUpWrite(write_set, write_region, &flush);
+    PrintTimeStamp("end", "DSW suw");
     pthread_mutex_unlock(&cache_lock);
+    size_t write_bytes = 0;
+    for (size_t i = 0; i < flush.size(); ++i) {
+      Data *d = flush[i];
+      write_bytes += d->memory_size();
+      std::string reg_str = d->region().ToNetworkData() + " ; " + d->name();
+      PrintTimeStamp("DSW region", reg_str.c_str());
+    }
+    PrintSizeStamp("DSW wfcsize", write_bytes);
+    PrintTimeStamp("start", "DSW wfc");
     cache_var->PerformSetUpWrite(write_set, write_region, flush);
+    PrintTimeStamp("end", "DSW wfc");
+    PrintTimeStamp("start", "DSW l2");
     pthread_mutex_lock(&cache_lock);
+    PrintTimeStamp("end", "DSW l2");
     cache_var->ReleaseWritePendingFlag(write_set, flush);
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
+    PrintTimeStamp("end", "DSW");
 }
 
 /**
@@ -119,15 +139,6 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     if (pool_->find(prototype.id()) == pool_->end()) {
         CacheTable *ct = new CacheTable(cache::VAR);
         (*pool_)[prototype.id()] = ct;
-        char msg[2048];
-        int64_t area = static_cast<int64_t>(region.GetSurfaceArea());
-        int64_t dx = region.dx();
-        int64_t dy = region.dy();
-        int64_t dz = region.dz();
-        std::string reg_str = region.ToNetworkData() + " ; " + prototype.name();
-        snprintf(msg, sizeof(msg), "Region: %" PRId64 " ; %" PRId64 " ; %" PRId64 " ; %s",
-                 dx, dy, dz, prototype.name().c_str());
-        PrintTimeStamp("GAV Create", reg_str.c_str());
         cv = prototype.CreateNew(region);
         cv->set_unique_id(unique_id_allocator_++);
         assert(cv != NULL);
@@ -136,11 +147,6 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
         CacheTable *ct = (*pool_)[prototype.id()];
         cv = ct->GetClosestAvailable(region, read_set, access);
         if (cv == NULL) {
-            char msg[2048];
-            int64_t area = static_cast<int64_t>(region.GetSurfaceArea());
-            snprintf(msg, sizeof(msg), "Region: %" PRId64 " ; %s", area, prototype.name().c_str());
-            std::string reg_str = region.ToNetworkData() + " ; " + prototype.name();
-            PrintTimeStamp("GAV Create", reg_str.c_str());
             cv = prototype.CreateNew(region);
             cv->set_unique_id(unique_id_allocator_++);
             assert(cv != NULL);
@@ -172,20 +178,25 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     for (size_t i = 0; i < flush.size(); ++i) {
       Data *d = flush[i];
       write_bytes += d->memory_size();
+      std::string reg_str = d->region().ToNetworkData() + " ; " + d->name();
+      PrintTimeStamp("GAV region", reg_str.c_str());
     }
     for (size_t i = 0; i < sync.size(); ++i) {
       Data *d = sync[i];
       write_bytes += d->memory_size();
+      std::string reg_str = d->region().ToNetworkData() + " ; " + d->name();
+      PrintTimeStamp("GAV region", reg_str.c_str());
     }
     PrintSizeStamp("GAV wfcsize", write_bytes);
 
-    PrintTimeStamp("start", "GAV wfc");
+    std::string wfc_str = "GAV wfc " + cv->name();
+    PrintTimeStamp("start", wfc_str.c_str());
     cv->WriteFromCache(flush, write_region_old);
     for (size_t i = 0; i < sync.size(); ++i) {
         // assert(sync_co[i]->IsAvailable(cache::EXCLUSIVE));
         sync_co[i]->PullData(sync[i]);
     }
-    PrintTimeStamp("end", "GAV wfc");
+    PrintTimeStamp("end", wfc_str.c_str());
     size_t read_bytes = 0;
     for (size_t i = 0; i < diff.size(); ++i) {
       Data *d = diff[i];
@@ -355,11 +366,15 @@ void CacheManager::SyncData(Data *d) {
     pthread_mutex_unlock(&cache_lock);
 
     size_t write_bytes = d->memory_size();
+    std::string reg_str = d->region().ToNetworkData() + " ; " + d->name();
+    PrintTimeStamp("SD region", reg_str.c_str());
     PrintSizeStamp("SD wfcsize", write_bytes);
 
-    PrintTimeStamp("start", "SD pdata");
+    std::string wfc_str = "SD pdata " + co->name();
+
+    PrintTimeStamp("start", wfc_str.c_str());
     co->PullData(d);
-    PrintTimeStamp("end", "SD pdata");
+    PrintTimeStamp("end", wfc_str.c_str());
     PrintTimeStamp("start", "SD l2");
     pthread_mutex_lock(&cache_lock);
     PrintTimeStamp("end", "SD l2");
