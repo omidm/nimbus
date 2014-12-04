@@ -46,5 +46,5 @@
 #include "application/test_cache/cache_test.h"
 
 int main(int argc, char *argv[]) {
-  application::CacheTest::GetWriteTimes();
+  application::CacheTest::GetReadWriteTimes();
 }

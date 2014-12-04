@@ -8,9 +8,9 @@ namespace application {
 
   class CacheTest {
     public:
-      static void GetWriteTimes();
+      static void GetReadWriteTimes();
     private:
-      static void GetWriteTime(CacheAppVar &cache_proto, nimbus::PhysBAMData &data_proto);
+      static void GetReadWriteTime(CacheAppVar &cache_proto, nimbus::PhysBAMData &data_proto);
   };
 
 } // namespace application    
