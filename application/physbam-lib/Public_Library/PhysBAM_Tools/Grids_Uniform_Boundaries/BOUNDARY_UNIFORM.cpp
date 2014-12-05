@@ -11,6 +11,7 @@
 #include <PhysBAM_Tools/Matrices/MATRIX_1X1.h>
 #include <PhysBAM_Tools/Matrices/SYMMETRIC_MATRIX_2X2.h>
 #include <PhysBAM_Tools/Matrices/SYMMETRIC_MATRIX_3X3.h>
+#include <PhysBAM_Tools/Parallel_Computation/MPI_UTILITIES.h>
 using namespace PhysBAM;
 //#####################################################################
 // Constructor
@@ -30,7 +31,9 @@ template<class T_GRID,class T2> BOUNDARY_UNIFORM<T_GRID,T2>::
 template<class T_GRID,class T2> void BOUNDARY_UNIFORM<T_GRID,T2>::
 Fill_Ghost_Cells(const T_GRID& grid,const T_ARRAYS_T2& u,T_ARRAYS_T2& u_ghost,const T dt,const T time,const int number_of_ghost_cells)
 {
-    // TODO: timestamp here
+    char msg[100];
+    snprintf(msg, sizeof(msg), "A call to Fill_Ghost_Cells in Boundary_Uniform");
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp(msg);
     T_ARRAYS_T2::Put(u,u_ghost);
     ARRAY<RANGE<TV_INT> > regions;Find_Ghost_Regions(grid,regions,number_of_ghost_cells);
     for(int side=1;side<=T_GRID::number_of_faces_per_cell;side++)Fill_Single_Ghost_Region(grid,u_ghost,side,regions(side));

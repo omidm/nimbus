@@ -79,7 +79,7 @@ Fill_Ghost_Cells_Node(const T_GRID& grid,const T_ARRAYS_T2& u,T_ARRAYS_T2& u_gho
 {
     char msg[100];
     snprintf(msg, sizeof(msg), "A call to FillGhostCellsNode");
-    PhysBAM:PI_UTILITIES::PrintPackTimeStamp(msg);
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp(msg);
     boundary.Fill_Ghost_Cells(grid,u,u_ghost,dt,time,number_of_ghost_cells_input);
     mpi_grid->Exchange_Boundary_Node_Data(u_ghost,number_of_ghost_cells_input);
 }
