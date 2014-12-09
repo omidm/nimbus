@@ -162,7 +162,7 @@ size_t nimbus::PhysicalObjectMap::RemoveAllInstanceByWorker(worker_id_t worker_i
   return count;
 }
 
-size_t nimbus::PhysicalObjectMap::ResetVersionForAllInstances() {
+size_t nimbus::PhysicalObjectMap::ResetAllInstances() {
   size_t count = 0;
 
   PhysicalObjectMapType::iterator iter = data_map_.begin();
@@ -171,6 +171,9 @@ size_t nimbus::PhysicalObjectMap::ResetVersionForAllInstances() {
     PhysicalDataList::iterator it = pdv->begin();
     for (; it != pdv->end(); ++it) {
       it->set_version(NIMBUS_INIT_DATA_VERSION);
+      IDSet<job_id_t> empty;
+      it->set_list_job_read(empty);
+      it->set_last_job_write(NIMBUS_KERNEL_JOB_ID);
       ++count;
     }
   }

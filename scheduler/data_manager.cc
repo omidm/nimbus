@@ -354,8 +354,8 @@ size_t nimbus::DataManager::RemoveAllInstanceByWorker(worker_id_t worker_id) {
   return physical_object_map_.RemoveAllInstanceByWorker(worker_id);
 }
 
-size_t nimbus::DataManager::ResetVersionForAllInstances() {
-  return physical_object_map_.ResetVersionForAllInstances();
+size_t nimbus::DataManager::ResetAllInstances() {
+  return physical_object_map_.ResetAllInstances();
 }
 
 /**

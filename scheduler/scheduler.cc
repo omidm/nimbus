@@ -371,10 +371,9 @@ void Scheduler::ProcessWorkerDownCommand(WorkerDownCommand* cm) {
   server_->RemoveWorker(worker_id);
 
   data_manager_->RemoveAllInstanceByWorker(worker_id);
-  data_manager_->ResetVersionForAllInstances();
+  data_manager_->ResetAllInstances();
 
   checkpoint_id_t checkpoint_id = 0;
-  // TODO(omidm): implement!
   job_manager_->RewindFromLastCheckpoint(&checkpoint_id);
 
   job_assigner_->set_checkpoint_id(checkpoint_id);
