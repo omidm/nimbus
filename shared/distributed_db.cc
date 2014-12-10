@@ -68,6 +68,7 @@ DistributedDB::~DistributedDB() {
 
 void DistributedDB::Initialize(const std::string& ip_address,
                                const worker_id_t& worker_id) {
+  boost::recursive_mutex::scoped_lock lock(mutex_);
   ip_address_ = ip_address;
   worker_id_ = worker_id;
   path_ = exec("pwd") + "/_db_"+ int2string(worker_id) + "_" + exec("date +%T") + "/";
@@ -81,6 +82,7 @@ bool DistributedDB::Put(const std::string& key,
                         const std::string& value,
                         const checkpoint_id_t& checkpoint_id,
                         std::string *handle) {
+  boost::recursive_mutex::scoped_lock lock(mutex_);
   std::string db_root =
     path_ + int2string(checkpoint_id) + "_" + int2string(worker_id_);
 
@@ -94,6 +96,7 @@ bool DistributedDB::Put(const std::string& key,
 
 bool DistributedDB::Get(const std::string& handle,
                         std::string *value) {
+  boost::recursive_mutex::scoped_lock lock(mutex_);
   Handle h;
   h.Parse(handle);
 
@@ -103,12 +106,14 @@ bool DistributedDB::Get(const std::string& handle,
 }
 
 bool DistributedDB::RemoveCheckpoint(checkpoint_id_t checkpoint_id) {
+  boost::recursive_mutex::scoped_lock lock(mutex_);
   return false;
 }
 
 
 leveldb::DB* DistributedDB::GetDB(const std::string& ip_address,
                                   const std::string& db_root) {
+  boost::recursive_mutex::scoped_lock lock(mutex_);
   Map::iterator iter = db_map_.find(db_root);
   if (iter != db_map_.end()) {
     return iter->second;
@@ -142,6 +147,7 @@ leveldb::DB* DistributedDB::GetDB(const std::string& ip_address,
 bool DistributedDB::RetrieveDBFromOtherNode(const std::string& ip_address,
                                             const std::string& db_root,
                                             std::string *new_db_root) {
+  boost::recursive_mutex::scoped_lock lock(mutex_);
   /* 
      1. generate rsa key pair and add to nimbus repository.
 

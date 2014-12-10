@@ -114,7 +114,7 @@ class DistributedDB {
         std::string key_;
     };
 
-    boost::mutex mutex_;
+    boost::recursive_mutex mutex_;
     bool initialized_;
     std::string path_;
     std::string ip_address_;
