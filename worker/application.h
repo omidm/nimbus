@@ -174,7 +174,10 @@ class Application {
 
   CacheManager* cache_manager() const;
 
+  void WriteToLog(std::string str);
+
  private:
+  Log log_;
   app_id_t id_;
   size_t priority_;
   // Protects job table.

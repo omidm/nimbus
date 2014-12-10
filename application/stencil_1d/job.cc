@@ -41,6 +41,7 @@
 #include "./job.h"
 #include "./data.h"
 #include "./utils.h"
+#include "shared/helpers.h"
 
 #define LOOP_COUNTER static_cast<Stencil1DApp*>(application())->counter_
 #define LOOP_CONDITION 0
@@ -150,7 +151,7 @@ Job * ForLoop::Clone() {
 };
 
 void ForLoop::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the forLoop job\n";
+  std::cout << "Executing the forLoop job: " << id().elem() << std::endl;
 
   IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
@@ -158,6 +159,9 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
 
   size_t loop_counter;
   LoadParameter(&params, &loop_counter);
+
+  std::string str = int2string(loop_counter);
+  application()->WriteToLog(str);
 
   if (loop_counter > LOOP_CONDITION) {
     // Spawn the batch of jobs in each stencil
@@ -231,7 +235,7 @@ Job * Init::Clone() {
 };
 
 void Init::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the init job\n";
+  std::cout << "Executing the init job: " << id().elem() << std::endl;
   std::vector<int> read_data;
   std::vector<int> write_data;
   LoadDataFromNimbus(this, da, &read_data);
@@ -255,7 +259,7 @@ Job * Print::Clone() {
 };
 
 void Print::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the print job\n";
+  std::cout << "Executing the print job: " << id().elem() << std::endl;
   std::vector<int> read_data;
   std::vector<int> write_data;
   LoadDataFromNimbus(this, da, &read_data);
@@ -279,7 +283,7 @@ Job * Stencil::Clone() {
 };
 
 void Stencil::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the stencil job\n";
+  std::cout << "Executing the stencil job: " << id().elem() << std::endl;
   std::vector<int> read_data;
   std::vector<int> write_data;
   LoadDataFromNimbus(this, da, &read_data);
