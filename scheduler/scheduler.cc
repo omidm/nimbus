@@ -468,30 +468,36 @@ void Scheduler::ProcessTerminateCommand(TerminateCommand* cm) {
 
 void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
   // TODO(omidm): Implement!
-  Log log(Log::NO_FILE);
-  log.StartTimer();
-  template_manager_->InstantiateTemplate(cm->job_graph_name(),
-                                         cm->inner_job_ids(),
-                                         cm->outer_job_ids(),
-                                         cm->parameters(),
-                                         cm->parent_job_id().elem());
-  log.StopTimer();
-  std::cout << "OMID SPAWN TEMPLATE. " << log.timer() << std::endl;
+  if (NIMBUS_TEMPLATES_ACTIVE) {
+    Log log(Log::NO_FILE);
+    log.StartTimer();
+    template_manager_->InstantiateTemplate(cm->job_graph_name(),
+        cm->inner_job_ids(),
+        cm->outer_job_ids(),
+        cm->parameters(),
+        cm->parent_job_id().elem());
+    log.StopTimer();
+    std::cout << "OMID SPAWN TEMPLATE. " << log.timer() << std::endl;
+  }
 }
 
 void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
   // TODO(omidm): Implement!
-  // template_manager_->DetectNewTemplate(cm->job_graph_name());
-  // template_spawner_map_[cm->parent_job_id().elem()] = cm->job_graph_name();
-  // std::cout << "OMID START TEMPLATE\n.";
+  if (NIMBUS_TEMPLATES_ACTIVE) {
+    template_manager_->DetectNewTemplate(cm->job_graph_name());
+    template_spawner_map_[cm->parent_job_id().elem()] = cm->job_graph_name();
+    std::cout << "OMID START TEMPLATE\n.";
+  }
 }
 
 void Scheduler::ProcessEndTemplateCommand(EndTemplateCommand* cm) {
   // TODO(omidm): Implement!
-  // template_manager_->FinalizeNewTemplate(cm->job_graph_name());
-  // DefinedTemplateCommand command(cm->job_graph_name());
-  // server_->BroadcastCommand(&command);
-  // std::cout << "OMID END TEMPLATE\n.";
+  if (NIMBUS_TEMPLATES_ACTIVE) {
+    template_manager_->FinalizeNewTemplate(cm->job_graph_name());
+    DefinedTemplateCommand command(cm->job_graph_name());
+    server_->BroadcastCommand(&command);
+    std::cout << "OMID END TEMPLATE\n.";
+  }
 }
 
 void Scheduler::TerminationProcedure() {
