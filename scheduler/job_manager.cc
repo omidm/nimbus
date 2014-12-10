@@ -656,21 +656,23 @@ void JobManager::NotifyJobDone(JobEntry *job) {
   }
 
 
-  if (!job->sterile()) {
-    non_sterile_jobs_.erase(job_id);
-    if ((++non_sterile_counter_) == checkpoint_creation_rate_) {
-      // Initiate checkpoint creation.
-      non_sterile_counter_ = 0;
-      checkpoint_id_t checkpoint_id;
-      checkpoint_manager_.CreateNewCheckpoint(&checkpoint_id);
-      JobEntryMap::iterator it = non_sterile_jobs_.begin();
-      for (; it != non_sterile_jobs_.end(); ++it) {
-        // TODO(omidm): these checks may not necessarily pass, need general way
-        // to enforce these constraints. leave it like this for now, since the
-        // job graphs are not complicated.
-        assert(!it->second->assigned());
-        it->second->set_checkpoint_id(checkpoint_id);
-        checkpoint_manager_.AddJobToCheckpoint(checkpoint_id, it->second);
+  if (NIMBUS_FAULT_TOLERANCE_ACTIVE) {
+    if (!job->sterile()) {
+      non_sterile_jobs_.erase(job_id);
+      if ((++non_sterile_counter_) == checkpoint_creation_rate_) {
+        // Initiate checkpoint creation.
+        non_sterile_counter_ = 0;
+        checkpoint_id_t checkpoint_id;
+        checkpoint_manager_.CreateNewCheckpoint(&checkpoint_id);
+        JobEntryMap::iterator it = non_sterile_jobs_.begin();
+        for (; it != non_sterile_jobs_.end(); ++it) {
+          // TODO(omidm): these checks may not necessarily pass, need general way
+          // to enforce these constraints. leave it like this for now, since the
+          // job graphs are not complicated.
+          assert(!it->second->assigned());
+          it->second->set_checkpoint_id(checkpoint_id);
+          checkpoint_manager_.AddJobToCheckpoint(checkpoint_id, it->second);
+        }
       }
     }
   }
