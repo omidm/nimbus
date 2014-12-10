@@ -41,10 +41,12 @@
 #include <time.h>
 #include "worker/application.h"
 #include "worker/cache_manager.h"
+#include "worker/static_config_manager.h"
 
 using namespace nimbus; // NOLINT
 
 Application::Application() {
+  static_config_manager_ = new StaticConfigManager;
   pthread_mutex_init(&lock_job_table_, NULL);
   pthread_mutex_init(&lock_data_table_, NULL);
   pthread_mutex_init(&lock_job_graph_table_, NULL);
@@ -62,6 +64,7 @@ void Application::WriteToLog(std::string str) {
 
 Application::~Application() {
   delete cache_manager_;
+  delete static_config_manager_;
   pthread_mutex_destroy(&lock_job_table_);
   pthread_mutex_destroy(&lock_data_table_);
   pthread_mutex_destroy(&lock_job_graph_table_);
@@ -120,6 +123,11 @@ void Application::EndTemplate(const std::string& template_name,
                               const job_id_t& parent_job_id) {
   EndTemplateCommand command(template_name, ID<job_id_t>(parent_job_id));
   client_->SendCommand(&command);
+}
+
+void Application::RegisterStaticConfigPrototype(const std::string& name,
+                                                StaticConfigVariable* var) {
+  static_config_manager_->RegisterPrototype(name, var);
 }
 
 // Thread-safe.
@@ -339,4 +347,8 @@ int Application::GetIntersectingLogicalObjects(CLdoVector* result,
 
 CacheManager* Application::cache_manager() const {
   return cache_manager_;
+}
+
+StaticConfigManager* Application::static_config_manager() const {
+  return static_config_manager_;
 }

@@ -5,6 +5,7 @@
 #include <PhysBAM_Tools/Matrices/SYMMETRIC_MATRIX_3X3.h>
 #include <PhysBAM_Tools/Parallel_Computation/BOUNDARY_MPI.h>
 #include <PhysBAM_Tools/Parallel_Computation/MPI_UNIFORM_GRID.h>
+#include <PhysBAM_Tools/Parallel_Computation/MPI_UTILITIES.h>
 using namespace PhysBAM;
 //#####################################################################
 // Constructor
@@ -52,8 +53,10 @@ Set_Fixed_Boundary(const bool use_fixed_boundary_input,const T2 fixed_boundary_v
 template<class T_GRID,class T2> void BOUNDARY_MPI<T_GRID,T2>::
 Fill_Ghost_Cells(const T_GRID& grid,const T_ARRAYS_T2& u,T_ARRAYS_T2& u_ghost,const T dt,const T time,const int number_of_ghost_cells_input)
 {
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp("Fill_Ghost_Cells_Boundary_MPI START");
     boundary.Fill_Ghost_Cells(grid,u,u_ghost,dt,time,number_of_ghost_cells_input);
     mpi_grid->Exchange_Boundary_Cell_Data(u_ghost,number_of_ghost_cells_input);
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp("Fill_Ghost_Cells_Boundary_MPI END");
 }
 //#####################################################################
 // Function Fill_Ghost_Cells_Face
@@ -61,8 +64,10 @@ Fill_Ghost_Cells(const T_GRID& grid,const T_ARRAYS_T2& u,T_ARRAYS_T2& u_ghost,co
 template<class T_GRID,class T2> void BOUNDARY_MPI<T_GRID,T2>::
 Fill_Ghost_Cells_Face(const T_GRID& grid,const T_FACE_ARRAYS_T2& u,T_FACE_ARRAYS_T2& u_ghost,const T time,const int number_of_ghost_cells_input)
 {
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp("Fill_Ghost_Cells_Face_Boundary_MPI START");
     boundary.Fill_Ghost_Cells_Face(grid,u,u_ghost,time,number_of_ghost_cells_input);
     mpi_grid->Exchange_Boundary_Face_Data(u_ghost,number_of_ghost_cells_input);
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp("Fill_Ghost_Cells_Face_Boundary_MPI END");
 }
 //#####################################################################
 // Function Fill_Ghost_Cells_Node
@@ -70,8 +75,10 @@ Fill_Ghost_Cells_Face(const T_GRID& grid,const T_FACE_ARRAYS_T2& u,T_FACE_ARRAYS
 template<class T_GRID,class T2> void BOUNDARY_MPI<T_GRID,T2>::
 Fill_Ghost_Cells_Node(const T_GRID& grid,const T_ARRAYS_T2& u,T_ARRAYS_T2& u_ghost,const T dt,const T time,const int number_of_ghost_cells_input)
 {
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp("Fill_Ghost_Cells_Node_Boundary_MPI START");
     boundary.Fill_Ghost_Cells(grid,u,u_ghost,dt,time,number_of_ghost_cells_input);
     mpi_grid->Exchange_Boundary_Node_Data(u_ghost,number_of_ghost_cells_input);
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp("Fill_Ghost_Cells_Node_Boundary_MPI END");
 }
 //#####################################################################
 // Function Apply_Boundary_Condition

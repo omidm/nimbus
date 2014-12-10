@@ -54,11 +54,18 @@
 #include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 #include "worker/worker_thread.h"
+#include "worker/static_config_manager.h"
 #include "worker/task_thread_pool.h"
 
 #define PHYSBAM_INIT_LOG
 
 namespace application {
+
+void PrintGridDbg(const PhysBAM::GRID<PhysBAM::VECTOR<float, 3> >& grid) {
+  printf("GRID: %d %d %d %f %f %f %f %f %f\n", grid.counts[1], grid.counts[2], grid.counts[3],
+         grid.domain.min_corner[1], grid.domain.min_corner[2], grid.domain.min_corner[3], 
+         grid.domain.max_corner[1], grid.domain.max_corner[2], grid.domain.max_corner[3]);
+}
 
 Range GridToRange(
     const GeometricRegion& global_region,
@@ -391,6 +398,24 @@ void GetAppCacheObjects(
     assert(cache->ple != NULL);
   }
   cm->PrintTimeStamp("end", job.name().c_str());
+
+  nimbus::StaticConfigManager *config_manager = job.GetStaticConfigManager();
+  if (data_config.GetFlag(DataConfig::VALID_MASK)) {
+    cache->static_config_valid_mask = dynamic_cast<StaticConfigValidMask*>(
+        config_manager->GetStaticConfigVariable(STATIC_CONFIG_VALID_MASK,
+                                                local_region));
+    assert(cache->static_config_valid_mask != NULL);
+  }
+  if (data_config.GetFlag(DataConfig::U_INTERFACE)) {
+    cache->static_config_u_interface = dynamic_cast<StaticConfigUInterface*>(
+        config_manager->GetStaticConfigVariable(STATIC_CONFIG_U_INTERFACE,
+                                                local_region));
+    assert(cache->static_config_u_interface != NULL);
+  }
+  cache->static_config_force = dynamic_cast<StaticConfigForce*>(
+      config_manager->GetStaticConfigVariable(STATIC_CONFIG_FORCE,
+                                              local_region));
+  assert(cache->static_config_force != NULL);
 }
 
 bool InitializeExampleAndDriver(
@@ -426,20 +451,35 @@ bool InitializeExampleAndDriver(
       example_scope_timer =
           new application::ScopeTimer("init_example");
 
+      StaticConfigCollisionBody* collision_body
+       = dynamic_cast<StaticConfigCollisionBody*>(
+          job->GetStaticConfigManager()
+          ->GetStaticConfigVariable(STATIC_CONFIG_COLLISION_BODY,
+                                    init_config.local_region));
+      assert(collision_body != NULL);
       if (cache.ple)
-        example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
+        example = new PhysBAM::WATER_EXAMPLE<TV>(collision_body,
+                                                 PhysBAM::STREAM_TYPE((RW())),
                                                  &cache,
                                                  cache.ple->data(),
                                                  &job->worker_thread()->allocated_threads);
       else
-        example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
+        example = new PhysBAM::WATER_EXAMPLE<TV>(collision_body,
+                                                 PhysBAM::STREAM_TYPE((RW())),
                                                  &cache,
                                                  &job->worker_thread()->allocated_threads);
       example->use_cache = true;
     } else {
       example_scope_timer =
           new application::ScopeTimer("init_example");
-      example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
+      StaticConfigCollisionBody* collision_body
+       = dynamic_cast<StaticConfigCollisionBody*>(
+          job->GetStaticConfigManager()
+          ->GetStaticConfigVariable(STATIC_CONFIG_COLLISION_BODY,
+                                    init_config.local_region));
+      assert(collision_body != NULL);
+      example = new PhysBAM::WATER_EXAMPLE<TV>(collision_body,
+                                               PhysBAM::STREAM_TYPE((RW())),
                                                &job->worker_thread()->allocated_threads);
       example->use_cache = false;
     }

@@ -11,6 +11,7 @@
 #include <PhysBAM_Tools/Matrices/MATRIX_1X1.h>
 #include <PhysBAM_Tools/Matrices/SYMMETRIC_MATRIX_2X2.h>
 #include <PhysBAM_Tools/Matrices/SYMMETRIC_MATRIX_3X3.h>
+#include <PhysBAM_Tools/Parallel_Computation/MPI_UTILITIES.h>
 using namespace PhysBAM;
 //#####################################################################
 // Constructor
@@ -30,9 +31,13 @@ template<class T_GRID,class T2> BOUNDARY_UNIFORM<T_GRID,T2>::
 template<class T_GRID,class T2> void BOUNDARY_UNIFORM<T_GRID,T2>::
 Fill_Ghost_Cells(const T_GRID& grid,const T_ARRAYS_T2& u,T_ARRAYS_T2& u_ghost,const T dt,const T time,const int number_of_ghost_cells)
 {
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp("Fill_Ghost_Cells_Boundary_Uniform START");
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp("Fill_Ghost_Cells_Boundary_Uniform PUT START");
     T_ARRAYS_T2::Put(u,u_ghost);
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp("Fill_Ghost_Cells_Boundary_Uniform PUT END");
     ARRAY<RANGE<TV_INT> > regions;Find_Ghost_Regions(grid,regions,number_of_ghost_cells);
     for(int side=1;side<=T_GRID::number_of_faces_per_cell;side++)Fill_Single_Ghost_Region(grid,u_ghost,side,regions(side));
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp("Fill_Ghost_Cells_Boundary_Uniform END");
 }
 //#####################################################################
 // Function Fill_Ghost_Cells_Face
@@ -40,9 +45,11 @@ Fill_Ghost_Cells(const T_GRID& grid,const T_ARRAYS_T2& u,T_ARRAYS_T2& u_ghost,co
 template<class T_GRID,class T2> void BOUNDARY_UNIFORM<T_GRID,T2>::
 Fill_Ghost_Cells_Face(const T_GRID& grid,const T_FACE_ARRAYS_T2& u,T_FACE_ARRAYS_T2& u_ghost,const T time,const int number_of_ghost_cells)
 {
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp("Fill_Ghost_Cells_Face_Boundary_Uniform START");
     assert(grid.Is_MAC_Grid() && !clamp_below && !clamp_above);BOUNDARY_UNIFORM<T_GRID,T2> temp_boundary;
     if(use_fixed_boundary) temp_boundary.Set_Fixed_Boundary(true,fixed_boundary_value);
     for(int axis=1;axis<=T_GRID::dimension;axis++)temp_boundary.Fill_Ghost_Cells(grid.Get_Face_Grid(axis),u.Component(axis),u_ghost.Component(axis),0,time,number_of_ghost_cells);
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp("Fill_Ghost_Cells_Face_Boundary_Uniform END");
 }
 //#####################################################################
 // Function Fill_Ghost_Cells_Node
@@ -50,9 +57,13 @@ Fill_Ghost_Cells_Face(const T_GRID& grid,const T_FACE_ARRAYS_T2& u,T_FACE_ARRAYS
 template<class T_GRID,class T2> void BOUNDARY_UNIFORM<T_GRID,T2>::
 Fill_Ghost_Cells_Node(const T_GRID& grid,const T_ARRAYS_T2& u,T_ARRAYS_T2& u_ghost,const T dt,const T time,const int number_of_ghost_cells)
 {
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp("Fill_Ghost_Cells_Node_Boundary_Uniform START");
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp("Fill_Ghost_Cells_Node_Boundary_Uniform PUT START");
     T_ARRAYS_T2::Put(u,u_ghost);
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp("Fill_Ghost_Cells_Node_Boundary_Uniform PUT END");
     ARRAY<RANGE<TV_INT> > regions;Find_Ghost_Regions(grid,regions,number_of_ghost_cells);
     for(int side=1;side<=T_GRID::number_of_faces_per_cell;side++)Fill_Single_Ghost_Region(grid,u_ghost,side,regions(side));
+    PhysBAM::MPI_UTILITIES::PrintPackTimeStamp("Fill_Ghost_Cells_Node_Boundary_Uniform END");
 }
 //#####################################################################
 // Function Find_Ghost_Regions

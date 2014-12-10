@@ -79,7 +79,8 @@ namespace application {
 
         // get time from frame
         PhysBAM::WATER_EXAMPLE<TV>* example =
-          new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
+          new PhysBAM::WATER_EXAMPLE<TV>(NULL,
+                                         PhysBAM::STREAM_TYPE((RW())),
                                          &worker_thread()->allocated_threads);
         T time = example->Time_At_Frame(frame);
         delete example;

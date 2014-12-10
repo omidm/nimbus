@@ -21,8 +21,6 @@ DataScalarArray   : pressure             : (40, 40, 40), (2, 2, 1), (1, 1, 1) : 
 DataScalarArray   : filled_region_colors : (40, 40, 40), (2, 2, 1), (1, 1, 1) : include_boundary
 # float.
 DataScalarArray   : divergence           : (40, 40, 40), (2, 2, 1), (1, 1, 1) : include boundary
-# float.
-DataFaceArray     : u_interface          : (40, 40, 40), (2, 2, 1), (0, 0, 0) : none
 
 # The following data partitions should be changed if you want to run projection in different granularity.
 # Group II.

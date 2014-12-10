@@ -65,6 +65,7 @@ namespace nimbus {
 class Application;
 class Job;
 class WorkerThread;
+class StaticConfigManager;
 typedef std::list<Job*> JobList;
 typedef std::map<job_id_t, Job*> JobMap;
 typedef std::map<std::string, Job*> JobTable;
@@ -202,6 +203,7 @@ class Job {
     DataArray data_array;
 
     CacheManager* GetCacheManager() const;
+    StaticConfigManager* GetStaticConfigManager() const;
 
     void set_core_quota(int core_quota) {
       core_quota_ = core_quota;

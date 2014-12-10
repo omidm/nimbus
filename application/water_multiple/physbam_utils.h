@@ -62,6 +62,8 @@ namespace application {
 
 typedef PhysBAM::RANGE<TV> Range;
 
+void PrintGridDbg(const PhysBAM::GRID<PhysBAM::VECTOR<float, 3> >& grid);
+
 // Given the global region and local region, calculate the range to construct
 // grid.
 Range GridToRange(

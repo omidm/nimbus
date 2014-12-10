@@ -45,6 +45,7 @@
 #include <ctime>
 #include <map>
 #include <vector>
+#include <string>
 
 #include "data/cache/cache_defs.h"
 #include "data/cache/cache_object.h"
@@ -57,7 +58,7 @@
 #define FIRST_UNIQUE_ID 1000
 namespace nimbus {
 
-bool CacheManager::print_stat_ = false;
+bool CacheManager::print_stat_ = true;
 
 /**
  * \details
@@ -76,20 +77,40 @@ CacheManager::CacheManager() {
 void CacheManager::DoSetUpWrite(CacheVar* cache_var,
                                 const DataArray &write_set,
                                 GeometricRegion &write_region) {
+    PrintTimeStamp("start", "DSW");
     DataArray flush;
+    PrintTimeStamp("start", "DSW l1");
     pthread_mutex_lock(&cache_lock);
+    PrintTimeStamp("end", "DSW l1");
     BlockPrintTimeStamp("enter");
+    PrintTimeStamp("start", "DSW check");
     while (!cache_var->CheckWritePendingFlag(write_set, write_region)) {
         pthread_cond_wait(&cache_cond, &cache_lock);
     }
+    PrintTimeStamp("end", "DSW check");
     BlockPrintTimeStamp("leave");
+    PrintTimeStamp("start", "DSW suw");
     cache_var->SetUpWrite(write_set, write_region, &flush);
+    PrintTimeStamp("end", "DSW suw");
     pthread_mutex_unlock(&cache_lock);
+    size_t write_bytes = 0;
+    for (size_t i = 0; i < flush.size(); ++i) {
+      Data *d = flush[i];
+      write_bytes += d->memory_size();
+      std::string reg_str = d->region().ToNetworkData() + " ; " + d->name();
+      PrintTimeStamp("DSW region", reg_str.c_str());
+    }
+    PrintSizeStamp("DSW wfcsize", write_bytes);
+    PrintTimeStamp("start", "DSW wfc");
     cache_var->PerformSetUpWrite(write_set, write_region, flush);
+    PrintTimeStamp("end", "DSW wfc");
+    PrintTimeStamp("start", "DSW l2");
     pthread_mutex_lock(&cache_lock);
+    PrintTimeStamp("end", "DSW l2");
     cache_var->ReleaseWritePendingFlag(write_set, flush);
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
+    PrintTimeStamp("end", "DSW");
 }
 
 /**
@@ -153,13 +174,36 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
 
     GeometricRegion write_region_old = cv->write_region_;
     cv->write_region_ = write_region;
-    PrintTimeStamp("start", "GAV wfc");
+    size_t write_bytes = 0;
+    for (size_t i = 0; i < flush.size(); ++i) {
+      Data *d = flush[i];
+      write_bytes += d->memory_size();
+      std::string reg_str = d->region().ToNetworkData() + " ; " + d->name();
+      PrintTimeStamp("GAV region", reg_str.c_str());
+    }
+    for (size_t i = 0; i < sync.size(); ++i) {
+      Data *d = sync[i];
+      write_bytes += d->memory_size();
+      std::string reg_str = d->region().ToNetworkData() + " ; " + d->name();
+      PrintTimeStamp("GAV region", reg_str.c_str());
+    }
+    PrintSizeStamp("GAV wfcsize", write_bytes);
+
+    std::string wfc_str = "GAV wfc " + cv->name();
+    PrintTimeStamp("start", wfc_str.c_str());
     cv->WriteFromCache(flush, write_region_old);
     for (size_t i = 0; i < sync.size(); ++i) {
         // assert(sync_co[i]->IsAvailable(cache::EXCLUSIVE));
         sync_co[i]->PullData(sync[i]);
     }
-    PrintTimeStamp("end", "GAV wfc");
+    PrintTimeStamp("end", wfc_str.c_str());
+    size_t read_bytes = 0;
+    for (size_t i = 0; i < diff.size(); ++i) {
+      Data *d = diff[i];
+      read_bytes += d->memory_size();
+    }
+    PrintSizeStamp("GAV rfcsize", read_bytes);
+
     PrintTimeStamp("start", "GAV rfc");
     cv->ReadToCache(diff, read_region);
     PrintTimeStamp("end", "GAV rfc");
@@ -167,6 +211,7 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     pthread_mutex_lock(&cache_lock);
     PrintTimeStamp("end", "GAV l2");
     cv->ReleasePendingFlag(&flush, &diff, &sync, &sync_co);
+    cv->unset_pending_flag();
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
     PrintTimeStamp("end", "GAV");
@@ -232,6 +277,24 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
 
     GeometricRegion write_region_old = cs->write_region_;
     cs->write_region_ = write_region;
+
+    size_t write_bytes = 0;
+    for (size_t i = 0; i < num_var; ++i) {
+      DataArray &flush_t = flush_sets[i];
+      for (size_t j = 0; j < flush_t.size(); ++j) {
+        Data *d = flush_t[j];
+        write_bytes += d->memory_size();
+      }
+    }
+    for (size_t i = 0; i < num_var; ++i) {
+      DataArray &sync_t = sync_sets[i];
+      for (size_t j = 0; j < sync_t.size(); ++j) {
+        Data *d = sync_t[j];
+        write_bytes += d->memory_size();
+      }
+    }
+    PrintSizeStamp("GAS wfcsize", write_bytes);
+
     PrintTimeStamp("start", "GAS wfc");
     cs->WriteFromCache(var_type, flush_sets, write_region_old);
     for (size_t t = 0; t < num_var; ++t) {
@@ -243,6 +306,17 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
         }
     }
     PrintTimeStamp("end", "GAS wfc");
+
+    size_t read_bytes = 0;
+    for (size_t i = 0; i < num_var; ++i) {
+      DataArray &diff_t = diff_sets[i];
+      for (size_t j = 0; j < diff_t.size(); ++j) {
+        Data *d = diff_t[j];
+        read_bytes += d->memory_size();
+      }
+    }
+    PrintSizeStamp("GAS rfcsize", read_bytes);
+
     PrintTimeStamp("start", "GAS rfc");
     cs->ReadToCache(var_type, diff_sets, read_region);
     PrintTimeStamp("end", "GAS rfc");
@@ -251,6 +325,7 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
     PrintTimeStamp("end", "GAS l2");
     cs->ReleasePendingFlag(var_type,
                            &flush_sets, &diff_sets, &sync_sets, &sync_co_sets);
+    cs->unset_pending_flag();
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
     PrintTimeStamp("end", "GAS");
@@ -271,6 +346,9 @@ void CacheManager::SyncData(Data *d) {
     while (d->pending_flag() != 0 ||
            (d->dirty_cache_object()
             && d->dirty_cache_object()->pending_flag())) {
+       if (d->dirty_cache_object()) {
+         PrintTimeStamp("block", d->dirty_cache_object()->name().c_str());
+       }
        pthread_cond_wait(&cache_cond, &cache_lock);
     }
     PrintTimeStamp("end", "SD check");
@@ -283,16 +361,26 @@ void CacheManager::SyncData(Data *d) {
     }
     // assert(co->IsAvailable(cache::EXCLUSIVE));
     d->set_pending_flag(Data::WRITE);
-    co->set_pending_flag();
-    d->ClearDirtyMappings();
+    // co->set_pending_flag();
+    // d->ClearDirtyMappings();
     pthread_mutex_unlock(&cache_lock);
 
+    size_t write_bytes = d->memory_size();
+    std::string reg_str = d->region().ToNetworkData() + " ; " + d->name();
+    PrintTimeStamp("SD region", reg_str.c_str());
+    PrintSizeStamp("SD wfcsize", write_bytes);
+
+    std::string wfc_str = "SD pdata " + co->name();
+
+    PrintTimeStamp("start", wfc_str.c_str());
     co->PullData(d);
+    PrintTimeStamp("end", wfc_str.c_str());
     PrintTimeStamp("start", "SD l2");
     pthread_mutex_lock(&cache_lock);
     PrintTimeStamp("end", "SD l2");
+    d->ClearDirtyMappings();
     d->unset_pending_flag(Data::WRITE);
-    co->unset_pending_flag();
+    // co->unset_pending_flag();
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
     PrintTimeStamp("end", "SD");
@@ -320,7 +408,7 @@ void CacheManager::InvalidateMappings(Data *d) {
 
 void CacheManager::ReleaseAccess(CacheObject* cache_object) {
     pthread_mutex_lock(&cache_lock);
-    cache_object->unset_pending_flag();
+    // cache_object->unset_pending_flag();
     // TODO(quhang): use private method and mark friend class.
     cache_object->ReleaseAccessInternal();
     pthread_cond_broadcast(&cache_cond);
@@ -378,6 +466,14 @@ void CacheManager::BlockPrintTimeStamp(const char* message) {
   clock_gettime(CLOCK_REALTIME, &t);
   double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
   fprintf(block_log, "%f : %s\n", time_sum, message);
+}
+
+void CacheManager::PrintSizeStamp(const char *message, size_t num_bytes) {
+  struct timespec t;
+  clock_gettime(CLOCK_REALTIME, &t);
+  double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
+  pid_t tid = syscall(SYS_gettid);
+  fprintf(time_log, "%d ; %s ; %zu ; %f\n", tid, message, num_bytes, time_sum);
 }
 
 }  // namespace nimbus

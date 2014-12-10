@@ -1,0 +1,9 @@
+Build
+opengl_2d
+opengl_3d
+*.so
+*.dylib
+data_def.h
+data_def.cc
+reg_def.h
+reg_def.cc

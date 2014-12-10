@@ -153,6 +153,8 @@ class CacheManager {
 
         void PrintTimeStamp(const char *status, const char * message);
 
+        void PrintSizeStamp(const char *message, size_t num_bytes);
+
     private:
         static bool print_stat_;
         uint64_t unique_id_allocator_;

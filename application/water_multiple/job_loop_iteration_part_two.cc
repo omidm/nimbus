@@ -83,7 +83,8 @@ void JobLoopIterationPartTwo::Execute(
 
   // Initialize the state of example and driver.
   PhysBAM::WATER_EXAMPLE<TV>* example =
-      new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
+      new PhysBAM::WATER_EXAMPLE<TV>(NULL,
+                                     PhysBAM::STREAM_TYPE((RW())),
                                      &worker_thread()->allocated_threads);
 
   // check whether the frame is done or not

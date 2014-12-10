@@ -115,7 +115,11 @@ int main(int argc,char *argv[])
         char buffer[100];
         int n = sprintf(buffer, "mpi%d.log", mpi_world.rank+1);
         buffer[n] = '\0';
+	char pack_buffer[100];
+	n = sprintf(pack_buffer, "pack_mpi%d.log", mpi_world.rank+1);
+        pack_buffer[n] = '\0';
         PhysBAM::MPI_UTILITIES::SetLogFile(fopen(buffer, "w"));
+	PhysBAM::MPI_UTILITIES::SetPackLogFile(fopen(pack_buffer, "w"));
         PhysBAM::MPI_UTILITIES::PrintTimeStamp("RESTART");
         // Custom Partition
         // example->mpi_grid=new MPI_UNIFORM_GRID<GRID<TV> >(example->mac_grid,3,false,ppd);

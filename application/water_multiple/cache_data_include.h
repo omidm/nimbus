@@ -47,5 +47,9 @@
 #include "application/water_multiple/projection/cache_array_m2c.h"
 #include "application/water_multiple/projection/cache_vector.h"
 #include "application/water_multiple/projection/cache_raw_grid_array.h"
+#include "application/water_multiple/static_config_valid_mask.h"
+#include "application/water_multiple/static_config_u_interface.h"
+#include "application/water_multiple/static_config_force.h"
+#include "application/water_multiple/static_config_collision_body.h"
 
 #endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_
