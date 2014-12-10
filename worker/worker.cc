@@ -421,7 +421,7 @@ void Worker::ProcessSaveDataCommand(SaveDataCommand* cm) {
   SaveDataJob * job = new SaveDataJob(ddb_, application_);
   job->set_name("SaveData");
   job->set_id(cm->job_id());
-  PrintTimeStamp("save_job %s %lu\n", job->name().c_str(), job->id().elem());
+  PrintTimeStamp("recv_job %s %lu\n", job->name().c_str(), job->id().elem());
   job->set_checkpoint_id(cm->checkpoint_id().elem());
   IDSet<physical_data_id_t> read_set;
   read_set.insert(cm->from_physical_data_id().elem());
