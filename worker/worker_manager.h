@@ -137,6 +137,8 @@ class WorkerManager {
       Log* log, Log* version_log, Log* data_hash_log, Log* cache_log,
       HighResolutionTimer* timer);
 
+  void SetEventLog(std::string wid_str);
+
  private:
   // Internal logging facility.
   void PrintTimeStamp(const char* event, const char* s, const uint64_t d);

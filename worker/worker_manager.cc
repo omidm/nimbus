@@ -58,7 +58,6 @@ int WorkerManager::inside_job_parallism = 0;
 int WorkerManager::across_job_parallism = 0;
 
 WorkerManager::WorkerManager() {
-  event_log = fopen("event_be.txt", "w");
   pthread_mutex_init(&scheduling_needed_lock_, NULL);
   pthread_cond_init(&scheduling_needed_cond_, NULL);
   scheduling_needed_ = false;
@@ -110,6 +109,11 @@ void WorkerManager::SetLoggingInterface(
   timer_ = timer;
   log_ready_ = true;
 }
+
+void WorkerManager::SetEventLog(std::string wid_str) {
+  event_log = fopen((wid_str + "_event_be.txt").c_str(), "w");
+}
+
 
 bool WorkerManager::ClassifyAndAddJob(Job* job) {
   bool result;

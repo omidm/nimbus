@@ -88,8 +88,6 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
         exit(1);
       }
     }
-    event_log = fopen("event_fe.txt", "w");
-    alloc_log = fopen("data_objects.txt", "w");
     log_.InitTime();
     id_ = -1;
     ip_address_ = NIMBUS_RECEIVER_KNOWN_IP;
@@ -313,11 +311,13 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
   id_maker_.Initialize(id_);
   ddb_->Initialize(ip_address_, id_);
 
-  std::ostringstream ss;
-  ss << id_;
+  std::string wstr = int2string(id_);
   // TODO(quhang) thread-safety(log).
-  version_log_.set_file_name(ss.str() + "_version_log.txt");
-  data_hash_log_.set_file_name(ss.str() + "_data_hash_log.txt");
+  event_log = fopen((wstr + "_event_fe.txt").c_str(), "w");
+  alloc_log = fopen((wstr + "_data_objects.txt").c_str(), "w");
+  worker_manager_->SetEventLog(wstr);
+  version_log_.set_file_name(wstr + "_version_log.txt");
+  data_hash_log_.set_file_name(wstr + "_data_hash_log.txt");
   data_exchanger_->WriteTimeDriftToLog(time - cm->time());
 }
 

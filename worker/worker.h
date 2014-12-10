@@ -68,6 +68,7 @@
 #include "shared/log.h"
 #include "shared/high_resolution_timer.h"
 #include "shared/profiler.h"
+#include "shared/helpers.h"
 
 namespace nimbus {
 
