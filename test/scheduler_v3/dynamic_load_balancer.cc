@@ -298,6 +298,29 @@ void DynamicLoadBalancer::NotifyRegisteredWorker(SchedulerWorker *worker) {
   }
 }
 
+bool DynamicLoadBalancer::NotifyDownWorker(worker_id_t worker_id) {
+  boost::unique_lock<boost::recursive_mutex> worker_map_lock(worker_map_mutex_);
+  boost::unique_lock<boost::recursive_mutex> region_map_lock(region_map_mutex_);
+
+  {
+    boost::unique_lock<boost::recursive_mutex> lock_monitor(worker_monitor_mutex_);
+    worker_monitor_.RemoveWorker(worker_id);
+  }
+
+  WorkerMap::iterator iter = worker_map_.find(worker_id);
+  if (iter != worker_map_.end()) {
+    worker_map_.erase(iter);
+    worker_num_ = worker_map_.size();
+    region_map_.NotifyDownWorker(worker_id);
+    return true;
+  } else {
+    dbg(DBG_ERROR, "ERROR: DynamicLoadBalancer: worker with id %lu has NOT been registered.\n", // NOLINT
+        worker_id);
+    return false;
+  }
+}
+
+
 void DynamicLoadBalancer::InitializeRegionMap() {
   boost::unique_lock<boost::recursive_mutex> worker_map_lock(worker_map_mutex_);
   boost::unique_lock<boost::recursive_mutex> region_map_lock(region_map_mutex_);
