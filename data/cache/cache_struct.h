@@ -69,6 +69,7 @@ class GeometricRegion;
  */
 class CacheStruct : public CacheObject {
     friend class CacheManager;
+    friend class CacheTable;
     public:
         /**
          * \brief Creates a CacheStruct
@@ -88,117 +89,21 @@ class CacheStruct : public CacheObject {
         explicit CacheStruct(size_t num_variables, const GeometricRegion &ob_reg);
 
         /**
-         * \brief Creates a new CacheStruct instance using current instance
-         * parameters
-         * \param struct_region specifies the spatial domain of the CacheStruct
-         * instance
-         * \return Returns a pointer to the newly allocated CacheStruct instance
-         * \details This is a virtual function that must be over-written by application
-         * writer. When CacheManager cannot satisfy an application object request,
-         * using the instances it has already cached, it calls CreateNew(..) on the
-         * prototype passed in the request.
-         */
-        virtual CacheStruct *CreateNew(const GeometricRegion &struct_region) const = 0;
-
-        /**
+         * TODO: Make this protected
          * \brief Unsets mapping between data and CacheStruct instance
          * \param d denotes the data to unmap
          */
         virtual void UnsetData(Data *d);
 
         /**
+         * TODO: Make this protected
          * \brief Unsets dirty data mapping between data and CacheStruct
          * instance
          * \param d denotes the data to unmap
          */
         virtual void UnsetDirtyData(Data *d);
 
-        /**
-         * \brief Pulls data from cache, removes corresponding dirty data
-         * mapping. Locks the cache object when pulling the data.
-         * \param d is data to flush to
-         */
-        virtual void PullData(Data *d);
-
-        /**
-         * \brief Calculates distance of a CacheStruct, from the given list of
-         * read_sets. This distance indicates the cost of reconstruction if
-         * this CacheStruct instance is used.
-         * \param var_type is a list of type_ids corresponding to nimbus variables
-         * \param read_sets is a list of data arrays corresponding to nimbus variables
-         * \return Returns distance (cost)
-         */
-        cache::distance_t GetDistance(const std::vector<cache::type_id_t> &var_type,
-                                      const std::vector<DataArray> &read_sets) const;
-
-        /**
-         * \brief Writes data from cache to data in write_sets immediately
-         * \param var_type is a list of type_ids corresponding to nimbus
-         * variables, as explained in the class description
-         * \param write_sets is a list of data arrays corresponding to nimbus
-         * variables
-         */
-        void WriteImmediately(const std::vector<cache::type_id_t> &var_type,
-                              const std::vector<DataArray> &write_sets);
-
-        /**
-         * \brief Edits the write set mappings (dirty mappins), flushing data
-         * if necessary
-         * \param var_type is a list of type_ids corresponding to nimbus
-         * variables, as explained in the class description
-         * \param write_sets is a list of data arrays corresponding to nimbus
-         * variables
-         * \param write_region is region to write
-         */
-        void SetUpWrite(const std::vector<cache::type_id_t> &var_type,
-                        const std::vector<DataArray> &write_sets,
-                        GeometricRegion write_region);
-
-        virtual size_t memory_size() {
-          return sizeof(*this);
-        }
-
     private:
-        /**
-         * \brief Disallow calling constructor with no arguments
-         */
-        CacheStruct() {}
-
-        /**
-         * \brief Edits all mappings between cache objects, given read and
-         * write sets
-         * \param var_type is a list of type_ids corresponding to nimbus
-         * variables, as explained in the class description
-         * \param read_sets is a list of data arrays corresponding to nimbus
-         * variables
-         * \param write_sets is a list of data arrays corresponding to nimbus
-         * variables
-         * \param flush_sets is a list of data arrays where SetUpReadWrite puts
-         * all data that needs to be flushed
-         * \param diff_sets is a list of data arrays where SetUpReadWrite puts
-         * all data that needs to be read
-         * \param sync_sets is a list of data arrays where SetUpReadWrite puts
-         * all data that needs to be synced from other cache objects
-         * \param sync_co_sets is a list of cache object vectors where
-         * SetUpReadWrite puts all cache objects that need to be synced with
-         * data in sync, in the same order
-         */
-        void SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,
-                            const std::vector<DataArray> &read_sets,
-                            const std::vector<DataArray> &write_sets,
-                            std::vector<DataArray> *flush_sets,
-                            std::vector<DataArray> *diff_sets,
-                            std::vector<DataArray> *sync_sets,
-                            std::vector<CacheObjects> *sync_co_sets);
-        bool CheckPendingFlag(const std::vector<cache::type_id_t> &var_type,
-                              const std::vector<DataArray> &read_sets,
-                              const std::vector<DataArray> &write_sets);
-        void ReleasePendingFlag(const std::vector<cache::type_id_t> &var_type,
-                                std::vector<DataArray> *flush_sets,
-                                std::vector<DataArray> *diff_sets,
-                                std::vector<DataArray> *sync_sets,
-                                std::vector<CacheObjects> *sync_co_sets);
-
         // number of nimbus variables
         size_t num_variables_;
 
@@ -207,6 +112,34 @@ class CacheStruct : public CacheObject {
                          Data *> DMap;
         std::vector<DMap> data_maps_;
         std::vector<DataSet> write_backs_;
+
+        // disable constructor without arguments
+        CacheStruct() {}
+
+        // methods for cache manager to manage mappings and control access
+        void SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,
+                            const std::vector<DataArray> &read_sets,
+                            const std::vector<DataArray> &write_sets,
+                            std::vector<DataArray> *flush_sets,
+                            std::vector<DataArray> *diff_sets,
+                            std::vector<DataArray> *sync_sets,
+                            std::vector<CacheObjects> *sync_co_sets);
+        void SetUpWrite(const std::vector<cache::type_id_t> &var_type,
+                        const std::vector<DataArray> &write_sets,
+                        GeometricRegion write_region);
+
+        bool CheckPendingFlag(const std::vector<cache::type_id_t> &var_type,
+                              const std::vector<DataArray> &read_sets,
+                              const std::vector<DataArray> &write_sets);
+
+        void ReleasePendingFlag(const std::vector<cache::type_id_t> &var_type,
+                                std::vector<DataArray> *flush_sets,
+                                std::vector<DataArray> *diff_sets,
+                                std::vector<DataArray> *sync_sets,
+                                std::vector<CacheObjects> *sync_co_sets);
+
+        cache::distance_t GetDistance(const std::vector<cache::type_id_t> &var_type,
+                                      const std::vector<DataArray> &read_sets) const;
 
     protected:
         /**
@@ -236,6 +169,32 @@ class CacheStruct : public CacheObject {
         virtual void WriteFromCache(const std::vector<cache::type_id_t> &var_type,
                                     const std::vector<DataArray> &write_sets,
                                     const GeometricRegion &write_region) const = 0;
+
+        /**
+         * \brief Creates a new CacheStruct instance using current instance
+         * parameters
+         * \param struct_region specifies the spatial domain of the CacheStruct
+         * instance
+         * \return Returns a pointer to the newly allocated CacheStruct instance
+         * \details This is a virtual function that must be over-written by application
+         * writer. When CacheManager cannot satisfy an application object request,
+         * using the instances it has already cached, it calls CreateNew(..) on the
+         * prototype passed in the request.
+         */
+        virtual CacheStruct *CreateNew(const GeometricRegion &struct_region) const = 0;
+
+    protected:
+        /**
+         * \brief Pulls data from cache, removes corresponding dirty data
+         * mapping. Locks the cache object when pulling the data.
+         * \param d is data to flush to
+         */
+        virtual void PullData(Data *d);
+
+        // method for cache manager for profiling
+        virtual size_t memory_size() {
+          return sizeof(*this);
+        }
 };  // class CacheStruct
 
 typedef std::vector<CacheStruct *> CacheStructs;

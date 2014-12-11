@@ -74,43 +74,80 @@ CacheManager::CacheManager() {
     time_log = fopen("cache_time.txt", "w");
 }
 
-void CacheManager::DoSetUpWrite(CacheVar* cache_var,
-                                const DataArray &write_set,
-                                GeometricRegion &write_region) {
-    PrintTimeStamp("start", "DSW");
-    DataArray flush;
-    PrintTimeStamp("start", "DSW l1");
-    pthread_mutex_lock(&cache_lock);
-    PrintTimeStamp("end", "DSW l1");
-    BlockPrintTimeStamp("enter");
-    PrintTimeStamp("start", "DSW check");
-    while (!cache_var->CheckWritePendingFlag(write_set, write_region)) {
-        pthread_cond_wait(&cache_cond, &cache_lock);
-    }
-    PrintTimeStamp("end", "DSW check");
-    BlockPrintTimeStamp("leave");
-    PrintTimeStamp("start", "DSW suw");
-    cache_var->SetUpWrite(write_set, write_region, &flush);
-    PrintTimeStamp("end", "DSW suw");
-    pthread_mutex_unlock(&cache_lock);
+void CacheManager::WriteImmediately(CacheVar *cache_var,
+                                    const DataArray &write_set) {
+    PrintTimeStamp("start", "WIV stage");
+    DataArray flush_set;
+    DataSet &write_back = cache_var->write_back_;
     size_t write_bytes = 0;
-    for (size_t i = 0; i < flush.size(); ++i) {
-      Data *d = flush[i];
-      write_bytes += d->memory_size();
-      std::string reg_str = d->region().ToNetworkData() + " ; " + d->name();
-      PrintTimeStamp("DSW region", reg_str.c_str());
+    for (size_t i = 0; i < write_set.size(); ++i) {
+        Data *d = write_set[i];
+        if (write_back.find(d) != write_back.end()) {
+            flush_set.push_back(d);
+            write_bytes += d->memory_size();
+        }
     }
-    PrintSizeStamp("DSW wfcsize", write_bytes);
-    PrintTimeStamp("start", "DSW wfc");
-    cache_var->PerformSetUpWrite(write_set, write_region, flush);
-    PrintTimeStamp("end", "DSW wfc");
-    PrintTimeStamp("start", "DSW l2");
-    pthread_mutex_lock(&cache_lock);
-    PrintTimeStamp("end", "DSW l2");
-    cache_var->ReleaseWritePendingFlag(write_set, flush);
-    pthread_cond_broadcast(&cache_cond);
-    pthread_mutex_unlock(&cache_lock);
-    PrintTimeStamp("end", "DSW");
+    for (size_t i = 0; i < flush_set.size(); ++i) {
+        Data *d = flush_set[i];
+        d->UnsetDirtyCacheObject(cache_var);
+        write_back.erase(d);
+    }
+    std::string size_str = "DSW wfcsize " + cache_var->name();
+    PrintSizeStamp(size_str.c_str(), write_bytes);
+    std::string wfc_str = "GAV wfc " + cache_var->name();
+    PrintTimeStamp("start", wfc_str.c_str());
+    cache_var->WriteFromCache(flush_set, cache_var->write_region_);
+    PrintTimeStamp("end", wfc_str.c_str());
+    PrintTimeStamp("end", "WIV stage");
+}
+
+/**
+ * \detials WriteImmediately(...) checks if data passed to it is in the
+ * write_back set for the cache struct instance.
+ */
+void CacheManager::WriteImmediately(CacheStruct *cache_struct,
+                                    const std::vector<cache::type_id_t> &var_type,
+                                    const std::vector<DataArray> &write_sets) {
+    PrintTimeStamp("start", "WIS stage");
+    size_t num_vars = var_type.size();
+    if (write_sets.size() != num_vars) {
+        dbg(DBG_ERROR, "Mismatch in number of variable types passed to FlushCache\n");
+        exit(-1);
+    }
+    std::vector<DataArray> flush_sets(num_vars);
+    std::vector<DataSet> &write_backs = cache_struct->write_backs_;
+    size_t write_bytes = 0;
+    for (size_t t = 0; t < num_vars; ++t) {
+        DataArray &flush_t = flush_sets[t];
+        const DataArray &write_set_t = write_sets[t];
+        cache::type_id_t type = var_type[t];
+        DataSet &write_back_t = write_backs[type];
+        for (size_t i = 0; i < write_set_t.size(); ++i) {
+            Data *d = write_set_t[i];
+            if (write_back_t.find(d) != write_back_t.end()) {
+                flush_t.push_back(d);
+                write_bytes += d->memory_size();
+            }
+        }
+    }
+    for (size_t t = 0; t < num_vars; ++t) {
+        const DataArray &flush_t = flush_sets[t];
+        cache::type_id_t type = var_type[t];
+        DataSet &write_back_t = write_backs[type];
+        for (size_t i = 0; i < flush_t.size(); ++i) {
+            Data *d = flush_t[i];
+            d->UnsetDirtyCacheObject(cache_struct);
+            write_back_t.erase(d);
+        }
+    }
+    std::string size_str = "DSW wfcsize " + cache_struct->name();
+    PrintSizeStamp(size_str.c_str(), write_bytes);
+    std::string wfc_str = "GAV wfc " + cache_struct->name();
+    PrintTimeStamp("start", wfc_str.c_str());
+    cache_struct->WriteFromCache(var_type, flush_sets,
+                                 cache_struct->write_region_);
+    PrintTimeStamp("end", wfc_str.c_str());
+    PrintTimeStamp("end", "WIS stage");
 }
 
 /**
@@ -130,10 +167,10 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
                                   cache::CacheAccess access,
                                   void (*aux)(CacheVar*, void*),
                                   void* aux_data) {
-    PrintTimeStamp("start", "GAV");
-    PrintTimeStamp("start", "GAV l1");
+    PrintTimeStamp("start", "GAV stage");
+    PrintTimeStamp("start", "GAV lock");
     pthread_mutex_lock(&cache_lock);
-    PrintTimeStamp("end", "GAV l1");
+    PrintTimeStamp("end", "GAV lock");
     CacheVar *cv = NULL;
     // Get a cache object form the cache table.
     if (pool_->find(prototype.id()) == pool_->end()) {
@@ -156,13 +193,11 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     // cv->AcquireAccess(access);
     DataArray flush, sync, diff;
     CacheObjects sync_co;
-    BlockPrintTimeStamp("enter");
-    PrintTimeStamp("start", "GAV check");
+    PrintTimeStamp("start", "GAV block");
     while (!cv->CheckPendingFlag(read_set, write_set)) {
       pthread_cond_wait(&cache_cond, &cache_lock);
     }
-    PrintTimeStamp("end", "GAV check");
-    BlockPrintTimeStamp("leave");
+    PrintTimeStamp("end", "GAV block");
     // Move here.
     cv->AcquireAccess(access);
     cv->SetUpReadWrite(read_set, write_set,
@@ -178,16 +213,13 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     for (size_t i = 0; i < flush.size(); ++i) {
       Data *d = flush[i];
       write_bytes += d->memory_size();
-      std::string reg_str = d->region().ToNetworkData() + " ; " + d->name();
-      PrintTimeStamp("GAV region", reg_str.c_str());
     }
     for (size_t i = 0; i < sync.size(); ++i) {
       Data *d = sync[i];
       write_bytes += d->memory_size();
-      std::string reg_str = d->region().ToNetworkData() + " ; " + d->name();
-      PrintTimeStamp("GAV region", reg_str.c_str());
     }
-    PrintSizeStamp("GAV wfcsize", write_bytes);
+    std::string size_str = "GAV wfcsize " + cv->name();
+    PrintSizeStamp(size_str.c_str(), write_bytes);
 
     std::string wfc_str = "GAV wfc " + cv->name();
     PrintTimeStamp("start", wfc_str.c_str());
@@ -204,17 +236,18 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     }
     PrintSizeStamp("GAV rfcsize", read_bytes);
 
-    PrintTimeStamp("start", "GAV rfc");
+    std::string rfc_str = "GAV rfc " + cv->name();
+    PrintTimeStamp("start", rfc_str.c_str());
     cv->ReadToCache(diff, read_region);
-    PrintTimeStamp("end", "GAV rfc");
-    PrintTimeStamp("start", "GAV l2");
+    PrintTimeStamp("end", rfc_str.c_str());
+    PrintTimeStamp("start", "GAV lock");
     pthread_mutex_lock(&cache_lock);
-    PrintTimeStamp("end", "GAV l2");
+    PrintTimeStamp("end", "GAV lock");
     cv->ReleasePendingFlag(&flush, &diff, &sync, &sync_co);
     cv->unset_pending_flag();
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
-    PrintTimeStamp("end", "GAV");
+    PrintTimeStamp("end", "GAV stage");
     return cv;
 }
 
@@ -234,10 +267,10 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
                                         const CacheStruct &prototype,
                                         const GeometricRegion &region,
                                         cache::CacheAccess access) {
-    PrintTimeStamp("start", "GAS");
-    PrintTimeStamp("start", "GAS l1");
+    PrintTimeStamp("start", "GAS stage");
+    PrintTimeStamp("start", "GAS lock");
     pthread_mutex_lock(&cache_lock);
-    PrintTimeStamp("end", "GAS l1");
+    PrintTimeStamp("end", "GAS lock");
     CacheStruct *cs = NULL;
     if (pool_->find(prototype.id()) == pool_->end()) {
         CacheTable *ct = new CacheTable(cache::STRUCT);
@@ -262,14 +295,12 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
                            sync_sets(num_var),
                            diff_sets(num_var);
     std::vector<CacheObjects> sync_co_sets(num_var);
-    BlockPrintTimeStamp("enter");
-    PrintTimeStamp("start", "GAS check");
+    PrintTimeStamp("start", "GAS block");
     // Move here.
     while (!cs->CheckPendingFlag(var_type, read_sets, write_sets)) {
       pthread_cond_wait(&cache_cond, &cache_lock);
     }
-    BlockPrintTimeStamp("leave");
-    PrintTimeStamp("end", "GAS check");
+    PrintTimeStamp("end", "GAS block");
     cs->AcquireAccess(access);
     cs->SetUpReadWrite(var_type, read_sets, write_sets,
                        &flush_sets, &diff_sets, &sync_sets, &sync_co_sets);
@@ -293,9 +324,11 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
         write_bytes += d->memory_size();
       }
     }
-    PrintSizeStamp("GAS wfcsize", write_bytes);
+    std::string size_str = "GAS wfcsize " + cs->name();
+    PrintSizeStamp(size_str.c_str(), write_bytes);
 
-    PrintTimeStamp("start", "GAS wfc");
+    std::string wfc_str = "GAV wfc " + cs->name();
+    PrintTimeStamp("start", wfc_str.c_str());
     cs->WriteFromCache(var_type, flush_sets, write_region_old);
     for (size_t t = 0; t < num_var; ++t) {
         DataArray &sync_t = sync_sets[t];
@@ -305,7 +338,7 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
             sync_co_t[i]->PullData(sync_t[i]);
         }
     }
-    PrintTimeStamp("end", "GAS wfc");
+    PrintTimeStamp("end", wfc_str.c_str());
 
     size_t read_bytes = 0;
     for (size_t i = 0; i < num_var; ++i) {
@@ -317,18 +350,19 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
     }
     PrintSizeStamp("GAS rfcsize", read_bytes);
 
-    PrintTimeStamp("start", "GAS rfc");
+    std::string rfc_str = "GAV rfc " + cs->name();
+    PrintTimeStamp("start", rfc_str.c_str());
     cs->ReadToCache(var_type, diff_sets, read_region);
-    PrintTimeStamp("end", "GAS rfc");
-    PrintTimeStamp("start", "GAS l2");
+    PrintTimeStamp("end", rfc_str.c_str());
+    PrintTimeStamp("start", "GAS lock");
     pthread_mutex_lock(&cache_lock);
-    PrintTimeStamp("end", "GAS l2");
+    PrintTimeStamp("end", "GAS lock");
     cs->ReleasePendingFlag(var_type,
                            &flush_sets, &diff_sets, &sync_sets, &sync_co_sets);
     cs->unset_pending_flag();
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
-    PrintTimeStamp("end", "GAS");
+    PrintTimeStamp("end", "GAS stage");
     return cs;
 }
 
@@ -336,27 +370,22 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
  * \details
  */
 void CacheManager::SyncData(Data *d) {
-    PrintTimeStamp("start", "SD");
+    PrintTimeStamp("start", "SD stage");
     CacheObject *co = NULL;
-    PrintTimeStamp("start", "SD l1");
+    PrintTimeStamp("start", "SD lock");
     pthread_mutex_lock(&cache_lock);
-    PrintTimeStamp("end", "SD l1");
-    BlockPrintTimeStamp("enter");
-    PrintTimeStamp("start", "SD check");
+    PrintTimeStamp("end", "SD lock");
+    PrintTimeStamp("start", "SD block");
     while (d->pending_flag() != 0 ||
            (d->dirty_cache_object()
             && d->dirty_cache_object()->pending_flag())) {
-       if (d->dirty_cache_object()) {
-         PrintTimeStamp("block", d->dirty_cache_object()->name().c_str());
-       }
        pthread_cond_wait(&cache_cond, &cache_lock);
     }
-    PrintTimeStamp("end", "SD check");
-    BlockPrintTimeStamp("leave");
+    PrintTimeStamp("end", "SD block");
     co = d->dirty_cache_object();
     if (!co) {
         pthread_mutex_unlock(&cache_lock);
-        PrintTimeStamp("end", "SD");
+        PrintTimeStamp("end", "SD stage");
         return;
     }
     // assert(co->IsAvailable(cache::EXCLUSIVE));
@@ -366,44 +395,40 @@ void CacheManager::SyncData(Data *d) {
     pthread_mutex_unlock(&cache_lock);
 
     size_t write_bytes = d->memory_size();
-    std::string reg_str = d->region().ToNetworkData() + " ; " + d->name();
-    PrintTimeStamp("SD region", reg_str.c_str());
-    PrintSizeStamp("SD wfcsize", write_bytes);
+    std::string size_str = "SD wfcsize " + co->name();
+    PrintSizeStamp(size_str.c_str(), write_bytes);
 
     std::string wfc_str = "SD pdata " + co->name();
-
     PrintTimeStamp("start", wfc_str.c_str());
     co->PullData(d);
     PrintTimeStamp("end", wfc_str.c_str());
-    PrintTimeStamp("start", "SD l2");
+    PrintTimeStamp("start", "SD lock");
     pthread_mutex_lock(&cache_lock);
-    PrintTimeStamp("end", "SD l2");
+    PrintTimeStamp("end", "SD lock");
     d->ClearDirtyMappings();
     d->unset_pending_flag(Data::WRITE);
     // co->unset_pending_flag();
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
-    PrintTimeStamp("end", "SD");
+    PrintTimeStamp("end", "SD stage");
 }
 
 /**
  * \details
  */
 void CacheManager::InvalidateMappings(Data *d) {
-    PrintTimeStamp("start", "IM");
-    PrintTimeStamp("start", "IM l1");
+    PrintTimeStamp("start", "IM stage");
+    PrintTimeStamp("start", "IM lock");
     pthread_mutex_lock(&cache_lock);
-    PrintTimeStamp("end", "IM l1");
-    BlockPrintTimeStamp("enter");
-    PrintTimeStamp("start", "IM check");
+    PrintTimeStamp("end", "IM lock");
+    PrintTimeStamp("start", "IM block");
     while (d->pending_flag() != 0) {
         pthread_cond_wait(&cache_cond, &cache_lock);
     }
-    PrintTimeStamp("end", "IM check");
-    BlockPrintTimeStamp("leave");
+    PrintTimeStamp("end", "IM block");
     d->InvalidateMappings();
     pthread_mutex_unlock(&cache_lock);
-    PrintTimeStamp("end", "IM");
+    PrintTimeStamp("end", "IM stage");
 }
 
 void CacheManager::ReleaseAccess(CacheObject* cache_object) {
@@ -413,6 +438,7 @@ void CacheManager::ReleaseAccess(CacheObject* cache_object) {
     cache_object->ReleaseAccessInternal();
     pthread_cond_broadcast(&cache_cond);
 
+    /*
     if (print_stat_) {
       uint64_t data_id =cache_object->unique_id();
       size_t new_size = cache_object->memory_size();
@@ -437,9 +463,12 @@ void CacheManager::ReleaseAccess(CacheObject* cache_object) {
         // fflush(alloc_log);
       }
     }
+    */
+
     pthread_mutex_unlock(&cache_lock);
 }
 
+/*
 void CacheManager::PrintProfile(std::stringstream* output) {
   if (pool_ == NULL) {
     return;
@@ -452,6 +481,7 @@ void CacheManager::PrintProfile(std::stringstream* output) {
   }
   *output << "-----------" << std::endl;
 }
+*/
 
 void CacheManager::PrintTimeStamp(const char *status, const char *message) {
   struct timespec t;
@@ -461,12 +491,14 @@ void CacheManager::PrintTimeStamp(const char *status, const char *message) {
   fprintf(time_log, "%d ; %s ; %s ; %f\n", tid, status, message, time_sum);
 }
 
+/*
 void CacheManager::BlockPrintTimeStamp(const char* message) {
   struct timespec t;
   clock_gettime(CLOCK_REALTIME, &t);
   double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
   fprintf(block_log, "%f : %s\n", time_sum, message);
 }
+*/
 
 void CacheManager::PrintSizeStamp(const char *message, size_t num_bytes) {
   struct timespec t;

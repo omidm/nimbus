@@ -85,7 +85,7 @@ int main(int argc,char *argv[])
     parse_args.Add_Integer_Argument("-restart",0,"restart frame");
     parse_args.Add_Integer_Argument("-scale",128,"fine scale grid resolution");
     parse_args.Add_Integer_Argument("-substep",-1,"output-substep level");
-    parse_args.Add_Integer_Argument("-e",100,"last frame");
+    parse_args.Add_Integer_Argument("-e",1,"last frame");
     parse_args.Add_Integer_Argument("-refine",1,"refine levels");
     parse_args.Add_Integer_Argument("-threads",1,"number of threads");
     parse_args.Add_Double_Argument("-cfl",1,"cfl number");

@@ -129,6 +129,13 @@ class CacheManager {
                                   const GeometricRegion &region,
                                   cache::CacheAccess access);
 
+        void ReleaseAccess(CacheObject* cache_object);
+
+        void WriteImmediately(CacheVar *cache_var, const DataArray &write_set);
+        void WriteImmediately(CacheStruct *cache_struct,
+                              const std::vector<cache::type_id_t> &var_type,
+                              const std::vector<DataArray> &write_sets);
+
         /**
          * \brief If data is dirty, syncs with corresponding dirty cache
          * object, and clears the dirty mapping
@@ -143,13 +150,7 @@ class CacheManager {
          */
         void InvalidateMappings(Data *d);
 
-        void DoSetUpWrite(CacheVar* cache_var,
-                          const DataArray &write_set,
-                          GeometricRegion &write_region);
-
-        void ReleaseAccess(CacheObject* cache_object);
-
-        void PrintProfile(std::stringstream* output);
+        // void PrintProfile(std::stringstream* output);
 
         void PrintTimeStamp(const char *status, const char * message);
 
@@ -169,7 +170,7 @@ class CacheManager {
         FILE* block_log;
         FILE* alloc_log;
 
-        void BlockPrintTimeStamp(const char* message);
+        // void BlockPrintTimeStamp(const char* message);
 };  // class CacheManager
 
 }  // namespace nimbus

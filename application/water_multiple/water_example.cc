@@ -864,7 +864,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
                       }
                   }
               }
-              cache_ple->WriteImmediately(var_type, shared);
+              cm->WriteImmediately(cache_ple, var_type, shared);
           }
           particle_levelset_evolution.particle_levelset.Set_Thread_Queue(NULL);
           particle_levelset_evolution.particle_levelset.levelset.thread_queue=NULL;

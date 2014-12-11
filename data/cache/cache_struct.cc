@@ -154,42 +154,6 @@ cache::distance_t CacheStruct::GetDistance(const std::vector<cache::type_id_t> &
 }
 
 /**
- * \detials WriteImmediately(...) checks if data passed to it is in the
- * write_back set for the cache struct instance.
- */
-void CacheStruct::WriteImmediately(const std::vector<cache::type_id_t> &var_type,
-                                   const std::vector<DataArray> &write_sets) {
-    size_t num_vars = var_type.size();
-    if (write_sets.size() != num_vars) {
-        dbg(DBG_ERROR, "Mismatch in number of variable types passed to FlushCache\n");
-        exit(-1);
-    }
-    std::vector<DataArray> flush_sets(num_vars);
-    for (size_t t = 0; t < num_vars; ++t) {
-        DataArray &flush_t = flush_sets[t];
-        const DataArray &write_set_t = write_sets[t];
-        cache::type_id_t type = var_type[t];
-        DataSet &write_back_t = write_backs_[type];
-        for (size_t i = 0; i < write_set_t.size(); ++i) {
-            Data *d = write_set_t[i];
-            if (write_back_t.find(d) != write_back_t.end())
-                flush_t.push_back(d);
-        }
-    }
-    for (size_t t = 0; t < num_vars; ++t) {
-        const DataArray &flush_t = flush_sets[t];
-        cache::type_id_t type = var_type[t];
-        DataSet &write_back_t = write_backs_[type];
-        for (size_t i = 0; i < flush_t.size(); ++i) {
-            Data *d = flush_t[i];
-            d->UnsetDirtyCacheObject(this);
-            write_back_t.erase(d);
-        }
-    }
-    WriteFromCache(var_type, flush_sets, write_region_);
-}
-
-/**
  * \details If data is not already in existing data, create the mappings.
  * If it replaces existing data, flush existing data if dirty. Create
  * dirty object mapping with all data in write set and set write region.

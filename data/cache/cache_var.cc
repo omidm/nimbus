@@ -118,24 +118,7 @@ cache::distance_t CacheVar::GetDistance(const DataArray &read_set) const {
     return cur_distance;
 }
 
-/**
- * \details
- */
-void CacheVar::WriteImmediately(const DataArray &write_set) {
-    DataArray flush_set;
-    for (size_t i = 0; i < write_set.size(); ++i) {
-        Data *d = write_set[i];
-        if (write_back_.find(d) != write_back_.end())
-            flush_set.push_back(d);
-    }
-    for (size_t i = 0; i < flush_set.size(); ++i) {
-        Data *d = flush_set[i];
-        d->UnsetDirtyCacheObject(this);
-        write_back_.erase(d);
-    }
-    WriteFromCache(flush_set, write_region_);
-}
-
+// TODO(chinmayee): delete this
 bool CacheVar::CheckWritePendingFlag(const DataArray &write_set,
                                      GeometricRegion &write_region) {
     // if (pending_flag()) {
@@ -161,67 +144,6 @@ bool CacheVar::CheckWritePendingFlag(const DataArray &write_set,
     }
     return true;
 }
-/**
- * \details If data is not already in existing data, create the mappings.
- * If it replaces existing data, flush existing data if dirty. Create
- * dirty object mapping with all data in write set and set write region.
- */
-// TODO(chinmayee/quhang) add synchronization.
-void CacheVar::SetUpWrite(const DataArray &write_set,
-                          GeometricRegion &write_region,
-                          DataArray* flush) {
-    // assert(pending_flag());
-    // set_pending_flag();
-    assert(flush != NULL);
-    for (size_t i = 0; i < write_set.size(); ++i) {
-        Data *d = write_set.at(i);
-        d->set_pending_flag(Data::WRITE);
-        GeometricRegion dreg = d->region();
-        DMap::iterator it = data_map_.find(dreg);
-        if (it != data_map_.end()) {
-            Data *d_old = it->second;
-            if (d_old != d) {
-                if (write_back_.find(d_old) != write_back_.end()) {
-                    d_old->set_pending_flag(Data::WRITE);
-                    flush->push_back(d_old);
-                    write_back_.erase(d_old);
-                    d_old->UnsetDirtyCacheObject(this);
-                    d_old->UnsetCacheObject(this);
-                    assert(d_old->co_size() == 0);
-                }
-                d_old->UnsetCacheObject(this);
-            }
-        }
-        d->InvalidateMappings();
-        data_map_[dreg] = d;
-        d->SetUpCacheObject(this);
-        write_back_.insert(d);
-        d->SetUpDirtyCacheObject(this);
-    }
-}
-
-void CacheVar::PerformSetUpWrite(const DataArray &write_set,
-                                 GeometricRegion &write_region,
-                                 const DataArray& flush) {
-    GeometricRegion write_region_old = write_region_;
-    write_region_ = write_region;
-    WriteFromCache(flush, write_region_old);
-}
-
-
-void CacheVar::ReleaseWritePendingFlag(const DataArray &write_set,
-                                       const DataArray& flush) {
-    // unset_pending_flag();
-    for (size_t i = 0; i < write_set.size(); ++i) {
-        Data *d = write_set.at(i);
-        d->unset_pending_flag(Data::WRITE);
-    }
-    for (size_t i = 0; i < flush.size(); ++i) {
-        Data *d = flush.at(i);
-        d->unset_pending_flag(Data::WRITE);
-    }
-}
-
 
 /**
  * \details For read set, if data is not already in cache object, insert it in

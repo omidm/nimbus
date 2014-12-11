@@ -65,6 +65,7 @@ class GeometricRegion;
  */
 class CacheVar : public CacheObject {
     friend class CacheManager;
+    friend class CacheTable;
     public:
         /**
          * \brief Creates a CacheVar
@@ -80,109 +81,46 @@ class CacheVar : public CacheObject {
         explicit CacheVar(const GeometricRegion &ob_reg);
 
         /**
-         * \brief Creates a new CacheVar instance using current instance
-         * parameters
-         * \param struct_region specifies the spatial domain of the CacheVar
-         * instance
-         * \return Returns a pointer to the newly allocated CacheVar instance
-         * \details This is a virtual function that must be over-written by application
-         * writer. When CacheManager cannot satisfy an application object request,
-         * using the instances it has already cached, it calls CreateNew(..) on the
-         * prototype passed in the request.
-         */
-        virtual CacheVar *CreateNew(const GeometricRegion &struct_region) const = 0;
-
-        /**
+         * TODO: Make this protected
          * \brief Unsets mapping between data and CacheVar instance
          * \param d denotes the data to unmap
          */
         virtual void UnsetData(Data *d);
 
         /**
+         * TODO: Make this protected
          * \brief Unsets dirty data mapping between data and CacheVar
          * instance
          * \param d denotes the data to unmap
          */
         virtual void UnsetDirtyData(Data *d);
 
-        /**
-         * \brief Pulls data from cache, removes corresponding dirty data
-         * mapping. Locks the cache object when pulling the data.
-         * \param d is data to flush to
-         */
-        virtual void PullData(Data *d);
-
-        /**
-         * \brief Calculates distance of a CacheVar, from the given read_set.
-         * This distance indicates the cost of reconstruction if
-         * this CacheVar instance is used.
-         * \param read_set is a data array corresponding to nimbus variables
-         * \return Returns distance (cost)
-         */
-        cache::distance_t GetDistance(const DataArray &read_set) const;
-
-        /**
-         * \brief Writes data from cache to data in write_set immediately
-         * \param write_set is a data array corresponding to nimbus variables
-         */
-        void WriteImmediately(const DataArray &write_set);
-
-        /**
-         * \brief Edits the write set mappings (dirty mappins), flushing data
-         * if necessary
-         * \param write_set is a data array corresponding to nimbus variables
-         * \param write_region is region to write
-         */
-        void SetUpWrite(const DataArray &write_set,
-                        GeometricRegion &write_region,
-                        DataArray* flush);
-
-        virtual size_t memory_size() {
-          return sizeof(*this);
-        }
-
-        bool CheckWritePendingFlag(const DataArray &write_set,
-                                   GeometricRegion &write_region);
-
-        void PerformSetUpWrite(const DataArray &write_set,
-                               GeometricRegion &write_region,
-                               const DataArray& flush);
-        void ReleaseWritePendingFlag(const DataArray &write_set,
-                                     const DataArray& flush);
-
     private:
-        /**
-         * \brief Edits all mappings between cache objects, given read and
-         * write set
-         * \param read_set is a data array corresponding to nimbus variables
-         * \param write_set is a data array corresponding to nimbus variables
-         * \param flush is where SetUpReadWrite puts all data that needs to be
-         * flushed
-         * \param diff is where SetUpReadWrite puts all data that needs to be
-         * read
-         * \param sync is where SetUpReadWrite puts all data that needs to be
-         * synced from other cache objects
-         * \param sync_co is where SetUpReadWrite puts all cache objects that
-         * need to be synced with data in sync, in the same order
-         */
+        // cache-data mappings
+        typedef std::map<GeometricRegion,
+                         Data *> DMap;
+        DMap data_map_;
+        DataSet write_back_;
+
+        // methods for cache manager to manage mappings and control access
         void SetUpReadWrite(const DataArray &read_set,
                             const DataArray &write_set,
                             DataArray *flush,
                             DataArray *diff,
                             DataArray *sync,
                             CacheObjects *sync_co);
+
         bool CheckPendingFlag(const DataArray &read_set,
                               const DataArray &write_set);
+
+        bool CheckWritePendingFlag(const DataArray &write_set,
+                                   GeometricRegion &write_region);
         void ReleasePendingFlag(DataArray *flush,
                                 DataArray *diff,
                                 DataArray *sync,
                                 CacheObjects *sync_co);
 
-        // cache-data mappings
-        typedef std::map<GeometricRegion,
-                         Data *> DMap;
-        DMap data_map_;
-        DataSet write_back_;
+        cache::distance_t GetDistance(const DataArray &read_set) const;
 
     protected:
         /**
@@ -206,6 +144,32 @@ class CacheVar : public CacheObject {
          */
         virtual void WriteFromCache(const DataArray &write_set,
                                     const GeometricRegion &write_region) const = 0;
+
+        /**
+         * \brief Creates a new CacheVar instance using current instance
+         * parameters
+         * \param struct_region specifies the spatial domain of the CacheVar
+         * instance
+         * \return Returns a pointer to the newly allocated CacheVar instance
+         * \details This is a virtual function that must be over-written by application
+         * writer. When CacheManager cannot satisfy an application object request,
+         * using the instances it has already cached, it calls CreateNew(..) on the
+         * prototype passed in the request.
+         */
+        virtual CacheVar *CreateNew(const GeometricRegion &struct_region) const = 0;
+
+    protected:
+        /**
+         * \brief Pulls data from cache, removes corresponding dirty data
+         * mapping. Locks the cache object when pulling the data.
+         * \param d is data to flush to
+         */
+        virtual void PullData(Data *d);
+
+        // method for cache manager for profiling
+        virtual size_t memory_size() {
+          return sizeof(*this);
+        }
 };  // class CacheVar
 
 typedef std::vector<CacheVar *> CacheVars;

@@ -7,6 +7,24 @@
 #ifndef __PhysBAM_Tools_MPI_UTILITIES__
 #define __PhysBAM_Tools_MPI_UTILITIES__
 
+#include <cstdio>
+#include <ctime>
+
+namespace PhysBAM {
+
+namespace MPI_UTILITIES {
+
+// For nimbus usage.
+void SetLogFile(FILE* in);
+void PrintTimeStamp(const char* comment);
+void SetPackLogFile(FILE* in);
+void PrintPackTimeStamp(const char* comment);
+
+} // namespace MPI_UTILITIES
+
+} // namespace PhysBAM
+
+
 #ifdef USE_MPI
 
 #include <PhysBAM_Tools/Arrays/ARRAY.h>
@@ -22,8 +40,6 @@
 #include <PhysBAM_Tools/Vectors/VECTOR_FORWARD.h>
 #include <PhysBAM_Tools/Grids_Uniform/FACE_INDEX.h>
 #include <mpi.h>
-#include <cstdio>
-#include <ctime>
 namespace PhysBAM{
 
 class SPARSE_MATRIX_PARTITION;
@@ -36,11 +52,6 @@ class RLE_RUN_3D;
 
 namespace MPI_UTILITIES{
 
-// For nimbus usage.
-void SetLogFile(FILE* in);
-void PrintTimeStamp(const char* comment);
-void SetPackLogFile(FILE* in);
-void PrintPackTimeStamp(const char* comment);
 //#####################################################################
 // Datatype conversion
 //#####################################################################

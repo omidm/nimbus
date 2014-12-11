@@ -64,6 +64,8 @@ class GeometricRegion;
  * one variable and multiple variable implementation respectively.
  */
 class CacheObject {
+    friend class CacheManager;
+    friend class CacheTable;
     public:
         /**
          * \brief Creates a CacheObject
@@ -72,7 +74,7 @@ class CacheObject {
         explicit CacheObject();
 
         /**
-         * \brief Creates a CacheObject
+         * \brief Creates a CbcheObject
          * \param  ob_reg specifies application object region
          * \return Constructed CacheObject instance
          */
@@ -83,46 +85,6 @@ class CacheObject {
          * make a prototype for every application object he/ she plans to use.
          */
          void MakePrototype();
-
-        /**
-         * \brief Flushes data from cache, removes corresponding dirty data
-         * mapping
-         * \param d is data to flush to
-         */
-        virtual void PullData(Data *d) = 0;
-
-        /**
-         * \brief Unsets mapping between data and CacheObject instance
-         * \param d denotes the data to unmap
-         */
-        virtual void UnsetData(Data *d) = 0;
-
-        /**
-         * \brief Unsets dirty data mapping between data and CacheObject
-         * instance
-         * \param d denotes the data to unmap
-         */
-        virtual void UnsetDirtyData(Data *d) = 0;
-
-        /**
-         * \brief Acquires access to CacheObject instance
-         * \param access can be cache::EXCLUSIVE or cache::SHARED
-         */
-        void AcquireAccess(cache::CacheAccess access);
-
-        /**
-         * \brief Releases access to CacheObject instance
-         */
-        void ReleaseAccessInternal();
-
-        /**
-         * \brief Checks if CacheObject instance is available for use in access
-         * mode
-         * \param access denotes the mode (cache::EXCLUSIVE/ cache::SHARED) that application
-         * wants
-         * \return Boolean indicating if the instance is available
-         */
-        bool IsAvailable(cache::CacheAccess access) const;
 
         /**
          * \brief Accessor for id_ member
@@ -142,20 +104,6 @@ class CacheObject {
          */
         void set_object_region(const GeometricRegion &object_region);
 
-        bool pending_flag() {
-          return pending_flag_;
-        }
-        void set_pending_flag() {
-          pending_flag_ = true;
-        }
-        void unset_pending_flag() {
-          pending_flag_ = false;
-        }
-
-        virtual size_t memory_size() {
-          return sizeof(*this);
-        }
-
         uint64_t unique_id() {
           return unique_id_;
         }
@@ -171,21 +119,42 @@ class CacheObject {
           name_ = name;
         }
 
+        // methods for access control
+        bool pending_flag() {
+          return pending_flag_;
+        }
+        void set_pending_flag() {
+          pending_flag_ = true;
+        }
+        void unset_pending_flag() {
+          pending_flag_ = false;
+        }
+
         /**
          * \brief Dumps out data to a file, to be implemented by child classes
          * \param file_name is file to dump data to
          */
         virtual void DumpData(std::string file_name) {}
 
+        /**
+         * TODO: Make this protected
+         * \brief Unsets mapping between data and CacheObject instance
+         * \param d denotes the data to unmap
+         */
+        virtual void UnsetData(Data *d) = 0;
+
+        /**
+         * TODO: Make this protected
+         * \brief Unsets dirty data mapping between data and CacheObject
+         * instance
+         * \param d denotes the data to unmap
+         */
+        virtual void UnsetDirtyData(Data *d) = 0;
+
     private:
         std::string name_;
         uint64_t unique_id_;
         bool pending_flag_;
-        /**
-         * \brief Setter for id_ member
-         * \param id, of type cache::co_id_t
-         */
-        void set_id(cache::co_id_t id);
 
         // prototype information
         static cache::co_id_t ids_allocated_;
@@ -195,10 +164,28 @@ class CacheObject {
         cache::CacheAccess access_;
         int users_;
 
+        void set_id(cache::co_id_t id);
+
+        void AcquireAccess(cache::CacheAccess access);
+        void ReleaseAccessInternal();
+        bool IsAvailable(cache::CacheAccess access) const;
+
     protected:
         // read/ write/ object region information
         GeometricRegion object_region_;
         GeometricRegion write_region_;
+
+        /**
+         * \brief Flushes data from cache, removes corresponding dirty data
+         * mapping
+         * \param d is data to flush to
+         */
+        virtual void PullData(Data *d) = 0;
+
+        // method for cache manager for profiling
+        virtual size_t memory_size() {
+          return sizeof(*this);
+        }
 };  // class CacheObject
 
 typedef std::vector<CacheObject *> CacheObjects;

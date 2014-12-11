@@ -4,20 +4,13 @@
 //#####################################################################
 // Namespace MPI_UTILITIES
 //#####################################################################
-#ifdef USE_MPI
-#include <PhysBAM_Tools/Arrays/ARRAY_VIEW.h>
-#ifndef COMPILE_WITHOUT_RLE_SUPPORT
-#include <PhysBAM_Tools/Grids_RLE/RLE_RUN_2D.h>
-#include <PhysBAM_Tools/Grids_RLE/RLE_RUN_3D.h>
-#endif
-#include <PhysBAM_Tools/Matrices/SYMMETRIC_MATRIX_2X2.h>
-#include <PhysBAM_Tools/Matrices/SYMMETRIC_MATRIX_3X3.h>
-#include <PhysBAM_Tools/Parallel_Computation/MPI_UTILITIES.h>
-#include <PhysBAM_Tools/Parallel_Computation/SPARSE_MATRIX_PARTITION.h>
-#include <PhysBAM_Tools/Parsing/PARSE_ARGS.h>
-#include <time.h>
-namespace PhysBAM{
-namespace MPI_UTILITIES{
+
+#include <cstdio>
+#include <ctime>
+
+namespace PhysBAM {
+
+namespace MPI_UTILITIES {
 
 // For nimbus usage.
 FILE* log_file = NULL;
@@ -47,6 +40,25 @@ void PrintPackTimeStamp(const char* comment) {
   double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
   fprintf(pack_log_file, "%f ; %s\n", time_sum, comment);
 }
+
+} // namespace MPI_UTILITIES
+
+} // namespace PhysBAM
+
+#ifdef USE_MPI
+#include <PhysBAM_Tools/Arrays/ARRAY_VIEW.h>
+#ifndef COMPILE_WITHOUT_RLE_SUPPORT
+#include <PhysBAM_Tools/Grids_RLE/RLE_RUN_2D.h>
+#include <PhysBAM_Tools/Grids_RLE/RLE_RUN_3D.h>
+#endif
+#include <PhysBAM_Tools/Matrices/SYMMETRIC_MATRIX_2X2.h>
+#include <PhysBAM_Tools/Matrices/SYMMETRIC_MATRIX_3X3.h>
+#include <PhysBAM_Tools/Parallel_Computation/MPI_UTILITIES.h>
+#include <PhysBAM_Tools/Parallel_Computation/SPARSE_MATRIX_PARTITION.h>
+#include <PhysBAM_Tools/Parsing/PARSE_ARGS.h>
+namespace PhysBAM{
+namespace MPI_UTILITIES{
+
 //#####################################################################
 // Function RLE_Run_Datatype
 //#####################################################################
