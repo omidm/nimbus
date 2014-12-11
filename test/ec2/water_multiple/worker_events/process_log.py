@@ -6,6 +6,7 @@ import os
 import os.path
 import re
 import numpy
+import time
 
 expr = re.compile("[^0-9\.\-]+")
 def get_key(line):
@@ -67,7 +68,7 @@ for i in range(1, args.worker_num + 1):
   print 'Opening file ' + be_log_file
   be_log = open(be_log_file, 'r')
 
-
+  start_time = time.time()
   print 'Reading in files ...'
   fe_lines = fe_log.readlines()
   for i in range(1, 1000):
@@ -78,8 +79,15 @@ for i in range(1, args.worker_num + 1):
 
   lines = numpy.concatenate((fe_lines, be_lines), axis=0)
 
+  end_time = time.time()
+  print start_time - end_time
+
+  start_time = time.time()
   print 'Sorting lines ...'
   sorted_lines = sorted(lines, key=get_key)
+  end_time = time.time()
+  print start_time - end_time
+
 
   total_lines = len(sorted_lines)
   print "Parsing %d lines ..." % total_lines
@@ -91,16 +99,36 @@ for i in range(1, args.worker_num + 1):
   idle_time    = 0
   blocked_time = 0
 
-  blocked_jobs = []
-  ready_jobs   = []
-  running_jobs = []
+  blocked_jobs = 0
+  ready_jobs   = 0
+  running_jobs = 0
 
   init_time_stamp = float(re.findall('(\d+\.\d+) .*', sorted_lines[0])[0])
   last_time_stamp = init_time_stamp
 
+  start_time = time.time()
   num = 0;
   for line in sorted_lines:
       num += 1
+      if num == total_lines/4:
+          print "Parsed 25% ..."
+          end_time = time.time()
+          print start_time - end_time
+          start_time = end_time
+      if num == total_lines/2:
+          print "Parsed 50% ..."
+          end_time = time.time()
+          print start_time - end_time
+          start_time = end_time
+      if num == 3*total_lines/4:
+          print "Parsed 75% ..."
+          end_time = time.time()
+          print start_time - end_time
+          start_time = end_time
+
+
+      if "JOB_DONE" in line:
+        continue
 
       parsed = []
       if " dispatch_job(job_done) " in line:
@@ -116,45 +144,43 @@ for i in range(1, args.worker_num + 1):
         continue
 
 
-      elapsed = time_stamp - last_time_stamp
-      running_time += (elapsed * len(running_jobs))
-      if "Copy" in line:
-        copy_time += (elapsed * len(running_jobs))
-      else:
-        compute_time += (elapsed * len(running_jobs))
-        
-      if len(running_jobs) < CN:
-        blocked_time += (elapsed * min(len(blocked_jobs), CN - len(running_jobs)))
 
-      if (len(running_jobs) + len(blocked_jobs)) < CN:
-        idle_time += (elapsed * (CN - len(running_jobs) - len(blocked_jobs)))
+      elapsed = time_stamp - last_time_stamp
+      running_time += (elapsed * running_jobs)
+      if "Copy" in line:
+        copy_time += (elapsed * running_jobs)
+      else:
+        compute_time += (elapsed * running_jobs)
+        
+      if running_jobs < CN:
+        blocked_time += (elapsed * min(blocked_jobs, CN - running_jobs))
+
+      if (running_jobs + blocked_jobs) < CN:
+        idle_time += (elapsed * (CN - running_jobs - blocked_jobs))
 
 
       if " recv_job " in line:
-        blocked_jobs.append(job_num)
+        blocked_jobs += 1
 
       elif " dispatch_job(" in line:
-        blocked_jobs.remove(job_num)
-        ready_jobs.append(job_num)
+        blocked_jobs -= 1
+        ready_jobs += 1
 
       elif " r " in line:
-        ready_jobs.remove(job_num)
-        running_jobs.append(job_num)
+        ready_jobs -= 1
+        running_jobs += 1
 
       elif " f " in line:
-        running_jobs.remove(job_num)
+        running_jobs -= 1
 
 
       last_time_stamp = time_stamp
 
-      if num == total_lines/4:
-          print "Parsed 25% ..."
-      if num == total_lines/2:
-          print "Parsed 50% ..."
-      if num == 3*total_lines/4:
-          print "Parsed 75% ..."
 
   print "Parsed 100% ..."
+  print blocked_jobs
+  print ready_jobs
+  print running_jobs
 
   
   print "Opening %s ..." % data_file
