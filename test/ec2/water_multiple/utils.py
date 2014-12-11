@@ -260,15 +260,15 @@ def collect_output_data(scheduler_ip, worker_ips):
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
         'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        config.REL_WORKER_PATH + 'event_fe.txt',
-        config.OUTPUT_PATH + str(num) + '_event_fe.txt'])
+        config.REL_WORKER_PATH + '*_event_fe.txt',
+        config.OUTPUT_PATH])
 
     subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
         'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        config.REL_WORKER_PATH + 'event_be.txt',
-        config.OUTPUT_PATH + str(num) + '_event_be.txt'])
+        config.REL_WORKER_PATH + '*_event_be.txt',
+        config.OUTPUT_PATH])
 
     subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
@@ -327,9 +327,12 @@ def clean_output_data(scheduler_ip, worker_ips):
     worker_command  =  ''
     worker_command +=  'rm -rf ' + worker_path + '*_' + config.LOG_FILE_NAME + ';'
     worker_command +=  'rm -rf ' + worker_path + config.WORKER_LOG_FILE_NAME + '*;'
-    worker_command +=  'rm -rf ' + worker_path + 'event_*;'
+    worker_command +=  'rm -rf ' + worker_path + '*.txt;'
     worker_command +=  'rm -rf ' + worker_path + '*log*;'
     worker_command +=  'rm -rf ' + worker_path + 'core;'
+    worker_command +=  'rm -rf ' + worker_path + 'split_output/;'
+    worker_command +=  'rm -rf ' + worker_path + 'output/;'
+    worker_command +=  'rm -rf ' + worker_path + '_db*;'
   
     subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
