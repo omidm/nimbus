@@ -71,6 +71,8 @@ namespace nimbus {
 
     void Shrink(const GeometricRegion *region);
 
+    void Grow(const RegionMapEntry *rme);
+
     bool GetRegionToGiveUp(const RegionMapEntry *rme,
                            GeometricRegion *region);
 

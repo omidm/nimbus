@@ -72,6 +72,8 @@ namespace nimbus {
 
     void RemoveRegion(const GeometricRegion *region);
 
+    void Grow(const UnstructuredRegion *u_region);
+
     int_dimension_t CommonSurface(const GeometricRegion *region);
 
     std::string Print();

@@ -96,6 +96,8 @@ namespace nimbus {
 
     bool WorkersAreNeighbor(worker_id_t first, worker_id_t second);
 
+    bool NotifyDownWorker(worker_id_t worker_id);
+
     std::string Print();
 
     RegionMap& operator= (const RegionMap& right);

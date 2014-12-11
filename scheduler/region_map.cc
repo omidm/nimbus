@@ -247,6 +247,43 @@ void RegionMap::Initialize(const std::vector<worker_id_t>& worker_ids,
 }
 
 
+bool RegionMap::NotifyDownWorker(worker_id_t worker_id) {
+  TableIter iter_down = table_.find(worker_id);
+  if (iter_down == table_.end()) {
+    dbg(DBG_ERROR, "ERROR: RegionMap: worker %lu is not defined in region map.\n", worker_id);
+    exit(-1);
+    return false;
+  }
+
+  bool found_region_to_capture = false;
+  TableIter iter = table_.begin();
+  for (; iter != table_.end(); ++iter) {
+    if (iter == iter_down) {
+      continue;
+    }
+    if (iter->second->AdjacentOrIntersects(iter_down->second)) {
+      found_region_to_capture = true;
+      break;
+    }
+  }
+
+  if (!found_region_to_capture) {
+    dbg(DBG_ERROR, "ERROR: RegionMap: could not find worker to capture worker %lu region.\n", worker_id); // NOLINT
+    exit(-1);
+    return false;
+  }
+
+  dbg(DBG_WARN, "WARNING: RegionMap: worker %lu capturing worker %lu region.\n", iter->first, worker_id); // NOLINT
+
+  iter->second->Grow(iter_down->second);
+  delete iter_down->second;
+  table_.erase(iter_down);
+
+  InvalidateCache();
+  InvalidateRegionCoverage();
+
+  return true;
+}
 
 bool RegionMap::QueryCache(const GeometricRegion *region,
                            worker_id_t *worker_id) {
@@ -433,8 +470,8 @@ void RegionMap::SplitDimensions(size_t worker_num, size_t *num_x, size_t *num_y,
       *num_z = 1;
       break;
     case 4 :
-      *num_x = 2;
-      *num_y = 2;
+      *num_x = 4;
+      *num_y = 1;
       *num_z = 1;
       break;
     case 5 :

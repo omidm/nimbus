@@ -89,6 +89,15 @@ void UnstructuredRegion::RemoveRegion(const GeometricRegion *region) {
   region_list_ = result;
 }
 
+
+void UnstructuredRegion::Grow(const UnstructuredRegion *u_region) {
+  RegionListConstIter iter = u_region->region_list_.begin();
+  for (; iter != u_region->region_list_.end(); ++iter) {
+    AddRegion(&(*iter));
+  }
+}
+
+
 int_dimension_t UnstructuredRegion::CommonSurface(const GeometricRegion *region) {
   int_dimension_t result = 0;
   RegionListIter iter = region_list_.begin();

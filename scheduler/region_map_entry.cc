@@ -68,6 +68,11 @@ void RegionMapEntry::Shrink(const GeometricRegion *region) {
   RemoveObsoleteCoveredRegions(region);
 }
 
+void RegionMapEntry::Grow(const RegionMapEntry *rme) {
+  region_.Grow(&(rme->region_));
+}
+
+
 bool RegionMapEntry::GetRegionToGiveUp(const RegionMapEntry *rme,
                        GeometricRegion *region) {
   if (covered_regions_.size() == 0) {
