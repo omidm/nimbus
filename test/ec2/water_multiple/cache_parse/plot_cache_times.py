@@ -95,20 +95,20 @@ for i in range(int(sys.argv[1]), int(sys.argv[2]) + 1):
             cs_rtc[-1] += float(line.split()[-1])
 
 # average over all threads
-lc_cache_total = map(lambda x : x/8, lc_cache_total)
-lc_block = map(lambda x : x/8, lc_block)
-lc_wfc = map(lambda x : x/8, lc_wfc)
-rc_cache_total = map(lambda x : x/8, rc_cache_total)
-rc_block = map(lambda x : x/8, rc_block)
-rc_wfc = map(lambda x : x/8, rc_wfc)
-cv_cache_total = map(lambda x : x/8, cv_cache_total)
-cv_block = map(lambda x : x/8, cv_block)
-cv_wfc = map(lambda x : x/8, cv_wfc)
-cv_rtc = map(lambda x : x/8, cv_rtc)
-cs_cache_total = map(lambda x : x/8, cs_cache_total)
-cs_block = map(lambda x : x/8, cs_block)
-cs_wfc = map(lambda x : x/8, cs_wfc)
-cs_rtc = map(lambda x : x/8, cs_rtc)
+lc_cache_total = map(lambda x : x/num_threads, lc_cache_total)
+lc_block = map(lambda x : x/num_threads, lc_block)
+lc_wfc = map(lambda x : x/num_threads, lc_wfc)
+rc_cache_total = map(lambda x : x/num_threads, rc_cache_total)
+rc_block = map(lambda x : x/num_threads, rc_block)
+rc_wfc = map(lambda x : x/num_threads, rc_wfc)
+cv_cache_total = map(lambda x : x/num_threads, cv_cache_total)
+cv_block = map(lambda x : x/num_threads, cv_block)
+cv_wfc = map(lambda x : x/num_threads, cv_wfc)
+cv_rtc = map(lambda x : x/num_threads, cv_rtc)
+cs_cache_total = map(lambda x : x/num_threads, cs_cache_total)
+cs_block = map(lambda x : x/num_threads, cs_block)
+cs_wfc = map(lambda x : x/num_threads, cs_wfc)
+cs_rtc = map(lambda x : x/num_threads, cs_rtc)
 
 # aggregated, uncategorized into other category
 lc_other = []
@@ -148,8 +148,10 @@ for i in range(1, num_workers+1):
     groups.append("Worker " + str(i))
 categories = [ 'LC Block', 'LC WriteFromCache', 'LC Other', \
                'RC Block', 'RC WriteFromCache', 'RC Other', \
-               'Comp Var Block', 'Comp Var WriteFromCache', 'Comp Var ReadToCache', 'Comp Var Other', \
-               'Comp Struct Block', 'Comp Struct WriteFromCache', 'Comp Struct ReadToCache', 'Comp Struct Other' ]
+               'Comp Var Block', 'Comp Var WriteFromCache', \
+               'Comp Var ReadToCache', 'Comp Var Other', \
+               'Comp Struct Block', 'Comp Struct WriteFromCache', \
+               'Comp Struct ReadToCache', 'Comp Struct Other' ]
 dataList = [ lc_block, lc_wfc, lc_other, \
              rc_block, rc_wfc, rc_other, \
              cv_block, cv_wfc, cv_rtc, cv_other, \
@@ -161,7 +163,8 @@ timesCopy = copy.deepcopy(times)
 bottoms = {}
 bottoms[categories[0]] = [0] * num_workers
 for i in range(1, num_categories):
-    bottoms[categories[i]] = addTimes(timesCopy[categories[i-1]], bottoms[categories[i-1]])
+    bottoms[categories[i]] = addTimes(timesCopy[categories[i-1]], \
+                                      bottoms[categories[i-1]])
 
 # colors and hashing
 colors = []
@@ -178,25 +181,29 @@ hatch_use  = [ "x", "//", "", \
 # bars
 rects = {}
 for i in range(0, num_categories):
-    rects[i] = ax.bar(ind + 3*width, times[categories[i]], width, \
-                      bottom=bottoms[categories[i]], color=colors_use[i], hatch=hatch_use[i]) 
+    rects[categories[i]] = ax.bar(ind + 3*width, times[categories[i]], width, \
+                                  bottom=bottoms[categories[i]], \
+                                  color=colors_use[i], hatch=hatch_use[i]) 
 
-# label bars
+# label bars with numbers (values) for selected categories
 def autolabel(rects):
     # attach some text labels
     for rect in rects:
         height = rect.get_height()
-        ax.text((rect.get_x()+rect.get_width()*0.5), rect.get_y() + height, '%0.2f'%(height),
-                ha='left', va='bottom', fontsize='10')
-label_list = [1, 4, 7, 8, 11, 12]
+        ax.text((rect.get_x()+rect.get_width()*0.5), \
+                 rect.get_y() + height, '%0.2f'%(height), \
+                 ha='left', va='bottom', fontsize='10')
+label_list = { 'LC WriteFromCache', 'RC WriteFromCache', \
+               'Comp Var WriteFromCache', 'Comp Var ReadToCache', \
+               'Comp Struct WriteFromCache', 'Comp Struct ReadToCache' }
 for i in label_list:
     autolabel(rects[i])
 
 # label and ticks
 ax.set_ylabel('Time (s)')
-ax.set_title('Cache Manager Profiles - Scale 256, 64 Partitions (Uniform), 1 Frame')
+ax.set_title('Cache Times - Scale 256, 64 Partitions (Uniform), 3 Frames')
 ax.set_xticks(ind+3.5*width)
-ax.set_xticklabels( ('Worker 1', 'Worker 2', 'Worker 3', 'Worker 4', 'Worker 5', 'Worker 6', 'Worker 7', 'Worker 8') )
+ax.set_xticklabels( groups )
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.xaxis.set_ticks_position('bottom')
@@ -208,8 +215,12 @@ ax.yaxis.labelpad = 15
 blockBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch="x")
 writeBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch="//")
 readBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch="\\")
-leg = ax.legend( (rects[13][0], rects[9][0], rects[5][0], rects[2][0], blockBars[0], readBars[0], writeBars[0]), \
-                 ('Compute Job - AppStruct', 'Compute Job - AppVar', 'Remote Copy', 'Local Copy', 'Blocked Time', 'Read to Cache', 'Write from Cache'), \
+leg = ax.legend( (rects['Comp Struct Other'][0], rects['Comp Var Other'][0], \
+                  rects['RC Other'][0], rects['LC Other'][0], \
+                  blockBars[0], readBars[0], writeBars[0]), \
+                 ('Compute Job - AppStruct', 'Compute Job - AppVar', \
+                  'Remote Copy', 'Local Copy', 'Blocked Time', \
+                  'Read to Cache', 'Write from Cache'), \
                  labelspacing = 0.0, borderpad =  0.2, loc = 2)
 leg.draggable()
 for label in leg.get_texts():
