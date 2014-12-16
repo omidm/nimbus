@@ -23,7 +23,7 @@ use bootstrap with prefix option as follows:
 --------------------------------------------------
 To update the known libraries to system
 --------------------------------------------------
-sudo ldconfig
+sudo ldconfig 
 
 
 --------------------------------------------------
