@@ -166,6 +166,7 @@ class CacheManager {
         typedef std::map<cache::co_id_t,
                          CacheTable *> Pool;
         Pool *pool_;
+
         FILE* time_log;
         FILE* block_log;
         FILE* alloc_log;

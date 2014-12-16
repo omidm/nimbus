@@ -3,11 +3,19 @@
 from optparse import OptionParser
 import pprint
 
+###############################################################################
+#                               PARSER OPTIONS                                #
+###############################################################################
+
 parser = OptionParser()
 parser.add_option('-i', '--in', dest='input', help='file containing data to parse')
 parser.add_option('-o', '--out', dest='output', help='file to store results')
 
 (options, args) = parser.parse_args()
+
+###############################################################################
+#                                    PARSE                                    #
+###############################################################################
 
 data = open(options.input)
 
@@ -19,12 +27,15 @@ def new_thread_table():
    }
  return table
 
+# dictionary to store all times and state
 in_copy = dict()
 copy_t = dict()
 comp_t = dict()
 
-copy_events = {'LC', 'RCS', 'RCR'}
+# events to mark as beginning of copy jobs
+copy_events = {'LC job', 'RCS job', 'RCR job'}
 
+# parse each line, make state transitions and store times
 active_copy = {}
 for line in data:
  if "region" in line or "size" in line:
@@ -66,6 +77,7 @@ for line in data:
     in_copy[thread] = False
     active_copy[thread] = None
 
+# save parsed times for different states
 with open(options.output, 'w') as out:
  copy = {}
  comp = {}

@@ -92,9 +92,9 @@ void CacheManager::WriteImmediately(CacheVar *cache_var,
         d->UnsetDirtyCacheObject(cache_var);
         write_back.erase(d);
     }
-    std::string size_str = "DSW wfcsize " + cache_var->name();
+    std::string size_str = "WIV wfcsize " + cache_var->name();
     PrintSizeStamp(size_str.c_str(), write_bytes);
-    std::string wfc_str = "GAV wfc " + cache_var->name();
+    std::string wfc_str = "WIV wfc " + cache_var->name();
     PrintTimeStamp("start", wfc_str.c_str());
     cache_var->WriteFromCache(flush_set, cache_var->write_region_);
     PrintTimeStamp("end", wfc_str.c_str());
@@ -140,9 +140,9 @@ void CacheManager::WriteImmediately(CacheStruct *cache_struct,
             write_back_t.erase(d);
         }
     }
-    std::string size_str = "DSW wfcsize " + cache_struct->name();
+    std::string size_str = "WIS wfcsize " + cache_struct->name();
     PrintSizeStamp(size_str.c_str(), write_bytes);
-    std::string wfc_str = "GAV wfc " + cache_struct->name();
+    std::string wfc_str = "WIS wfc " + cache_struct->name();
     PrintTimeStamp("start", wfc_str.c_str());
     cache_struct->WriteFromCache(var_type, flush_sets,
                                  cache_struct->write_region_);
@@ -234,12 +234,12 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
       Data *d = diff[i];
       read_bytes += d->memory_size();
     }
-    PrintSizeStamp("GAV rfcsize", read_bytes);
+    PrintSizeStamp("GAV rtcsize", read_bytes);
 
-    std::string rfc_str = "GAV rfc " + cv->name();
-    PrintTimeStamp("start", rfc_str.c_str());
+    std::string rtc_str = "GAV rtc " + cv->name();
+    PrintTimeStamp("start", rtc_str.c_str());
     cv->ReadToCache(diff, read_region);
-    PrintTimeStamp("end", rfc_str.c_str());
+    PrintTimeStamp("end", rtc_str.c_str());
     PrintTimeStamp("start", "GAV lock");
     pthread_mutex_lock(&cache_lock);
     PrintTimeStamp("end", "GAV lock");
@@ -327,7 +327,7 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
     std::string size_str = "GAS wfcsize " + cs->name();
     PrintSizeStamp(size_str.c_str(), write_bytes);
 
-    std::string wfc_str = "GAV wfc " + cs->name();
+    std::string wfc_str = "GAS wfc " + cs->name();
     PrintTimeStamp("start", wfc_str.c_str());
     cs->WriteFromCache(var_type, flush_sets, write_region_old);
     for (size_t t = 0; t < num_var; ++t) {
@@ -348,12 +348,12 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
         read_bytes += d->memory_size();
       }
     }
-    PrintSizeStamp("GAS rfcsize", read_bytes);
+    PrintSizeStamp("GAS rtcsize", read_bytes);
 
-    std::string rfc_str = "GAV rfc " + cs->name();
-    PrintTimeStamp("start", rfc_str.c_str());
+    std::string rtc_str = "GAS rtc " + cs->name();
+    PrintTimeStamp("start", rtc_str.c_str());
     cs->ReadToCache(var_type, diff_sets, read_region);
-    PrintTimeStamp("end", rfc_str.c_str());
+    PrintTimeStamp("end", rtc_str.c_str());
     PrintTimeStamp("start", "GAS lock");
     pthread_mutex_lock(&cache_lock);
     PrintTimeStamp("end", "GAS lock");
