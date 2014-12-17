@@ -16,7 +16,7 @@ num_workers = (int(sys.argv[2]) - int(sys.argv[1]) + 1)
 num_categories = 14
 # set denom_ave to number of iterations or frames to get average value instead
 # of aggregate
-denom_ave = 1
+denom_ave = 55
 
 ##############################################################################
 #                            GROUP INTO CATGORIES                            #
@@ -134,7 +134,7 @@ width = 4 * 1 / (num_categories + 1.0)
 pylab.rcParams['xtick.major.pad']='20'
 pylab.rcParams['ytick.major.pad']='20'
 font = {'family' : 'sans-serif',
-        'size'   : 20,
+        'size'   : 12,
         'weight' : 'bold'}
 matplotlib.rc('font', **font)
 fig, ax = plt.subplots()
@@ -148,7 +148,7 @@ def addTimes(a, b):
     return times
 groups = []
 for i in range(1, num_workers+1):
-    groups.append("Worker " + str(i))
+    groups.append("W " + str(i))
 categories = [ 'LC Block', 'LC WriteFromCache', 'LC Other', \
                'RC Block', 'RC WriteFromCache', 'RC Other', \
                'Comp Var Block', 'Comp Var WriteFromCache', \
@@ -176,15 +176,18 @@ colors.append('#ffffb3')
 colors.append('#bebada')
 colors.append('#fb8072')
 colors_use = [colors[0]]*3 + [colors[1]]*3 + [colors[2]]*4 + [colors[3]]*4
-hatch_use  = [ "x", "//", "", \
-               "x", "//", "", \
-               "x", "//", "\\", "", \
-               "x", "//", "\\", "" ]
+hatch_block = "x"
+hatch_write = "/"
+hatch_read  = "\\"
+hatch_use  = [ hatch_block, hatch_write, "", \
+               hatch_block, hatch_write, "", \
+               hatch_block, hatch_write, hatch_read, "", \
+               hatch_block, hatch_write, hatch_read, "" ]
 
 # bars
 rects = {}
 for i in range(0, num_categories):
-    rects[categories[i]] = ax.bar(ind + 3*width, times[categories[i]], width, \
+    rects[categories[i]] = ax.bar(ind, times[categories[i]], 1.5*width, \
                                   bottom=bottoms[categories[i]], \
                                   color=colors_use[i], hatch=hatch_use[i]) 
 
@@ -193,45 +196,46 @@ def autolabel(rects):
     # attach some text labels
     for rect in rects:
         height = rect.get_height()
-        ax.text((rect.get_x()+rect.get_width()*0.5), \
-                 rect.get_y() + height, '%0.2f'%(height), \
-                 ha='left', va='bottom', fontsize='10')
-label_list = { 'LC WriteFromCache', 'RC WriteFromCache', \
-               'Comp Var WriteFromCache', 'Comp Var ReadToCache', \
-               'Comp Struct WriteFromCache', 'Comp Struct ReadToCache' }
+        ax.text((rect.get_x() + rect.get_width() * 1.05), \
+                 rect.get_y() + 0.5*height - 0.05, '%0.2f'%(height), \
+                 ha='left', va='bottom', fontsize='8')
+label_list = { 'LC WriteFromCache', 'LC Block', \
+               'RC WriteFromCache', 'RC Block', \
+               'Comp Var WriteFromCache', 'Comp Var ReadToCache', 'Comp Var Block' }
 for i in label_list:
     autolabel(rects[i])
 
 # label and ticks
 ax.set_ylabel('Time (s)')
 ax.set_title('Cache Times - Scale 256, 64 Partitions (Uniform), 3 Frames')
-ax.set_xticks(ind+3.5*width)
+ax.set_xticks(ind + 0.75*width)
 ax.set_xticklabels( groups )
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.xaxis.set_ticks_position('bottom')
 ax.yaxis.set_ticks_position('left')
 ax.yaxis.label.set_weight('bold')
-ax.yaxis.labelpad = 15
+ax.yaxis.labelpad = 6
 
 # legend
-blockBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch="x")
-writeBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch="//")
-readBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch="\\")
+blockBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch=hatch_block)
+writeBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch=hatch_write)
+readBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch=hatch_read)
 leg = ax.legend( (rects['Comp Struct Other'][0], rects['Comp Var Other'][0], \
                   rects['RC Other'][0], rects['LC Other'][0], \
                   blockBars[0], readBars[0], writeBars[0]), \
                  ('Compute Job - AppStruct', 'Compute Job - AppVar', \
                   'Remote Copy', 'Local Copy', 'Blocked Time', \
                   'Read to Cache', 'Write from Cache'), \
-                 labelspacing = 0.0, borderpad =  0.2, loc = 2)
+                 labelspacing = 0.0, borderpad =  0.2, loc = 9,
+                 ncol = 2)
 leg.draggable()
 for label in leg.get_texts():
-    label.set_fontsize(10)
+    label.set_fontsize(8)
 
 # scale
 x1,x2,y1,y2 = plt.axis()
-plt.axis((x1,x2,0,15))
+plt.axis((x1-0.5,x2+0.5,0,5.5))
 
 # save figure
 plt.savefig("cache_times.pdf")

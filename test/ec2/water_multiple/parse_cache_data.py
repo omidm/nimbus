@@ -2,24 +2,12 @@
 
 from optparse import OptionParser
 import pprint
-import sys
-
-###############################################################################
-#                               PARSER OPTIONS                                #
-###############################################################################
 
 parser = OptionParser()
 parser.add_option('-i', '--in', dest='input', help='file containing data to parse')
 parser.add_option('-o', '--out', dest='output', help='file to store results')
 
 (options, args) = parser.parse_args()
-
-###############################################################################
-#                                    PARSE                                    #
-###############################################################################
-
-with open(options.input) as data:
- num_lines = len(data.readlines())
 
 data = open(options.input)
 
@@ -31,23 +19,15 @@ def new_thread_table():
    }
  return table
 
-# dictionary to store all times and state
 in_copy = dict()
 copy_t = dict()
 comp_t = dict()
 
-# events to mark as beginning of copy jobs
-copy_events = {'LC job', 'RCS job', 'RCR job'}
+copy_events = {'LC', 'RCS', 'RCR'}
 
-# parse each line, make state transitions and store times
 active_copy = {}
-num_line = 1
-percent_check = 2
-percent_inc = 2
-sys.stdout.write("Parsed file % :   0")
-sys.stdout.flush()
 for line in data:
- if "wfcsize" in line or "rtcsize" in line:
+ if "region" in line or "size" in line:
   continue
  words = line.split(";")
  thread = words[0].strip()
@@ -85,15 +65,7 @@ for line in data:
    if event in copy_events:
     in_copy[thread] = False
     active_copy[thread] = None
- num_line += 1
- if num_line * 100 / num_lines == percent_check:
-  sys.stdout.write("\b\b\b%3i" % percent_check)
-  sys.stdout.flush()
-  percent_check += percent_inc
-sys.stdout.write("\n")
-sys.stdout.flush()
 
-# save parsed times for different states
 with open(options.output, 'w') as out:
  copy = {}
  comp = {}
