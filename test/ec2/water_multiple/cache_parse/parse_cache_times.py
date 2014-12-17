@@ -2,6 +2,7 @@
 
 from optparse import OptionParser
 import pprint
+import sys
 
 ###############################################################################
 #                               PARSER OPTIONS                                #
@@ -16,6 +17,9 @@ parser.add_option('-o', '--out', dest='output', help='file to store results')
 ###############################################################################
 #                                    PARSE                                    #
 ###############################################################################
+
+with open(options.input) as data:
+ num_lines = len(data.readlines())
 
 data = open(options.input)
 
@@ -37,6 +41,11 @@ copy_events = {'LC job', 'RCS job', 'RCR job'}
 
 # parse each line, make state transitions and store times
 active_copy = {}
+num_line = 1
+percent_check = 2
+percent_inc = 2
+sys.stdout.write("Parsed file % :   0")
+sys.stdout.flush()
 for line in data:
  if "region" in line or "size" in line:
   continue
@@ -76,6 +85,13 @@ for line in data:
    if event in copy_events:
     in_copy[thread] = False
     active_copy[thread] = None
+ num_line += 1
+ if num_line * 100 / num_lines == percent_check:
+  sys.stdout.write("\b\b\b%3i" % percent_check)
+  sys.stdout.flush()
+  percent_check += percent_inc
+sys.stdout.write("\n")
+sys.stdout.flush()
 
 # save parsed times for different states
 with open(options.output, 'w') as out:

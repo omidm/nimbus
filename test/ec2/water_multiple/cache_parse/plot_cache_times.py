@@ -14,6 +14,9 @@ import pylab
 num_threads = 8
 num_workers = (int(sys.argv[2]) - int(sys.argv[1]) + 1)
 num_categories = 14
+# set denom_ave to number of iterations or frames to get average value instead
+# of aggregate
+denom_ave = 1
 
 ##############################################################################
 #                            GROUP INTO CATGORIES                            #
@@ -95,20 +98,20 @@ for i in range(int(sys.argv[1]), int(sys.argv[2]) + 1):
             cs_rtc[-1] += float(line.split()[-1])
 
 # average over all threads
-lc_cache_total = map(lambda x : x/num_threads, lc_cache_total)
-lc_block = map(lambda x : x/num_threads, lc_block)
-lc_wfc = map(lambda x : x/num_threads, lc_wfc)
-rc_cache_total = map(lambda x : x/num_threads, rc_cache_total)
-rc_block = map(lambda x : x/num_threads, rc_block)
-rc_wfc = map(lambda x : x/num_threads, rc_wfc)
-cv_cache_total = map(lambda x : x/num_threads, cv_cache_total)
-cv_block = map(lambda x : x/num_threads, cv_block)
-cv_wfc = map(lambda x : x/num_threads, cv_wfc)
-cv_rtc = map(lambda x : x/num_threads, cv_rtc)
-cs_cache_total = map(lambda x : x/num_threads, cs_cache_total)
-cs_block = map(lambda x : x/num_threads, cs_block)
-cs_wfc = map(lambda x : x/num_threads, cs_wfc)
-cs_rtc = map(lambda x : x/num_threads, cs_rtc)
+lc_cache_total = map(lambda x : x/(num_threads*denom_ave), lc_cache_total)
+lc_block = map(lambda x : x/(num_threads*denom_ave), lc_block)
+lc_wfc = map(lambda x : x/(num_threads*denom_ave), lc_wfc)
+rc_cache_total = map(lambda x : x/(num_threads*denom_ave), rc_cache_total)
+rc_block = map(lambda x : x/(num_threads*denom_ave), rc_block)
+rc_wfc = map(lambda x : x/(num_threads*denom_ave), rc_wfc)
+cv_cache_total = map(lambda x : x/(num_threads*denom_ave), cv_cache_total)
+cv_block = map(lambda x : x/(num_threads*denom_ave), cv_block)
+cv_wfc = map(lambda x : x/(num_threads*denom_ave), cv_wfc)
+cv_rtc = map(lambda x : x/(num_threads*denom_ave), cv_rtc)
+cs_cache_total = map(lambda x : x/(num_threads*denom_ave), cs_cache_total)
+cs_block = map(lambda x : x/(num_threads*denom_ave), cs_block)
+cs_wfc = map(lambda x : x/(num_threads*denom_ave), cs_wfc)
+cs_rtc = map(lambda x : x/(num_threads*denom_ave), cs_rtc)
 
 # aggregated, uncategorized into other category
 lc_other = []
