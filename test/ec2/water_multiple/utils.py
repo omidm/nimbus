@@ -281,22 +281,22 @@ def collect_output_data(scheduler_ip, worker_ips):
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
         'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        config.REL_WORKER_PATH + 'cache_time.txt',
-        config.OUTPUT_PATH + str(num) + '_cache_time.txt'])
+        config.REL_WORKER_PATH + '*_cache_time.txt',
+        config.OUTPUT_PATH])
 
     subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
         'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        config.REL_WORKER_PATH + 'data_objects.txt',
-        config.OUTPUT_PATH + str(num) + '_data_objects.txt'])
+        config.REL_WORKER_PATH + '*_cache_objects.txt',
+        config.OUTPUT_PATH])
 
     subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
         'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        config.REL_WORKER_PATH + 'cache_behavior.txt',
-        config.OUTPUT_PATH + str(num) + '_cache_behavior.txt'])
+        config.REL_WORKER_PATH + '*_cache_behavior.txt',
+        config.OUTPUT_PATH])
 
     subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
