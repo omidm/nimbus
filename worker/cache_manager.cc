@@ -69,9 +69,6 @@ CacheManager::CacheManager() {
     pool_ = new Pool();
     pthread_mutex_init(&cache_lock, NULL);
     pthread_cond_init(&cache_cond, NULL);
-    alloc_log = fopen("cache_objects.txt", "w");
-    block_log = fopen("cache_behavior.txt", "w");
-    time_log = fopen("cache_time.txt", "w");
 }
 
 void CacheManager::WriteImmediately(CacheVar *cache_var,
@@ -507,5 +504,12 @@ void CacheManager::PrintSizeStamp(const char *message, size_t num_bytes) {
   pid_t tid = syscall(SYS_gettid);
   fprintf(time_log, "%d ; %s ; %zu ; %f\n", tid, message, num_bytes, time_sum);
 }
+
+void CacheManager::SetLogNames(std::string wid_str) {
+    alloc_log = fopen((wid_str + "_cache_objects.txt").c_str(), "w");
+    block_log = fopen((wid_str + "_cache_behavior.txt").c_str(), "w");
+    time_log = fopen((wid_str + "_cache_time.txt").c_str(), "w");
+}
+
 
 }  // namespace nimbus

@@ -191,6 +191,8 @@ bool Application::SpawnTemplate(const std::string& job_graph_name,
                                parameters,
                                ID<job_id_t>(parent_id));
   client_->SendCommand(&command);
+
+  return true;
 }
 
 
@@ -352,3 +354,9 @@ CacheManager* Application::cache_manager() const {
 StaticConfigManager* Application::static_config_manager() const {
   return static_config_manager_;
 }
+
+
+void Application::SetCacheManagerLogNames(std::string wid_str) {
+  cache_manager_->SetLogNames(wid_str);
+}
+
