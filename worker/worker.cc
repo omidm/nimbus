@@ -313,9 +313,10 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
 
   std::string wstr = int2string(id_);
   // TODO(quhang) thread-safety(log).
+  worker_manager_->SetEventLog(wstr);
+  application_->SetCacheManagerLogNames(wstr);
   event_log = fopen((wstr + "_event_fe.txt").c_str(), "w");
   alloc_log = fopen((wstr + "_data_objects.txt").c_str(), "w");
-  worker_manager_->SetEventLog(wstr);
   version_log_.set_file_name(wstr + "_version_log.txt");
   data_hash_log_.set_file_name(wstr + "_data_hash_log.txt");
   data_exchanger_->WriteTimeDriftToLog(time - cm->time());

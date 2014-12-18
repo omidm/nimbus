@@ -181,6 +181,8 @@ class Application {
 
   void WriteToLog(std::string str);
 
+  void SetCacheManagerLogNames(std::string wid_str);
+
  private:
   Log log_;
   app_id_t id_;

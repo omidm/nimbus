@@ -48,6 +48,7 @@
 #include <sstream>  // NOLINT
 #include <map>
 #include <vector>
+#include <string>
 
 #include "data/cache/cache_defs.h"
 #include "data/cache/cache_struct.h"
@@ -155,6 +156,8 @@ class CacheManager {
         void PrintTimeStamp(const char *status, const char * message);
 
         void PrintSizeStamp(const char *message, size_t num_bytes);
+
+        void SetLogNames(std::string wid_str);
 
     private:
         static bool print_stat_;
