@@ -210,6 +210,7 @@ ax.set_ylabel('Time (s)')
 ax.set_title('Cache Times - Scale 256, 64 Partitions (Uniform), 3 Frames')
 ax.set_xticks(ind + 0.75*width)
 ax.set_xticklabels( groups )
+ax.set_yticks(np.arange(0, 5.1, 0.5))
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.xaxis.set_ticks_position('bottom')
@@ -236,6 +237,9 @@ for label in leg.get_texts():
 # scale
 x1,x2,y1,y2 = plt.axis()
 plt.axis((x1-0.5,x2+0.5,0,5.5))
+
+# grid
+plt.grid()
 
 # save figure
 plt.savefig("cache_times.pdf")
