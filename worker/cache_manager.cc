@@ -76,21 +76,27 @@ void CacheManager::WriteImmediately(CacheVar *cache_var,
     PrintTimeStamp("start", "WIV stage");
     DataArray flush_set;
     DataSet &write_back = cache_var->write_back_;
-    size_t write_bytes = 0;
+    // size_t write_bytes = 0;
+    PrintTimeStamp("start", "WIV mapping");
+    PrintTimeStamp("start", "WIV sets");
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set[i];
         if (write_back.find(d) != write_back.end()) {
             flush_set.push_back(d);
-            write_bytes += d->memory_size();
+            // write_bytes += d->memory_size();
         }
     }
+    PrintTimeStamp("end", "WIV sets");
+    PrintTimeStamp("start", "WIV edit");
     for (size_t i = 0; i < flush_set.size(); ++i) {
         Data *d = flush_set[i];
         d->UnsetDirtyCacheObject(cache_var);
         write_back.erase(d);
     }
-    std::string size_str = "WIV wfcsize " + cache_var->name();
-    PrintSizeStamp(size_str.c_str(), write_bytes);
+    PrintTimeStamp("end", "WIV edit");
+    PrintTimeStamp("end", "WIV mapping");
+    // std::string size_str = "WIV wfcsize " + cache_var->name();
+    // PrintSizeStamp(size_str.c_str(), write_bytes);
     std::string wfc_str = "WIV wfc " + cache_var->name();
     PrintTimeStamp("start", wfc_str.c_str());
     cache_var->WriteFromCache(flush_set, cache_var->write_region_);
@@ -113,7 +119,9 @@ void CacheManager::WriteImmediately(CacheStruct *cache_struct,
     }
     std::vector<DataArray> flush_sets(num_vars);
     std::vector<DataSet> &write_backs = cache_struct->write_backs_;
-    size_t write_bytes = 0;
+    // size_t write_bytes = 0;
+    PrintTimeStamp("start", "WIS mapping");
+    PrintTimeStamp("start", "WIS sets");
     for (size_t t = 0; t < num_vars; ++t) {
         DataArray &flush_t = flush_sets[t];
         const DataArray &write_set_t = write_sets[t];
@@ -123,10 +131,12 @@ void CacheManager::WriteImmediately(CacheStruct *cache_struct,
             Data *d = write_set_t[i];
             if (write_back_t.find(d) != write_back_t.end()) {
                 flush_t.push_back(d);
-                write_bytes += d->memory_size();
+                // write_bytes += d->memory_size();
             }
         }
     }
+    PrintTimeStamp("end", "WIS sets");
+    PrintTimeStamp("start", "WIS edit");
     for (size_t t = 0; t < num_vars; ++t) {
         const DataArray &flush_t = flush_sets[t];
         cache::type_id_t type = var_type[t];
@@ -137,8 +147,10 @@ void CacheManager::WriteImmediately(CacheStruct *cache_struct,
             write_back_t.erase(d);
         }
     }
-    std::string size_str = "WIS wfcsize " + cache_struct->name();
-    PrintSizeStamp(size_str.c_str(), write_bytes);
+    PrintTimeStamp("end", "WIS edit");
+    PrintTimeStamp("end", "WIS mapping");
+    // std::string size_str = "WIS wfcsize " + cache_struct->name();
+    // PrintSizeStamp(size_str.c_str(), write_bytes);
     std::string wfc_str = "WIS wfc " + cache_struct->name();
     PrintTimeStamp("start", wfc_str.c_str());
     cache_struct->WriteFromCache(var_type, flush_sets,
@@ -197,8 +209,10 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     PrintTimeStamp("end", "GAV block");
     // Move here.
     cv->AcquireAccess(access);
+    PrintTimeStamp("start", "GAV mapping");
     cv->SetUpReadWrite(read_set, write_set,
                        &flush, &diff, &sync, &sync_co);
+    PrintTimeStamp("end", "GAV mapping");
     pthread_mutex_unlock(&cache_lock);
     if (aux != NULL) {
       aux(cv, aux_data);
@@ -206,17 +220,18 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
 
     GeometricRegion write_region_old = cv->write_region_;
     cv->write_region_ = write_region;
-    size_t write_bytes = 0;
-    for (size_t i = 0; i < flush.size(); ++i) {
-      Data *d = flush[i];
-      write_bytes += d->memory_size();
-    }
-    for (size_t i = 0; i < sync.size(); ++i) {
-      Data *d = sync[i];
-      write_bytes += d->memory_size();
-    }
-    std::string size_str = "GAV wfcsize " + cv->name();
-    PrintSizeStamp(size_str.c_str(), write_bytes);
+    // std::string size_str;
+    // size_t write_bytes = 0;
+    // for (size_t i = 0; i < flush.size(); ++i) {
+    //   Data *d = flush[i];
+    //   write_bytes += d->memory_size();
+    // }
+    // for (size_t i = 0; i < sync.size(); ++i) {
+    //   Data *d = sync[i];
+    //   write_bytes += d->memory_size();
+    // }
+    // std::string size_str = "GAV wfcsize " + cv->name();
+    // PrintSizeStamp(size_str.c_str(), write_bytes);
 
     std::string wfc_str = "GAV wfc " + cv->name();
     PrintTimeStamp("start", wfc_str.c_str());
@@ -226,12 +241,14 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
         sync_co[i]->PullData(sync[i]);
     }
     PrintTimeStamp("end", wfc_str.c_str());
-    size_t read_bytes = 0;
-    for (size_t i = 0; i < diff.size(); ++i) {
-      Data *d = diff[i];
-      read_bytes += d->memory_size();
-    }
-    PrintSizeStamp("GAV rtcsize", read_bytes);
+
+    // size_t read_bytes = 0;
+    // for (size_t i = 0; i < diff.size(); ++i) {
+    //   Data *d = diff[i];
+    //   read_bytes += d->memory_size();
+    // }
+    // size_str = "GAV rtcsize " + cv->name();
+    // PrintSizeStamp(size_str.c_str(), read_bytes);
 
     std::string rtc_str = "GAV rtc " + cv->name();
     PrintTimeStamp("start", rtc_str.c_str());
@@ -299,30 +316,33 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
     }
     PrintTimeStamp("end", "GAS block");
     cs->AcquireAccess(access);
+    PrintTimeStamp("start", "GAS mapping");
     cs->SetUpReadWrite(var_type, read_sets, write_sets,
                        &flush_sets, &diff_sets, &sync_sets, &sync_co_sets);
+    PrintTimeStamp("end", "GAS mapping");
     pthread_mutex_unlock(&cache_lock);
 
     GeometricRegion write_region_old = cs->write_region_;
     cs->write_region_ = write_region;
 
-    size_t write_bytes = 0;
-    for (size_t i = 0; i < num_var; ++i) {
-      DataArray &flush_t = flush_sets[i];
-      for (size_t j = 0; j < flush_t.size(); ++j) {
-        Data *d = flush_t[j];
-        write_bytes += d->memory_size();
-      }
-    }
-    for (size_t i = 0; i < num_var; ++i) {
-      DataArray &sync_t = sync_sets[i];
-      for (size_t j = 0; j < sync_t.size(); ++j) {
-        Data *d = sync_t[j];
-        write_bytes += d->memory_size();
-      }
-    }
-    std::string size_str = "GAS wfcsize " + cs->name();
-    PrintSizeStamp(size_str.c_str(), write_bytes);
+    // std::string size_str = "GAS wfcsize " + cs->name();
+    // size_t write_bytes = 0;
+    // for (size_t i = 0; i < num_var; ++i) {
+    //   DataArray &flush_t = flush_sets[i];
+    //   for (size_t j = 0; j < flush_t.size(); ++j) {
+    //     Data *d = flush_t[j];
+    //     write_bytes += d->memory_size();
+    //   }
+    // }
+    // for (size_t i = 0; i < num_var; ++i) {
+    //   DataArray &sync_t = sync_sets[i];
+    //   for (size_t j = 0; j < sync_t.size(); ++j) {
+    //     Data *d = sync_t[j];
+    //     write_bytes += d->memory_size();
+    //   }
+    // }
+    // size_str = "GAS wfcsize " + cs->name();
+    // PrintSizeStamp(size_str.c_str(), write_bytes);
 
     std::string wfc_str = "GAS wfc " + cs->name();
     PrintTimeStamp("start", wfc_str.c_str());
@@ -337,15 +357,16 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
     }
     PrintTimeStamp("end", wfc_str.c_str());
 
-    size_t read_bytes = 0;
-    for (size_t i = 0; i < num_var; ++i) {
-      DataArray &diff_t = diff_sets[i];
-      for (size_t j = 0; j < diff_t.size(); ++j) {
-        Data *d = diff_t[j];
-        read_bytes += d->memory_size();
-      }
-    }
-    PrintSizeStamp("GAS rtcsize", read_bytes);
+    // size_t read_bytes = 0;
+    // for (size_t i = 0; i < num_var; ++i) {
+    //   DataArray &diff_t = diff_sets[i];
+    //   for (size_t j = 0; j < diff_t.size(); ++j) {
+    //     Data *d = diff_t[j];
+    //     read_bytes += d->memory_size();
+    //   }
+    // }
+    // size_str = "GAS rtcsize " + cs->name();
+    // PrintSizeStamp(size_str.c_str(), read_bytes);
 
     std::string rtc_str = "GAS rtc " + cs->name();
     PrintTimeStamp("start", rtc_str.c_str());
@@ -386,14 +407,14 @@ void CacheManager::SyncData(Data *d) {
         return;
     }
     // assert(co->IsAvailable(cache::EXCLUSIVE));
+    PrintTimeStamp("start", "SD mapping");
     d->set_pending_flag(Data::WRITE);
-    // co->set_pending_flag();
-    // d->ClearDirtyMappings();
+    PrintTimeStamp("end", "SD mapping");
     pthread_mutex_unlock(&cache_lock);
 
-    size_t write_bytes = d->memory_size();
-    std::string size_str = "SD wfcsize " + co->name();
-    PrintSizeStamp(size_str.c_str(), write_bytes);
+    // size_t write_bytes = d->memory_size();
+    // std::string size_str = "SD wfcsize " + co->name();
+    // PrintSizeStamp(size_str.c_str(), write_bytes);
 
     std::string wfc_str = "SD pdata " + co->name();
     PrintTimeStamp("start", wfc_str.c_str());
@@ -402,9 +423,10 @@ void CacheManager::SyncData(Data *d) {
     PrintTimeStamp("start", "SD lock");
     pthread_mutex_lock(&cache_lock);
     PrintTimeStamp("end", "SD lock");
+    PrintTimeStamp("start", "SD mapping");
     d->ClearDirtyMappings();
     d->unset_pending_flag(Data::WRITE);
-    // co->unset_pending_flag();
+    PrintTimeStamp("end", "SD mapping");
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
     PrintTimeStamp("end", "SD stage");
@@ -423,7 +445,9 @@ void CacheManager::InvalidateMappings(Data *d) {
         pthread_cond_wait(&cache_cond, &cache_lock);
     }
     PrintTimeStamp("end", "IM block");
+    PrintTimeStamp("start", "IM mapping");
     d->InvalidateMappings();
+    PrintTimeStamp("end", "IM mapping");
     pthread_mutex_unlock(&cache_lock);
     PrintTimeStamp("end", "IM stage");
 }
