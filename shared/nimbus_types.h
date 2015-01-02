@@ -122,7 +122,8 @@ namespace nimbus {
     JOB_FUTURE = 5,
     JOB_SAVE   = 6,
     JOB_LOAD   = 7,
-    JOB_CMPX   = 8
+    JOB_CMPX   = 8,
+    JOB_SHDW   = 9
   };
 
 
