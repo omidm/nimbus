@@ -478,6 +478,19 @@ void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
         cm->parent_job_id().elem());
     log.StopTimer();
     std::cout << "OMID SPAWN TEMPLATE. " << log.timer() << std::endl;
+  } else if (NIMBUS_NEW_TEMPLATES_ACTIVE) {
+    ComplexJobEntry* complex_job;
+    if (!template_manager_->GetComplexJobEntryForTemplate(complex_job,
+                                                          cm->job_graph_name(),
+                                                          cm->parent_job_id().elem(),
+                                                          cm->inner_job_ids(),
+                                                          cm->outer_job_ids(),
+                                                          cm->parameters())) {
+      assert(false);
+    }
+    if (!job_manager_->AddComplexJobEntry(complex_job)) {
+      assert(false);
+    }
   }
 }
 
@@ -620,6 +633,7 @@ void Scheduler::SetupJobManager() {
 
 void Scheduler::SetupTemplateManager() {
   template_manager_->set_job_manager(job_manager_);
+  template_manager_->set_id_maker(id_maker_);
 }
 
 void Scheduler::SetupLoadBalancer() {

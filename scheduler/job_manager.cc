@@ -178,6 +178,11 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
   return job;
 }
 
+bool JobManager::AddComplexJobEntry(ComplexJobEntry* complex_job) {
+  assert(false);
+  return false;
+}
+
 JobEntry* JobManager::AddExplicitCopyJobEntry() {
   dbg(DBG_ERROR, "ERROR: explicit copy jobs from application are not supported yet!.\n");
   exit(-1);

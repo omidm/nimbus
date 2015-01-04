@@ -55,6 +55,7 @@
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "shared/log.h"
+#include "scheduler/complex_job_entry.h"
 #include "scheduler/job_manager.h"
 
 namespace nimbus {
@@ -75,6 +76,13 @@ class TemplateEntry {
                      const std::vector<Parameter>& parameters,
                      const job_id_t& parent_job_id);
 
+    bool GetComplexJobEntry(ComplexJobEntry*& complex_job,
+                            const job_id_t& job_id,
+                            const job_id_t& parent_job_id,
+                            const std::vector<job_id_t>& inner_job_ids,
+                            const std::vector<job_id_t>& outer_job_ids,
+                            const std::vector<Parameter>& parameters);
+
     bool AddComputeJob(const std::string& job_name,
                        const job_id_t& job_id,
                        const IDSet<logical_data_id_t>& read_set,
@@ -93,17 +101,17 @@ class TemplateEntry {
     typedef boost::unordered_set<boost::shared_ptr<job_id_t> > PtrSet;
     typedef boost::unordered_map<job_id_t, boost::shared_ptr<job_id_t> > PtrMap;
 
-    class ComputeJobEntry {
+    class TemplateComputeJobEntry {
       public:
-        ComputeJobEntry(const std::string& job_name,
-                        boost::shared_ptr<job_id_t> job_id_ptr,
-                        const IDSet<logical_data_id_t>& read_set,
-                        const IDSet<logical_data_id_t>& write_set,
-                        const PtrSet& before_set_ptrs,
-                        const PtrSet& after_set_ptrs,
-                        boost::shared_ptr<job_id_t> future_job_id_ptr,
-                        const bool& sterile,
-                        const GeometricRegion& region)
+        TemplateComputeJobEntry(const std::string& job_name,
+                                boost::shared_ptr<job_id_t> job_id_ptr,
+                                const IDSet<logical_data_id_t>& read_set,
+                                const IDSet<logical_data_id_t>& write_set,
+                                const PtrSet& before_set_ptrs,
+                                const PtrSet& after_set_ptrs,
+                                boost::shared_ptr<job_id_t> future_job_id_ptr,
+                                const bool& sterile,
+                                const GeometricRegion& region)
           : job_name_(job_name),
             job_id_ptr_(job_id_ptr),
             read_set_(read_set),
@@ -114,7 +122,7 @@ class TemplateEntry {
             sterile_(sterile),
             region_(region) {}
 
-        ~ComputeJobEntry() {}
+        ~TemplateComputeJobEntry() {}
 
         std::string job_name_;
         boost::shared_ptr<job_id_t> job_id_ptr_;
@@ -127,7 +135,7 @@ class TemplateEntry {
         GeometricRegion region_;
     };
 
-    typedef std::vector<ComputeJobEntry> EntryList;
+    typedef std::vector<TemplateComputeJobEntry> EntryList;
 
     bool finalized_;
     PtrList job_id_ptrs_;

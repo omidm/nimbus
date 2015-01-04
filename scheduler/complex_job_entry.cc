@@ -43,6 +43,7 @@
   */
 
 #include "scheduler/complex_job_entry.h"
+#include "scheduler/template_entry.h"
 
 using namespace nimbus; // NOLINT
 
@@ -50,13 +51,15 @@ ComplexJobEntry::ComplexJobEntry() {
   job_type_ = JOB_CMPX;
 }
 
-ComplexJobEntry::ComplexJobEntry(JobEntry* parent_job,
+ComplexJobEntry::ComplexJobEntry(const job_id_t& job_id,
+                                 const job_id_t& parent_job_id,
                                  TemplateEntry* template_entry,
                                  const std::vector<job_id_t>& inner_job_ids,
                                  const std::vector<job_id_t>& outer_job_ids,
                                  const std::vector<Parameter>& parameters) {
   job_type_ = JOB_CMPX;
-  parent_job_ = parent_job;
+  job_id_ = job_id;
+  parent_job_id_ = parent_job_id;
   template_entry_ = template_entry;
   inner_job_ids_ = inner_job_ids;
   outer_job_ids_ = outer_job_ids;
@@ -64,10 +67,6 @@ ComplexJobEntry::ComplexJobEntry(JobEntry* parent_job,
 }
 
 ComplexJobEntry::~ComplexJobEntry() {
-}
-
-JobEntry* ComplexJobEntry::parent_job() const {
-  return parent_job_;
 }
 
 TemplateEntry* ComplexJobEntry::template_entry() const {

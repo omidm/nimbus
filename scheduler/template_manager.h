@@ -65,6 +65,7 @@ class TemplateManager {
     ~TemplateManager();
 
     void set_job_manager(JobManager* job_manager);
+    void set_id_maker(IDMaker* id_maker);
 
     bool DetectNewTemplate(const std::string& template_name);
 
@@ -75,6 +76,13 @@ class TemplateManager {
                              const std::vector<job_id_t>& outer_job_ids,
                              const std::vector<Parameter>& parameters,
                              const job_id_t& parent_job_id);
+
+    bool GetComplexJobEntryForTemplate(ComplexJobEntry*& complex_job,
+                                       const std::string& template_name,
+                                       const job_id_t& parent_job_id,
+                                       const std::vector<job_id_t>& inner_job_ids,
+                                       const std::vector<job_id_t>& outer_job_ids,
+                                       const std::vector<Parameter>& parameters);
 
     bool AddComputeJobToTemplate(const std::string& template_name,
                                  const std::string& job_name,
@@ -93,6 +101,7 @@ class TemplateManager {
 
   private:
     Log log_;
+    IDMaker *id_maker_;
     JobManager *job_manager_;
     TemplateMap template_map_;
     boost::mutex mutex_;

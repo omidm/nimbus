@@ -58,6 +58,7 @@
 #include "shared/graph.h"
 #include "shared/id_maker.h"
 #include "scheduler/job_entry.h"
+#include "scheduler/complex_job_entry.h"
 #include "scheduler/after_map.h"
 #include "shared/logical_data_object.h"
 #include "scheduler/version_manager.h"
@@ -87,6 +88,8 @@ class JobManager {
                                  const bool& sterile,
                                  const GeometricRegion& region,
                                  const Parameter& params);
+
+    bool AddComplexJobEntry(ComplexJobEntry* complex_job);
 
     JobEntry* AddExplicitCopyJobEntry();
 

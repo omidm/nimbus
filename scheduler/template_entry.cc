@@ -153,6 +153,38 @@ bool TemplateEntry::Instantiate(JobManager *job_manager,
   return true;
 }
 
+bool TemplateEntry::GetComplexJobEntry(ComplexJobEntry*& complex_job,
+                                       const job_id_t& job_id,
+                                       const job_id_t& parent_job_id,
+                                       const std::vector<job_id_t>& inner_job_ids,
+                                       const std::vector<job_id_t>& outer_job_ids,
+                                       const std::vector<Parameter>& parameters) {
+  if (!finalized_) {
+    dbg(DBG_ERROR, "ERROR: template has NOT been finalized and cannot get instantiated!\n");
+    return false;
+  }
+
+  assert(entry_list_.size() == job_id_ptrs_.size());
+
+  if (inner_job_ids.size() != job_id_ptrs_.size()) {
+    dbg(DBG_ERROR, "ERROR: number of provided ids does not match the required ids!\n");
+    return false;
+  }
+
+  if (parameters.size() != job_id_ptrs_.size()) {
+    dbg(DBG_ERROR, "ERROR: number of provided parameters does not match the required ids!\n");
+    return false;
+  }
+
+  complex_job = new ComplexJobEntry(job_id,
+                                    parent_job_id,
+                                    this,
+                                    inner_job_ids,
+                                    outer_job_ids,
+                                    parameters);
+
+  return true;
+}
 
 bool TemplateEntry::AddComputeJob(const std::string& job_name,
                                   const job_id_t& job_id,
@@ -212,15 +244,15 @@ bool TemplateEntry::AddComputeJob(const std::string& job_name,
     }
   }
 
-  ComputeJobEntry entry(job_name,
-                        job_id_ptr,
-                        read_set,
-                        write_set,
-                        before_set_ptrs,
-                        after_set_ptrs,
-                        future_job_id_ptr_,
-                        sterile,
-                        region);
+  TemplateComputeJobEntry entry(job_name,
+                                job_id_ptr,
+                                read_set,
+                                write_set,
+                                before_set_ptrs,
+                                after_set_ptrs,
+                                future_job_id_ptr_,
+                                sterile,
+                                region);
 
   entry_list_.push_back(entry);
   job_id_ptrs_.push_back(job_id_ptr);

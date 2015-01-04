@@ -61,6 +61,11 @@ void TemplateManager::set_job_manager(JobManager* job_manager) {
   job_manager_ = job_manager;
 }
 
+void TemplateManager::set_id_maker(IDMaker *id_maker) {
+  id_maker_ = id_maker;
+}
+
+
 bool TemplateManager::DetectNewTemplate(const std::string& template_name) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   TemplateMap::iterator iter = template_map_.find(template_name);
@@ -127,6 +132,41 @@ bool TemplateManager::InstantiateTemplate(const std::string& template_name,
 }
 
 
+bool TemplateManager::GetComplexJobEntryForTemplate(ComplexJobEntry*& complex_job,
+                                                    const std::string& template_name,
+                                                    const job_id_t& parent_job_id,
+                                                    const std::vector<job_id_t>& inner_job_ids,
+                                                    const std::vector<job_id_t>& outer_job_ids,
+                                                    const std::vector<Parameter>& parameters) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
+  TemplateMap::iterator iter = template_map_.find(template_name);
+  if (iter != template_map_.end()) {
+    if (iter->second->finalized()) {
+      std::vector<job_id_t> j;
+      id_maker_->GetNewJobID(&j, 1);
+
+      return iter->second->GetComplexJobEntry(complex_job,
+                                              j[0],
+                                              parent_job_id,
+                                              inner_job_ids,
+                                              outer_job_ids,
+                                              parameters);
+    } else {
+      dbg(DBG_ERROR, "ERROR: template has NOT been finalized to get complex job!\n");
+      return false;
+    }
+  } else {
+    dbg(DBG_ERROR, "ERROR: template has NOT been detected to get complex job!\n");
+    return false;
+  }
+
+  return true;
+}
+
+
+
+
+
 bool TemplateManager::AddComputeJobToTemplate(const std::string& template_name,
                                               const std::string& job_name,
                                               const job_id_t& job_id,
@@ -174,7 +214,5 @@ bool TemplateManager::AddExplicitCopyJobToTemplate() {
   exit(-1);
   return false;
 }
-
-
 
 

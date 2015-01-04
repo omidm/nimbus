@@ -57,7 +57,6 @@
 #include "shared/parameter.h"
 #include "shared/geometric_region.h"
 #include "scheduler/job_entry.h"
-#include "scheduler/template_entry.h"
 #include "scheduler/version_map.h"
 #include "scheduler/data_manager.h"
 #include "scheduler/meta_before_set.h"
@@ -65,11 +64,14 @@
 
 namespace nimbus {
 
+class TemplateEntry;
+
 class ComplexJobEntry : public JobEntry {
   public:
     ComplexJobEntry();
 
-    ComplexJobEntry(JobEntry* parent_job,
+    ComplexJobEntry(const job_id_t& job_id,
+                    const job_id_t& parent_job_id,
                     TemplateEntry* template_entry,
                     const std::vector<job_id_t>& inner_job_ids,
                     const std::vector<job_id_t>& outer_job_ids,
@@ -77,7 +79,6 @@ class ComplexJobEntry : public JobEntry {
 
     virtual ~ComplexJobEntry();
 
-    JobEntry* parent_job() const;
     TemplateEntry* template_entry() const;
     std::vector<job_id_t> inner_job_ids() const;
     std::vector<job_id_t> outer_job_ids() const;
@@ -92,7 +93,6 @@ class ComplexJobEntry : public JobEntry {
     void MarkJobDone(job_id_t job_id);
 
   private:
-    JobEntry* parent_job_;
     TemplateEntry* template_entry_;
     std::vector<job_id_t> inner_job_ids_;
     std::vector<job_id_t> outer_job_ids_;
