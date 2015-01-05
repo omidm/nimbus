@@ -48,6 +48,7 @@
 #include <fstream> // NOLINT
 #include <sstream>
 #include <string>
+#include <list>
 #include <vector>
 #include <utility>
 #include <algorithm>
@@ -96,6 +97,8 @@ class TemplateEntry {
 
     bool AddExplicitCopyJob();
 
+    size_t GetParentJobIndices(std::list<size_t>* list);
+
   private:
     typedef std::vector<boost::shared_ptr<job_id_t> > PtrList;
     typedef boost::unordered_set<boost::shared_ptr<job_id_t> > PtrSet;
@@ -141,6 +144,7 @@ class TemplateEntry {
     PtrList job_id_ptrs_;
     PtrMap job_id_ptrs_map_;
     EntryList entry_list_;
+    std::list<size_t> parent_job_indices_;
     // TODO(omidm): currently we do not support future job id in templates!
     boost::shared_ptr<job_id_t> future_job_id_ptr_;
 };

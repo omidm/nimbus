@@ -96,6 +96,11 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
   return true;
 }
 
+bool VersionManager::AddComplexJobEntry(ComplexJobEntry *complex_job) {
+  assert(false);
+  return false;
+}
+
 bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
   assert(job->IsReadyForCompleteVersioning());
 

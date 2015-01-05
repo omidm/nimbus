@@ -294,6 +294,10 @@ void JobEntry::set_vmap_write(boost::shared_ptr<VersionMap> vmap_write) {
   vmap_write_ = vmap_write;
 }
 
+void JobEntry::set_vmap_partial(boost::shared_ptr<VersionMap> vmap_partial) {
+  vmap_partial_ = vmap_partial;
+}
+
 void JobEntry::set_meta_before_set(boost::shared_ptr<MetaBeforeSet> meta_before_set) {
   meta_before_set_ = meta_before_set;
 }

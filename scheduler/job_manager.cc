@@ -166,7 +166,6 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
   }
 
   ReceiveMetaBeforeSetDepthVersioningDependency(job);
-
   PassMetaBeforeSetDepthVersioningDependency(job);
 
   version_manager_.AddJobEntry(job);
@@ -179,8 +178,39 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
 }
 
 bool JobManager::AddComplexJobEntry(ComplexJobEntry* complex_job) {
-  assert(false);
-  return false;
+  job_id_t job_id = complex_job->job_id();
+
+  if (!AddJobEntryToJobGraph(job_id, complex_job)) {
+    dbg(DBG_ERROR, "ERROR: could not add complex job (id: %lu) in job manager.\n", job_id);
+    delete complex_job;
+    return false;
+  }
+
+  if (!AddJobEntryIncomingEdges(complex_job)) {
+    RemoveJobEntryFromJobGraph(job_id);
+    delete complex_job;
+    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
+    return false;
+  }
+
+  ReceiveMetaBeforeSetDepthVersioningDependency(complex_job);
+  PassMetaBeforeSetDepthVersioningDependency(complex_job);
+
+  version_manager_.AddComplexJobEntry(complex_job);
+
+  std::list<job_id_t> list;
+  complex_job->GetParentJobIds(&list);
+  std::list<job_id_t>::iterator iter = list.begin();
+  for (; iter != list.end(); ++iter) {
+    complex_containers_[*iter] = job_id;
+  }
+
+  // TODO(omidm): what does it mean for checkpointing logic?!!
+  if (!complex_job->sterile()) {
+    non_sterile_jobs_[job_id] = complex_job;
+  }
+
+  return true;
 }
 
 JobEntry* JobManager::AddExplicitCopyJobEntry() {
@@ -305,14 +335,33 @@ Edge<JobEntry, job_id_t>* JobManager::AddEdgeToJobGraph(job_id_t from, job_id_t 
   }
 }
 
+bool JobManager::GetComplexJobContainer(const job_id_t& job_id,
+                                        job_id_t* complex_job_id) {
+  boost::unordered_map<job_id_t, job_id_t>::iterator iter;
+  iter = complex_containers_.find(job_id);
+  if (iter == complex_containers_.end()) {
+    return false;
+  }
+
+  *complex_job_id = iter->second;
+  return true;
+}
+
 bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
   JobEntry *j;
   Edge<JobEntry, job_id_t> *edge;
 
+  job_id_t complex_job_id;
   edge = AddEdgeToJobGraph(job->parent_job_id(), job->job_id());
   if (edge != NULL) {
     j = edge->start_vertex()->entry();
     assert(j->versioned());
+  } else if (GetComplexJobContainer(job->parent_job_id(), &complex_job_id)) {
+    edge = AddEdgeToJobGraph(complex_job_id, job->job_id());
+    assert(edge);
+    j = edge->start_vertex()->entry();
+    assert(j->versioned());
+    assert(false);
   } else {
     dbg(DBG_ERROR, "ERROR: could not add edge from parent (id: %lu) for job (id: %lu) in job manager.\n", // NOLINT
         job->parent_job_id(), job->job_id());

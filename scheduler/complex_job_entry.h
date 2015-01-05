@@ -88,8 +88,12 @@ class ComplexJobEntry : public JobEntry {
     const std::vector<Parameter>* parameters_p() const;
 
 
+    size_t GetParentJobIds(std::list<job_id_t>* list);
+
     size_t GetJobForAssignment(JobEntryList* list, size_t max_num);
+
     void MarkJobAssigned(job_id_t job_id);
+
     void MarkJobDone(job_id_t job_id);
 
   private:

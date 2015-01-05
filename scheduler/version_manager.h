@@ -53,6 +53,7 @@
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "scheduler/job_entry.h"
+#include "scheduler/complex_job_entry.h"
 #include "scheduler/version_entry.h"
 #include "shared/logical_data_object.h"
 
@@ -74,6 +75,8 @@ class VersionManager {
     void set_snap_shot_rate(size_t rate);
 
     bool AddJobEntry(JobEntry *job);
+
+    bool AddComplexJobEntry(ComplexJobEntry *complex_job);
 
     size_t GetJobsNeedDataVersion(
         JobEntryList* list, VLD vld);

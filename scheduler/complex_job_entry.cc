@@ -97,6 +97,25 @@ const std::vector<Parameter>* ComplexJobEntry::parameters_p() const {
   return &parameters_;
 }
 
+
+size_t ComplexJobEntry::GetParentJobIds(std::list<job_id_t>* list) {
+  std::list<size_t> indices;
+  if (!template_entry_->GetParentJobIndices(&indices)) {
+    assert(false);
+    return 0;
+  }
+
+  size_t count = 0;
+  list->clear();
+  std::list<size_t>::iterator iter = indices.begin();
+  for (; iter != indices.end(); ++iter) {
+    list->push_back(inner_job_ids_[*iter]);
+    ++count;
+  }
+
+  return count;
+}
+
 size_t ComplexJobEntry::GetJobForAssignment(JobEntryList* list, size_t max_num) {
   // TODO(omidm): Implement
   list->clear();

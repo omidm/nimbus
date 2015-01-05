@@ -496,7 +496,7 @@ void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
 
 void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
   // TODO(omidm): Implement!
-  if (NIMBUS_TEMPLATES_ACTIVE) {
+  if (NIMBUS_TEMPLATES_ACTIVE || NIMBUS_NEW_TEMPLATES_ACTIVE) {
     template_manager_->DetectNewTemplate(cm->job_graph_name());
     template_spawner_map_[cm->parent_job_id().elem()] = cm->job_graph_name();
     std::cout << "OMID START TEMPLATE\n.";
@@ -505,7 +505,7 @@ void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
 
 void Scheduler::ProcessEndTemplateCommand(EndTemplateCommand* cm) {
   // TODO(omidm): Implement!
-  if (NIMBUS_TEMPLATES_ACTIVE) {
+  if (NIMBUS_TEMPLATES_ACTIVE || NIMBUS_NEW_TEMPLATES_ACTIVE) {
     template_manager_->FinalizeNewTemplate(cm->job_graph_name());
     DefinedTemplateCommand command(cm->job_graph_name());
     server_->BroadcastCommand(&command);

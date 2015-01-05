@@ -68,6 +68,16 @@ bool TemplateEntry::Finalize() {
     return false;
   }
 
+  size_t index = 0;
+  parent_job_indices_.clear();
+  EntryList::iterator iter = entry_list_.begin();
+  for (; iter != entry_list_.end(); ++iter) {
+    if (!iter->sterile_) {
+      parent_job_indices_.push_back(index);
+    }
+    ++index;
+  }
+
   finalized_ = true;
   return true;
 }
@@ -151,6 +161,13 @@ bool TemplateEntry::Instantiate(JobManager *job_manager,
   }
 
   return true;
+}
+
+size_t TemplateEntry::GetParentJobIndices(std::list<size_t>* list) {
+  assert(finalized_);
+  list->clear();
+  *list = parent_job_indices_;
+  return list->size();
 }
 
 bool TemplateEntry::GetComplexJobEntry(ComplexJobEntry*& complex_job,

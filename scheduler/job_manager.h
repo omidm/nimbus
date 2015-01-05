@@ -43,6 +43,7 @@
 #define NIMBUS_SCHEDULER_JOB_MANAGER_H_
 
 #include <boost/thread.hpp>
+#include <boost/unordered_map.hpp>
 #include <iostream> // NOLINT
 #include <fstream> // NOLINT
 #include <sstream>
@@ -106,6 +107,9 @@ class JobManager {
     JobEntry* AddRemoteCopyReceiveJobEntry(const job_id_t& job_id);
 
     JobEntry* AddFutureJobEntry(const job_id_t& job_id);
+
+    bool GetComplexJobContainer(const job_id_t& job_id,
+                                job_id_t* complex_job_id);
 
     bool AddJobEntryIncomingEdges(JobEntry *job);
 
@@ -196,6 +200,8 @@ class JobManager {
     bool ClearJobGraph();
 
     Edge<JobEntry, job_id_t>* AddEdgeToJobGraph(job_id_t from, job_id_t to);
+
+    boost::unordered_map<job_id_t, job_id_t> complex_containers_;
 };
 
 }  // namespace nimbus
