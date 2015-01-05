@@ -56,6 +56,7 @@ TemplateJobEntry::TemplateJobEntry(const std::string& job_name,
                                    const IDSet<logical_data_id_t> write_set,
                                    const bool& sterile,
                                    const GeometricRegion& region) {
+  job_type_ = JOB_TMPL;
   job_name_ = job_name;
   read_set_ = read_set;
   write_set_ = write_set;

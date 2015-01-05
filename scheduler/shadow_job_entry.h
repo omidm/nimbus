@@ -58,13 +58,14 @@
 #include "shared/nimbus_types.h"
 #include "shared/geometric_region.h"
 #include "scheduler/job_entry.h"
-#include "scheduler/complex_job_entry.h"
 #include "scheduler/version_map.h"
 #include "scheduler/scheduler_worker.h"
 #include "scheduler/meta_before_set.h"
 #include "scheduler/logical_data_lineage.h"
 
 namespace nimbus {
+
+class ComplexJobEntry;
 
 class ShadowJobEntry : public JobEntry {
   public:
@@ -111,6 +112,9 @@ class ShadowJobEntry : public JobEntry {
     boost::shared_ptr<VersionMap> vmap_read_diff_;
     boost::shared_ptr<VersionMap> vmap_write_diff_;
 };
+
+typedef std::list<ShadowJobEntry*> ShadowJobEntryList;
+typedef boost::unordered_map<job_id_t, ShadowJobEntry*> ShadowJobEntryMap;
 
 
 }  // namespace nimbus

@@ -57,6 +57,7 @@
 #include "shared/parameter.h"
 #include "shared/geometric_region.h"
 #include "scheduler/job_entry.h"
+#include "scheduler/shadow_job_entry.h"
 #include "scheduler/template_job_entry.h"
 #include "scheduler/version_map.h"
 #include "scheduler/data_manager.h"
@@ -95,6 +96,8 @@ class ComplexJobEntry : public JobEntry {
 
     size_t GetJobsForAssignment(JobEntryList* list, size_t max_num, bool append = false);
 
+    size_t GetParentJobs(ShadowJobEntryList* list, bool append = false);
+
     void MarkJobAssigned(job_id_t job_id);
 
     void MarkJobDone(job_id_t job_id);
@@ -104,7 +107,14 @@ class ComplexJobEntry : public JobEntry {
     std::vector<job_id_t> inner_job_ids_;
     std::vector<job_id_t> outer_job_ids_;
     std::vector<Parameter> parameters_;
+    ShadowJobEntryMap jobs_;
+    std::list<size_t> parent_job_ids_;
+    bool parent_job_ids_set_;
     size_t assign_index_;
+
+    void SetParentJobIds();
+
+    size_t GetJobIndex(job_id_t job_id);
 };
 
 }  // namespace nimbus

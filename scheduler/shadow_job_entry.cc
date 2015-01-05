@@ -43,6 +43,7 @@
   */
 
 #include "scheduler/shadow_job_entry.h"
+#include "scheduler/complex_job_entry.h"
 
 using namespace nimbus; // NOLINT
 
@@ -69,6 +70,7 @@ ShadowJobEntry::ShadowJobEntry(const std::string& job_name,
                                const GeometricRegion& region,
                                const Parameter& params,
                                const ComplexJobEntry* complex_job) {
+  job_type_ = JOB_SHDW;
   job_name_ = job_name;
   job_id_ = job_id;
   read_set_p_ = read_set_p;
