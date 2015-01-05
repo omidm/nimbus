@@ -56,6 +56,7 @@
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "shared/log.h"
+#include "scheduler/shadow_job_entry.h"
 #include "scheduler/complex_job_entry.h"
 #include "scheduler/job_manager.h"
 
@@ -98,6 +99,8 @@ class TemplateEntry {
     bool AddExplicitCopyJob();
 
     size_t GetParentJobIndices(std::list<size_t>* list);
+
+    TemplateJobEntry* GetJobAtIndex(size_t index);
 
   private:
     typedef std::vector<boost::shared_ptr<job_id_t> > PtrList;
@@ -144,6 +147,7 @@ class TemplateEntry {
     PtrList job_id_ptrs_;
     PtrMap job_id_ptrs_map_;
     EntryList entry_list_;
+    TemplateJobEntryVector compute_jobs_;
     std::list<size_t> parent_job_indices_;
     // TODO(omidm): currently we do not support future job id in templates!
     boost::shared_ptr<job_id_t> future_job_id_ptr_;

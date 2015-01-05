@@ -75,6 +75,7 @@
 #define NIMBUS_CREATE_DATA_JOB_NAME "createdata"
 #define NIMBUS_SAVE_DATA_JOB_NAME "savedata"
 #define NIMBUS_LOAD_DATA_JOB_NAME "loaddata"
+#define NIMBUS_COMPLEX_JOB_NAME "complex"
 
 #define NIMBUS_RECEIVER_KNOWN_IP "receiver_known_ip"
 
@@ -124,7 +125,8 @@ namespace nimbus {
     JOB_SAVE   = 6,
     JOB_LOAD   = 7,
     JOB_CMPX   = 8,
-    JOB_SHDW   = 9
+    JOB_SHDW   = 9,
+    JOB_TMPL   = 10
   };
 
 

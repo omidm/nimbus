@@ -89,6 +89,7 @@ bool TemplateEntry::CleanPartiallyFilledTemplate() {
   }
 
   entry_list_.clear();
+  compute_jobs_.clear();
   job_id_ptrs_.clear();
   job_id_ptrs_map_.clear();
   return true;
@@ -169,6 +170,16 @@ size_t TemplateEntry::GetParentJobIndices(std::list<size_t>* list) {
   *list = parent_job_indices_;
   return list->size();
 }
+
+
+TemplateJobEntry* TemplateEntry::GetJobAtIndex(size_t index) {
+  if (index >= compute_jobs_.size()) {
+    return NULL;
+  }
+
+  return compute_jobs_[index];
+}
+
 
 bool TemplateEntry::GetComplexJobEntry(ComplexJobEntry*& complex_job,
                                        const job_id_t& job_id,
@@ -260,6 +271,15 @@ bool TemplateEntry::AddComputeJob(const std::string& job_name,
       after_set_ptrs.insert(ptr);
     }
   }
+
+  TemplateJobEntry *job =
+    new TemplateJobEntry(job_name,
+                         read_set,
+                         write_set,
+                         sterile,
+                         region);
+
+  compute_jobs_.push_back(job);
 
   TemplateComputeJobEntry entry(job_name,
                                 job_id_ptr,

@@ -61,25 +61,27 @@ ShadowJobEntry::ShadowJobEntry(const std::string& job_name,
                                const IDSet<logical_data_id_t>* read_set_p,
                                const IDSet<logical_data_id_t>* write_set_p,
                                const IDSet<logical_data_id_t>* union_set_p,
-                               boost::shared_ptr<VersionMap> vmap_read,
-                               boost::shared_ptr<VersionMap> vmap_write,
+                               boost::shared_ptr<VersionMap> vmap_read_diff,
+                               boost::shared_ptr<VersionMap> vmap_write_diff,
                                const job_id_t& parent_job_id,
                                const job_id_t& future_job_id,
                                const bool& sterile,
                                const GeometricRegion& region,
-                               const Parameter& params) {
+                               const Parameter& params,
+                               const ComplexJobEntry* complex_job) {
   job_name_ = job_name;
   job_id_ = job_id;
   read_set_p_ = read_set_p;
   write_set_p_ = write_set_p;
   union_set_p_ = union_set_p;
-  vmap_read_ = vmap_read;
-  vmap_write_ = vmap_write;
+  vmap_read_diff_ = vmap_read_diff;
+  vmap_write_diff_ = vmap_write_diff;
   parent_job_id_ = parent_job_id;
   future_job_id_ = future_job_id;
   sterile_ = sterile;
   region_ = region;
   params_ = params;
+  complex_job_ = complex_job;
 }
 
 ShadowJobEntry::~ShadowJobEntry() {
@@ -98,7 +100,17 @@ const IDSet<logical_data_id_t>* ShadowJobEntry::union_set_p() const {
   return union_set_p_;
 }
 
+boost::shared_ptr<VersionMap> ShadowJobEntry::vmap_read_diff() const {
+  return vmap_read_diff_;
+}
 
+boost::shared_ptr<VersionMap> ShadowJobEntry::vmap_write_diff() const {
+  return vmap_write_diff_;
+}
+
+const ComplexJobEntry* ShadowJobEntry::complex_job() {
+  return complex_job_;
+}
 
 void ShadowJobEntry::set_read_set_p(const IDSet<logical_data_id_t>* read_set_p) {
   read_set_p_ = read_set_p;
@@ -113,4 +125,15 @@ void ShadowJobEntry::set_union_set_p(const IDSet<logical_data_id_t>* union_set_p
   union_set_p_ = union_set_p;
 }
 
+void ShadowJobEntry::set_vmap_read_diff(boost::shared_ptr<VersionMap> vmap_read_diff) {
+  vmap_read_diff_ = vmap_read_diff;
+}
+
+void ShadowJobEntry::set_vmap_write_diff(boost::shared_ptr<VersionMap> vmap_write_diff) {
+  vmap_write_diff_ = vmap_write_diff;
+}
+
+void ShadowJobEntry::set_complex_job(const ComplexJobEntry* complex_job) {
+  complex_job_ = complex_job;
+}
 

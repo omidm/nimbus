@@ -619,14 +619,29 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
 
   JobEntryMap::iterator iter = jobs_ready_to_assign_.begin();
   for (; (iter != jobs_ready_to_assign_.end()) && (num < max_num);) {
-    JobEntry *job = iter->second;
+    JobEntry* job = iter->second;
     assert(!job->assigned());
 
-    jobs_pending_to_assign_[iter->first] = job;
-    jobs_ready_to_assign_.erase(iter++);
-
-    list->push_back(job);
-    ++num;
+    if (job->job_type() == JOB_CMPX) {
+      ComplexJobEntry* complex_job = reinterpret_cast<ComplexJobEntry*>(job);
+      JobEntryList l;
+      size_t c_num = complex_job->GetJobsForAssignment(&l, max_num - num);
+      assert(c_num > 0);
+      num += c_num;
+      JobEntryList::iterator it = l.begin();
+      for (; it != l.end(); ++it) {
+        list->push_back(*it);
+        jobs_pending_to_assign_[(*it)->job_id()] = *it;
+      }
+      if (complex_job->DrainedAllJobsForAssignment()) {
+        jobs_ready_to_assign_.erase(iter++);
+      }
+    } else {
+      list->push_back(job);
+      jobs_pending_to_assign_[iter->first] = job;
+      jobs_ready_to_assign_.erase(iter++);
+      ++num;
+    }
   }
 
   return num;
@@ -664,7 +679,9 @@ void JobManager::NotifyJobAssignment(JobEntry *job) {
   // AfterMap has internal locking.
   after_map_->AddEntries(job);
 
-  if (job->job_type() != JOB_COMP) {
+  if ((job->job_type() != JOB_COMP) &&
+      (job->job_type() != JOB_SHDW) &&
+      (job->job_type() != JOB_CMPX)) {
     return;
   }
 

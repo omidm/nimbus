@@ -33,7 +33,7 @@
  */
 
  /*
-  * Shadow job entry is a version of job entry that contanis only required
+  * Template job entry is a version of job entry that contanis only required
   * information to assign the job properly. It includes version maps and
   * read/write set. This data id=s read from the main job entry and shared
   * among multiple shadoes. This way the creation of shadow jobs is very cost
@@ -42,8 +42,8 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_SHADOW_JOB_ENTRY_H_
-#define NIMBUS_SCHEDULER_SHADOW_JOB_ENTRY_H_
+#ifndef NIMBUS_SCHEDULER_TEMPLATE_JOB_ENTRY_H_
+#define NIMBUS_SCHEDULER_TEMPLATE_JOB_ENTRY_H_
 
 #include <boost/unordered_map.hpp>
 #include <vector>
@@ -58,7 +58,6 @@
 #include "shared/nimbus_types.h"
 #include "shared/geometric_region.h"
 #include "scheduler/job_entry.h"
-#include "scheduler/complex_job_entry.h"
 #include "scheduler/version_map.h"
 #include "scheduler/scheduler_worker.h"
 #include "scheduler/meta_before_set.h"
@@ -66,54 +65,33 @@
 
 namespace nimbus {
 
-class ShadowJobEntry : public JobEntry {
+class TemplateJobEntry : public JobEntry {
   public:
-    ShadowJobEntry();
+    TemplateJobEntry();
 
-    explicit ShadowJobEntry(const job_id_t& job_id);
+    TemplateJobEntry(const std::string& job_name,
+                     const IDSet<logical_data_id_t> read_set,
+                     const IDSet<logical_data_id_t> write_set,
+                     const bool& sterile,
+                     const GeometricRegion& region);
 
-    ShadowJobEntry(const std::string& job_name,
-                   const job_id_t& job_id,
-                   const IDSet<logical_data_id_t>* read_set_p,
-                   const IDSet<logical_data_id_t>* write_set_p,
-                   const IDSet<logical_data_id_t>* union_set_p,
-                   boost::shared_ptr<VersionMap> vmap_read_diff,
-                   boost::shared_ptr<VersionMap> vmap_write_diff,
-                   const job_id_t& parent_job_id,
-                   const job_id_t& future_job_id,
-                   const bool& sterile,
-                   const GeometricRegion& region,
-                   const Parameter& params,
-                   const ComplexJobEntry* complex_job);
+    virtual ~TemplateJobEntry();
 
-    virtual ~ShadowJobEntry();
-
-    virtual const IDSet<logical_data_id_t>* read_set_p() const;
-    virtual const IDSet<logical_data_id_t>* write_set_p() const;
-    virtual const IDSet<logical_data_id_t>* union_set_p() const;
     virtual boost::shared_ptr<VersionMap> vmap_read_diff() const;
     virtual boost::shared_ptr<VersionMap> vmap_write_diff() const;
-    virtual const ComplexJobEntry* complex_job();
 
-
-    virtual void set_read_set_p(const IDSet<logical_data_id_t>* read_set_p);
-    virtual void set_write_set_p(const IDSet<logical_data_id_t>* write_set_p);
-    virtual void set_union_set_p(const IDSet<logical_data_id_t>* union_set_p);
     virtual void set_vmap_read_diff(boost::shared_ptr<VersionMap> vmap_read_diff);
     virtual void set_vmap_write_diff(boost::shared_ptr<VersionMap> vmap_write_diff);
-    virtual void set_complex_job(const ComplexJobEntry* complex_job);
 
   private:
-    const ComplexJobEntry* complex_job_;
-    const IDSet<logical_data_id_t>* read_set_p_;
-    const IDSet<logical_data_id_t>* write_set_p_;
-    const IDSet<logical_data_id_t>* union_set_p_;
     boost::shared_ptr<VersionMap> vmap_read_diff_;
     boost::shared_ptr<VersionMap> vmap_write_diff_;
 };
 
+typedef std::vector<TemplateJobEntry*> TemplateJobEntryVector;
+
 
 }  // namespace nimbus
-#endif  // NIMBUS_SCHEDULER_SHADOW_JOB_ENTRY_H_
+#endif  // NIMBUS_SCHEDULER_TEMPLATE_JOB_ENTRY_H_
 
 

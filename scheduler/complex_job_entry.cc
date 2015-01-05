@@ -49,6 +49,8 @@ using namespace nimbus; // NOLINT
 
 ComplexJobEntry::ComplexJobEntry() {
   job_type_ = JOB_CMPX;
+  job_name_ = NIMBUS_COMPLEX_JOB_NAME;
+  assign_index_ = 0;
 }
 
 ComplexJobEntry::ComplexJobEntry(const job_id_t& job_id,
@@ -58,12 +60,22 @@ ComplexJobEntry::ComplexJobEntry(const job_id_t& job_id,
                                  const std::vector<job_id_t>& outer_job_ids,
                                  const std::vector<Parameter>& parameters) {
   job_type_ = JOB_CMPX;
+  job_name_ = NIMBUS_COMPLEX_JOB_NAME;
   job_id_ = job_id;
   parent_job_id_ = parent_job_id;
   template_entry_ = template_entry;
   inner_job_ids_ = inner_job_ids;
   outer_job_ids_ = outer_job_ids;
   parameters_ = parameters;
+  assign_index_ = 0;
+
+  // parent should be explicitally in before set - omidm
+  // currentrly before set of complex job is only parent job - omidm
+  assert(before_set_.size() == 0);
+  before_set_.insert(parent_job_id);
+
+  assignment_dependencies_ = before_set_;
+  versioning_dependencies_ = before_set_;
 }
 
 ComplexJobEntry::~ComplexJobEntry() {
@@ -116,10 +128,40 @@ size_t ComplexJobEntry::GetParentJobIds(std::list<job_id_t>* list) {
   return count;
 }
 
-size_t ComplexJobEntry::GetJobForAssignment(JobEntryList* list, size_t max_num) {
-  // TODO(omidm): Implement
-  list->clear();
-  return 0;
+size_t ComplexJobEntry::GetJobsForAssignment(JobEntryList* list, size_t max_num, bool append) {
+  size_t count = 0;
+  if (!append) {
+    list->clear();
+  }
+
+  size_t index = assign_index_;
+  for (; (index < inner_job_ids_.size()) && (count < max_num); ++index) {
+    TemplateJobEntry* job = template_entry_->GetJobAtIndex(index);
+    ShadowJobEntry* shadow_job =
+      new ShadowJobEntry(job->job_name(),
+                         inner_job_ids_[index],
+                         job->read_set_p(),
+                         job->write_set_p(),
+                         job->union_set_p(),
+                         job->vmap_read_diff(),
+                         job->vmap_write_diff(),
+                         parent_job_id_,
+                         0,  // future_job_id, currently not supported - omidm
+                         job->sterile(),
+                         job->region(),
+                         parameters_[index],
+                         this);
+    list->push_back(shadow_job);
+    count++;
+  }
+
+  assign_index_ += count;
+  return count;
+}
+
+
+bool ComplexJobEntry::DrainedAllJobsForAssignment() {
+  return (assign_index_ == inner_job_ids_.size());
 }
 
 void ComplexJobEntry::MarkJobAssigned(job_id_t job_id) {
