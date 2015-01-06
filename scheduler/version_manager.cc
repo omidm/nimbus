@@ -167,6 +167,55 @@ bool VersionManager::ResolveEntireContextForJob(JobEntry *job) {
   return true;
 }
 
+bool VersionManager::MemoizeVersionsForTemplate(JobEntry *job) {
+  TemplateJobEntry* tj = job->template_job();
+  assert(job->memoize());
+  assert(tj);
+  TemplateEntry* te = tj->template_entry();
+
+  assert(job->IsReadyForCompleteVersioning());
+
+  if (job->sterile()) {
+    IDSet<logical_data_id_t>::ConstIter it;
+    for (it = job->union_set_p()->begin(); it != job->union_set_p()->end(); ++it) {
+      data_version_t version;
+      if (job->vmap_read()->query_entry(*it, &version)) {
+      } else if (LookUpVersion(job, *it, &version)) {
+        job->vmap_read()->set_entry(*it, version);
+      } else {
+        return false;
+      }
+
+      data_version_t base_version;
+      if (!te->vmap_base()->query_entry(*it, &base_version)) {
+        return false;
+      }
+
+      tj->vmap_read_diff()->set_entry(*it, version - base_version);
+    }
+  } else {
+    LdoMap::const_iterator it;
+    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+      data_version_t version;
+      if (job->vmap_read()->query_entry(it->first, &version)) {
+      } else if (LookUpVersion(job, it->first, &version)) {
+        job->vmap_read()->set_entry(it->first, version);
+      } else {
+        return false;
+      }
+
+      data_version_t base_version;
+      if (!te->vmap_base()->query_entry(it->first, &base_version)) {
+        return false;
+      }
+
+      tj->vmap_read_diff()->set_entry(it->first, version - base_version);
+    }
+  }
+
+  return true;
+}
+
 bool VersionManager::CreateCheckPoint(JobEntry *job) {
   assert(!job->sterile());
 
@@ -227,6 +276,10 @@ bool VersionManager::DetectVersionedJob(JobEntry *job) {
     assert(it != child_counter_.end());
     --it->second;
     if (it->second == 0) {
+      if (it->first == 10000000141) {
+        std::cout << "OMID1\n";
+      }
+
       child_counter_.erase(it);
     }
   }
@@ -240,6 +293,10 @@ bool VersionManager::DetectDoneJob(JobEntry *job) {
     assert(it != child_counter_.end());
     --it->second;
     if (it->second == 0) {
+      if (it->first == 10000000141) {
+        std::cout << "OMID2\n";
+      }
+
       child_counter_.erase(it);
     }
   }

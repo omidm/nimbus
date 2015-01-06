@@ -58,13 +58,15 @@ TemplateJobEntry::TemplateJobEntry(const std::string& job_name,
                                    const IDSet<logical_data_id_t> read_set,
                                    const IDSet<logical_data_id_t> write_set,
                                    const bool& sterile,
-                                   const GeometricRegion& region) {
+                                   const GeometricRegion& region,
+                                   TemplateEntry* template_entry) {
   job_type_ = JOB_TMPL;
   job_name_ = job_name;
   read_set_ = read_set;
   write_set_ = write_set;
   sterile_ = sterile;
   region_ = region;
+  template_entry_ = template_entry;
 
   union_set_.insert(read_set_);
   union_set_.insert(write_set_);
@@ -76,12 +78,20 @@ TemplateJobEntry::TemplateJobEntry(const std::string& job_name,
 TemplateJobEntry::~TemplateJobEntry() {
 }
 
+TemplateEntry* TemplateJobEntry::template_entry() {
+  return template_entry_;
+}
+
 boost::shared_ptr<VersionMap> TemplateJobEntry::vmap_read_diff() const {
   return vmap_read_diff_;
 }
 
 boost::shared_ptr<VersionMap> TemplateJobEntry::vmap_write_diff() const {
   return vmap_write_diff_;
+}
+
+void TemplateJobEntry::set_template_entry(TemplateEntry* template_entry) {
+  template_entry_ = template_entry;
 }
 
 void TemplateJobEntry::set_vmap_read_diff(boost::shared_ptr<VersionMap> vmap_read_diff) {

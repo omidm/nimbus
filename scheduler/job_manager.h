@@ -137,6 +137,8 @@ class JobManager {
 
     bool ResolveEntireContextForJob(JobEntry *job);
 
+    bool MemoizeVersionsForTemplate(JobEntry *job);
+
     size_t GetJobsNeedDataVersion(JobEntryList* list,
                                   VersionedLogicalData vld);
 

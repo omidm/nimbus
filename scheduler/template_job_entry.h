@@ -65,6 +65,8 @@
 
 namespace nimbus {
 
+class TemplateEntry;
+
 class TemplateJobEntry : public JobEntry {
   public:
     TemplateJobEntry();
@@ -73,17 +75,21 @@ class TemplateJobEntry : public JobEntry {
                      const IDSet<logical_data_id_t> read_set,
                      const IDSet<logical_data_id_t> write_set,
                      const bool& sterile,
-                     const GeometricRegion& region);
+                     const GeometricRegion& region,
+                     TemplateEntry* template_entry);
 
     virtual ~TemplateJobEntry();
 
+    virtual TemplateEntry* template_entry();
     virtual boost::shared_ptr<VersionMap> vmap_read_diff() const;
     virtual boost::shared_ptr<VersionMap> vmap_write_diff() const;
 
+    virtual void set_template_entry(TemplateEntry* template_entry);
     virtual void set_vmap_read_diff(boost::shared_ptr<VersionMap> vmap_read_diff);
     virtual void set_vmap_write_diff(boost::shared_ptr<VersionMap> vmap_write_diff);
 
   private:
+    TemplateEntry* template_entry_;
     boost::shared_ptr<VersionMap> vmap_read_diff_;
     boost::shared_ptr<VersionMap> vmap_write_diff_;
 };

@@ -39,6 +39,7 @@
   */
 
 #include "scheduler/template_entry.h"
+#include "scheduler/job_manager.h"
 
 using namespace nimbus; // NOLINT
 
@@ -285,7 +286,8 @@ TemplateJobEntry* TemplateEntry::AddComputeJob(const std::string& job_name,
                          read_set,
                          write_set,
                          sterile,
-                         region);
+                         region,
+                         this);
 
   compute_jobs_.push_back(job);
 

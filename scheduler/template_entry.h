@@ -58,9 +58,12 @@
 #include "shared/log.h"
 #include "scheduler/shadow_job_entry.h"
 #include "scheduler/complex_job_entry.h"
-#include "scheduler/job_manager.h"
+#include "scheduler/template_job_entry.h"
 
 namespace nimbus {
+
+class JobManager;
+
 class TemplateEntry {
   public:
     TemplateEntry();

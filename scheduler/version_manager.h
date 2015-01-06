@@ -54,6 +54,8 @@
 #include "shared/dbg.h"
 #include "scheduler/job_entry.h"
 #include "scheduler/complex_job_entry.h"
+#include "scheduler/template_job_entry.h"
+#include "scheduler/template_entry.h"
 #include "scheduler/version_entry.h"
 #include "shared/logical_data_object.h"
 
@@ -88,6 +90,8 @@ class VersionManager {
     bool ResolveJobDataVersions(JobEntry *job);
 
     bool ResolveEntireContextForJob(JobEntry *job);
+
+    bool MemoizeVersionsForTemplate(JobEntry *job);
 
     bool DefineData(
         const logical_data_id_t ldid,
