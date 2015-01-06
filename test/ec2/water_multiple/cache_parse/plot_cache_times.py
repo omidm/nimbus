@@ -23,6 +23,8 @@ denom_ave = 55
 
 times_grp = {}
 
+# NOTE: to add categories in plot, edit the categories here.
+
 times_grp['lc']                = {}
 times_grp['lc']['cache_total'] = []
 times_grp['lc']['block']       = []
@@ -61,6 +63,8 @@ for i in range(int(sys.argv[1]), int(sys.argv[2]) + 1):
 
         #######################################################################
 
+        # NOTE: to add categories in plot, edit the parser here.
+
         if "stage LC job" in line:
             times_grp['lc']['cache_total'][-1] += float(line.split()[-1])
         elif ("stage RCS job" in line or "stage RCR job" in line):
@@ -87,6 +91,8 @@ for i in range(int(sys.argv[1]), int(sys.argv[2]) + 1):
             times_grp['rc']['wfc'][-1] += float(line.split()[-1])
 
         #######################################################################
+
+        # NOTE: to add categories in plot, edit the parser here.
 
         elif "GAV stage" in line or "WIV stage" in line:
             times_grp['cv']['cache_total'][-1] += float(line.split()[-1])
@@ -146,6 +152,7 @@ for k in times_grp.keys():
 #                     PLOT CATGEORIES INTO STACKED PLOTS                     #
 ##############################################################################
 
+# NOTE: to add categories in plot, edit number of categories here.
 num_categories = 18
 
 # plot properties
@@ -171,6 +178,7 @@ groups = []
 for i in range(1, num_workers+1):
     groups.append("W " + str(i))
 
+# NOTE: to add categories in plot, edit number of *num, categories, dataList here.
 lc_num = 4
 rc_num = 4
 cv_num = 5
@@ -189,6 +197,7 @@ dataList = [ times_grp['lc']['block'], times_grp['lc']['wfc'], \
              times_grp['cv']['mapping'], times_grp['cv']['other'], \
              times_grp['cs']['block'], times_grp['cs']['wfc'], times_grp['cs']['rtc'], \
              times_grp['cs']['mapping'], times_grp['cs']['other'] ]
+
 times = {}
 for i in range(len(categories)):
     print(categories[i])
@@ -209,6 +218,8 @@ colors.append('#bebada')
 colors.append('#fb8072')
 colors_use = [colors[0]]*lc_num + [colors[1]]*rc_num + \
              [colors[2]]*cv_num + [colors[3]]*cs_num
+
+# NOTE: to add categories in plot, edit hatch patterns here.
 hatch_block = "x"
 hatch_write = "/"
 hatch_read  = "\\"
@@ -254,6 +265,7 @@ ax.yaxis.label.set_weight('bold')
 ax.yaxis.labelpad = 6
 
 # legend
+# NOTE: to add categories in plot, edit legend here.
 blockBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch=hatch_block)
 writeBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch=hatch_write)
 readBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch=hatch_read)
