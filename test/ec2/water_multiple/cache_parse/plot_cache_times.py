@@ -13,7 +13,6 @@ import pylab
 ##############################################################################
 num_threads = 8
 num_workers = (int(sys.argv[2]) - int(sys.argv[1]) + 1)
-num_categories = 14
 # set denom_ave to number of iterations or frames to get average value instead
 # of aggregate
 denom_ave = 55
@@ -22,111 +21,132 @@ denom_ave = 55
 #                            GROUP INTO CATGORIES                            #
 ##############################################################################
 
-lc_cache_total = []
-lc_block       = []
-lc_wfc         = []
+times_grp = {}
 
-rc_cache_total = []
-rc_block       = []
-rc_wfc         = []
+times_grp['lc']                = {}
+times_grp['lc']['cache_total'] = []
+times_grp['lc']['block']       = []
+times_grp['lc']['wfc']         = []
+times_grp['lc']['mapping']     = []
 
-cv_cache_total = []
-cv_block       = []
-cv_wfc         = []
-cv_rtc         = []
+times_grp['rc']                = {}
+times_grp['rc']['cache_total'] = []
+times_grp['rc']['block']       = []
+times_grp['rc']['wfc']         = []
+times_grp['rc']['mapping']     = []
 
-cs_cache_total = []
-cs_block       = []
-cs_wfc         = []
-cs_rtc         = []
+times_grp['cv']                = {}
+times_grp['cv']['cache_total'] = []
+times_grp['cv']['block']       = []
+times_grp['cv']['wfc']         = []
+times_grp['cv']['rtc']         = []
+times_grp['cv']['mapping']     = []
+
+times_grp['cs']                = {}
+times_grp['cs']['cache_total'] = []
+times_grp['cs']['block']       = []
+times_grp['cs']['wfc']         = []
+times_grp['cs']['rtc']         = []
+times_grp['cs']['mapping']     = []
 
 # group parsed numbers into plotting categories for each file
 for i in range(int(sys.argv[1]), int(sys.argv[2]) + 1):
-    lc_cache_total.append(0)
-    lc_block.append(0)
-    lc_wfc.append(0)
-    rc_cache_total.append(0)
-    rc_block.append(0)
-    rc_wfc.append(0)
-    cv_cache_total.append(0)
-    cv_block.append(0)
-    cv_wfc.append(0)
-    cv_rtc.append(0)
-    cs_cache_total.append(0)
-    cs_block.append(0)
-    cs_wfc.append(0)
-    cs_rtc.append(0)
+    for k1 in times_grp.keys():
+        for k2 in times_grp[k1].keys():
+            times_grp[k1][k2].append(0)
     fname = str(i) + "_parse.txt"
     f = open(fname)
     for line in f:
         line = line.strip("\t\n\r\f\v ,}")
+
+        #######################################################################
+
         if "stage LC job" in line:
-            lc_cache_total[-1] += float(line.split()[-1])
+            times_grp['lc']['cache_total'][-1] += float(line.split()[-1])
         elif ("stage RCS job" in line or "stage RCR job" in line):
-            rc_cache_total[-1] += float(line.split()[-1])
+            times_grp['rc']['cache_total'][-1] += float(line.split()[-1])
+
         elif "block LC job" in line:
-            lc_block[-1] += float(line.split()[-1])
+            times_grp['lc']['block'][-1] += float(line.split()[-1])
         elif ("block RCS job" in line or "block RCR job" in line):
-            rc_block[-1] += float(line.split()[-1])
+            times_grp['rc']['block'][-1] += float(line.split()[-1])
+
         elif " lock LC job" in line:
-            lc_block[-1] += float(line.split()[-1])
+            times_grp['lc']['block'][-1] += float(line.split()[-1])
         elif (" lock RCS job" in line or " lock RCR job" in line):
-            rc_block[-1] += float(line.split()[-1])
+            times_grp['rc']['block'][-1] += float(line.split()[-1])
+
+        elif " mapping LC job" in line:
+            times_grp['lc']['mapping'][-1] += float(line.split()[-1])
+        elif (" mapping RCS job" in line or " mapping RCR job" in line):
+            times_grp['rc']['mapping'][-1] += float(line.split()[-1])
+
         elif "pdata" in line and "LC job" in line:
-            lc_wfc[-1] += float(line.split()[-1])
+            times_grp['lc']['wfc'][-1] += float(line.split()[-1])
         elif "pdata" in line and ("RCR job" in line or "RCS job" in line):
-            rc_wfc[-1] += float(line.split()[-1])
+            times_grp['rc']['wfc'][-1] += float(line.split()[-1])
+
+        #######################################################################
+
         elif "GAV stage" in line or "WIV stage" in line:
-            cv_cache_total[-1] += float(line.split()[-1])
+            times_grp['cv']['cache_total'][-1] += float(line.split()[-1])
         elif "GAS stage" in line or "WIS stage" in line:
-            cs_cache_total[-1] += float(line.split()[-1])
+            times_grp['cs']['cache_total'][-1] += float(line.split()[-1])
+
         elif "GAV block" in line or "WIV block" in line:
-            cv_block[-1] += float(line.split()[-1])
+            times_grp['cv']['block'][-1] += float(line.split()[-1])
         elif "GAS block" in line or "WIS block" in line:
-            cs_block[-1] += float(line.split()[-1])
+            times_grp['cs']['block'][-1] += float(line.split()[-1])
+
         elif "GAV lock" in line or "WIV lock" in line:
-            cv_block[-1] += float(line.split()[-1])
+            times_grp['cv']['block'][-1] += float(line.split()[-1])
         elif "GAS lock" in line or "WIS lock" in line:
-            cs_block[-1] += float(line.split()[-1])
+            times_grp['cs']['block'][-1] += float(line.split()[-1])
+
+        elif "GAV mapping" in line or "WIV mapping" in line:
+            times_grp['cv']['mapping'][-1] += float(line.split()[-1])
+        elif "GAS mapping" in line or "WIS mapping" in line:
+            times_grp['cs']['mapping'][-1] += float(line.split()[-1])
+
         elif "GAV wfc" in line or "WIV wfc" in line:
-            cv_wfc[-1] += float(line.split()[-1])
+            times_grp['cv']['wfc'][-1] += float(line.split()[-1])
         elif "GAS wfc" in line or "WIS wfc" in line:
-            cs_wfc[-1] += float(line.split()[-1])
+            times_grp['cs']['wfc'][-1] += float(line.split()[-1])
+
         elif "GAV rtc" in line or "WIV rtc" in line:
-            cv_rtc[-1] += float(line.split()[-1])
+            times_grp['cv']['rtc'][-1] += float(line.split()[-1])
         elif "GAS rtc" in line or "WIS rtc" in line:
-            cs_rtc[-1] += float(line.split()[-1])
+            times_grp['cs']['rtc'][-1] += float(line.split()[-1])
+
+        #######################################################################
 
 # average over all threads
-lc_cache_total = map(lambda x : x/(num_threads*denom_ave), lc_cache_total)
-lc_block = map(lambda x : x/(num_threads*denom_ave), lc_block)
-lc_wfc = map(lambda x : x/(num_threads*denom_ave), lc_wfc)
-rc_cache_total = map(lambda x : x/(num_threads*denom_ave), rc_cache_total)
-rc_block = map(lambda x : x/(num_threads*denom_ave), rc_block)
-rc_wfc = map(lambda x : x/(num_threads*denom_ave), rc_wfc)
-cv_cache_total = map(lambda x : x/(num_threads*denom_ave), cv_cache_total)
-cv_block = map(lambda x : x/(num_threads*denom_ave), cv_block)
-cv_wfc = map(lambda x : x/(num_threads*denom_ave), cv_wfc)
-cv_rtc = map(lambda x : x/(num_threads*denom_ave), cv_rtc)
-cs_cache_total = map(lambda x : x/(num_threads*denom_ave), cs_cache_total)
-cs_block = map(lambda x : x/(num_threads*denom_ave), cs_block)
-cs_wfc = map(lambda x : x/(num_threads*denom_ave), cs_wfc)
-cs_rtc = map(lambda x : x/(num_threads*denom_ave), cs_rtc)
+for k1 in times_grp.keys():
+    for k2 in times_grp[k1].keys():
+        times_grp[k1][k2] = map(lambda x : x/(num_threads*denom_ave), times_grp[k1][k2])
 
 # aggregated, uncategorized into other category
-lc_other = []
-rc_other = []
-cv_other = []
-cs_other = []
-for i in range(0, num_workers):
-    lc_other.append(lc_cache_total[i] - lc_block[i] - lc_wfc[i])
-    rc_other.append(rc_cache_total[i] - rc_block[i] - rc_wfc[i])
-    cv_other.append(cv_cache_total[i] - cv_block[i] - cv_wfc[i] - cv_rtc[i])
-    cs_other.append(cs_cache_total[i] - cs_block[i] - cs_wfc[i] - cs_rtc[i])
+times_grp_calc = {}
+times_grp_calc['lc'] = [0] * num_workers
+times_grp_calc['rc'] = [0] * num_workers
+times_grp_calc['cv'] = [0] * num_workers
+times_grp_calc['cs'] = [0] * num_workers
+for k1 in times_grp.keys():
+    for k2 in times_grp[k1].keys():
+        if k2 != 'cache_total':
+            for i in range(0, num_workers):
+                times_grp_calc[k1][i] += times_grp[k1][k2][i]
+for k in times_grp.keys():
+    times_grp[k]['other'] = []
+    for i in range(0, num_workers):
+        times_grp[k]['other'].append(times_grp[k]['cache_total'][i] - \
+                                     times_grp_calc[k][i])
 
 ##############################################################################
 #                     PLOT CATGEORIES INTO STACKED PLOTS                     #
 ##############################################################################
+
+num_categories = 18
 
 # plot properties
 ind = np.arange(num_workers)
@@ -146,22 +166,34 @@ def addTimes(a, b):
     for idx, val in enumerate(b):
         times[idx] += val
     return times
+
 groups = []
 for i in range(1, num_workers+1):
     groups.append("W " + str(i))
-categories = [ 'LC Block', 'LC WriteFromCache', 'LC Other', \
-               'RC Block', 'RC WriteFromCache', 'RC Other', \
+
+lc_num = 4
+rc_num = 4
+cv_num = 5
+cs_num = 5
+categories = [ 'LC Block', 'LC WriteFromCache', 'LC Mapping', 'LC Other', \
+               'RC Block', 'RC WriteFromCache', 'RC Mapping', 'RC Other', \
                'Comp Var Block', 'Comp Var WriteFromCache', \
-               'Comp Var ReadToCache', 'Comp Var Other', \
+               'Comp Var ReadToCache', 'Comp Var Mapping', 'Comp Var Other', \
                'Comp Struct Block', 'Comp Struct WriteFromCache', \
-               'Comp Struct ReadToCache', 'Comp Struct Other' ]
-dataList = [ lc_block, lc_wfc, lc_other, \
-             rc_block, rc_wfc, rc_other, \
-             cv_block, cv_wfc, cv_rtc, cv_other, \
-             cs_block, cs_wfc, cs_rtc, cs_other ]
+               'Comp Struct ReadToCache', 'Comp Struct Mapping', 'Comp Struct Other' ]
+dataList = [ times_grp['lc']['block'], times_grp['lc']['wfc'], \
+             times_grp['lc']['mapping'], times_grp['lc']['other'], \
+             times_grp['rc']['block'], times_grp['rc']['wfc'], \
+             times_grp['rc']['mapping'], times_grp['rc']['other'], \
+             times_grp['cv']['block'], times_grp['cv']['wfc'], times_grp['cv']['rtc'], \
+             times_grp['cv']['mapping'], times_grp['cv']['other'], \
+             times_grp['cs']['block'], times_grp['cs']['wfc'], times_grp['cs']['rtc'], \
+             times_grp['cs']['mapping'], times_grp['cs']['other'] ]
 times = {}
 for i in range(len(categories)):
+    print(categories[i])
     times[categories[i]] = dataList[i]
+print("***")
 timesCopy = copy.deepcopy(times)
 bottoms = {}
 bottoms[categories[0]] = [0] * num_workers
@@ -175,18 +207,21 @@ colors.append('#8dd3c7')
 colors.append('#ffffb3')
 colors.append('#bebada')
 colors.append('#fb8072')
-colors_use = [colors[0]]*3 + [colors[1]]*3 + [colors[2]]*4 + [colors[3]]*4
+colors_use = [colors[0]]*lc_num + [colors[1]]*rc_num + \
+             [colors[2]]*cv_num + [colors[3]]*cs_num
 hatch_block = "x"
 hatch_write = "/"
 hatch_read  = "\\"
-hatch_use  = [ hatch_block, hatch_write, "", \
-               hatch_block, hatch_write, "", \
-               hatch_block, hatch_write, hatch_read, "", \
-               hatch_block, hatch_write, hatch_read, "" ]
+hatch_map = "|"
+hatch_use  = [ hatch_block, hatch_write, hatch_map, "", \
+               hatch_block, hatch_write, hatch_map, "", \
+               hatch_block, hatch_write, hatch_read, hatch_map, "", \
+               hatch_block, hatch_write, hatch_read, hatch_map, "" ]
 
 # bars
 rects = {}
 for i in range(0, num_categories):
+    print(categories[i])
     rects[categories[i]] = ax.bar(ind, times[categories[i]], 1.5*width, \
                                   bottom=bottoms[categories[i]], \
                                   color=colors_use[i], hatch=hatch_use[i]) 
@@ -222,12 +257,13 @@ ax.yaxis.labelpad = 6
 blockBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch=hatch_block)
 writeBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch=hatch_write)
 readBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch=hatch_read)
+mapBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch=hatch_map)
 leg = ax.legend( (rects['Comp Struct Other'][0], rects['Comp Var Other'][0], \
                   rects['RC Other'][0], rects['LC Other'][0], \
-                  blockBars[0], readBars[0], writeBars[0]), \
+                  blockBars[0], readBars[0], writeBars[0], mapBars[0]), \
                  ('Compute Job - AppStruct', 'Compute Job - AppVar', \
                   'Remote Copy', 'Local Copy', 'Blocked Time', \
-                  'Read to Cache', 'Write from Cache'), \
+                  'Read to Cache', 'Write from Cache', 'Edit Mapping'), \
                  labelspacing = 0.0, borderpad =  0.2, loc = 9,
                  ncol = 2)
 leg.draggable()
