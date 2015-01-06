@@ -50,11 +50,13 @@ using namespace nimbus; // NOLINT
 
 ShadowJobEntry::ShadowJobEntry() {
   job_type_ = JOB_SHDW;
+  complex_job_ = NULL;
 }
 
 ShadowJobEntry::ShadowJobEntry(const job_id_t& job_id) {
   job_type_ = JOB_SHDW;
   job_id_ = job_id;
+  complex_job_ = NULL;
 }
 
 ShadowJobEntry::ShadowJobEntry(const std::string& job_name,
@@ -69,7 +71,7 @@ ShadowJobEntry::ShadowJobEntry(const std::string& job_name,
                                const bool& sterile,
                                const GeometricRegion& region,
                                const Parameter& params,
-                               const ComplexJobEntry* complex_job) {
+                               ComplexJobEntry* complex_job) {
   job_type_ = JOB_SHDW;
   job_name_ = job_name;
   job_id_ = job_id;
@@ -110,7 +112,7 @@ boost::shared_ptr<VersionMap> ShadowJobEntry::vmap_write_diff() const {
   return vmap_write_diff_;
 }
 
-const ComplexJobEntry* ShadowJobEntry::complex_job() {
+ComplexJobEntry* ShadowJobEntry::complex_job() {
   return complex_job_;
 }
 
@@ -135,7 +137,17 @@ void ShadowJobEntry::set_vmap_write_diff(boost::shared_ptr<VersionMap> vmap_writ
   vmap_write_diff_ = vmap_write_diff;
 }
 
-void ShadowJobEntry::set_complex_job(const ComplexJobEntry* complex_job) {
+void ShadowJobEntry::set_complex_job(ComplexJobEntry* complex_job) {
   complex_job_ = complex_job;
 }
+
+bool ShadowJobEntry::IsReadyForCompleteVersioning() {
+  assert(complex_job_);
+  return complex_job_->IsReadyForCompleteVersioning();
+}
+
+job_depth_t ShadowJobEntry::job_depth() const {
+  return complex_job_->job_depth();
+}
+
 

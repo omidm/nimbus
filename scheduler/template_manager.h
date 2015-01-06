@@ -84,17 +84,20 @@ class TemplateManager {
                                        const std::vector<job_id_t>& outer_job_ids,
                                        const std::vector<Parameter>& parameters);
 
-    bool AddComputeJobToTemplate(const std::string& template_name,
-                                 const std::string& job_name,
-                                 const job_id_t& job_id,
-                                 const IDSet<logical_data_id_t>& read_set,
-                                 const IDSet<logical_data_id_t>& write_set,
-                                 const IDSet<job_id_t>& before_set,
-                                 const IDSet<job_id_t>& after_set,
-                                 const job_id_t& parent_job_id,
-                                 const job_id_t& future_job_id,
-                                 const bool& sterile,
-                                 const GeometricRegion& region);
+    TemplateJobEntry* AddComputeJobToTemplate(const std::string& template_name,
+                                              const std::string& job_name,
+                                              const job_id_t& job_id,
+                                              const IDSet<logical_data_id_t>& read_set,
+                                              const IDSet<logical_data_id_t>& write_set,
+                                              const IDSet<job_id_t>& before_set,
+                                              const IDSet<job_id_t>& after_set,
+                                              const job_id_t& parent_job_id,
+                                              const job_id_t& future_job_id,
+                                              const bool& sterile,
+                                              const GeometricRegion& region);
+
+    bool SetBaseVersionMapForTemplate(const std::string& template_name,
+                                      boost::shared_ptr<VersionMap> vmap_base);
 
     bool AddExplicitCopyJobToTemplate();
 

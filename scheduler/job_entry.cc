@@ -47,6 +47,8 @@ JobEntry::JobEntry() {
   Initialize();
   job_depth_ = NIMBUS_INIT_JOB_DEPTH;
   sterile_ = false;
+  memoize_ = false;
+  template_job_ = NULL;
   region_ = GeometricRegion();
   partial_versioned_ = false;
   versioned_ = false;
@@ -173,6 +175,14 @@ SchedulerWorker* JobEntry::assigned_worker() const {
 
 bool JobEntry::sterile() const {
   return sterile_;
+}
+
+bool JobEntry::memoize() const {
+  return memoize_;
+}
+
+TemplateJobEntry* JobEntry::template_job() const {
+  return template_job_;
 }
 
 GeometricRegion JobEntry::region() const {
@@ -331,9 +341,16 @@ void JobEntry::set_assigned_worker(SchedulerWorker *assigned_worker) {
   assigned_worker_ = assigned_worker;
 }
 
-
 void JobEntry::set_sterile(bool flag) {
   sterile_ = flag;
+}
+
+void JobEntry::set_memoize(bool flag) {
+  memoize_ = flag;
+}
+
+void JobEntry::set_template_job(TemplateJobEntry* template_job) {
+  template_job_ = template_job;
 }
 
 void JobEntry::set_region(GeometricRegion region) {

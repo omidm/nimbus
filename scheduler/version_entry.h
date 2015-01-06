@@ -54,6 +54,8 @@
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "scheduler/job_entry.h"
+#include "scheduler/shadow_job_entry.h"
+#include "scheduler/complex_job_entry.h"
 #include "scheduler/logical_data_lineage.h"
 
 namespace nimbus {

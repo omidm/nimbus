@@ -256,32 +256,36 @@ void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
       Log::GetRawTime(), cm->job_id().elem(), cm->job_name().c_str());
   log_receive_stamp_.log_WriteToFile(std::string(buff));
 
-  job_manager_->AddComputeJobEntry(cm->job_name(),
-                                   cm->job_id().elem(),
-                                   cm->read_set(),
-                                   cm->write_set(),
-                                   cm->before_set(),
-                                   cm->after_set(),
-                                   cm->parent_job_id().elem(),
-                                   cm->future_job_id().elem(),
-                                   cm->sterile(),
-                                   cm->region(),
-                                   cm->params());
+  JobEntry * job =
+    job_manager_->AddComputeJobEntry(cm->job_name(),
+                                     cm->job_id().elem(),
+                                     cm->read_set(),
+                                     cm->write_set(),
+                                     cm->before_set(),
+                                     cm->after_set(),
+                                     cm->parent_job_id().elem(),
+                                     cm->future_job_id().elem(),
+                                     cm->sterile(),
+                                     cm->region(),
+                                     cm->params());
 
   std::map<job_id_t, std::string>::iterator iter =
     template_spawner_map_.find(cm->parent_job_id().elem());
   if (iter != template_spawner_map_.end()) {
-    template_manager_->AddComputeJobToTemplate(iter->second,
-                                               cm->job_name(),
-                                               cm->job_id().elem(),
-                                               cm->read_set(),
-                                               cm->write_set(),
-                                               cm->before_set(),
-                                               cm->after_set(),
-                                               cm->parent_job_id().elem(),
-                                               cm->future_job_id().elem(),
-                                               cm->sterile(),
-                                               cm->region());
+    TemplateJobEntry* template_job =
+      template_manager_->AddComputeJobToTemplate(iter->second,
+                                                 cm->job_name(),
+                                                 cm->job_id().elem(),
+                                                 cm->read_set(),
+                                                 cm->write_set(),
+                                                 cm->before_set(),
+                                                 cm->after_set(),
+                                                 cm->parent_job_id().elem(),
+                                                 cm->future_job_id().elem(),
+                                                 cm->sterile(),
+                                                 cm->region());
+    job->set_memoize(true);
+    job->set_template_job(template_job);
   }
 
   snprintf(buff, sizeof(buff), "%10.9f JE id: %lu n: %s.",
@@ -497,8 +501,25 @@ void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
 void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
   // TODO(omidm): Implement!
   if (NIMBUS_TEMPLATES_ACTIVE || NIMBUS_NEW_TEMPLATES_ACTIVE) {
-    template_manager_->DetectNewTemplate(cm->job_graph_name());
-    template_spawner_map_[cm->parent_job_id().elem()] = cm->job_graph_name();
+    std::string template_name = cm->job_graph_name();
+    job_id_t job_id = cm->parent_job_id().elem();
+
+    template_manager_->DetectNewTemplate(template_name);
+    template_spawner_map_[job_id] = template_name;
+
+    // Memoize the parent version map as the base version map of the template.
+    JobEntry *job;
+    if (job_manager_->GetJobEntry(job_id, job)) {
+      if (!job_manager_->ResolveEntireContextForJob(job)) {
+        dbg(DBG_ERROR, "ERROR: could not resolve entire context of parent of template with job id %lu.\n", job_id); // NOLINT
+        assert(false);
+      }
+      template_manager_->SetBaseVersionMapForTemplate(template_name,
+                                                      job->vmap_read());
+    } else {
+      dbg(DBG_ERROR, "ERROR: parent of template with job id %lu is not in the graph.\n", job_id);
+      assert(false);
+    }
     std::cout << "OMID START TEMPLATE\n.";
   }
 }

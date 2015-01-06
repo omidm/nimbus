@@ -163,21 +163,32 @@ bool TemplateManager::GetComplexJobEntryForTemplate(ComplexJobEntry*& complex_jo
   return true;
 }
 
+bool TemplateManager::SetBaseVersionMapForTemplate(const std::string& template_name,
+                                                   boost::shared_ptr<VersionMap> vmap_base) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
+  TemplateMap::iterator iter = template_map_.find(template_name);
+  if (iter != template_map_.end()) {
+      iter->second->set_vmap_base(vmap_base);
+  } else {
+    dbg(DBG_ERROR, "ERROR: template has NOT been detected to get complex job!\n");
+    return false;
+  }
 
+  return true;
+}
 
-
-
-bool TemplateManager::AddComputeJobToTemplate(const std::string& template_name,
-                                              const std::string& job_name,
-                                              const job_id_t& job_id,
-                                              const IDSet<logical_data_id_t>& read_set,
-                                              const IDSet<logical_data_id_t>& write_set,
-                                              const IDSet<job_id_t>& before_set,
-                                              const IDSet<job_id_t>& after_set,
-                                              const job_id_t& parent_job_id,
-                                              const job_id_t& future_job_id,
-                                              const bool& sterile,
-                                              const GeometricRegion& region) {
+TemplateJobEntry*
+TemplateManager::AddComputeJobToTemplate(const std::string& template_name,
+                                         const std::string& job_name,
+                                         const job_id_t& job_id,
+                                         const IDSet<logical_data_id_t>& read_set,
+                                         const IDSet<logical_data_id_t>& write_set,
+                                         const IDSet<job_id_t>& before_set,
+                                         const IDSet<job_id_t>& after_set,
+                                         const job_id_t& parent_job_id,
+                                         const job_id_t& future_job_id,
+                                         const bool& sterile,
+                                         const GeometricRegion& region) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   TemplateMap::iterator iter = template_map_.find(template_name);
   if (iter != template_map_.end()) {
@@ -198,14 +209,12 @@ bool TemplateManager::AddComputeJobToTemplate(const std::string& template_name,
                                          region);
     } else {
       dbg(DBG_ERROR, "ERROR: template has been finalized and cannot add compute job!\n");
-      return false;
+      return NULL;
     }
   } else {
     dbg(DBG_ERROR, "ERROR: template has NOT been detected to add compute job!\n");
-    return false;
+    return NULL;
   }
-
-  return true;
 }
 
 bool TemplateManager::AddExplicitCopyJobToTemplate() {

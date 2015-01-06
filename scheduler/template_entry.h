@@ -67,6 +67,9 @@ class TemplateEntry {
     ~TemplateEntry();
 
     bool finalized();
+    boost::shared_ptr<VersionMap> vmap_base() const;
+
+    virtual void set_vmap_base(boost::shared_ptr<VersionMap> vmap_base);
 
     bool Finalize();
 
@@ -85,16 +88,16 @@ class TemplateEntry {
                             const std::vector<job_id_t>& outer_job_ids,
                             const std::vector<Parameter>& parameters);
 
-    bool AddComputeJob(const std::string& job_name,
-                       const job_id_t& job_id,
-                       const IDSet<logical_data_id_t>& read_set,
-                       const IDSet<logical_data_id_t>& write_set,
-                       const IDSet<job_id_t>& before_set,
-                       const IDSet<job_id_t>& after_set,
-                       const job_id_t& parent_job_id,
-                       const job_id_t& future_job_id,
-                       const bool& sterile,
-                       const GeometricRegion& region);
+    TemplateJobEntry* AddComputeJob(const std::string& job_name,
+                                    const job_id_t& job_id,
+                                    const IDSet<logical_data_id_t>& read_set,
+                                    const IDSet<logical_data_id_t>& write_set,
+                                    const IDSet<job_id_t>& before_set,
+                                    const IDSet<job_id_t>& after_set,
+                                    const job_id_t& parent_job_id,
+                                    const job_id_t& future_job_id,
+                                    const bool& sterile,
+                                    const GeometricRegion& region);
 
     bool AddExplicitCopyJob();
 
@@ -149,6 +152,7 @@ class TemplateEntry {
     EntryList entry_list_;
     TemplateJobEntryVector compute_jobs_;
     std::list<size_t> parent_job_indices_;
+    boost::shared_ptr<VersionMap> vmap_base_;
     // TODO(omidm): currently we do not support future job id in templates!
     boost::shared_ptr<job_id_t> future_job_id_ptr_;
 };

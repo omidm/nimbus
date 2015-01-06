@@ -97,12 +97,17 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
 }
 
 bool VersionManager::AddComplexJobEntry(ComplexJobEntry *complex_job) {
-  assert(false);
-  return false;
+  // assert(false);
+  // return false;
+  return true;
 }
 
 bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
   assert(job->IsReadyForCompleteVersioning());
+
+  if (job->job_id() == 10000000157) {
+    std::cout << "OMID\n";
+  }
 
   IDSet<logical_data_id_t>::ConstIter it;
   for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {

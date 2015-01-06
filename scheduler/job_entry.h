@@ -68,6 +68,8 @@ typedef boost::unordered_map<job_id_t, JobEntry*> JobEntryTable;
 typedef std::list<JobEntry*> JobEntryList;
 typedef std::vector<Data*> DataArray;
 
+class TemplateJobEntry;
+
 class JobEntry {
   public:
     typedef boost::unordered_map<logical_data_id_t, physical_data_id_t> PhysicalTable;
@@ -100,6 +102,8 @@ class JobEntry {
     virtual worker_id_t assigned_worker_id() const;
     virtual SchedulerWorker* assigned_worker() const;
     virtual bool sterile() const;
+    virtual bool memoize() const;
+    virtual TemplateJobEntry* template_job() const;
     virtual GeometricRegion region() const;
     virtual bool partial_versioned() const;
     virtual bool versioned() const;
@@ -136,6 +140,8 @@ class JobEntry {
     virtual void set_assigned_worker_id(worker_id_t assigned_worker_id);
     virtual void set_assigned_worker(SchedulerWorker* assigned_worker);
     virtual void set_sterile(bool flag);
+    virtual void set_memoize(bool flag);
+    virtual void set_template_job(TemplateJobEntry* template_job);
     virtual void set_region(GeometricRegion region);
     virtual void set_partial_versioned(bool flag);
     virtual void set_versioned(bool flag);
@@ -190,6 +196,8 @@ class JobEntry {
     worker_id_t assigned_worker_id_;
     SchedulerWorker *assigned_worker_;
     bool sterile_;
+    bool memoize_;
+    TemplateJobEntry* template_job_;
     GeometricRegion region_;
     bool partial_versioned_;
     bool versioned_;

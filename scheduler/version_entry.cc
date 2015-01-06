@@ -227,6 +227,29 @@ bool VersionEntry::LookUpVersion(
     dbg(DBG_ERROR, "Could not update the ldl for ldid %lu.\n", ldid_);
   }
 
+  if (job->job_type() == JOB_SHDW) {
+    ShadowJobEntry* sj = reinterpret_cast<ShadowJobEntry*>(job);
+    ComplexJobEntry* xj = sj->complex_job();
+
+    data_version_t base_version;
+    if (xj->vmap_read()->query_entry(ldid_, &base_version)) {
+    } else if (LookUpVersion(xj, &base_version)) {
+      xj->vmap_read()->set_entry(ldid_, base_version);
+    } else {
+      dbg(DBG_ERROR, "ERROR: could not version the base complex job %lu.\n", xj->job_id());
+      return false;
+    }
+
+    data_version_t diff_version;
+    if (!sj->vmap_read_diff()->query_entry(ldid_, &diff_version)) {
+      dbg(DBG_ERROR, "ERROR: could not get diff version for shadow job %lu.\n", sj->job_id());
+      return false;
+    }
+
+    *version = base_version + diff_version;
+    return true;
+  }
+
   return ldl_.LookUpVersion(job->meta_before_set(), version);
 }
 

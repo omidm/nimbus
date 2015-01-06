@@ -89,6 +89,8 @@ class ComplexJobEntry : public JobEntry {
     const std::vector<job_id_t>* outer_job_ids_p() const;
     const std::vector<Parameter>* parameters_p() const;
 
+    ShadowJobEntryMap jobs();
+    const ShadowJobEntryMap* jobs_p();
 
     size_t GetParentJobIds(std::list<job_id_t>* list);
 
@@ -110,9 +112,12 @@ class ComplexJobEntry : public JobEntry {
     ShadowJobEntryMap jobs_;
     std::list<size_t> parent_job_ids_;
     bool parent_job_ids_set_;
+    bool job_map_complete_;
     size_t assign_index_;
 
     void SetParentJobIds();
+
+    void CompleteJobMap();
 
     size_t GetJobIndex(job_id_t job_id);
 };

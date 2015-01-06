@@ -42,13 +42,16 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "scheduler/shadow_job_entry.h"
+#include "scheduler/template_job_entry.h"
 
 using namespace nimbus; // NOLINT
 
 
 TemplateJobEntry::TemplateJobEntry() {
   job_type_ = JOB_TMPL;
+
+  vmap_read_diff_ = boost::shared_ptr<VersionMap>(new VersionMap());
+  vmap_write_diff_ = boost::shared_ptr<VersionMap>(new VersionMap());
 }
 
 TemplateJobEntry::TemplateJobEntry(const std::string& job_name,
@@ -65,6 +68,9 @@ TemplateJobEntry::TemplateJobEntry(const std::string& job_name,
 
   union_set_.insert(read_set_);
   union_set_.insert(write_set_);
+
+  vmap_read_diff_ = boost::shared_ptr<VersionMap>(new VersionMap());
+  vmap_write_diff_ = boost::shared_ptr<VersionMap>(new VersionMap());
 }
 
 TemplateJobEntry::~TemplateJobEntry() {

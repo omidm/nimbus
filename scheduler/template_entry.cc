@@ -57,6 +57,14 @@ bool TemplateEntry::finalized() {
   return finalized_;
 }
 
+boost::shared_ptr<VersionMap> TemplateEntry::vmap_base() const {
+  return vmap_base_;
+}
+
+void TemplateEntry::set_vmap_base(boost::shared_ptr<VersionMap> vmap_base) {
+  vmap_base_ = vmap_base;
+}
+
 bool TemplateEntry::Finalize() {
   if (finalized_) {
     dbg(DBG_WARN, "WARNING: template has been already finalized!\n");
@@ -214,19 +222,19 @@ bool TemplateEntry::GetComplexJobEntry(ComplexJobEntry*& complex_job,
   return true;
 }
 
-bool TemplateEntry::AddComputeJob(const std::string& job_name,
-                                  const job_id_t& job_id,
-                                  const IDSet<logical_data_id_t>& read_set,
-                                  const IDSet<logical_data_id_t>& write_set,
-                                  const IDSet<job_id_t>& before_set,
-                                  const IDSet<job_id_t>& after_set,
-                                  const job_id_t& parent_job_id,
-                                  const job_id_t& future_job_id,
-                                  const bool& sterile,
-                                  const GeometricRegion& region) {
+TemplateJobEntry* TemplateEntry::AddComputeJob(const std::string& job_name,
+                                               const job_id_t& job_id,
+                                               const IDSet<logical_data_id_t>& read_set,
+                                               const IDSet<logical_data_id_t>& write_set,
+                                               const IDSet<job_id_t>& before_set,
+                                               const IDSet<job_id_t>& after_set,
+                                               const job_id_t& parent_job_id,
+                                               const job_id_t& future_job_id,
+                                               const bool& sterile,
+                                               const GeometricRegion& region) {
   if (finalized_) {
     dbg(DBG_ERROR, "ERROR: template has been finalized and cannot add compute job!\n");
-    return false;
+    return NULL;
   }
 
   boost::shared_ptr<job_id_t> job_id_ptr;
@@ -294,7 +302,7 @@ bool TemplateEntry::AddComputeJob(const std::string& job_name,
   entry_list_.push_back(entry);
   job_id_ptrs_.push_back(job_id_ptr);
 
-  return true;
+  return job;
 }
 
 bool TemplateEntry::AddExplicitCopyJob() {

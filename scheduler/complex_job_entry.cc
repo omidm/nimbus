@@ -52,6 +52,7 @@ ComplexJobEntry::ComplexJobEntry() {
   job_name_ = NIMBUS_COMPLEX_JOB_NAME;
   assign_index_ = 0;
   parent_job_ids_set_ = false;
+  job_map_complete_ = false;
 }
 
 ComplexJobEntry::ComplexJobEntry(const job_id_t& job_id,
@@ -70,6 +71,7 @@ ComplexJobEntry::ComplexJobEntry(const job_id_t& job_id,
   parameters_ = parameters;
   assign_index_ = 0;
   parent_job_ids_set_ = false;
+  job_map_complete_ = false;
 
   // parent should be explicitally in before set - omidm
   // currentrly before set of complex job is only parent job - omidm
@@ -229,6 +231,56 @@ size_t ComplexJobEntry::GetParentJobs(ShadowJobEntryList* list, bool append) {
 
   assign_index_ += count;
   return count;
+}
+
+ShadowJobEntryMap ComplexJobEntry::jobs() {
+  if (!job_map_complete_) {
+    CompleteJobMap();
+  }
+
+  return jobs_;
+}
+
+const ShadowJobEntryMap* ComplexJobEntry::jobs_p() {
+  if (!job_map_complete_) {
+    CompleteJobMap();
+  }
+
+  return &jobs_;
+}
+
+void ComplexJobEntry::CompleteJobMap() {
+  if (job_map_complete_) {
+    return;
+  }
+
+  size_t index = 0;
+  for (; index < inner_job_ids_.size(); ++index) {
+    ShadowJobEntryMap::iterator it = jobs_.find(inner_job_ids_[index]);
+    if (it != jobs_.end()) {
+      continue;
+    } else {
+      TemplateJobEntry* job = template_entry_->GetJobAtIndex(index);
+      ShadowJobEntry* shadow_job =
+        new ShadowJobEntry(job->job_name(),
+                           inner_job_ids_[index],
+                           job->read_set_p(),
+                           job->write_set_p(),
+                           job->union_set_p(),
+                           job->vmap_read_diff(),
+                           job->vmap_write_diff(),
+                           parent_job_id_,
+                           0,  // future_job_id, currently not supported - omidm
+                           job->sterile(),
+                           job->region(),
+                           parameters_[index],
+                           this);
+      jobs_[inner_job_ids_[index]] = shadow_job;
+    }
+  }
+
+  job_map_complete_ = true;
+  return;
 }
 
 size_t ComplexJobEntry::GetJobIndex(job_id_t job_id) {

@@ -85,7 +85,7 @@ class ShadowJobEntry : public JobEntry {
                    const bool& sterile,
                    const GeometricRegion& region,
                    const Parameter& params,
-                   const ComplexJobEntry* complex_job);
+                   ComplexJobEntry* complex_job);
 
     virtual ~ShadowJobEntry();
 
@@ -94,7 +94,7 @@ class ShadowJobEntry : public JobEntry {
     virtual const IDSet<logical_data_id_t>* union_set_p() const;
     virtual boost::shared_ptr<VersionMap> vmap_read_diff() const;
     virtual boost::shared_ptr<VersionMap> vmap_write_diff() const;
-    virtual const ComplexJobEntry* complex_job();
+    virtual ComplexJobEntry* complex_job();
 
 
     virtual void set_read_set_p(const IDSet<logical_data_id_t>* read_set_p);
@@ -102,10 +102,13 @@ class ShadowJobEntry : public JobEntry {
     virtual void set_union_set_p(const IDSet<logical_data_id_t>* union_set_p);
     virtual void set_vmap_read_diff(boost::shared_ptr<VersionMap> vmap_read_diff);
     virtual void set_vmap_write_diff(boost::shared_ptr<VersionMap> vmap_write_diff);
-    virtual void set_complex_job(const ComplexJobEntry* complex_job);
+    virtual void set_complex_job(ComplexJobEntry* complex_job);
+
+    virtual job_depth_t job_depth() const;
+    virtual bool IsReadyForCompleteVersioning();
 
   private:
-    const ComplexJobEntry* complex_job_;
+    ComplexJobEntry* complex_job_;
     const IDSet<logical_data_id_t>* read_set_p_;
     const IDSet<logical_data_id_t>* write_set_p_;
     const IDSet<logical_data_id_t>* union_set_p_;
