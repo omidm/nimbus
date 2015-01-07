@@ -87,6 +87,14 @@ bool TemplateEntry::Finalize() {
     ++index;
   }
 
+  TemplateJobEntryVector::iterator it = compute_jobs_.begin();
+  for (; it != compute_jobs_.end(); ++it) {
+    std::cout << "******OMID: " << (*it)->job_name() << std::endl;
+  }
+
+
+
+
   finalized_ = true;
   return true;
 }

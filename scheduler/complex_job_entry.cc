@@ -229,7 +229,6 @@ size_t ComplexJobEntry::GetParentJobs(ShadowJobEntryList* list, bool append) {
     count++;
   }
 
-  assign_index_ += count;
   return count;
 }
 

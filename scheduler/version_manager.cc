@@ -97,17 +97,33 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
 }
 
 bool VersionManager::AddComplexJobEntry(ComplexJobEntry *complex_job) {
-  // assert(false);
-  // return false;
+  InsertComplexJobInLdl(complex_job);
+
+  const ShadowJobEntryMap* jobs =  complex_job->jobs_p();
+  ShadowJobEntryMap::const_iterator iter = jobs->begin();
+  for (; iter != jobs->end(); ++iter) {
+    ShadowJobEntry* job = iter->second;
+    {
+      IDSet<logical_data_id_t>::ConstIter it;
+      for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
+        Index::iterator iter = index_.find(*it);
+        if (iter == index_.end()) {
+          dbg(DBG_ERROR, "ERROR: ldid %lu appeared in read set of %lu is not defined yet.\n",
+              *it, job->job_id());
+        } else {
+          iter->second->AddJobEntryReader(job);
+        }
+      }
+    }
+
+    DetectNewJob(job);
+  }
+
   return true;
 }
 
 bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
   assert(job->IsReadyForCompleteVersioning());
-
-  if (job->job_id() == 10000000157) {
-    std::cout << "OMID\n";
-  }
 
   IDSet<logical_data_id_t>::ConstIter it;
   for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
@@ -191,7 +207,16 @@ bool VersionManager::MemoizeVersionsForTemplate(JobEntry *job) {
         return false;
       }
 
-      tj->vmap_read_diff()->set_entry(*it, version - base_version);
+      data_version_t diff_version = version - base_version;
+      assert(diff_version >= 0);
+      tj->vmap_read_diff()->set_entry(*it, diff_version);
+
+      if (tj->write_set_p()->contains(*it)) {
+        diff_version = diff_version + 1;
+      }
+      if (diff_version > 0) {
+        tj->vmap_write_diff()->set_entry(*it, diff_version);
+      }
     }
   } else {
     LdoMap::const_iterator it;
@@ -209,12 +234,59 @@ bool VersionManager::MemoizeVersionsForTemplate(JobEntry *job) {
         return false;
       }
 
-      tj->vmap_read_diff()->set_entry(it->first, version - base_version);
+      data_version_t diff_version = version - base_version;
+      assert(diff_version >= 0);
+      tj->vmap_read_diff()->set_entry(it->first, diff_version);
+
+      if (tj->write_set_p()->contains(it->first)) {
+        diff_version = diff_version + 1;
+      }
+      if (diff_version > 0) {
+        tj->vmap_write_diff()->set_entry(it->first, diff_version);
+      }
     }
   }
 
   return true;
 }
+
+
+bool VersionManager::InsertComplexJobInLdl(ComplexJobEntry *job) {
+  ShadowJobEntryList list;
+  job->GetParentJobs(&list);
+  // For now only one parent job per complex job is allowd!
+  assert(list.size() == 1);
+  ShadowJobEntry* sj = *(list.begin());
+  ComplexJobEntry* xj = sj->complex_job();
+  assert(xj == job);
+
+  VersionMap::ConstIter iter = sj->vmap_write_diff()->content_p()->begin();
+  for (; iter != sj->vmap_write_diff()->content_p()->end(); ++iter) {
+    data_version_t base_version;
+    if (xj->vmap_read()->query_entry(iter->first, &base_version)) {
+    } else if (LookUpVersion(xj, iter->first, &base_version)) {
+      xj->vmap_read()->set_entry(iter->first, base_version);
+    } else {
+      dbg(DBG_ERROR, "ERROR: complex job %lu could not be versioned for ldid %lu.", xj->job_id(), iter->first); //NOLINT
+      assert(false);
+      return false;
+    }
+
+    data_version_t diff_version;
+    if (sj->vmap_write_diff()->query_entry(iter->first, &diff_version)) {
+    } else {
+      dbg(DBG_ERROR, "ERROR: shadow job %lu did not have diff versioned for ldid %lu.", xj->job_id(), iter->first); //NOLINT
+      assert(false);
+      return false;
+    }
+
+    InsertCheckPointLdlEntry(
+        iter->first, xj->job_id(), base_version + diff_version, xj->job_depth());
+  }
+
+  return true;
+}
+
 
 bool VersionManager::CreateCheckPoint(JobEntry *job) {
   assert(!job->sterile());
@@ -276,10 +348,6 @@ bool VersionManager::DetectVersionedJob(JobEntry *job) {
     assert(it != child_counter_.end());
     --it->second;
     if (it->second == 0) {
-      if (it->first == 10000000141) {
-        std::cout << "OMID1\n";
-      }
-
       child_counter_.erase(it);
     }
   }
@@ -293,10 +361,6 @@ bool VersionManager::DetectDoneJob(JobEntry *job) {
     assert(it != child_counter_.end());
     --it->second;
     if (it->second == 0) {
-      if (it->first == 10000000141) {
-        std::cout << "OMID2\n";
-      }
-
       child_counter_.erase(it);
     }
   }
@@ -318,6 +382,9 @@ bool VersionManager::InsertCheckPointLdlEntry(
 }
 
 bool VersionManager::GetSnapShot() {
+  // TODO(omidm): fix snap shot logic when there are complex jobs!
+  return false;
+
   boost::unique_lock<boost::recursive_mutex> lock(snap_shot_mutex_);
   if (snap_shot_pending_) {
     CleanUp();

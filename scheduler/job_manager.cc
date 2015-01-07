@@ -700,7 +700,6 @@ void JobManager::NotifyJobAssignment(JobEntry *job) {
   after_map_->AddEntries(job);
 
   if ((job->job_type() != JOB_COMP) &&
-      (job->job_type() != JOB_SHDW) &&
       (job->job_type() != JOB_CMPX)) {
     return;
   }

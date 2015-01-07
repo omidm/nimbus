@@ -504,7 +504,12 @@ void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
     std::string template_name = cm->job_graph_name();
     job_id_t job_id = cm->parent_job_id().elem();
 
-    template_manager_->DetectNewTemplate(template_name);
+    if (!template_manager_->DetectNewTemplate(template_name)) {
+      dbg(DBG_ERROR, "ERROR: could not detect new template %s.\n", template_name.c_str());
+      assert(false);
+      return;
+    }
+
     template_spawner_map_[job_id] = template_name;
 
     // Memoize the parent version map as the base version map of the template.

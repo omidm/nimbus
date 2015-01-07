@@ -822,7 +822,7 @@ bool JobAssigner::GetFreeDataAtWorker(SchedulerWorker* worker,
 
 bool JobAssigner::SendComputeJobToWorker(SchedulerWorker* worker,
                                          JobEntry* job) {
-  if (job->job_type() == JOB_COMP) {
+  if ((job->job_type() == JOB_COMP) || (job->job_type() == JOB_SHDW)) {
     ID<job_id_t> job_id(job->job_id());
     ID<job_id_t> future_job_id(job->future_job_id());
     IDSet<physical_data_id_t> read_set, write_set;
@@ -843,7 +843,7 @@ bool JobAssigner::SendComputeJobToWorker(SchedulerWorker* worker,
     server_->SendCommand(worker, &cm);
     return true;
   } else {
-    dbg(DBG_ERROR, "Job with id %lu is not a compute job.\n", job->job_id());
+    dbg(DBG_ERROR, "ERROR: Job with id %lu is not a compute job.\n", job->job_id());
     return false;
   }
 }

@@ -120,6 +120,8 @@ class VersionManager {
                        logical_data_id_t ldid,
                        data_version_t *version);
 
+    bool InsertComplexJobInLdl(ComplexJobEntry *job);
+
     bool CreateCheckPoint(JobEntry *job);
 
     bool DetectNewJob(JobEntry *job);
