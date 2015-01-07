@@ -25,21 +25,17 @@ times_grp = {}
 
 # NOTE: to add categories in plot, edit the categories here.
 
-times_grp['lc']                = {}
-times_grp['lc']['cache_total'] = []
-times_grp['lc']['block']       = []
-times_grp['lc']['wfc']         = []
-times_grp['lc']['mapping']     = []
-
-times_grp['rc']                = {}
-times_grp['rc']['cache_total'] = []
-times_grp['rc']['block']       = []
-times_grp['rc']['wfc']         = []
-times_grp['rc']['mapping']     = []
+times_grp['copy']                = {}
+times_grp['copy']['cache_total'] = []
+times_grp['copy']['block']       = []
+times_grp['copy']['lock']        = []
+times_grp['copy']['wfc']         = []
+times_grp['copy']['mapping']     = []
 
 times_grp['cv']                = {}
 times_grp['cv']['cache_total'] = []
 times_grp['cv']['block']       = []
+times_grp['cv']['lock']        = []
 times_grp['cv']['wfc']         = []
 times_grp['cv']['rtc']         = []
 times_grp['cv']['mapping']     = []
@@ -47,6 +43,7 @@ times_grp['cv']['mapping']     = []
 times_grp['cs']                = {}
 times_grp['cs']['cache_total'] = []
 times_grp['cs']['block']       = []
+times_grp['cs']['lock']        = []
 times_grp['cs']['wfc']         = []
 times_grp['cs']['rtc']         = []
 times_grp['cs']['mapping']     = []
@@ -65,30 +62,20 @@ for i in range(int(sys.argv[1]), int(sys.argv[2]) + 1):
 
         # NOTE: to add categories in plot, edit the parser here.
 
-        if "stage LC job" in line:
-            times_grp['lc']['cache_total'][-1] += float(line.split()[-1])
-        elif ("stage RCS job" in line or "stage RCR job" in line):
-            times_grp['rc']['cache_total'][-1] += float(line.split()[-1])
+        if "stage" in line and "Copy job" in line:
+            times_grp['copy']['cache_total'][-1] += float(line.split()[-1])
 
-#        elif "block LC job" in line:
-#            times_grp['lc']['block'][-1] += float(line.split()[-1])
-#        elif ("block RCS job" in line or "block RCR job" in line):
-#            times_grp['rc']['block'][-1] += float(line.split()[-1])
+        elif "block" in line and "Copy job" in line:
+            times_grp['copy']['block'][-1] += float(line.split()[-1])
 
-        elif " lock LC job" in line:
-            times_grp['lc']['block'][-1] += float(line.split()[-1])
-        elif (" lock RCS job" in line or " lock RCR job" in line):
-            times_grp['rc']['block'][-1] += float(line.split()[-1])
+        elif " lock" in line and  "Copy job" in line:
+            times_grp['copy']['lock'][-1] += float(line.split()[-1])
 
-#        elif " mapping LC job" in line:
-#            times_grp['lc']['mapping'][-1] += float(line.split()[-1])
-#        elif (" mapping RCS job" in line or " mapping RCR job" in line):
-#            times_grp['rc']['mapping'][-1] += float(line.split()[-1])
-#
-#        elif "pdata" in line and "LC job" in line:
-#            times_grp['lc']['wfc'][-1] += float(line.split()[-1])
-#        elif "pdata" in line and ("RCR job" in line or "RCS job" in line):
-#            times_grp['rc']['wfc'][-1] += float(line.split()[-1])
+        elif " mapping" in line and  "Copy job" in line:
+            times_grp['copy']['mapping'][-1] += float(line.split()[-1])
+
+        elif "wfc" in line and "Copy job" in line:
+            times_grp['copy']['wfc'][-1] += float(line.split()[-1])
 
         #######################################################################
 
@@ -99,30 +86,30 @@ for i in range(int(sys.argv[1]), int(sys.argv[2]) + 1):
         elif "GAS stage" in line or "WIS stage" in line:
             times_grp['cs']['cache_total'][-1] += float(line.split()[-1])
 
-#        elif "GAV block" in line or "WIV block" in line:
-#            times_grp['cv']['block'][-1] += float(line.split()[-1])
-#        elif "GAS block" in line or "WIS block" in line:
-#            times_grp['cs']['block'][-1] += float(line.split()[-1])
-
-        elif "GAV lock" in line or "WIV lock" in line:
+        elif "GAV block" in line or "WIV block" in line:
             times_grp['cv']['block'][-1] += float(line.split()[-1])
-        elif "GAS lock" in line or "WIS lock" in line:
+        elif "GAS block" in line or "WIS block" in line:
             times_grp['cs']['block'][-1] += float(line.split()[-1])
 
-#        elif "GAV mapping" in line or "WIV mapping" in line:
-#            times_grp['cv']['mapping'][-1] += float(line.split()[-1])
-#        elif "GAS mapping" in line or "WIS mapping" in line:
-#            times_grp['cs']['mapping'][-1] += float(line.split()[-1])
-#
-#        elif "GAV wfc" in line or "WIV wfc" in line:
-#            times_grp['cv']['wfc'][-1] += float(line.split()[-1])
-#        elif "GAS wfc" in line or "WIS wfc" in line:
-#            times_grp['cs']['wfc'][-1] += float(line.split()[-1])
-#
-#        elif "GAV rtc" in line or "WIV rtc" in line:
-#            times_grp['cv']['rtc'][-1] += float(line.split()[-1])
-#        elif "GAS rtc" in line or "WIS rtc" in line:
-#            times_grp['cs']['rtc'][-1] += float(line.split()[-1])
+        elif "GAV lock" in line or "WIV lock" in line:
+            times_grp['cv']['lock'][-1] += float(line.split()[-1])
+        elif "GAS lock" in line or "WIS lock" in line:
+            times_grp['cs']['lock'][-1] += float(line.split()[-1])
+
+        elif "GAV mapping" in line or "WIV mapping" in line:
+            times_grp['cv']['mapping'][-1] += float(line.split()[-1])
+        elif "GAS mapping" in line or "WIS mapping" in line:
+            times_grp['cs']['mapping'][-1] += float(line.split()[-1])
+
+        elif "GAV wfc" in line or "WIV wfc" in line:
+            times_grp['cv']['wfc'][-1] += float(line.split()[-1])
+        elif "GAS wfc" in line or "WIS wfc" in line:
+            times_grp['cs']['wfc'][-1] += float(line.split()[-1])
+
+        elif "GAV rtc" in line or "WIV rtc" in line:
+            times_grp['cv']['rtc'][-1] += float(line.split()[-1])
+        elif "GAS rtc" in line or "WIS rtc" in line:
+            times_grp['cs']['rtc'][-1] += float(line.split()[-1])
 
         #######################################################################
 
@@ -133,8 +120,7 @@ for k1 in times_grp.keys():
 
 # aggregated, uncategorized into other category
 times_grp_calc = {}
-times_grp_calc['lc'] = [0] * num_workers
-times_grp_calc['rc'] = [0] * num_workers
+times_grp_calc['copy'] = [0] * num_workers
 times_grp_calc['cv'] = [0] * num_workers
 times_grp_calc['cs'] = [0] * num_workers
 for k1 in times_grp.keys():
@@ -153,7 +139,10 @@ for k in times_grp.keys():
 ##############################################################################
 
 # NOTE: to add categories in plot, edit number of categories here.
-num_categories = 18
+copy_num = 5
+cv_num = 6
+cs_num = 6
+num_categories = copy_num + cv_num + cs_num
 
 # plot properties
 ind = np.arange(num_workers)
@@ -179,30 +168,24 @@ for i in range(1, num_workers+1):
     groups.append("W " + str(i))
 
 # NOTE: to add categories in plot, edit number of *num, categories, dataList here.
-lc_num = 4
-rc_num = 4
-cv_num = 5
-cs_num = 5
-categories = [ 'LC Block', 'LC WriteFromCache', 'LC Mapping', 'LC Other', \
-               'RC Block', 'RC WriteFromCache', 'RC Mapping', 'RC Other', \
-               'Comp Var Block', 'Comp Var WriteFromCache', \
+categories = [ 'Copy Block', 'Copy Lock', 'Copy WriteFromCache', \
+               'Copy Mapping', 'Copy Other', \
+               'Comp Var Block', 'Comp Var Lock', 'Comp Var WriteFromCache', \
                'Comp Var ReadToCache', 'Comp Var Mapping', 'Comp Var Other', \
-               'Comp Struct Block', 'Comp Struct WriteFromCache', \
+               'Comp Struct Block', 'Comp Struct Lock', 'Comp Struct WriteFromCache', \
                'Comp Struct ReadToCache', 'Comp Struct Mapping', 'Comp Struct Other' ]
-dataList = [ times_grp['lc']['block'], times_grp['lc']['wfc'], \
-             times_grp['lc']['mapping'], times_grp['lc']['other'], \
-             times_grp['rc']['block'], times_grp['rc']['wfc'], \
-             times_grp['rc']['mapping'], times_grp['rc']['other'], \
-             times_grp['cv']['block'], times_grp['cv']['wfc'], times_grp['cv']['rtc'], \
+dataList = [ times_grp['copy']['block'], times_grp['copy']['lock'], times_grp['copy']['wfc'], \
+             times_grp['copy']['mapping'], times_grp['copy']['other'], \
+             times_grp['cv']['block'], times_grp['cv']['lock'], \
+             times_grp['cv']['wfc'], times_grp['cv']['rtc'], \
              times_grp['cv']['mapping'], times_grp['cv']['other'], \
-             times_grp['cs']['block'], times_grp['cs']['wfc'], times_grp['cs']['rtc'], \
+             times_grp['cs']['block'], times_grp['cs']['lock'], \
+             times_grp['cs']['wfc'], times_grp['cs']['rtc'], \
              times_grp['cs']['mapping'], times_grp['cs']['other'] ]
 
 times = {}
 for i in range(len(categories)):
-    print(categories[i])
     times[categories[i]] = dataList[i]
-print("***")
 timesCopy = copy.deepcopy(times)
 bottoms = {}
 bottoms[categories[0]] = [0] * num_workers
@@ -216,23 +199,22 @@ colors.append('#8dd3c7')
 colors.append('#ffffb3')
 colors.append('#bebada')
 colors.append('#fb8072')
-colors_use = [colors[0]]*lc_num + [colors[1]]*rc_num + \
+colors_use = [colors[0]]*copy_num + \
              [colors[2]]*cv_num + [colors[3]]*cs_num
 
 # NOTE: to add categories in plot, edit hatch patterns here.
 hatch_block = "x"
+hatch_lock = "*"
 hatch_write = "/"
 hatch_read  = "\\"
 hatch_map = "|"
-hatch_use  = [ hatch_block, hatch_write, hatch_map, "", \
-               hatch_block, hatch_write, hatch_map, "", \
-               hatch_block, hatch_write, hatch_read, hatch_map, "", \
-               hatch_block, hatch_write, hatch_read, hatch_map, "" ]
+hatch_use  = [ hatch_block, hatch_lock, hatch_write, hatch_map, "", \
+               hatch_block, hatch_lock, hatch_write, hatch_read, hatch_map, "", \
+               hatch_block, hatch_lock, hatch_write, hatch_read, hatch_map, "" ]
 
 # bars
 rects = {}
 for i in range(0, num_categories):
-    print(categories[i])
     rects[categories[i]] = ax.bar(ind, times[categories[i]], 1.5*width, \
                                   bottom=bottoms[categories[i]], \
                                   color=colors_use[i], hatch=hatch_use[i]) 
@@ -267,14 +249,15 @@ ax.yaxis.labelpad = 6
 # legend
 # NOTE: to add categories in plot, edit legend here.
 blockBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch=hatch_block)
+lockBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch=hatch_lock)
 writeBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch=hatch_write)
 readBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch=hatch_read)
 mapBars = ax.bar(0, 0, 0, 0, color='#FFFFFF', hatch=hatch_map)
 leg = ax.legend( (rects['Comp Struct Other'][0], rects['Comp Var Other'][0], \
-                  rects['RC Other'][0], rects['LC Other'][0], \
-                  blockBars[0], readBars[0], writeBars[0], mapBars[0]), \
-                 ('Compute Job - AppStruct', 'Compute Job - AppVar', \
-                  'Remote Copy', 'Local Copy', 'Blocked Time', \
+                  rects['Copy Other'][0], \
+                  blockBars[0], lockBars[0], readBars[0], writeBars[0], mapBars[0]), \
+                 ('Compute Job - AppStruct', 'Compute Job - AppVar', 'Copy Jobs', \
+                  'Block Time', 'Lock Time', \
                   'Read to Cache', 'Write from Cache', 'Edit Mapping'), \
                  labelspacing = 0.0, borderpad =  0.2, loc = 9,
                  ncol = 2)
