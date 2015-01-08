@@ -46,6 +46,7 @@
 #define NIMBUS_SCHEDULER_COMPLEX_JOB_ENTRY_H_
 
 #include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 #include <vector>
 #include <string>
 #include <set>
@@ -100,11 +101,15 @@ class ComplexJobEntry : public JobEntry {
 
     size_t GetParentJobs(ShadowJobEntryList* list, bool append = false);
 
+    bool GetShadowJobEntry(job_id_t job_id, ShadowJobEntry*& shadow_job);
+
     void MarkJobAssigned(job_id_t job_id);
 
     void MarkJobDone(job_id_t job_id);
 
   private:
+    typedef boost::unordered_set<job_id_t> IdPool;
+
     TemplateEntry* template_entry_;
     std::vector<job_id_t> inner_job_ids_;
     std::vector<job_id_t> outer_job_ids_;
@@ -119,8 +124,10 @@ class ComplexJobEntry : public JobEntry {
 
     void CompleteJobMap();
 
-    size_t GetJobIndex(job_id_t job_id);
+    bool GetJobIndex(job_id_t job_id, size_t *index);
 };
+
+typedef boost::unordered_map<job_id_t, ComplexJobEntry*> ComplexJobEntryMap;
 
 }  // namespace nimbus
 #endif  // NIMBUS_SCHEDULER_COMPLEX_JOB_ENTRY_H_

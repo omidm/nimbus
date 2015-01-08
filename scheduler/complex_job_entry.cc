@@ -205,7 +205,11 @@ size_t ComplexJobEntry::GetParentJobs(ShadowJobEntryList* list, bool append) {
     if (it != jobs_.end()) {
       shadow_job = it->second;
     } else {
-      size_t index = GetJobIndex(*iter);
+      size_t index;
+      if (!GetJobIndex(*iter, &index)) {
+        assert(false);
+      }
+
       TemplateJobEntry* job = template_entry_->GetJobAtIndex(index);
       shadow_job =
         new ShadowJobEntry(job->job_name(),
@@ -231,6 +235,49 @@ size_t ComplexJobEntry::GetParentJobs(ShadowJobEntryList* list, bool append) {
 
   return count;
 }
+
+
+bool ComplexJobEntry::GetShadowJobEntry(job_id_t job_id, ShadowJobEntry*& shadow_job) {
+  if (job_map_complete_) {
+    ShadowJobEntryMap::iterator iter = jobs_.find(job_id);
+    if (iter != jobs_.end()) {
+      shadow_job = iter->second;
+      return true;
+    }
+  } else {
+    size_t index;
+    if (GetJobIndex(job_id, &index)) {
+      ShadowJobEntryMap::iterator iter = jobs_.find(inner_job_ids_[index]);
+      if (iter != jobs_.end()) {
+        shadow_job = iter->second;
+        return true;
+      } else {
+        TemplateJobEntry* job = template_entry_->GetJobAtIndex(index);
+        ShadowJobEntry* sj =
+          new ShadowJobEntry(job->job_name(),
+              inner_job_ids_[index],
+              job->read_set_p(),
+              job->write_set_p(),
+              job->union_set_p(),
+              job->vmap_read_diff(),
+              job->vmap_write_diff(),
+              parent_job_id_,
+              0,  // future_job_id, currently not supported - omidm
+              job->sterile(),
+              job->region(),
+              parameters_[index],
+              this);
+        jobs_[inner_job_ids_[index]] = sj;
+        shadow_job = sj;
+        return true;
+      }
+    }
+  }
+
+  shadow_job = NULL;
+  return false;
+}
+
 
 ShadowJobEntryMap ComplexJobEntry::jobs() {
   if (!job_map_complete_) {
@@ -282,19 +329,19 @@ void ComplexJobEntry::CompleteJobMap() {
   return;
 }
 
-size_t ComplexJobEntry::GetJobIndex(job_id_t job_id) {
-  size_t index = 0;
+bool ComplexJobEntry::GetJobIndex(job_id_t job_id, size_t* index) {
+  size_t idx = 0;
   std::vector<job_id_t>::iterator iter = inner_job_ids_.begin();
   for (; iter != inner_job_ids_.end(); ++iter) {
     if ((*iter) == job_id) {
-      return index;
+      *index = idx;
+      return true;
     }
 
-    ++index;
+    ++idx;
   }
 
-  assert(false);
-  return index;
+  return false;
 }
 
 bool ComplexJobEntry::DrainedAllJobsForAssignment() {

@@ -182,6 +182,8 @@ class JobManager {
     CheckpointManager checkpoint_manager_;
 
     Graph<JobEntry, job_id_t> job_graph_;
+    ComplexJobEntryMap complex_jobs_;
+    boost::unordered_map<job_id_t, job_id_t> complex_containers_;
     boost::mutex job_graph_mutex_;
 
     JobEntryList jobs_done_;
@@ -202,8 +204,6 @@ class JobManager {
     bool ClearJobGraph();
 
     Edge<JobEntry, job_id_t>* AddEdgeToJobGraph(job_id_t from, job_id_t to);
-
-    boost::unordered_map<job_id_t, job_id_t> complex_containers_;
 };
 
 }  // namespace nimbus

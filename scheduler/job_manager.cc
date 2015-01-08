@@ -450,6 +450,15 @@ bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
     job = vertex->entry();
     return true;
   } else {
+    ComplexJobEntryMap::iterator iter = complex_jobs_.begin();
+    for (; iter != complex_jobs_.end(); ++iter) {
+      ShadowJobEntry* shadow_job;
+      if (iter->second->GetShadowJobEntry(job_id, shadow_job)) {
+        job = shadow_job;
+        return true;
+      }
+    }
+
     job = NULL;
     return false;
   }
