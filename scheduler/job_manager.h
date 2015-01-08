@@ -109,7 +109,7 @@ class JobManager {
     JobEntry* AddFutureJobEntry(const job_id_t& job_id);
 
     bool GetComplexJobContainer(const job_id_t& job_id,
-                                job_id_t* complex_job_id);
+                                ComplexJobEntry*& complex_job);
 
     bool AddJobEntryIncomingEdges(JobEntry *job);
 
@@ -183,7 +183,6 @@ class JobManager {
 
     Graph<JobEntry, job_id_t> job_graph_;
     ComplexJobEntryMap complex_jobs_;
-    boost::unordered_map<job_id_t, job_id_t> complex_containers_;
     boost::mutex job_graph_mutex_;
 
     JobEntryList jobs_done_;

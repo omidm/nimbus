@@ -200,10 +200,9 @@ bool JobManager::AddComplexJobEntry(ComplexJobEntry* complex_job) {
 
   std::list<job_id_t> list;
   complex_job->GetParentJobIds(&list);
-  std::list<job_id_t>::iterator iter = list.begin();
-  for (; iter != list.end(); ++iter) {
-    complex_containers_[*iter] = job_id;
-  }
+  // For now complex job could have only one parent job, otherwise versioning goes wrong!
+  assert(list.size() == 1);
+  complex_jobs_[job_id] = complex_job;
 
   // TODO(omidm): what does it mean for checkpointing logic?!!
   if (!complex_job->sterile()) {
@@ -336,32 +335,36 @@ Edge<JobEntry, job_id_t>* JobManager::AddEdgeToJobGraph(job_id_t from, job_id_t 
 }
 
 bool JobManager::GetComplexJobContainer(const job_id_t& job_id,
-                                        job_id_t* complex_job_id) {
-  boost::unordered_map<job_id_t, job_id_t>::iterator iter;
-  iter = complex_containers_.find(job_id);
-  if (iter == complex_containers_.end()) {
-    return false;
+                                        ComplexJobEntry*& complex_job) {
+  ComplexJobEntryMap::iterator iter = complex_jobs_.begin();
+  for (; iter != complex_jobs_.end(); ++iter) {
+    ShadowJobEntry* shadow_job;
+    if (iter->second->GetShadowJobEntry(job_id, shadow_job)) {
+      assert(job_id == shadow_job->job_id());
+      complex_job = iter->second;
+      return true;
+    }
   }
 
-  *complex_job_id = iter->second;
-  return true;
+  complex_job = NULL;
+  return false;
 }
 
 bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
   JobEntry *j;
   Edge<JobEntry, job_id_t> *edge;
 
-  job_id_t complex_job_id;
+  ComplexJobEntry* complex_job;
   edge = AddEdgeToJobGraph(job->parent_job_id(), job->job_id());
   if (edge != NULL) {
     j = edge->start_vertex()->entry();
     assert(j->versioned());
-  } else if (GetComplexJobContainer(job->parent_job_id(), &complex_job_id)) {
-    edge = AddEdgeToJobGraph(complex_job_id, job->job_id());
+  } else if (GetComplexJobContainer(job->parent_job_id(), complex_job)) {
+    edge = AddEdgeToJobGraph(complex_job->job_id(), job->job_id());
     assert(edge);
     j = edge->start_vertex()->entry();
-    assert(j->versioned());
-    assert(false);
+    // TODO(omidm): uncomment this check!
+    // assert(j->versioned());
   } else {
     dbg(DBG_ERROR, "ERROR: could not add edge from parent (id: %lu) for job (id: %lu) in job manager.\n", // NOLINT
         job->parent_job_id(), job->job_id());
@@ -377,6 +380,9 @@ bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
     edge = AddEdgeToJobGraph(*it, job->job_id());
     if (edge != NULL) {
       j = edge->start_vertex()->entry();
+    } else if (GetComplexJobContainer(*it, complex_job)) {
+      // cannot have before set in a complex job - omidm
+      assert(false);
     } else {
       dbg(DBG_SCHED, "Adding possible future job (id: %lu) in job manager.\n", *it);
       AddFutureJobEntry(*it);
@@ -399,7 +405,8 @@ void JobManager::ReceiveMetaBeforeSetDepthVersioningDependency(JobEntry* job) {
   job_depth_t depth = NIMBUS_INIT_JOB_DEPTH;
   job_id_t job_id = job->job_id();
   Vertex<JobEntry, job_id_t>* vertex;
-  GetJobGraphVertex(job_id, &vertex);
+  bool got_vertex = GetJobGraphVertex(job_id, &vertex);
+  assert(got_vertex);
   typename Edge<JobEntry, job_id_t>::Iter it;
   for (it = vertex->incoming_edges()->begin(); it != vertex->incoming_edges()->end(); ++it) {
     JobEntry *j = it->second->start_vertex()->entry();
@@ -411,7 +418,16 @@ void JobManager::ReceiveMetaBeforeSetDepthVersioningDependency(JobEntry* job) {
         depth = j->job_depth();
       }
 
-      job->remove_versioning_dependency(j->job_id());
+      if (j->job_type() == JOB_CMPX) {
+        ComplexJobEntry* complex_job = reinterpret_cast<ComplexJobEntry*>(j);
+        std::list<job_id_t> list;
+        complex_job->GetParentJobIds(&list);
+        // For now complex job could have only one parent job, otherwise versioning goes wrong!
+        assert(list.size() == 1);
+        job->remove_versioning_dependency(*(list.begin()));
+      } else {
+        job->remove_versioning_dependency(j->job_id());
+      }
     }
   }
   job->set_job_depth(depth + 1);
@@ -422,7 +438,8 @@ void JobManager::PassMetaBeforeSetDepthVersioningDependency(JobEntry* job) {
   if (job->IsReadyForCompleteVersioning()) {
     job_id_t job_id = job->job_id();
     Vertex<JobEntry, job_id_t>* vertex;
-    GetJobGraphVertex(job_id, &vertex);
+    bool got_vertex = GetJobGraphVertex(job_id, &vertex);
+    assert(got_vertex);
     typename Edge<JobEntry, job_id_t>::Iter it;
     for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
       JobEntry *j = it->second->end_vertex()->entry();
@@ -441,7 +458,6 @@ void JobManager::PassMetaBeforeSetDepthVersioningDependency(JobEntry* job) {
     }
   }
 }
-
 
 bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
   Vertex<JobEntry, job_id_t>* vertex;
@@ -721,7 +737,8 @@ void JobManager::NotifyJobAssignment(JobEntry *job) {
   if (job->sterile()) {
     job_id_t job_id = job->job_id();
     Vertex<JobEntry, job_id_t>* vertex;
-    GetJobGraphVertex(job_id, &vertex);
+    bool got_vertex = GetJobGraphVertex(job_id, &vertex);
+    assert(got_vertex);
     typename Edge<JobEntry, job_id_t>::Iter it;
     for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
       JobEntry *j = it->second->end_vertex()->entry();
@@ -742,8 +759,15 @@ void JobManager::NotifyJobDone(JobEntry *job) {
   version_manager_.NotifyJobDone(job);
 
   if (!job->sterile()) {
+    ComplexJobEntry* complex_job;
     Vertex<JobEntry, job_id_t>* vertex;
-    GetJobGraphVertex(job_id, &vertex);
+    if (!GetJobGraphVertex(job_id, &vertex)) {
+      if (!GetComplexJobContainer(job_id, complex_job)) {
+        assert(false);
+      }
+      bool got_vertex = GetJobGraphVertex(complex_job->job_id(), &vertex);
+      assert(got_vertex);
+    }
     typename Edge<JobEntry, job_id_t>::Iter it;
     for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
       JobEntry *j = it->second->end_vertex()->entry();
