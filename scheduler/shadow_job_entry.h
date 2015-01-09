@@ -105,6 +105,10 @@ class ShadowJobEntry : public JobEntry {
     virtual void set_complex_job(ComplexJobEntry* complex_job);
 
     virtual job_depth_t job_depth() const;
+
+    virtual bool GetPhysicalReadSet(IDSet<physical_data_id_t>* set);
+    virtual bool GetPhysicalWriteSet(IDSet<physical_data_id_t>* set);
+
     virtual bool IsReadyForCompleteVersioning();
 
   private:

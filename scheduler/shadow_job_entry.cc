@@ -150,4 +150,26 @@ job_depth_t ShadowJobEntry::job_depth() const {
   return complex_job_->job_depth();
 }
 
+bool ShadowJobEntry::GetPhysicalReadSet(IDSet<physical_data_id_t>* set) {
+  set->clear();
+  IDSet<logical_data_id_t>::IDSetIter it;
+  for (it = read_set_p_->begin(); it != read_set_p_->end(); ++it) {
+    if (physical_table_.count(*it) == 0)
+      return false;
+    set->insert(physical_table_[*it]);
+  }
+  return true;
+}
+
+bool ShadowJobEntry::GetPhysicalWriteSet(IDSet<physical_data_id_t>* set) {
+  set->clear();
+  IDSet<logical_data_id_t>::IDSetIter it;
+  for (it = write_set_p_->begin(); it != write_set_p_->end(); ++it) {
+    if (physical_table_.count(*it) == 0)
+      return false;
+    set->insert(physical_table_[*it]);
+  }
+  return true;
+}
+
 
