@@ -442,6 +442,11 @@ bool VersionManager::NotifyJobDone(JobEntry* job) {
 }
 
 bool VersionManager::RemoveJobEntry(JobEntry* job) {
+  // TODO(omidm): may need better clean up for compolex jobs.
+  if (job->job_type() == JOB_CMPX) {
+    return true;
+  }
+
   assert(job->versioned());
 
   {

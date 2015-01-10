@@ -107,6 +107,8 @@ class ComplexJobEntry : public JobEntry {
 
     void MarkJobDone(job_id_t job_id);
 
+    bool IsDone();
+
   private:
     typedef boost::unordered_set<job_id_t> IdPool;
 
@@ -114,6 +116,7 @@ class ComplexJobEntry : public JobEntry {
     std::vector<job_id_t> inner_job_ids_;
     std::vector<job_id_t> outer_job_ids_;
     std::vector<Parameter> parameters_;
+    IdPool done_job_ids_;
     ShadowJobEntryMap jobs_;
     std::list<size_t> parent_job_ids_;
     bool parent_job_ids_set_;

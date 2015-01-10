@@ -803,6 +803,16 @@ void JobManager::NotifyJobDone(JobEntry *job) {
   // After traversing the out going endges then put in the dueue for removal.
   {
     boost::unique_lock<boost::mutex> lock(jobs_done_mutex_);
+    if (job->job_type() == JOB_SHDW) {
+      ShadowJobEntry* sj = reinterpret_cast<ShadowJobEntry*>(job);
+      ComplexJobEntry* xj = sj->complex_job();
+      xj->MarkJobDone(job_id);
+      if (xj->IsDone()) {
+        xj->set_done(true);
+        complex_jobs_.erase(xj->job_id());
+        jobs_done_.push_back(xj);
+      }
+    }
     jobs_done_.push_back(job);
   }
 }

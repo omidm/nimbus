@@ -353,7 +353,10 @@ void ComplexJobEntry::MarkJobAssigned(job_id_t job_id) {
 }
 
 void ComplexJobEntry::MarkJobDone(job_id_t job_id) {
-  // TODO(omidm): Implement
+  done_job_ids_.insert(job_id);
 }
 
+bool ComplexJobEntry::IsDone() {
+  return (done_job_ids_.size() == inner_job_ids_.size());
+}
 
