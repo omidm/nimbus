@@ -489,6 +489,12 @@ bool JobManager::RemoveJobEntry(JobEntry* job) {
     }
     delete job;
     return true;
+  } else if (job->job_type() == JOB_SHDW) {
+    ShadowJobEntry* sj = reinterpret_cast<ShadowJobEntry*>(job);
+    version_manager_.RemoveJobEntry(job);
+    sj->complex_job()->MarkJobRemoved(job->job_id());
+    delete job;
+    return true;
   } else {
     return false;
   }

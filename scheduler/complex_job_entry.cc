@@ -238,6 +238,13 @@ size_t ComplexJobEntry::GetParentJobs(ShadowJobEntryList* list, bool append) {
 
 
 bool ComplexJobEntry::GetShadowJobEntry(job_id_t job_id, ShadowJobEntry*& shadow_job) {
+  if (removed_job_ids_.size() != 0) {
+    if (removed_job_ids_.find(job_id) != removed_job_ids_.end()) {
+      shadow_job = NULL;
+      return false;
+    }
+  }
+
   if (job_map_complete_) {
     ShadowJobEntryMap::iterator iter = jobs_.find(job_id);
     if (iter != jobs_.end()) {
@@ -359,4 +366,9 @@ void ComplexJobEntry::MarkJobDone(job_id_t job_id) {
 bool ComplexJobEntry::IsDone() {
   return (done_job_ids_.size() == inner_job_ids_.size());
 }
+
+void ComplexJobEntry::MarkJobRemoved(job_id_t job_id) {
+  removed_job_ids_.insert(job_id);
+}
+
 
