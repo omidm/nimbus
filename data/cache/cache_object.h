@@ -121,10 +121,12 @@ class CacheObject {
 
         // methods for access control
         bool pending_flag() {
-          return pending_flag_;
+          return false;
+          // return pending_flag_;
         }
         void set_pending_flag() {
-          pending_flag_ = true;
+          // pending_flag_ = true;
+          pending_flag_ = false;
         }
         void unset_pending_flag() {
           pending_flag_ = false;
