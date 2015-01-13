@@ -251,7 +251,7 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
             ct->AddEntry(region, cv);
         }
     }
-    // cv->AcquireAccess(access);
+    cv->AcquireAccess(cache::EXCLUSIVE);
     DataArray flush, sync, diff;
     CacheObjects sync_co;
     RecordTs();  // PrintTimeStamp("start", "GAV block");
@@ -260,7 +260,7 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     }
     RecordTs();  // PrintTimeStamp("end", "GAV block");
     // Move here.
-    cv->AcquireAccess(access);
+    // cv->AcquireAccess(access);
     RecordTs();  // PrintTimeStamp("start", "GAV mapping");
     cv->SetUpReadWrite(read_set, write_set,
                        &flush, &diff, &sync, &sync_co);
@@ -303,9 +303,6 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     // PrintSizeStamp(size_str.c_str(), read_bytes);
 
     // std::string rtc_str = "GAV rtc " + cv->name();
-    RecordTs();  // PrintTimeStamp("start", rtc_str.c_str());
-    cv->ReadToCache(diff, read_region);
-    RecordTs();  // PrintTimeStamp("end", rtc_str.c_str());
     RecordTs();  // PrintTimeStamp("start", "GAV lock");
     pthread_mutex_lock(&cache_lock);
     RecordTs();  // PrintTimeStamp("end", "GAV lock");
@@ -313,6 +310,11 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     cv->unset_pending_flag();
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
+
+    RecordTs();  // PrintTimeStamp("start", rtc_str.c_str());
+    cv->ReadToCache(diff, read_region);
+    RecordTs();  // PrintTimeStamp("end", rtc_str.c_str());
+
     RecordTs();  // PrintTimeStamp("end", "GAV stage");
     {
       int i = 0;
@@ -326,10 +328,10 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
       OutputTs("end", "GAV mapping");
       OutputTs("start", "GAV wfc");
       OutputTs("end", "GAV wfc");
-      OutputTs("start", "GAV rtc");
-      OutputTs("end", "GAV rtc");
       OutputTs("start", "GAV lock");
       OutputTs("end", "GAV lock");
+      OutputTs("start", "GAV rtc");
+      OutputTs("end", "GAV rtc");
       OutputTs("end", "GAV stage");
       assert(i == order);
       assert(order <= 14);
@@ -385,11 +387,12 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
     std::vector<CacheObjects> sync_co_sets(num_var);
     RecordTs();  // PrintTimeStamp("start", "GAS block");
     // Move here.
+    cs->AcquireAccess(cache::EXCLUSIVE);
     while (!cs->CheckPendingFlag(var_type, read_sets, write_sets)) {
       pthread_cond_wait(&cache_cond, &cache_lock);
     }
     RecordTs();  // PrintTimeStamp("end", "GAS block");
-    cs->AcquireAccess(access);
+    // cs->AcquireAccess(access);
     RecordTs();  // PrintTimeStamp("start", "GAS mapping");
     cs->SetUpReadWrite(var_type, read_sets, write_sets,
                        &flush_sets, &diff_sets, &sync_sets, &sync_co_sets);
@@ -443,9 +446,7 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
     // PrintSizeStamp(size_str.c_str(), read_bytes);
 
     // std::string rtc_str = "GAS rtc " + cs->name();
-    RecordTs();  // PrintTimeStamp("start", rtc_str.c_str());
-    cs->ReadToCache(var_type, diff_sets, read_region);
-    RecordTs();  // PrintTimeStamp("end", rtc_str.c_str());
+
     RecordTs();  // PrintTimeStamp("start", "GAS lock");
     pthread_mutex_lock(&cache_lock);
     RecordTs();  // PrintTimeStamp("end", "GAS lock");
@@ -454,6 +455,11 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
     cs->unset_pending_flag();
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
+
+    RecordTs();  // PrintTimeStamp("start", rtc_str.c_str());
+    cs->ReadToCache(var_type, diff_sets, read_region);
+    RecordTs();  // PrintTimeStamp("end", rtc_str.c_str());
+
     RecordTs();  // PrintTimeStamp("end", "GAS stage");
     {
       int i = 0;
@@ -467,10 +473,10 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
       OutputTs("end", "GAS mapping");
       OutputTs("start", "GAS wfc");
       OutputTs("end", "GAS wfc");
-      OutputTs("start", "GAS rtc");
-      OutputTs("end", "GAS rtc");
       OutputTs("start", "GAS lock");
       OutputTs("end", "GAS lock");
+      OutputTs("start", "GAS rtc");
+      OutputTs("end", "GAS rtc");
       OutputTs("end", "GAS stage");
       assert(i == order);
       assert(order <= 14);
