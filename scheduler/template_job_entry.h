@@ -72,23 +72,30 @@ class TemplateJobEntry : public JobEntry {
     TemplateJobEntry();
 
     TemplateJobEntry(const std::string& job_name,
+                     const job_id_t& job_id,
+                     const size_t& index,
                      const IDSet<logical_data_id_t> read_set,
                      const IDSet<logical_data_id_t> write_set,
+                     const IDSet<job_id_t>& before_set,
+                     const IDSet<job_id_t>& after_set,
                      const bool& sterile,
                      const GeometricRegion& region,
                      TemplateEntry* template_entry);
 
     virtual ~TemplateJobEntry();
 
+    virtual size_t index();
     virtual TemplateEntry* template_entry();
     virtual boost::shared_ptr<VersionMap> vmap_read_diff() const;
     virtual boost::shared_ptr<VersionMap> vmap_write_diff() const;
 
+    virtual void set_index(size_t index);
     virtual void set_template_entry(TemplateEntry* template_entry);
     virtual void set_vmap_read_diff(boost::shared_ptr<VersionMap> vmap_read_diff);
     virtual void set_vmap_write_diff(boost::shared_ptr<VersionMap> vmap_write_diff);
 
   private:
+    size_t index_;
     TemplateEntry* template_entry_;
     boost::shared_ptr<VersionMap> vmap_read_diff_;
     boost::shared_ptr<VersionMap> vmap_write_diff_;

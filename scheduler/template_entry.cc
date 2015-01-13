@@ -43,6 +43,7 @@
 
 using namespace nimbus; // NOLINT
 
+#define ACTIVE_INSTANTIATION true
 
 TemplateEntry::TemplateEntry() {
   finalized_ = false;
@@ -77,23 +78,18 @@ bool TemplateEntry::Finalize() {
     return false;
   }
 
+  assert(entry_list_.size() == job_id_ptrs_.size());
+
   size_t index = 0;
   parent_job_indices_.clear();
-  EntryList::iterator iter = entry_list_.begin();
-  for (; iter != entry_list_.end(); ++iter) {
-    if (!iter->sterile_) {
+  TemplateJobEntryVector::iterator iter = compute_jobs_.begin();
+  for (; iter != compute_jobs_.end(); ++iter) {
+    std::cout << "******OMID: " << (*iter)->job_name() << std::endl;
+    if (!(*iter)->sterile()) {
       parent_job_indices_.push_back(index);
     }
     ++index;
   }
-
-  TemplateJobEntryVector::iterator it = compute_jobs_.begin();
-  for (; it != compute_jobs_.end(); ++it) {
-    std::cout << "******OMID: " << (*it)->job_name() << std::endl;
-  }
-
-
-
 
   finalized_ = true;
   return true;
@@ -209,14 +205,12 @@ bool TemplateEntry::GetComplexJobEntry(ComplexJobEntry*& complex_job,
     return false;
   }
 
-  assert(entry_list_.size() == job_id_ptrs_.size());
-
-  if (inner_job_ids.size() != job_id_ptrs_.size()) {
+  if (inner_job_ids.size() != compute_jobs_.size()) {
     dbg(DBG_ERROR, "ERROR: number of provided ids does not match the required ids!\n");
     return false;
   }
 
-  if (parameters.size() != job_id_ptrs_.size()) {
+  if (parameters.size() != compute_jobs_.size()) {
     dbg(DBG_ERROR, "ERROR: number of provided parameters does not match the required ids!\n");
     return false;
   }
@@ -246,71 +240,83 @@ TemplateJobEntry* TemplateEntry::AddComputeJob(const std::string& job_name,
     return NULL;
   }
 
-  boost::shared_ptr<job_id_t> job_id_ptr;
-  {
-    PtrMap::iterator iter = job_id_ptrs_map_.find(job_id);
-    if (iter == job_id_ptrs_map_.end()) {
-      job_id_ptr = boost::shared_ptr<job_id_t>(new job_id_t(job_id));
-      job_id_ptrs_map_[job_id] = job_id_ptr;
-    } else {
-      job_id_ptr = iter->second;
-    }
-  }
-
-  PtrSet before_set_ptrs;
-  {
-    IDSet<job_id_t>::IDSetIter it = before_set.begin();
-    for (; it != before_set.end(); ++it) {
-      boost::shared_ptr<job_id_t> ptr;
-      PtrMap::iterator iter = job_id_ptrs_map_.find(*it);
-      if (iter == job_id_ptrs_map_.end()) {
-        ptr = boost::shared_ptr<job_id_t>(new job_id_t(*it));
-        job_id_ptrs_map_[*it] = ptr;
-      } else {
-        ptr = iter->second;
-      }
-      before_set_ptrs.insert(ptr);
-    }
-  }
-
-  PtrSet after_set_ptrs;
-  {
-    IDSet<job_id_t>::IDSetIter it = after_set.begin();
-    for (; it != after_set.end(); ++it) {
-      boost::shared_ptr<job_id_t> ptr;
-      PtrMap::iterator iter = job_id_ptrs_map_.find(*it);
-      if (iter == job_id_ptrs_map_.end()) {
-        ptr = boost::shared_ptr<job_id_t>(new job_id_t(*it));
-        job_id_ptrs_map_[*it] = ptr;
-      } else {
-        ptr = iter->second;
-      }
-      after_set_ptrs.insert(ptr);
-    }
-  }
-
   TemplateJobEntry *job =
     new TemplateJobEntry(job_name,
+                         job_id,
+                         compute_jobs_.size(),
                          read_set,
                          write_set,
+                         before_set,
+                         after_set,
                          sterile,
                          region,
                          this);
 
   compute_jobs_.push_back(job);
+  AddTemplateJobEntryToJobGraph(job);
 
-  TemplateComputeJobEntry entry(job_name,
-                                job_id_ptr,
-                                read_set,
-                                write_set,
-                                before_set_ptrs,
-                                after_set_ptrs,
-                                future_job_id_ptr_,
-                                sterile,
-                                region);
+  if (!ACTIVE_INSTANTIATION) {
+    return job;
+  } else {
+    // TODO(omidm): the rest of theis function could be ignored if we don't need
+    // the Instantiation function to work.
+    boost::shared_ptr<job_id_t> job_id_ptr;
+    {
+      PtrMap::iterator iter = job_id_ptrs_map_.find(job_id);
+      if (iter == job_id_ptrs_map_.end()) {
+        job_id_ptr = boost::shared_ptr<job_id_t>(new job_id_t(job_id));
+        job_id_ptrs_map_[job_id] = job_id_ptr;
+      } else {
+        job_id_ptr = iter->second;
+      }
+    }
 
-  entry_list_.push_back(entry);
-  job_id_ptrs_.push_back(job_id_ptr);
+    PtrSet before_set_ptrs;
+    {
+      IDSet<job_id_t>::IDSetIter it = before_set.begin();
+      for (; it != before_set.end(); ++it) {
+        boost::shared_ptr<job_id_t> ptr;
+        PtrMap::iterator iter = job_id_ptrs_map_.find(*it);
+        if (iter == job_id_ptrs_map_.end()) {
+          ptr = boost::shared_ptr<job_id_t>(new job_id_t(*it));
+          job_id_ptrs_map_[*it] = ptr;
+        } else {
+          ptr = iter->second;
+        }
+        before_set_ptrs.insert(ptr);
+      }
+    }
+
+    PtrSet after_set_ptrs;
+    {
+      IDSet<job_id_t>::IDSetIter it = after_set.begin();
+      for (; it != after_set.end(); ++it) {
+        boost::shared_ptr<job_id_t> ptr;
+        PtrMap::iterator iter = job_id_ptrs_map_.find(*it);
+        if (iter == job_id_ptrs_map_.end()) {
+          ptr = boost::shared_ptr<job_id_t>(new job_id_t(*it));
+          job_id_ptrs_map_[*it] = ptr;
+        } else {
+          ptr = iter->second;
+        }
+        after_set_ptrs.insert(ptr);
+      }
+    }
+
+    TemplateComputeJobEntry entry(job_name,
+        job_id_ptr,
+        read_set,
+        write_set,
+        before_set_ptrs,
+        after_set_ptrs,
+        future_job_id_ptr_,
+        sterile,
+        region);
+
+    entry_list_.push_back(entry);
+    job_id_ptrs_.push_back(job_id_ptr);
+    // End of block
+  }
 
   return job;
 }
@@ -322,5 +328,21 @@ bool TemplateEntry::AddExplicitCopyJob() {
 }
 
 
+bool TemplateEntry::AddTemplateJobEntryToJobGraph(TemplateJobEntry *job) {
+  bool added_node = job_graph_.AddVertex(job->job_id(), job);
+  assert(added_node);
+
+  if (job->before_set_p()->size() == 0) {
+    assign_ordered_indices_.push_back(job->index());
+  } else {
+    IDSet<job_id_t>::ConstIter it;
+    for (it = job->before_set_p()->begin(); it != job->before_set_p()->end(); ++it) {
+      bool added_edge = job_graph_.AddEdge(*it, job->job_id());
+      assert(added_edge);
+    }
+  }
+
+  return true;
+}
 
 

@@ -399,6 +399,8 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     return true;
   }
 
+  assert(NIMBUS_FAULT_TOLERANCE_ACTIVE);
+
   // If you are here, you may find the version in checkpoint.
   dbg(DBG_WARN, "WARNING: looking in to checkpoint to load the data.\n");
 

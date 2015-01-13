@@ -44,6 +44,7 @@
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 #include <iostream> // NOLINT
 #include <fstream> // NOLINT
 #include <sstream>
@@ -56,6 +57,7 @@
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "shared/log.h"
+#include "shared/graph.h"
 #include "scheduler/shadow_job_entry.h"
 #include "scheduler/complex_job_entry.h"
 #include "scheduler/template_job_entry.h"
@@ -146,18 +148,27 @@ class TemplateEntry {
         bool sterile_;
         GeometricRegion region_;
     };
-
     typedef std::vector<TemplateComputeJobEntry> EntryList;
-
-    bool finalized_;
     PtrList job_id_ptrs_;
     PtrMap job_id_ptrs_map_;
     EntryList entry_list_;
-    TemplateJobEntryVector compute_jobs_;
-    std::list<size_t> parent_job_indices_;
-    boost::shared_ptr<VersionMap> vmap_base_;
     // TODO(omidm): currently we do not support future job id in templates!
     boost::shared_ptr<job_id_t> future_job_id_ptr_;
+
+
+
+    bool finalized_;
+    Graph<TemplateJobEntry, size_t> job_graph_;
+    TemplateJobEntryVector compute_jobs_;
+
+    std::list<size_t> parent_job_indices_;
+    std::list<size_t> assign_ordered_indices_;
+    boost::unordered_set<size_t> assign_batch_mark_indices_;
+    size_t last_assign_index_;
+
+    boost::shared_ptr<VersionMap> vmap_base_;
+
+    bool AddTemplateJobEntryToJobGraph(TemplateJobEntry *job);
 };
 
 }  // namespace nimbus

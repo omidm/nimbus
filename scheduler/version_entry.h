@@ -119,4 +119,6 @@ class VersionEntry {
 typedef std::list<VersionEntry> VersionEntryList;
 
 }  // namespace nimbus
+
 #endif  // NIMBUS_SCHEDULER_VERSION_ENTRY_H_
+
