@@ -45,6 +45,7 @@
 #ifndef NIMBUS_SCHEDULER_COMPLEX_JOB_ENTRY_H_
 #define NIMBUS_SCHEDULER_COMPLEX_JOB_ENTRY_H_
 
+#include <boost/thread.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 #include <vector>
@@ -120,6 +121,7 @@ class ComplexJobEntry : public JobEntry {
     std::vector<Parameter> parameters_;
     IdPool done_job_ids_;
     IdPool removed_job_ids_;
+    boost::mutex mutex_;
     ShadowJobEntryMap jobs_;
     std::list<size_t> parent_job_ids_;
     bool parent_job_ids_set_;

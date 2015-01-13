@@ -238,10 +238,13 @@ size_t ComplexJobEntry::GetParentJobs(ShadowJobEntryList* list, bool append) {
 
 
 bool ComplexJobEntry::GetShadowJobEntry(job_id_t job_id, ShadowJobEntry*& shadow_job) {
-  if (removed_job_ids_.size() != 0) {
-    if (removed_job_ids_.find(job_id) != removed_job_ids_.end()) {
-      shadow_job = NULL;
-      return false;
+  {
+    boost::unique_lock<boost::mutex> lock(mutex_);
+    if (removed_job_ids_.size() != 0) {
+      if (removed_job_ids_.find(job_id) != removed_job_ids_.end()) {
+        shadow_job = NULL;
+        return false;
+      }
     }
   }
 
@@ -368,6 +371,7 @@ bool ComplexJobEntry::IsDone() {
 }
 
 void ComplexJobEntry::MarkJobRemoved(job_id_t job_id) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   removed_job_ids_.insert(job_id);
 }
 
