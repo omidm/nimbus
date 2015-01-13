@@ -114,6 +114,28 @@ class ComplexJobEntry : public JobEntry {
 
     bool AllJobsDone();
 
+    class Cursor {
+      public:
+        enum State {
+          MID_BATCH = 0,
+          END_BATCH = 1,
+          END_ALL   = 2
+        };
+
+        Cursor();
+        ~Cursor();
+
+        State state();
+        size_t index();
+
+        void set_state(State state);
+        void set_index(size_t index);
+
+      private:
+        State state_;
+        size_t index_;
+    };
+
   private:
     typedef boost::unordered_set<job_id_t> IdPool;
 

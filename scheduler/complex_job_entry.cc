@@ -381,6 +381,29 @@ bool ComplexJobEntry::AllJobsRemoved() {
   return (removed_job_ids_.size() == inner_job_ids_.size());
 }
 
+ComplexJobEntry::Cursor::Cursor() {
+}
+
+ComplexJobEntry::Cursor::~Cursor() {
+}
+
+ComplexJobEntry::Cursor::State ComplexJobEntry::Cursor::state() {
+  return state_;
+}
+
+size_t ComplexJobEntry::Cursor::index() {
+  return index_;
+}
+
+void ComplexJobEntry::Cursor::set_state(State state) {
+  state_ = state;
+}
+
+void ComplexJobEntry::Cursor::set_index(size_t index) {
+  index_ = index;
+}
+
+
 
 
 
