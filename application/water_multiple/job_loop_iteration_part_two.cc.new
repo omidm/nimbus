@@ -389,7 +389,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
     MarkEndOfStage();
 
 
-    EndTemplate("loop_iteration_part_two");
+    EndTemplate("loop_iteration_part_two_end");
   }  // end loop "if (done)".
   // job_query.PrintTimeProfile();
   if (time == 0) {
