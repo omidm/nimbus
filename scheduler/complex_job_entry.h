@@ -110,7 +110,9 @@ class ComplexJobEntry : public JobEntry {
 
     void MarkJobRemoved(job_id_t job_id);
 
-    bool IsDone();
+    bool AllJobsRemoved();
+
+    bool AllJobsDone();
 
   private:
     typedef boost::unordered_set<job_id_t> IdPool;

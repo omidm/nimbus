@@ -366,7 +366,8 @@ void ComplexJobEntry::MarkJobDone(job_id_t job_id) {
   done_job_ids_.insert(job_id);
 }
 
-bool ComplexJobEntry::IsDone() {
+bool ComplexJobEntry::AllJobsDone() {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   return (done_job_ids_.size() == inner_job_ids_.size());
 }
 
@@ -374,5 +375,14 @@ void ComplexJobEntry::MarkJobRemoved(job_id_t job_id) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   removed_job_ids_.insert(job_id);
 }
+
+bool ComplexJobEntry::AllJobsRemoved() {
+  boost::unique_lock<boost::mutex> lock(mutex_);
+  return (removed_job_ids_.size() == inner_job_ids_.size());
+}
+
+
+
+
 
 

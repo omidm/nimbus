@@ -487,6 +487,10 @@ bool JobManager::RemoveJobEntry(JobEntry* job) {
         !job->sterile()) {
       version_manager_.RemoveJobEntry(job);
     }
+    if (job->job_type() == JOB_CMPX) {
+      ComplexJobEntry* xj = reinterpret_cast<ComplexJobEntry*>(job);
+      assert(xj->AllJobsRemoved());
+    }
     delete job;
     return true;
   } else if (job->job_type() == JOB_SHDW) {
@@ -809,17 +813,22 @@ void JobManager::NotifyJobDone(JobEntry *job) {
   // After traversing the out going endges then put in the dueue for removal.
   {
     boost::unique_lock<boost::mutex> lock(jobs_done_mutex_);
+    jobs_done_.push_back(job);
+
+    // TODO(omidm): right now because the jobs_done is treated as a FIFO, the
+    // coplex jobs will be removed after all shadow jobs are removed such that
+    // the complex job pointer in shadow jobs is always valid. But you are
+    // gonna need a cleaner logic for that (using AllJobsRemoved method). - omidm
     if (job->job_type() == JOB_SHDW) {
       ShadowJobEntry* sj = reinterpret_cast<ShadowJobEntry*>(job);
       ComplexJobEntry* xj = sj->complex_job();
       xj->MarkJobDone(job_id);
-      if (xj->IsDone()) {
+      if (xj->AllJobsDone()) {
         xj->set_done(true);
         complex_jobs_.erase(xj->job_id());
         jobs_done_.push_back(xj);
       }
     }
-    jobs_done_.push_back(job);
   }
 }
 
