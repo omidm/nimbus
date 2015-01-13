@@ -338,17 +338,20 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
       assert(i == order);
       assert(order <= 14);
     }
-    {
-      int max_i = 0;
+    if (diff.size() != 0) {
+      size_t max_i = 0;
       for (size_t i = 1; i < diff.size(); ++i)
-        if (diff[i]->region().GetSurfaceArea()
-            < diff[i]->region().GetSurfaceArea()) {
+        if (diff.at(max_i)->region().GetSurfaceArea()
+            < diff.at(i)->region().GetSurfaceArea()) {
           max_i = i;
         }
+      std::string cv_name = cv->name();
+      Data* data = diff.at(max_i);
+      std::string region_name = data->region().ToNetworkData();
       fprintf(debug_log,
               "%s %s %f\n",
-              cv->name().c_str(),
-              diff[max_i]->region().ToNetworkData().c_str(),
+              cv_name.c_str(),
+              region_name.c_str(),
               timestamps[12] - timestamps[11]);
     }
     return cv;
