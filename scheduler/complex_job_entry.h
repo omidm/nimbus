@@ -127,13 +127,16 @@ class ComplexJobEntry : public JobEntry {
 
         State state();
         size_t index();
+        size_t pivot();
 
         void set_state(State state);
         void set_index(size_t index);
+        void set_pivot(size_t pivot);
 
       private:
         State state_;
         size_t index_;
+        size_t pivot_;
     };
 
   private:
@@ -150,7 +153,9 @@ class ComplexJobEntry : public JobEntry {
     std::list<size_t> parent_job_ids_;
     bool parent_job_ids_set_;
     bool job_map_complete_;
-    size_t assign_index_;
+    Cursor cursor_;
+    bool drained_all_;
+    bool initialized_cursor_;
 
     void SetParentJobIds();
 

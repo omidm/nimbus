@@ -690,6 +690,8 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
       }
       if (complex_job->DrainedAllJobsForAssignment()) {
         jobs_ready_to_assign_.erase(iter++);
+      } else {
+        ++iter;
       }
     } else {
       list->push_back(job);

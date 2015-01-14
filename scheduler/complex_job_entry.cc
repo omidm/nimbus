@@ -50,9 +50,9 @@ using namespace nimbus; // NOLINT
 ComplexJobEntry::ComplexJobEntry() {
   job_type_ = JOB_CMPX;
   job_name_ = NIMBUS_COMPLEX_JOB_NAME;
-  assign_index_ = 0;
   parent_job_ids_set_ = false;
   job_map_complete_ = false;
+  drained_all_ = false;
 }
 
 ComplexJobEntry::ComplexJobEntry(const job_id_t& job_id,
@@ -69,9 +69,11 @@ ComplexJobEntry::ComplexJobEntry(const job_id_t& job_id,
   inner_job_ids_ = inner_job_ids;
   outer_job_ids_ = outer_job_ids;
   parameters_ = parameters;
-  assign_index_ = 0;
+  template_entry->InitializeCursor(&cursor_);
+  initialized_cursor_ = true;
   parent_job_ids_set_ = false;
   job_map_complete_ = false;
+  drained_all_ = false;
 
   // parent should be explicitally in before set - omidm
   // currentrly before set of complex job is only parent job - omidm
@@ -149,13 +151,16 @@ size_t ComplexJobEntry::GetParentJobIds(std::list<job_id_t>* list) {
 }
 
 size_t ComplexJobEntry::GetJobsForAssignment(JobEntryList* list, size_t max_num, bool append) {
+  assert(initialized_cursor_);
+
   size_t count = 0;
   if (!append) {
     list->clear();
   }
 
-  size_t index = assign_index_;
-  for (; (index < inner_job_ids_.size()) && (count < max_num); ++index) {
+  while (count < max_num) {
+    size_t index = cursor_.index();
+    assert(index < inner_job_ids_.size());
     ShadowJobEntry* shadow_job;
     ShadowJobEntryMap::iterator it = jobs_.find(inner_job_ids_[index]);
     if (it != jobs_.end()) {
@@ -180,10 +185,19 @@ size_t ComplexJobEntry::GetJobsForAssignment(JobEntryList* list, size_t max_num,
     }
 
     list->push_back(shadow_job);
-    count++;
+    ++count;
+
+    if (cursor_.state() == Cursor::END_ALL) {
+      drained_all_ = true;
+      break;
+    } else if (cursor_.state() == Cursor::END_BATCH) {
+      template_entry_->AdvanceCursorForAssignment(&cursor_);
+      break;
+    } else {
+      template_entry_->AdvanceCursorForAssignment(&cursor_);
+    }
   }
 
-  assign_index_ += count;
   return count;
 }
 
@@ -355,7 +369,7 @@ bool ComplexJobEntry::GetJobIndex(job_id_t job_id, size_t* index) {
 }
 
 bool ComplexJobEntry::DrainedAllJobsForAssignment() {
-  return (assign_index_ == inner_job_ids_.size());
+  return drained_all_;
 }
 
 void ComplexJobEntry::MarkJobAssigned(job_id_t job_id) {
@@ -395,6 +409,10 @@ size_t ComplexJobEntry::Cursor::index() {
   return index_;
 }
 
+size_t ComplexJobEntry::Cursor::pivot() {
+  return pivot_;
+}
+
 void ComplexJobEntry::Cursor::set_state(State state) {
   state_ = state;
 }
@@ -403,6 +421,9 @@ void ComplexJobEntry::Cursor::set_index(size_t index) {
   index_ = index;
 }
 
+void ComplexJobEntry::Cursor::set_pivot(size_t pivot) {
+  pivot_ = pivot;
+}
 
 
 

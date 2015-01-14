@@ -43,6 +43,7 @@
 
 using namespace nimbus; // NOLINT
 
+#define MAX_DEPTH 100
 #define ACTIVE_INSTANTIATION true
 
 TemplateEntry::TemplateEntry() {
@@ -80,6 +81,15 @@ bool TemplateEntry::Finalize() {
 
   assert(entry_list_.size() == job_id_ptrs_.size());
 
+  CompleteParentJobIndices();
+
+  CompleteBreadthFirstSearch();
+
+  finalized_ = true;
+  return true;
+}
+
+void TemplateEntry::CompleteParentJobIndices() {
   size_t index = 0;
   parent_job_indices_.clear();
   TemplateJobEntryVector::iterator iter = compute_jobs_.begin();
@@ -90,9 +100,38 @@ bool TemplateEntry::Finalize() {
     }
     ++index;
   }
+}
 
-  finalized_ = true;
-  return true;
+void TemplateEntry::CompleteBreadthFirstSearch() {
+  size_t depth = 0;
+  while (assign_ordered_indices_.size() != compute_jobs_.size()) {
+    assert(depth++ < MAX_DEPTH);
+    assert(traverse_queue_.size() != 0);
+    std::list<Vertex<TemplateJobEntry, job_id_t>*> temp_traverse_queue;
+    assign_batch_mark_indices_.insert(assign_ordered_indices_.back());
+
+    std::list<Vertex<TemplateJobEntry, job_id_t>*>::iterator iter;
+    for (iter = traverse_queue_.begin(); iter != traverse_queue_.end(); ++iter) {
+      typename Edge<TemplateJobEntry, job_id_t>::Iter it;
+      for (it = (*iter)->outgoing_edges()->begin(); it != (*iter)->outgoing_edges()->end(); ++it) {
+        Vertex<TemplateJobEntry, job_id_t>* start = it->second->start_vertex();
+        Vertex<TemplateJobEntry, job_id_t>* end = it->second->end_vertex();
+        bool removed_edge = job_graph_.RemoveEdge(start, end);
+        assert(removed_edge);
+
+        if (end->incoming_edges()->size() == 0) {
+          temp_traverse_queue.push_back(end);
+          assign_ordered_indices_.push_back(end->entry()->index());
+        }
+      }
+    }
+
+    traverse_queue_.swap(temp_traverse_queue);
+  }
+
+  assign_batch_mark_indices_.insert(assign_ordered_indices_.back());
+  last_assign_index_ = assign_ordered_indices_.back();
+  assert(assign_ordered_indices_.size() == compute_jobs_.size());
 }
 
 bool TemplateEntry::CleanPartiallyFilledTemplate() {
@@ -202,16 +241,19 @@ bool TemplateEntry::GetComplexJobEntry(ComplexJobEntry*& complex_job,
                                        const std::vector<Parameter>& parameters) {
   if (!finalized_) {
     dbg(DBG_ERROR, "ERROR: template has NOT been finalized and cannot get instantiated!\n");
+    complex_job = NULL;
     return false;
   }
 
   if (inner_job_ids.size() != compute_jobs_.size()) {
     dbg(DBG_ERROR, "ERROR: number of provided ids does not match the required ids!\n");
+    complex_job = NULL;
     return false;
   }
 
   if (parameters.size() != compute_jobs_.size()) {
     dbg(DBG_ERROR, "ERROR: number of provided parameters does not match the required ids!\n");
+    complex_job = NULL;
     return false;
   }
 
@@ -329,10 +371,12 @@ bool TemplateEntry::AddExplicitCopyJob() {
 
 
 bool TemplateEntry::AddTemplateJobEntryToJobGraph(TemplateJobEntry *job) {
-  bool added_node = job_graph_.AddVertex(job->job_id(), job);
+  Vertex<TemplateJobEntry, job_id_t> *vertex;
+  bool added_node = job_graph_.AddVertex(job->job_id(), job, &vertex);
   assert(added_node);
 
   if (job->before_set_p()->size() == 0) {
+    traverse_queue_.push_back(vertex);
     assign_ordered_indices_.push_back(job->index());
   } else {
     IDSet<job_id_t>::ConstIter it;
@@ -344,5 +388,47 @@ bool TemplateEntry::AddTemplateJobEntryToJobGraph(TemplateJobEntry *job) {
 
   return true;
 }
+
+bool TemplateEntry::InitializeCursor(ComplexJobEntry::Cursor* cursor) {
+  assert(finalized_);
+  size_t pivot = 0;
+  size_t index = assign_ordered_indices_[pivot];
+
+  cursor->set_index(index);
+  cursor->set_pivot(pivot);
+  if (index == last_assign_index_) {
+    cursor->set_state(ComplexJobEntry::Cursor::END_ALL);
+  } else if (assign_batch_mark_indices_.count(index)) {
+    cursor->set_state(ComplexJobEntry::Cursor::END_BATCH);
+  } else {
+    cursor->set_state(ComplexJobEntry::Cursor::MID_BATCH);
+  }
+
+  return true;
+}
+
+bool TemplateEntry::AdvanceCursorForAssignment(ComplexJobEntry::Cursor* cursor) {
+  assert(finalized_);
+  size_t pivot = cursor->pivot() + 1;
+  if (pivot >= assign_ordered_indices_.size()) {
+    return false;
+  }
+
+  size_t index = assign_ordered_indices_[pivot];
+
+  cursor->set_index(index);
+  cursor->set_pivot(pivot);
+  if (index == last_assign_index_) {
+    cursor->set_state(ComplexJobEntry::Cursor::END_ALL);
+  } else if (assign_batch_mark_indices_.count(index)) {
+    cursor->set_state(ComplexJobEntry::Cursor::END_BATCH);
+  } else {
+    cursor->set_state(ComplexJobEntry::Cursor::MID_BATCH);
+  }
+
+  return true;
+}
+
+
 
 

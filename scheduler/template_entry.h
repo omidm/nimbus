@@ -110,6 +110,10 @@ class TemplateEntry {
 
     TemplateJobEntry* GetJobAtIndex(size_t index);
 
+    bool InitializeCursor(ComplexJobEntry::Cursor* cursor);
+
+    bool AdvanceCursorForAssignment(ComplexJobEntry::Cursor* cursor);
+
   private:
     typedef std::vector<boost::shared_ptr<job_id_t> > PtrList;
     typedef boost::unordered_set<boost::shared_ptr<job_id_t> > PtrSet;
@@ -158,17 +162,22 @@ class TemplateEntry {
 
 
     bool finalized_;
-    Graph<TemplateJobEntry, size_t> job_graph_;
+    Graph<TemplateJobEntry, job_id_t> job_graph_;
+    std::list<Vertex<TemplateJobEntry, job_id_t>*> traverse_queue_;
     TemplateJobEntryVector compute_jobs_;
 
     std::list<size_t> parent_job_indices_;
-    std::list<size_t> assign_ordered_indices_;
+    std::vector<size_t> assign_ordered_indices_;
     boost::unordered_set<size_t> assign_batch_mark_indices_;
     size_t last_assign_index_;
 
     boost::shared_ptr<VersionMap> vmap_base_;
 
     bool AddTemplateJobEntryToJobGraph(TemplateJobEntry *job);
+
+    void CompleteParentJobIndices();
+
+    void CompleteBreadthFirstSearch();
 };
 
 }  // namespace nimbus
