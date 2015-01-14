@@ -908,7 +908,7 @@ bool JobManager::CausingUnwantedSerialization(JobEntry* job,
     JobEntry *j;
     if (GetJobEntry(*iter, j)) {
       if ((!j->done()) &&
-          (j->job_type() == JOB_COMP) &&
+          (j->job_type() == JOB_COMP || j->job_type() == JOB_SHDW) &&
           // (!job->before_set_p()->contains(*iter))) {
           // the job may not be in the immediate before set but still there is
           // indirect dependency. so we need to look through meta before set.
