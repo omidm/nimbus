@@ -197,6 +197,25 @@ void Worker::WorkerCoreProcessor() {
       }
     }
     if (!process_jobs) {
+//      typename WorkerJobVertex::Iter iter = worker_job_graph_.begin();
+//      for (; iter != worker_job_graph_.end(); ++iter) {
+//        if (iter->second->incoming_edges()->size() != 0) {
+//          Job* job = iter->second->entry()->get_job();
+//          std::string name = job->name();
+//          if (name.find("Copy") == std::string::npos &&
+//              name.find("extrapolate_phi") != std::string::npos) {
+//              std::cout << "OMID: " << job->id().elem() << " "
+//                << iter->second->incoming_edges()->size() << " ";
+//            WorkerJobEdge::Map::iterator it = iter->second->incoming_edges()->begin();
+//            for (; it != iter->second->incoming_edges()->end(); ++it) {
+//              WorkerJobEdge* edge = it->second;
+//              std::cout << edge->start_vertex()->entry()->get_job_id() << " ";
+//            }
+//            std::cout << job->before_set().ToNetworkData() << std::endl;
+//          }
+//        }
+//      }
+
       usleep(10);
     }
   }
