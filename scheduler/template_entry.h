@@ -80,6 +80,11 @@ class TemplateEntry {
 
     bool CleanPartiallyFilledTemplate();
 
+    bool LoadBeforeSet(IDSet<job_id_t>* before_set,
+                       const size_t& index,
+                       const std::vector<job_id_t>& inner_job_ids,
+                       const std::vector<job_id_t>& outer_job_ids);
+
     bool Instantiate(JobManager *job_manager,
                      const std::vector<job_id_t>& inner_job_ids,
                      const std::vector<job_id_t>& outer_job_ids,

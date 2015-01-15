@@ -167,12 +167,16 @@ size_t ComplexJobEntry::GetJobsForAssignment(JobEntryList* list, size_t max_num,
       shadow_job = it->second;
     } else {
       TemplateJobEntry* job = template_entry_->GetJobAtIndex(index);
+      IDSet<job_id_t> before_set;
+      template_entry_->LoadBeforeSet(&before_set, index, inner_job_ids_, outer_job_ids_);
+
       shadow_job =
         new ShadowJobEntry(job->job_name(),
                            inner_job_ids_[index],
                            job->read_set_p(),
                            job->write_set_p(),
                            job->union_set_p(),
+                           before_set,
                            job->vmap_read_diff(),
                            job->vmap_write_diff(),
                            parent_job_id_,
@@ -225,12 +229,16 @@ size_t ComplexJobEntry::GetParentJobs(ShadowJobEntryList* list, bool append) {
       }
 
       TemplateJobEntry* job = template_entry_->GetJobAtIndex(index);
+      IDSet<job_id_t> before_set;
+      template_entry_->LoadBeforeSet(&before_set, index, inner_job_ids_, outer_job_ids_);
+
       shadow_job =
         new ShadowJobEntry(job->job_name(),
                            inner_job_ids_[index],
                            job->read_set_p(),
                            job->write_set_p(),
                            job->union_set_p(),
+                           before_set,
                            job->vmap_read_diff(),
                            job->vmap_write_diff(),
                            parent_job_id_,
@@ -277,12 +285,16 @@ bool ComplexJobEntry::GetShadowJobEntry(job_id_t job_id, ShadowJobEntry*& shadow
         return true;
       } else {
         TemplateJobEntry* job = template_entry_->GetJobAtIndex(index);
+        IDSet<job_id_t> before_set;
+        template_entry_->LoadBeforeSet(&before_set, index, inner_job_ids_, outer_job_ids_);
+
         ShadowJobEntry* sj =
           new ShadowJobEntry(job->job_name(),
               inner_job_ids_[index],
               job->read_set_p(),
               job->write_set_p(),
               job->union_set_p(),
+              before_set,
               job->vmap_read_diff(),
               job->vmap_write_diff(),
               parent_job_id_,
@@ -331,12 +343,16 @@ void ComplexJobEntry::CompleteJobMap() {
       continue;
     } else {
       TemplateJobEntry* job = template_entry_->GetJobAtIndex(index);
+      IDSet<job_id_t> before_set;
+      template_entry_->LoadBeforeSet(&before_set, index, inner_job_ids_, outer_job_ids_);
+
       ShadowJobEntry* shadow_job =
         new ShadowJobEntry(job->job_name(),
                            inner_job_ids_[index],
                            job->read_set_p(),
                            job->write_set_p(),
                            job->union_set_p(),
+                           before_set,
                            job->vmap_read_diff(),
                            job->vmap_write_diff(),
                            parent_job_id_,

@@ -147,6 +147,56 @@ bool TemplateEntry::CleanPartiallyFilledTemplate() {
   return true;
 }
 
+
+bool TemplateEntry::LoadBeforeSet(IDSet<job_id_t>* before_set,
+                                  const size_t& index,
+                                  const std::vector<job_id_t>& inner_job_ids,
+                                  const std::vector<job_id_t>& outer_job_ids) {
+  if (!finalized_) {
+    dbg(DBG_ERROR, "ERROR: template has NOT been finalized and cannot get instantiated!\n");
+    return false;
+  }
+
+  assert(entry_list_.size() == job_id_ptrs_.size());
+
+  if (inner_job_ids.size() != job_id_ptrs_.size()) {
+    dbg(DBG_ERROR, "ERROR: number of provided ids does not match the required ids!\n");
+    return false;
+  }
+
+  assert(index < inner_job_ids.size());
+
+  // Set the job_id pointers to the new values.
+  size_t idx = 0;
+  PtrList::iterator piter = job_id_ptrs_.begin();
+  for (; piter != job_id_ptrs_.end(); ++piter) {
+    *(*piter) = inner_job_ids[idx];
+    ++idx;
+  }
+
+  idx = 0;
+  EntryList::iterator iter = entry_list_.begin();
+  for (; idx < index; ++idx) {
+    ++iter;
+  }
+
+  {
+    // TODO(omidm) Does accesing a field in class make a copy?
+    PtrSet::iterator it = iter->before_set_ptrs_.begin();
+    for (; it != iter->before_set_ptrs_.end(); ++it) {
+      before_set->insert(*(*it));
+    }
+  }
+
+  return true;
+}
+
+
+
+
+
+
+
 bool TemplateEntry::Instantiate(JobManager *job_manager,
                                 const std::vector<job_id_t>& inner_job_ids,
                                 const std::vector<job_id_t>& outer_job_ids,

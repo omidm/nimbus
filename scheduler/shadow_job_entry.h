@@ -78,6 +78,7 @@ class ShadowJobEntry : public JobEntry {
                    const IDSet<logical_data_id_t>* read_set_p,
                    const IDSet<logical_data_id_t>* write_set_p,
                    const IDSet<logical_data_id_t>* union_set_p,
+                   const IDSet<job_id_t> before_set,
                    boost::shared_ptr<VersionMap> vmap_read_diff,
                    boost::shared_ptr<VersionMap> vmap_write_diff,
                    const job_id_t& parent_job_id,

@@ -64,6 +64,7 @@ ShadowJobEntry::ShadowJobEntry(const std::string& job_name,
                                const IDSet<logical_data_id_t>* read_set_p,
                                const IDSet<logical_data_id_t>* write_set_p,
                                const IDSet<logical_data_id_t>* union_set_p,
+                               const IDSet<job_id_t> before_set,
                                boost::shared_ptr<VersionMap> vmap_read_diff,
                                boost::shared_ptr<VersionMap> vmap_write_diff,
                                const job_id_t& parent_job_id,
@@ -78,6 +79,7 @@ ShadowJobEntry::ShadowJobEntry(const std::string& job_name,
   read_set_p_ = read_set_p;
   write_set_p_ = write_set_p;
   union_set_p_ = union_set_p;
+  before_set_ = before_set;
   vmap_read_diff_ = vmap_read_diff;
   vmap_write_diff_ = vmap_write_diff;
   parent_job_id_ = parent_job_id;
