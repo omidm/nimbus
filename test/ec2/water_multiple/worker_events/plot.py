@@ -27,18 +27,21 @@ parser.add_argument(
     "-wn", "--workernum",
     dest="worker_num",
     default=1,
+    required=True,
     type=int,
     help="number of workers to process")
 parser.add_argument(
     "-cn", "--corenum",
     dest="core_num",
     default=1,
+    required=True,
     type=int,
     help="number of cores per worker")
 parser.add_argument(
     "-in", "--iternum",
     dest="iter_num",
     default=1,
+    required=True,
     type=int,
     help="number of iterations")
 
@@ -162,7 +165,7 @@ plt.xticks(ind+width/2., xticks )
 
 plt.legend(reversed(Parts), reversed(Legends))
 
-plt.ylim(0, 35)
+# plt.ylim(0, 35)
 
 plt.savefig("test.png")
 plt.show()
