@@ -275,12 +275,11 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     GetFreeDataAtWorker(worker, ldo, &target_instance);
 
     log_job_manager_.log_ResumeTimer();
-    // TODO(omidm): uncoment this check and fix it when used by the shadow jobs
-//    if (job_manager_->CausingUnwantedSerialization(job, l_id, target_instance)) {
-//      std::cout << "Why serializing!!\n";
-//      exit(-1);
-//      dbg(DBG_SCHED, "Causing unwanted serialization for data %lu.\n", l_id);
-//    }
+    if (job_manager_->CausingUnwantedSerialization(job, l_id, target_instance)) {
+      std::cout << "Why serializing!!\n";
+      exit(-1);
+      dbg(DBG_SCHED, "Causing unwanted serialization for data %lu.\n", l_id);
+    }
     log_job_manager_.log_StopTimer();
 
     AllocateLdoInstanceToJob(job, ldo, target_instance);

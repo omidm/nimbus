@@ -483,6 +483,8 @@ void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
     log.StopTimer();
     std::cout << "OMID SPAWN TEMPLATE. " << log.timer() << std::endl;
   } else if (NIMBUS_NEW_TEMPLATES_ACTIVE) {
+    Log log(Log::NO_FILE);
+    log.StartTimer();
     ComplexJobEntry* complex_job;
     if (!template_manager_->GetComplexJobEntryForTemplate(complex_job,
                                                           cm->job_graph_name(),
@@ -495,6 +497,8 @@ void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
     if (!job_manager_->AddComplexJobEntry(complex_job)) {
       assert(false);
     }
+    log.StopTimer();
+    std::cout << "OMID SPAWN TEMPLATE. " << log.timer() << std::endl;
   }
 }
 
