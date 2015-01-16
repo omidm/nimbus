@@ -513,6 +513,9 @@ void JobEntry::MarkJobAsCompletelyResolved() {
     versioned_entire_context_ = true;
 }
 
+bool JobEntry::LookUpMetaBeforeSet(JobEntry* job) {
+  return meta_before_set_->LookUpBeforeSetChain(job->job_id(), job->job_depth());
+}
 
 
 

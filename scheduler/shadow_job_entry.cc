@@ -72,6 +72,7 @@ ShadowJobEntry::ShadowJobEntry(const std::string& job_name,
                                const bool& sterile,
                                const GeometricRegion& region,
                                const Parameter& params,
+                               TemplateJobEntry* template_job,
                                ComplexJobEntry* complex_job) {
   job_type_ = JOB_SHDW;
   job_name_ = job_name;
@@ -87,6 +88,7 @@ ShadowJobEntry::ShadowJobEntry(const std::string& job_name,
   sterile_ = sterile;
   region_ = region;
   params_ = params;
+  template_job_ = template_job;
   complex_job_ = complex_job;
 }
 
@@ -118,6 +120,10 @@ ComplexJobEntry* ShadowJobEntry::complex_job() {
   return complex_job_;
 }
 
+TemplateJobEntry* ShadowJobEntry::template_job() {
+  return template_job_;
+}
+
 void ShadowJobEntry::set_read_set_p(const IDSet<logical_data_id_t>* read_set_p) {
   read_set_p_ = read_set_p;
 }
@@ -141,6 +147,10 @@ void ShadowJobEntry::set_vmap_write_diff(boost::shared_ptr<VersionMap> vmap_writ
 
 void ShadowJobEntry::set_complex_job(ComplexJobEntry* complex_job) {
   complex_job_ = complex_job;
+}
+
+void ShadowJobEntry::set_template_job(TemplateJobEntry* template_job) {
+  template_job_ = template_job;
 }
 
 bool ShadowJobEntry::IsReadyForCompleteVersioning() {
@@ -172,6 +182,15 @@ bool ShadowJobEntry::GetPhysicalWriteSet(IDSet<physical_data_id_t>* set) {
     set->insert(physical_table_[*it]);
   }
   return true;
+}
+
+bool ShadowJobEntry::LookUpMetaBeforeSet(JobEntry* job) {
+  assert(job->job_type() == JOB_SHDW);
+  ShadowJobEntry* sj = reinterpret_cast<ShadowJobEntry*>(job);
+  assert(sj->complex_job() == complex_job_);
+  TemplateJobEntry* tj = sj->template_job();
+
+  return template_job_->meta_before_set()->LookUpBeforeSetChain(tj->job_id(), tj->job_depth());
 }
 
 

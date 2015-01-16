@@ -164,6 +164,8 @@ class JobEntry {
 
     virtual void MarkJobAsCompletelyResolved();
 
+    virtual bool LookUpMetaBeforeSet(JobEntry* job);
+
     virtual bool GetRegion(GeometricRegion *region);
     virtual bool GetReadSetRegion(DataManager *data_manager, GeometricRegion *region);
     virtual bool GetWriteSetRegion(DataManager *data_manager, GeometricRegion *region);

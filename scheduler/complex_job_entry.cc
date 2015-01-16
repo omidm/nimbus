@@ -184,6 +184,7 @@ size_t ComplexJobEntry::GetJobsForAssignment(JobEntryList* list, size_t max_num,
                            job->sterile(),
                            job->region(),
                            parameters_[index],
+                           job,
                            this);
       jobs_[inner_job_ids_[index]] = shadow_job;
     }
@@ -246,6 +247,7 @@ size_t ComplexJobEntry::GetParentJobs(ShadowJobEntryList* list, bool append) {
                            job->sterile(),
                            job->region(),
                            parameters_[index],
+                           job,
                            this);
       jobs_[inner_job_ids_[index]] = shadow_job;
     }
@@ -302,6 +304,7 @@ bool ComplexJobEntry::GetShadowJobEntry(job_id_t job_id, ShadowJobEntry*& shadow
               job->sterile(),
               job->region(),
               parameters_[index],
+              job,
               this);
         jobs_[inner_job_ids_[index]] = sj;
         shadow_job = sj;
@@ -360,6 +363,7 @@ void ComplexJobEntry::CompleteJobMap() {
                            job->sterile(),
                            job->region(),
                            parameters_[index],
+                           job,
                            this);
       jobs_[inner_job_ids_[index]] = shadow_job;
     }

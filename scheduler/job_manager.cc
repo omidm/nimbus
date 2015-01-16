@@ -901,8 +901,6 @@ bool JobManager::CausingUnwantedSerialization(JobEntry* job,
     return result;
   }
 
-  boost::shared_ptr<MetaBeforeSet> mbs = job->meta_before_set();
-
   IDSet<job_id_t>::IDSetIter iter;
   for (iter = pd.list_job_read_p()->begin(); iter != pd.list_job_read_p()->end(); iter++) {
     JobEntry *j;
@@ -912,7 +910,7 @@ bool JobManager::CausingUnwantedSerialization(JobEntry* job,
           // (!job->before_set_p()->contains(*iter))) {
           // the job may not be in the immediate before set but still there is
           // indirect dependency. so we need to look through meta before set.
-          (!mbs->LookUpBeforeSetChain(j->job_id(), j->job_depth()))) {
+          (!job->LookUpMetaBeforeSet(j))) {
         result = true;
         break;
       }

@@ -191,6 +191,10 @@ bool VersionManager::MemoizeVersionsForTemplate(JobEntry *job) {
 
   assert(job->IsReadyForCompleteVersioning());
 
+  // Set the meta before set for later before set relation lookups.
+  tj->set_meta_before_set(job->meta_before_set());
+  tj->set_job_depth(job->job_depth());
+
   if (job->sterile()) {
     IDSet<logical_data_id_t>::ConstIter it;
     for (it = job->union_set_p()->begin(); it != job->union_set_p()->end(); ++it) {

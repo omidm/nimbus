@@ -66,6 +66,7 @@
 namespace nimbus {
 
 class ComplexJobEntry;
+class TemplateJobEntry;
 
 class ShadowJobEntry : public JobEntry {
   public:
@@ -86,6 +87,7 @@ class ShadowJobEntry : public JobEntry {
                    const bool& sterile,
                    const GeometricRegion& region,
                    const Parameter& params,
+                   TemplateJobEntry* template_job,
                    ComplexJobEntry* complex_job);
 
     virtual ~ShadowJobEntry();
@@ -95,6 +97,7 @@ class ShadowJobEntry : public JobEntry {
     virtual const IDSet<logical_data_id_t>* union_set_p() const;
     virtual boost::shared_ptr<VersionMap> vmap_read_diff() const;
     virtual boost::shared_ptr<VersionMap> vmap_write_diff() const;
+    virtual TemplateJobEntry* template_job();
     virtual ComplexJobEntry* complex_job();
 
 
@@ -103,6 +106,7 @@ class ShadowJobEntry : public JobEntry {
     virtual void set_union_set_p(const IDSet<logical_data_id_t>* union_set_p);
     virtual void set_vmap_read_diff(boost::shared_ptr<VersionMap> vmap_read_diff);
     virtual void set_vmap_write_diff(boost::shared_ptr<VersionMap> vmap_write_diff);
+    virtual void set_template_job(TemplateJobEntry* template_job);
     virtual void set_complex_job(ComplexJobEntry* complex_job);
 
     virtual job_depth_t job_depth() const;
@@ -112,7 +116,10 @@ class ShadowJobEntry : public JobEntry {
 
     virtual bool IsReadyForCompleteVersioning();
 
+    virtual bool LookUpMetaBeforeSet(JobEntry* job);
+
   private:
+    TemplateJobEntry* template_job_;
     ComplexJobEntry* complex_job_;
     const IDSet<logical_data_id_t>* read_set_p_;
     const IDSet<logical_data_id_t>* write_set_p_;

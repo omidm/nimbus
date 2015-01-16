@@ -481,7 +481,7 @@ void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
         cm->parameters(),
         cm->parent_job_id().elem());
     log.StopTimer();
-    std::cout << "OMID SPAWN TEMPLATE. " << log.timer() << std::endl;
+    std::cout << "OMID SPAWN TEMPLATE. " << cm->job_graph_name() << log.timer() << std::endl;
   } else if (NIMBUS_NEW_TEMPLATES_ACTIVE) {
     Log log(Log::NO_FILE);
     log.StartTimer();
@@ -498,7 +498,7 @@ void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
       assert(false);
     }
     log.StopTimer();
-    std::cout << "OMID SPAWN TEMPLATE. " << log.timer() << std::endl;
+    std::cout << "OMID SPAWN TEMPLATE. " << cm->job_graph_name() << log.timer() << std::endl;
   }
 }
 
