@@ -119,19 +119,6 @@ class CacheObject {
           name_ = name;
         }
 
-        // methods for access control
-        bool pending_flag() {
-          return false;
-          // return pending_flag_;
-        }
-        void set_pending_flag() {
-          // pending_flag_ = true;
-          pending_flag_ = false;
-        }
-        void unset_pending_flag() {
-          pending_flag_ = false;
-        }
-
         /**
          * \brief Dumps out data to a file, to be implemented by child classes
          * \param file_name is file to dump data to
@@ -156,7 +143,6 @@ class CacheObject {
     private:
         std::string name_;
         uint64_t unique_id_;
-        bool pending_flag_;
 
         // prototype information
         static cache::co_id_t ids_allocated_;

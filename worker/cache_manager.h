@@ -71,8 +71,6 @@ class GeometricRegion;
  */
 class CacheManager {
     public:
-        pthread_mutex_t cache_lock;
-        pthread_cond_t cache_cond;
         /**
          * \brief Creates a CacheManager instance
          * \return Constructed CacheManager instance
@@ -106,7 +104,7 @@ class CacheManager {
 
         /**
          * \brief Requests a CacheStruct instance of type prototype, from the
-         * CacheManager
+         * CadheManager
          * \param var_type specifies the application variable types for the
          * lists in read_sets/ write_sets
          * \param read_sets specifies the data that should be read in the
@@ -132,7 +130,18 @@ class CacheManager {
 
         void ReleaseAccess(CacheObject* cache_object);
 
+        /**
+         * \brief Writes data to write_set back nimbus objects synchronously
+         * \param cache_var is the cache variable to write from
+         * \param write_set is the set of nimbus objects to write to
+         */
         void WriteImmediately(CacheVar *cache_var, const DataArray &write_set);
+
+        /**
+         * \brief Writes data to write_set back nimbus objects synchronously
+         * \param cache_object is the cache struct to write from
+         * \param write_set is the set of nimbus objects to write to
+         */
         void WriteImmediately(CacheStruct *cache_struct,
                               const std::vector<cache::type_id_t> &var_type,
                               const std::vector<DataArray> &write_sets);
@@ -151,21 +160,17 @@ class CacheManager {
          */
         void InvalidateMappings(Data *d);
 
-        // void PrintProfile(std::stringstream* output);
-
-        void PrintTimeStamp(const char *status, const char * message);
-
-        void PrintSizeStamp(const char *message, size_t num_bytes);
-
+        /**
+         * \brief Sets cache log file names
+         * \param Worker id, to be used in file names
+         */
         void SetLogNames(std::string wid_str);
 
     private:
-        static bool print_stat_;
-        uint64_t unique_id_allocator_;
-        typedef boost::unordered_map<uint64_t, size_t> MemorySizeMap;
-        MemorySizeMap memory_size_map_;
-        size_t memory_sum_;
+        pthread_mutex_t cache_lock;
+        pthread_cond_t cache_cond;
 
+        uint64_t unique_id_allocator_;
         typedef std::map<cache::co_id_t,
                          CacheTable *> Pool;
         Pool *pool_;
@@ -173,10 +178,7 @@ class CacheManager {
         FILE* time_log;
         FILE* block_log;
         FILE* alloc_log;
-
-        // void BlockPrintTimeStamp(const char* message);
 };  // class CacheManager
-
 }  // namespace nimbus
 
 #endif  // NIMBUS_WORKER_CACHE_MANAGER_H_

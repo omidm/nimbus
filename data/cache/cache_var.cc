@@ -87,7 +87,6 @@ void CacheVar::UnsetDirtyData(Data *d) {
  * When data needs to be updated from outside CacheVar, use PullData.
  */
 void CacheVar::PullData(Data *d) {
-    // assert(IsAvailable(cache::EXCLUSIVE));
     DataArray write_set(1, d);
     GeometricRegion dreg = d->region();
     GeometricRegion wreg = GeometricRegion::
@@ -118,33 +117,6 @@ cache::distance_t CacheVar::GetDistance(const DataArray &read_set) const {
     return cur_distance;
 }
 
-// TODO(chinmayee): delete this
-bool CacheVar::CheckWritePendingFlag(const DataArray &write_set,
-                                     GeometricRegion &write_region) {
-    // if (pending_flag()) {
-    //     return false;
-    // }
-    for (size_t i = 0; i < write_set.size(); ++i) {
-      Data *d = write_set.at(i);
-      if (d->pending_flag() != 0) {
-        return false;
-      }
-      GeometricRegion dreg = d->region();
-      DMap::iterator it = data_map_.find(dreg);
-      if (it != data_map_.end()) {
-        Data *d_old = it->second;
-        if (d_old != d) {
-          if (write_back_.find(d_old) != write_back_.end()) {
-            if (d_old->pending_flag() != 0) {
-              return false;
-            }
-          }
-        }
-      }
-    }
-    return true;
-}
-
 /**
  * \details For read set, if data is not already in cache object, insert it in
  * diff set to read, and sync it if necessary. If
@@ -163,7 +135,6 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
     assert(diff != NULL);
     assert(sync != NULL);
     assert(sync_co != NULL);
-    set_pending_flag();
     for (size_t i = 0; i < read_set.size(); ++i) {
         Data *d = read_set.at(i);
         GeometricRegion dreg = d->region();
@@ -237,20 +208,17 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
     for (size_t i = 0; i < diff->size(); ++i) {
       /* Data in the diff array may have also be present in the sync and flush
          arrays. Only set read flag if the data was not marked in write mode. */
-      if (diff->at(i)->pending_flag() != -1) {
-        diff->at(i)->set_pending_flag(Data::READ);
-      }
-    }
-    for (size_t i = 0; i < sync_co->size(); ++i) {
-        sync_co->at(i)->set_pending_flag();
+        // TODO(chinmayee): We probably don't need this. We should remove it.
+        if (diff->at(i)->pending_flag() != -1) {
+          diff->at(i)->set_pending_flag(Data::READ);
+        }
     }
 }
 
+// method for cache manager to manage mappings and control access - checks if
+// any data in read/ write set has pending flag set
 bool CacheVar::CheckPendingFlag(const DataArray &read_set,
                                 const DataArray &write_set) {
-    if (pending_flag()) {
-        return false;
-    }
     for (size_t i = 0; i < read_set.size(); ++i) {
       Data *d = read_set.at(i);
       if (d->pending_flag() == -1) {
@@ -264,12 +232,6 @@ bool CacheVar::CheckPendingFlag(const DataArray &read_set,
           if (d->pending_flag() != 0) {
             return false;
           }
-          // chinmayee: the next branch is not required. we do not want this.
-	  /*
-          if (d->dirty_cache_object()->pending_flag()) {
-            return false;
-          }
-	  */
         }
       } else {
         Data *d_old = it->second;
@@ -278,12 +240,6 @@ bool CacheVar::CheckPendingFlag(const DataArray &read_set,
             if (d->pending_flag() != 0) {
               return false;
             }
-            // chinmayee: the next branch is not required. we do not want this.
-	    /*
-            if (d->dirty_cache_object()->pending_flag()) {
-              return false;
-            }
-	    */
           }
           if (write_back_.find(d_old) != write_back_.end()) {
             if (d_old->pending_flag() != 0) {
@@ -317,15 +273,14 @@ bool CacheVar::CheckPendingFlag(const DataArray &read_set,
     return true;
 }
 
+// method for cache manager to manage mappings and control access - unset pending
+// flag for all data in flush, diff and sync sets
 void CacheVar::ReleasePendingFlag(DataArray *flush,
                                   DataArray *diff,
-                                  DataArray *sync,
-                                  CacheObjects *sync_co) {
+                                  DataArray *sync) {
     assert(flush != NULL);
     assert(diff != NULL);
     assert(sync != NULL);
-    assert(sync_co != NULL);
-    // unset_pending_flag();
     for (size_t i = 0; i < flush->size(); ++i) {
       flush->at(i)->unset_pending_flag(Data::WRITE);
       assert(flush->at(i)->pending_flag() == 0);
@@ -342,9 +297,6 @@ void CacheVar::ReleasePendingFlag(DataArray *flush,
       if (diff->at(i)->pending_flag() > 0) {
         diff->at(i)->unset_pending_flag(Data::READ);
       }
-    }
-    for (size_t i = 0; i < sync_co->size(); ++i) {
-        sync_co->at(i)->unset_pending_flag();
     }
 }
 

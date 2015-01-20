@@ -59,7 +59,7 @@ cache::co_id_t CacheObject::ids_allocated_ = 0;
 /**
  * \details
  */
-CacheObject::CacheObject() : unique_id_(0), pending_flag_(false), id_(0),
+CacheObject::CacheObject() : unique_id_(0), id_(0),
     access_(cache::SHARED), users_(0) {
   name_ = "default";
 }
@@ -68,7 +68,6 @@ CacheObject::CacheObject() : unique_id_(0), pending_flag_(false), id_(0),
  * \details
  */
 CacheObject::CacheObject(const GeometricRegion &ob_reg) : unique_id_(0),
-    pending_flag_(false), id_(0),
     access_(cache::SHARED), users_(0),
     object_region_(ob_reg) {
   name_ = "default";
