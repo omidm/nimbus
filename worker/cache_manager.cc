@@ -61,6 +61,8 @@
 #define OutputTs(x, y) fprintf(time_log, "%d ; %s ; %s ; %f\n", \
                            tid, x, y, timestamps[i++])
 
+FILE* debug_log = NULL;
+
 namespace {
 double GetSizeStamp() {
   struct timespec t;
@@ -336,6 +338,22 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
       assert(i == order);
       assert(order <= 14);
     }
+    if (diff.size() != 0) {
+      size_t max_i = 0;
+      for (size_t i = 1; i < diff.size(); ++i)
+        if (diff.at(max_i)->region().GetSurfaceArea()
+            < diff.at(i)->region().GetSurfaceArea()) {
+          max_i = i;
+        }
+      std::string cv_name = cv->name();
+      Data* data = diff.at(max_i);
+      std::string region_name = data->region().ToNetworkData();
+      fprintf(debug_log,
+              "%s %s %f\n",
+              cv_name.c_str(),
+              region_name.c_str(),
+              timestamps[12] - timestamps[11]);
+    }
     return cv;
 }
 
@@ -607,6 +625,7 @@ void CacheManager::SetLogNames(std::string wid_str) {
     alloc_log = fopen((wid_str + "_cache_objects.txt").c_str(), "w");
     block_log = fopen((wid_str + "_cache_behavior.txt").c_str(), "w");
     time_log = fopen((wid_str + "_cache_time.txt").c_str(), "w");
+    debug_log = fopen((wid_str + "_cache_debug.txt").c_str(), "w");
 }
 
 
