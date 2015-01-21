@@ -72,79 +72,58 @@ public:
         particle_levelset_evolution,
         bool forced_alloc = false);
 
-    void CalculateFrameImpl(const nimbus::Job *job,
-                            const nimbus::DataArray &da,
-                            const bool set_boundary_conditions,
-                            const T dt);
-
-    void ReseedParticlesImpl(const nimbus::Job *job,
-                        const nimbus::DataArray &da,
-                        const bool set_boundary_conditions,
-                        const T dt);
-
-    void WriteOutputSplitImpl(const nimbus::Job *job,
-                              const nimbus::DataArray &da,
-                              const bool set_boundary_conditions,
-                              const T dt, const int rank);
-
-    bool ComputeOccupiedBlocksImpl(const nimbus::Job *job,
-                                   const nimbus::DataArray &da,
-                                   T dt);
-
-    bool UpdateGhostVelocitiesImpl(const nimbus::Job *job,
-                                  const nimbus::DataArray &da,
-                                  T dt);
-
+    bool AdjustPhiImpl(const nimbus::Job *job,
+                       const nimbus::DataArray &da,
+                       T dt);
     bool AdvectPhiImpl(const nimbus::Job *job,
                        const nimbus::DataArray &da,
                        T dt);
-
-    bool StepParticlesImpl(const nimbus::Job *job,
-                           const nimbus::DataArray &da,
-                           T dt);
-
     bool AdvectRemovedParticlesImpl(const nimbus::Job *job,
                            const nimbus::DataArray &da,
                            T dt);
-
     bool AdvectVImpl(const nimbus::Job *job,
                      const nimbus::DataArray &da,
                      T dt);
-
     bool ApplyForcesImpl(const nimbus::Job *job,
                     const nimbus::DataArray &da,
                     T dt);
-
-    bool ModifyLevelSetPartOneImpl(const nimbus::Job *job,
-                                   const nimbus::DataArray &da,
-                                   const nimbus::GeometricRegion &local_region,
-                                   T dt);
-
-    bool ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
-                                   const nimbus::DataArray &da,
-                                   const nimbus::GeometricRegion &local_region,
-                                   T dt);
-
+    bool DeleteParticlesImpl(const nimbus::Job *job,
+                             const nimbus::DataArray &da,
+                             T dt);
+    bool ExtrapolatePhiImpl(const nimbus::Job *job,
+                            const nimbus::DataArray &da,
+                            T dt);
+    bool ExtrapolationImpl (const nimbus::Job *job,
+                          const nimbus::DataArray &da,
+                          T dt);
     bool MakeSignedDistanceImpl(const nimbus::Job *job,
                                    const nimbus::DataArray &da,
                                    const nimbus::GeometricRegion &local_region,
                                    T dt);
-
-    bool ExtrapolatePhiImpl(const nimbus::Job *job,
-                            const nimbus::DataArray &da,
-                            T dt);
-
-    bool AdjustPhiImpl(const nimbus::Job *job,
-                       const nimbus::DataArray &da,
-                       T dt);
-
-    bool DeleteParticlesImpl(const nimbus::Job *job,
-                             const nimbus::DataArray &da,
-                             T dt);
-
+    bool ModifyLevelSetPartOneImpl(const nimbus::Job *job,
+                                   const nimbus::DataArray &da,
+                                   const nimbus::GeometricRegion &local_region,
+                                   T dt);
+    bool ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
+                                   const nimbus::DataArray &da,
+                                   const nimbus::GeometricRegion &local_region,
+                                   T dt);
     bool ReincorporateParticlesImpl(const nimbus::Job *job,
                                     const nimbus::DataArray &da,
                                     T dt);
+    bool ReseedParticlesImpl(const nimbus::Job *job,
+                        const nimbus::DataArray &da,
+                        const T dt);
+    bool StepParticlesImpl(const nimbus::Job *job,
+                           const nimbus::DataArray &da,
+                           T dt);
+    bool UpdateGhostVelocitiesImpl(const nimbus::Job *job,
+                                  const nimbus::DataArray &da,
+                                  T dt);
+    void WriteOutputSplitImpl(const nimbus::Job *job,
+                              const nimbus::DataArray &da,
+                              const bool set_boundary_conditions,
+                              const T dt, const int rank);
 
     bool ProjectionCalculateBoundaryConditionPartOneImpl(
         const nimbus::Job *job,
@@ -161,16 +140,10 @@ public:
                             const nimbus::DataArray &da,
                             T dt);
 
-    bool ExtrapolationImpl (const nimbus::Job *job,
-                          const nimbus::DataArray &da,
-                          T dt);
-    bool ReseedParticlesImpl(const nimbus::Job *job,
-                             const nimbus::DataArray &da,
-                             T dt);
-
-    void Write_Output_Files(const int frame, int rank = -1);
-
+public:
     void Write_Substep(const std::string& title,const int substep,const int level=0);
+private:
+    void Write_Output_Files(const int frame, int rank = -1);
     void Run(RANGE<TV_INT>& domain,const T dt,const T time);
 
 //#####################################################################

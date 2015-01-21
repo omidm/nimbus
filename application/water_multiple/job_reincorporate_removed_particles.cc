@@ -67,6 +67,7 @@ void JobReincorporateRemovedParticles::Execute(nimbus::Parameter params, const n
 
     InitConfig init_config;
     init_config.use_cache = true;
+
     std::string params_str(params.ser_data().data_ptr_raw(),
                            params.ser_data().size());
     LoadParameter(params_str, &init_config);
@@ -91,14 +92,12 @@ void JobReincorporateRemovedParticles::Execute(nimbus::Parameter params, const n
                                this, da, example, driver);
 
     {
-      //nimbus::Timer timer(std::string("reincorporate_particle_")
-      //                    + id().ToNetworkData());
       application::ScopeTimer scope_timer(name());
       driver->ReincorporateParticlesImpl(this, da, dt);
     }
 
+    // Write, free resources.
     example->Save_To_Nimbus(this, da, driver->current_frame + 1);
-    // free resources
     DestroyExampleAndDriver(example, driver);
 
     dbg(APP_LOG, "Completed executing reincorporate particles job\n");

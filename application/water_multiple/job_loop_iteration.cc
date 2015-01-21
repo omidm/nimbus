@@ -33,20 +33,9 @@
  */
 
 /*
- * This file contains a loop iteration job that spawns the sub step jobs to
- * calculate the current frame. It keeps spawning the iteration in a loop as
- * long as frame computation in not complete. When the frame is done it will
- * spawn the loop frame job for the next frame. The granularity of the sub step
- * jobs could be controlled by changing the changing the GRANULARITY_STATE
- * macro in this file as follows:
- * ONE_JOB:              calculate the frame iteration in one job (like water coarse).
- * SUPER_JOBS:           break the frame iteration in to three super jobs.
- * BREAK_SUPER_JOB_1:    further break super job 1 in to its components.
- * BREAK_SUPER_JOB_2:    further break super job 2 in to its components.
- * BREAK_SUPER_JOB_3:    further break super job 3 in to its components.
- * BREAK_ALL_SUPER_JOBS: break all three super jobs in to their components.
- *
- * Author: Omid Mashayekhi <omidm@stanford.edu>
+ * Author: Omid Mashayekhi <omidm@stanford.edu>,
+ * Chinmayee Shah <chshah@stanford.edu>,
+ * Hang Qu <quhang@stanford.edu>
  */
 
 #define GRANULARITY_STATE BREAK_ALL_SUPER_JOBS
@@ -104,6 +93,8 @@ namespace application {
     DataConfig data_config;
     data_config.SetFlag(DataConfig::DT);
     example->data_config.Set(data_config);
+
+    // Since this job uses only DT, it does not need to use cache.
     example->Load_From_Nimbus(this, da, frame);
 
     // check whether the frame is done or not
@@ -130,7 +121,7 @@ namespace application {
     SpawnWithBreakAllGranularity(false, init_config.frame, init_config.time,
                                  dt, da, init_config.global_region);
 
-    // Free resources.
+    // Write, free resources. This job does not use cache.
     example->Save_To_Nimbus(this, da, frame+1);
     delete example;
   }

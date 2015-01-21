@@ -31,7 +31,7 @@ namespace PhysBAM{
 
 template<class T_GRID> class LEVELSET_MULTIPLE_UNIFORM;
 
-//TODO: Should adventually derive off of a incompressible project
+//NOTE: Should eventually derive off of an incompressible project
 template<class TV>
 class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
 {

@@ -64,6 +64,7 @@ void JobExtrapolation::Execute(nimbus::Parameter params,
   InitConfig init_config;
   init_config.use_cache = true;
   init_config.set_boundary_condition = false;
+
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
   LoadParameter(params_str, &init_config);
@@ -91,8 +92,8 @@ void JobExtrapolation::Execute(nimbus::Parameter params,
     driver->ExtrapolationImpl(this, da, dt);
   }
 
+  // Write, free resources.
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
-  // Free resources.
   DestroyExampleAndDriver(example, driver);
 
   dbg(APP_LOG, "Completed executing EXTRAPOLATION job\n");

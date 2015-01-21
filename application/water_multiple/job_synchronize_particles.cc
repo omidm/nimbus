@@ -70,6 +70,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     // get time, dt, frame from the parameters.
     InitConfig init_config;
     init_config.use_cache = true;
+
     std::string params_str(params.ser_data().data_ptr_raw(),
                            params.ser_data().size());
     LoadParameter(params_str, &init_config);
@@ -90,10 +91,13 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
         InitializeExampleAndDriver(init_config, data_config, this,
                                    da, example, driver);
 
+        // Write, free resources.
         example->Save_To_Nimbus(this, da, init_config.frame + 1);
         DestroyExampleAndDriver(example, driver);
         return;
     }
+
+    // else
 
     nimbus::GeometricRegion array_inner(
             init_config.local_region.NewEnlarged(-kGhostNum));

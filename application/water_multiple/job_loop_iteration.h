@@ -47,15 +47,6 @@
 #include "shared/nimbus.h"
 
 namespace application {
-    enum {
-      ONE_JOB,
-      SUPER_JOBS,
-      BREAK_SUPER_JOB_1,
-      BREAK_SUPER_JOB_2,
-      BREAK_SUPER_JOB_3,
-      BREAK_ALL_SUPER_JOBS
-    };
-
     class JobLoopIteration : public nimbus::Job {
         public:
             explicit JobLoopIteration(nimbus::Application *app);

@@ -65,12 +65,12 @@ nimbus::Job* JobAdvectRemovedParticles::Clone() {
 
 void JobAdvectRemovedParticles::Execute(nimbus::Parameter params,
                         const nimbus::DataArray& da) {
-  dbg(APP_LOG, "--- Executing advect removed particles job.\n");
+  dbg(APP_LOG, "Executing advect removed particles job.\n");
 
   // get time, dt, frame from the parameters.
   InitConfig init_config;
-  init_config.set_boundary_condition = false;
   init_config.use_cache = true;
+  init_config.set_boundary_condition = false;
 
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
@@ -118,7 +118,8 @@ void JobAdvectRemovedParticles::Execute(nimbus::Parameter params,
     app->translator_log->WriteToFile(msg.str());
   }
 
-  // Free resources.
+  // Write, free resources.
+  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
   DestroyExampleAndDriver(example, driver);
 
   dbg(APP_LOG, "Completed executing advect removed particles.\n");

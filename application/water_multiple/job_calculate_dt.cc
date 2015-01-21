@@ -66,6 +66,9 @@ void JobCalculateDt::Execute(
     const nimbus::DataArray& da) {
   dbg(APP_LOG, "Executing CALCULATE_DT job\n");
   InitConfig init_config;
+  init_config.use_cache = true;
+  init_config.set_boundary_condition = false;
+
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
   LoadParameter(params_str, &init_config);
@@ -73,9 +76,6 @@ void JobCalculateDt::Execute(
   // initialize configuration and state
   PhysBAM::WATER_EXAMPLE<TV> *example;
   PhysBAM::WATER_DRIVER<TV> *driver;
-
-  init_config.set_boundary_condition = false;
-  init_config.use_cache = true;
 
   DataConfig data_config;
   data_config.SetFlag(DataConfig::VELOCITY);
@@ -98,10 +98,10 @@ void JobCalculateDt::Execute(
     example->dt_buffer = dt;
   }
 
+  // Write, free resources.
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
-
-  // Free resources.
   DestroyExampleAndDriver(example, driver);
+
   dbg(APP_LOG, "Completed executing CALCULATE_DT job\n");
 }
 

@@ -37,26 +37,66 @@ namespace{
         ((WATER_DRIVER<TV>*)writer)->Write_Substep(title,substep,level);
     }
 };
-//#####################################################################
-// Initialize
-//#####################################################################
+
 template<class TV> WATER_DRIVER<TV>::
     WATER_DRIVER(WATER_EXAMPLE<TV>& example)
 :example(example)
 {
     DEBUG_SUBSTEPS::Set_Substep_Writer((void*)this,&Write_Substep_Helper<TV>);
 }
-//#####################################################################
-// Initialize
-//#####################################################################
+
 template<class TV> WATER_DRIVER<TV>::
 ~WATER_DRIVER()
 {
     DEBUG_SUBSTEPS::Clear_Substep_Writer((void*)this);
 }
+
 //#####################################################################
-// Run
+// Internal methods
 //#####################################################################
+
+// Function Write_Substep
+template<class TV> void WATER_DRIVER<TV>::
+Write_Substep(const std::string& title,const int substep,const int level)
+{
+    if(level<=example.write_substeps_level){
+        example.frame_title=title;
+        std::stringstream ss;ss<<"Writing substep ["<<example.frame_title<<"]: output_number="<<output_number+1<<", time="<<time<<", frame="<<current_frame<<", substep="<<substep<<std::endl;
+        LOG::filecout(ss.str());
+        Write_Output_Files(++output_number);example.frame_title="";}
+}
+
+// Write_Output_Files
+template<class TV> void WATER_DRIVER<TV>::
+Write_Output_Files(const int frame, int rank)
+{
+    if (rank != -1) {
+      std::string rank_name = "";
+      std::stringstream temp_ss;
+      temp_ss << "split_output/" << rank;
+      rank_name = temp_ss.str();
+      FILE_UTILITIES::Create_Directory("split_output/");
+      FILE_UTILITIES::Create_Directory(rank_name);
+      FILE_UTILITIES::Create_Directory(rank_name+STRING_UTILITIES::string_sprintf("/%d",frame));
+      FILE_UTILITIES::Create_Directory(rank_name+"/common");
+      FILE_UTILITIES::Write_To_Text_File(rank_name+STRING_UTILITIES::string_sprintf("/%d/frame_title",frame),example.frame_title);
+      if(frame==example.first_frame)
+        FILE_UTILITIES::Write_To_Text_File(rank_name+"/common/first_frame",frame,"\n");
+      example.Write_Output_Files(frame, rank);
+      FILE_UTILITIES::Write_To_Text_File(rank_name+"/common/last_frame",frame,"\n");
+    } else {
+      FILE_UTILITIES::Create_Directory(example.output_directory);
+      FILE_UTILITIES::Create_Directory(example.output_directory+STRING_UTILITIES::string_sprintf("/%d",frame));
+      FILE_UTILITIES::Create_Directory(example.output_directory+"/common");
+      FILE_UTILITIES::Write_To_Text_File(example.output_directory+STRING_UTILITIES::string_sprintf("/%d/frame_title",frame),example.frame_title);
+      if(frame==example.first_frame)
+        FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/first_frame",frame,"\n");
+      example.Write_Output_Files(frame);
+      FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/last_frame",frame,"\n");
+    }
+}
+
+// Run advect particles callback
 template<class TV> void WATER_DRIVER<TV>::
 Run(RANGE<TV_INT>& domain,const T dt,const T time)
 {
@@ -102,107 +142,195 @@ Run(RANGE<TV_INT>& domain,const T dt,const T time)
     }
 }
 
+//#####################################################################
+// Methods for jobs
+//#####################################################################
 
+template<class TV> bool WATER_DRIVER<TV>::
+AdjustPhiImpl(const nimbus::Job *job,
+        const nimbus::DataArray &da,
+        T dt) {
+    // NOT THREAD SAFE!!! LOG::Time("Adjust Phi ...\n");
+    example.Adjust_Phi_With_Sources(time+dt);
+    return true;
+}
 
-// Substep without reseeding and writing to frame.
-// Operation on time should be solved carefully. --quhang
-template<class TV> void WATER_DRIVER<TV>::
-CalculateFrameImpl(const nimbus::Job *job,
-                   const nimbus::DataArray &da,
-                   const bool set_boundary_conditions,
-                   const T dt) {
-  // NOT THREAD SAFE!!! LOG::Time("Calculate Dt");
-  // example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
-  // T dt=example.cfl*example.incompressible.CFL(example.face_velocities);dt=min(dt,example.particle_levelset_evolution.CFL(false,false));
-  // if(time+dt>=target_time){dt=target_time-time;done=true;}
-  // else if(time+2*dt>=target_time){dt=.5*(target_time-time);}
-
-  // NOT THREAD SAFE!!! LOG::Time("Compute Occupied Blocks");
-  // T maximum_fluid_speed=example.face_velocities.Maxabs().Max();
-  // T max_particle_collision_distance=example.particle_levelset_evolution.particle_levelset.max_collision_distance_factor*example.mac_grid.dX.Max();
-  // example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,dt*maximum_fluid_speed+2*max_particle_collision_distance+(T).5*example.mac_grid.dX.Max(),10);
-  //example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,dt*maximum_fluid_speed+2*max_particle_collision_distance+(T).5*example.mac_grid.dX.Max(),10);
-
-  // NOT THREAD SAFE!!! LOG::Time("Adjust Phi With Objects");
-  T_FACE_ARRAYS_SCALAR face_velocities_ghost;face_velocities_ghost.Resize(example.incompressible.grid,example.number_of_ghost_cells,false);
-  example.incompressible.boundary->Fill_Ghost_Cells_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,time+dt,example.number_of_ghost_cells);
-
-  //Advect Phi 3.6% (Parallelized)
+template<class TV> bool WATER_DRIVER<TV>::
+AdvectPhiImpl(const nimbus::Job *job,
+              const nimbus::DataArray &da,
+              T dt) {
   // NOT THREAD SAFE!!! LOG::Time("Advect Phi");
   example.phi_boundary_water.Use_Extrapolation_Mode(false);
   assert(example.particle_levelset_evolution.runge_kutta_order_levelset == 1);
-  example.particle_levelset_evolution.levelset_advection.Euler_Step(
-      example.face_velocities,
-      dt, time,
-      example.particle_levelset_evolution.particle_levelset.
-      number_of_ghost_cells);
+  // I wrote and tested the following code, which broke levelset advection
+  // into function calls. Because extrapolation and MPI calls are used
+  // implicitly in this function call, I think we cannot get rid of it.
+  {
+    typedef typename LEVELSET_ADVECTION_POLICY<GRID<TV> >
+        ::FAST_LEVELSET_ADVECTION_T T_FAST_LEVELSET_ADVECTION;
+    typedef typename LEVELSET_POLICY<GRID<TV> >
+        ::FAST_LEVELSET_T T_FAST_LEVELSET;
+    T_FAST_LEVELSET_ADVECTION& levelset_advection =
+        example.particle_levelset_evolution.levelset_advection;
+    GRID<TV>& grid = ((T_FAST_LEVELSET*)levelset_advection.levelset)->grid;
+    T_ARRAYS_SCALAR& phi = ((T_FAST_LEVELSET*)levelset_advection.levelset)->phi;
+    assert(grid.Is_MAC_Grid() && levelset_advection.advection);
+    T_ARRAYS_SCALAR phi_ghost(grid.Domain_Indices(
+            example.particle_levelset_evolution.particle_levelset.
+            number_of_ghost_cells));
+    T_ARRAYS_SCALAR::Copy(phi, phi_ghost);
+    levelset_advection.advection->Update_Advection_Equation_Cell(
+        grid, phi, phi_ghost, example.face_velocities,
+        *((T_FAST_LEVELSET*)levelset_advection.levelset)->boundary, dt, time);
+    ((T_FAST_LEVELSET*)levelset_advection.levelset)->boundary->Apply_Boundary_Condition(
+        grid, phi, time + dt);
+  }
+  return true;
+}
 
-  example.particle_levelset_evolution.time += dt;
-  example.phi_boundary_water.Use_Extrapolation_Mode(true);
-
-  //Advect Particles 12.1% (Parallelized)
-  // NOT THREAD SAFE!!! LOG::Time("Step Particles");
-  example.particle_levelset_evolution.particle_levelset.Euler_Step_Particles(face_velocities_ghost,dt,time,true,true,false,false);
-
-  //Advect removed particles (Parallelized)
+template<class TV> bool WATER_DRIVER<TV>::
+AdvectRemovedParticlesImpl(const nimbus::Job *job,
+                           const nimbus::DataArray &da,
+                           T dt) {
   // NOT THREAD SAFE!!! LOG::Time("Advect Removed Particles");
-  RANGE<TV_INT> domain(example.mac_grid.Domain_Indices());domain.max_corner+=TV_INT::All_Ones_Vector();
-  DOMAIN_ITERATOR_THREADED_ALPHA<WATER_DRIVER<TV>,TV>(domain,0).template Run<T,T>(*this,&WATER_DRIVER<TV>::Run,dt,time);
+  RANGE<TV_INT> domain(example.mac_grid.Domain_Indices());
+  domain.max_corner += TV_INT::All_Ones_Vector();
+  DOMAIN_ITERATOR_THREADED_ALPHA<WATER_DRIVER<TV>,TV>(domain,0).template Run<T,T>(
+      *this, &WATER_DRIVER<TV>::Run, dt, time);
+  return true;
+}
 
-  //Advect Velocities 26% (Parallelized)
+template<class TV> bool WATER_DRIVER<TV>::
+AdvectVImpl(const nimbus::Job *job,
+            const nimbus::DataArray &da,
+            T dt) {
   // NOT THREAD SAFE!!! LOG::Time("Advect V");
-  example.incompressible.advection->Update_Advection_Equation_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,face_velocities_ghost,*example.incompressible.boundary,dt,time);
+  example.incompressible.advection->Update_Advection_Equation_Face(
+      example.mac_grid, example.face_velocities, example.face_velocities_ghost,
+      example.face_velocities_ghost, *example.incompressible.boundary, dt, time);
+  return true;
+}
 
-  //Add Forces 0%
+template<class TV> bool WATER_DRIVER<TV>::
+ApplyForcesImpl(const nimbus::Job *job,
+           const nimbus::DataArray &da,
+           T dt) {
   // NOT THREAD SAFE!!! LOG::Time("Forces");
-  example.incompressible.Advance_One_Time_Step_Forces(example.face_velocities,dt,time,true,0,example.number_of_ghost_cells);
+  example.incompressible.Advance_One_Time_Step_Forces(
+      example.face_velocities, example.face_velocities_ghost, dt, time, true, 0, example.number_of_ghost_cells);
+  return true;
+}
 
-  //Modify Levelset with Particles 15% (Parallelizedish)
-  // NOT THREAD SAFE!!! LOG::Time("Modify Levelset");
-  example.particle_levelset_evolution.particle_levelset.Exchange_Overlap_Particles();
-  example.particle_levelset_evolution.Modify_Levelset_And_Particles(&face_velocities_ghost);
+template<class TV> bool WATER_DRIVER<TV>::
+DeleteParticlesImpl(const nimbus::Job *job,
+                    const nimbus::DataArray &da,
+                    T dt) {
+    // NOT THREAD SAFE!!! LOG::Time("Delete Particles ...\n");
+    int lid1 = example.particle_levelset_evolution.particle_levelset.last_unique_particle_id;
+    example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
+    example.particle_levelset_evolution.particle_levelset.
+        Delete_Particles_In_Local_Maximum_Phi_Cells(1);
+    example.particle_levelset_evolution.particle_levelset.
+        Delete_Particles_Far_From_Interface(); // uses visibility
+    example.particle_levelset_evolution.particle_levelset.
+        Identify_And_Remove_Escaped_Particles(example.face_velocities_ghost,
+                1.5,
+                time + dt);
 
-  //Adjust Phi 0%
-  // NOT THREAD SAFE!!! LOG::Time("Adjust Phi");
-  example.Adjust_Phi_With_Sources(time+dt);
+    int lid2 = example.particle_levelset_evolution.particle_levelset.last_unique_particle_id;
+    if (lid1 != lid2) {
+      dbg(APP_LOG, "***** last unique particle id are different, %i and %i\n", lid1, lid2);
+      exit(-1);
+    }
+    return true;
+}
 
-  //Delete Particles 12.5 (Parallelized)
-  // NOT THREAD SAFE!!! LOG::Time("Delete Particles");
-  example.particle_levelset_evolution.Delete_Particles_Outside_Grid();                                                            //0.1%
-  example.particle_levelset_evolution.particle_levelset.Delete_Particles_In_Local_Maximum_Phi_Cells(1);                           //4.9%
-  example.particle_levelset_evolution.particle_levelset.Delete_Particles_Far_From_Interface(); // uses visibility                 //7.6%
-  example.particle_levelset_evolution.particle_levelset.Identify_And_Remove_Escaped_Particles(face_velocities_ghost,1.5,time+dt); //2.4%
+template<class TV> bool WATER_DRIVER<TV>::
+ExtrapolatePhiImpl(const nimbus::Job *job,
+                   const nimbus::DataArray &da,
+                   T dt) {
+  assert(example.particle_levelset_evolution.runge_kutta_order_levelset == 1);
+  {
+    example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(
+        example.mac_grid,
+        example.particle_levelset_evolution.phi,
+        example.phi_ghost_bandwidth_eight,
+        0, time+dt, 8);
+    std::cout << "OMID: called extrapolate phi.\n";
+  }
+  return true;
+}
 
-  //Reincorporate Particles 0% (Parallelized)
-  // NOT THREAD SAFE!!! LOG::Time("Reincorporate Particles");
-  if(example.particle_levelset_evolution.particle_levelset.use_removed_positive_particles || example.particle_levelset_evolution.particle_levelset.use_removed_negative_particles)
-    example.particle_levelset_evolution.particle_levelset.Reincorporate_Removed_Particles(1,1,0,true);
+template<class TV> bool WATER_DRIVER<TV>::
+ExtrapolationImpl (const nimbus::Job *job,
+                 const nimbus::DataArray &da,
+                 T dt) {
+  example.incompressible.Extrapolate_Velocity_Across_Interface(
+      example.face_velocities,
+      example.phi_ghost_bandwidth_eight,
+      false, 3, 0, TV());
+  return true;
+}
 
-  //Project 7% (Parallelizedish)
-  LOG::SCOPE *scope=0;
-  scope=new LOG::SCOPE("Project");
-  if (set_boundary_conditions)
-    example.Set_Boundary_Conditions(time);
-  example.incompressible.Set_Dirichlet_Boundary_Conditions(&example.particle_levelset_evolution.phi,0);
-  example.projection.p*=dt;
-  // example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method();
-  example.incompressible.Advance_One_Time_Step_Implicit_Part(example.face_velocities,dt,time,true);
-  example.projection.p*=(1/dt);
-  example.incompressible.boundary->Apply_Boundary_Condition_Face(example.incompressible.grid,example.face_velocities,time+dt);
-  // example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method(false);
-  delete scope;
+template<class TV> bool WATER_DRIVER<TV>::
+MakeSignedDistanceImpl(const nimbus::Job *job,
+                          const nimbus::DataArray &da,
+                          const nimbus::GeometricRegion &local_region,
+                          T dt) {
+    // NOT THREAD SAFE!!! LOG::Time("Make Signed Distance ...\n");
+    int ghost_cells = 7;
+    example.particle_levelset_evolution.
+        Make_Signed_Distance_Nimbus(&example.face_velocities_ghost,
+                                     &example.phi_ghost_bandwidth_seven,
+                                     ghost_cells);
+    return true;
+}
 
-  //Extrapolate Velocity 7%
-  // NOT THREAD SAFE!!! LOG::Time("Extrapolate Velocity");
-  T_ARRAYS_SCALAR exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
-  example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time+dt,8);
-  example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
+template<class TV> bool WATER_DRIVER<TV>::
+ModifyLevelSetPartOneImpl(const nimbus::Job *job,
+                          const nimbus::DataArray &da,
+                          const nimbus::GeometricRegion &local_region,
+                          T dt) {
+    // NOT THREAD SAFE!!! LOG::Time("Modify Levelset Part one ...\n");
+    example.particle_levelset_evolution.
+        Modify_Levelset_And_Particles_Nimbus_One(&example.
+                                                 face_velocities_ghost);
+    example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(
+        example.mac_grid,
+        example.particle_levelset_evolution.phi,
+        example.phi_ghost_bandwidth_seven,
+        0, time+dt, 7);
+    return true;
+}
 
-  // TODO(quhang) Take care of this!
-  // time+=dt;
+template<class TV> bool WATER_DRIVER<TV>::
+ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
+                          const nimbus::DataArray &da,
+                          const nimbus::GeometricRegion &local_region,
+                          T dt) {
+    // NOT THREAD SAFE!!! LOG::Time("Modify Levelset Part two ...\n");
+    // TODO: this involves redundant copy operation. can get rid of some/ all
+    // of this after merging with Hang's updates.
+    int ghost_cells = 7;
+    example.particle_levelset_evolution.
+        Modify_Levelset_And_Particles_Nimbus_Two(&example.face_velocities_ghost,
+                                                 &example.phi_ghost_bandwidth_seven,
+                                                 ghost_cells);
+    return true;
+}
 
-  // Save State.
-  // example.Save_To_Nimbus(job, da, current_frame+1);
+template<class TV> bool WATER_DRIVER<TV>::
+ReincorporateParticlesImpl(const nimbus::Job *job,
+                           const nimbus::DataArray &da,
+                           T dt) {
+    // NOT THREAD SAFE!!! LOG::Time("Reincorporate Removed Particles ...\n");
+    if (example.particle_levelset_evolution.particle_levelset.
+            use_removed_positive_particles ||
+            example.particle_levelset_evolution.particle_levelset.
+            use_removed_negative_particles)
+        example.particle_levelset_evolution.particle_levelset.
+            Reincorporate_Removed_Particles(1, 1, 0, true);
+    return true;
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
@@ -217,6 +345,27 @@ ReseedParticlesImpl(const nimbus::Job *job,
   return true;
 }
 
+template<class TV> bool WATER_DRIVER<TV>::
+StepParticlesImpl(const nimbus::Job *job,
+                  const nimbus::DataArray &da,
+                  T dt) {
+  // NOT THREAD SAFE!!! LOG::Time("Step Particles");
+  example.particle_levelset_evolution.particle_levelset.Euler_Step_Particles(
+      example.face_velocities_ghost, dt, time, true, true, false, false);
+  return true;
+}
+
+template<class TV> bool WATER_DRIVER<TV>::
+UpdateGhostVelocitiesImpl (const nimbus::Job *job,
+                          const nimbus::DataArray &da,
+                          T dt) {
+  // NOT THREAD SAFE!!! LOG::Time("Adjust Phi With Objects");
+  example.incompressible.boundary->Fill_Ghost_Cells_Face(
+      example.mac_grid, example.face_velocities, example.face_velocities_ghost,
+      time + dt, example.number_of_ghost_cells);
+  return true;
+}
+
 template<class TV> void WATER_DRIVER<TV>::
 WriteOutputSplitImpl(const nimbus::Job *job,
                      const nimbus::DataArray &da,
@@ -228,8 +377,6 @@ WriteOutputSplitImpl(const nimbus::Job *job,
   } else {
     Write_Output_Files(++output_number, rank);
   }
-  //Save State
-  // example.Save_To_Nimbus(job, da, current_frame+1);
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
@@ -316,326 +463,5 @@ ProjectionWrapupImpl(
   return true;
 }
 
-template<class TV> bool WATER_DRIVER<TV>::
-ExtrapolationImpl (const nimbus::Job *job,
-                 const nimbus::DataArray &da,
-                 T dt) {
-  example.incompressible.Extrapolate_Velocity_Across_Interface(
-      example.face_velocities,
-      example.phi_ghost_bandwidth_eight,
-      false, 3, 0, TV());
-
-  return true;
-}
-
-template<class TV> bool WATER_DRIVER<TV>::
-UpdateGhostVelocitiesImpl (const nimbus::Job *job,
-                          const nimbus::DataArray &da,
-                          T dt) {
-  // NOT THREAD SAFE!!! LOG::Time("Adjust Phi With Objects");
-  example.incompressible.boundary->Fill_Ghost_Cells_Face(
-      example.mac_grid, example.face_velocities, example.face_velocities_ghost,
-      time + dt, example.number_of_ghost_cells);
-
-  // Save State.
-  // example.Save_To_Nimbus(job, da, current_frame + 1);
-
-  return true;
-}
-
-template<class TV> bool WATER_DRIVER<TV>::
-ExtrapolatePhiImpl(const nimbus::Job *job,
-                   const nimbus::DataArray &da,
-                   T dt) {
-  // example.phi_boundary_water.Use_Extrapolation_Mode(false);
-  assert(example.particle_levelset_evolution.runge_kutta_order_levelset == 1);
-  {
-    example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(
-        example.mac_grid,
-        example.particle_levelset_evolution.phi,
-        example.phi_ghost_bandwidth_eight,
-        0, time+dt, 8);
-    std::cout << "OMID: called extrapolate phi.\n";
-  }
-  // example.phi_boundary_water.Use_Extrapolation_Mode(true);
-
-  // Save State.
-  // example.Save_To_Nimbus(job, da, current_frame + 1);
-
-  return true;
-}
-
-template<class TV> bool WATER_DRIVER<TV>::
-AdvectPhiImpl(const nimbus::Job *job,
-              const nimbus::DataArray &da,
-              T dt) {
-  //Advect Phi 3.6% (Parallelized)
-  // NOT THREAD SAFE!!! LOG::Time("Advect Phi");
-  example.phi_boundary_water.Use_Extrapolation_Mode(false);
-  assert(example.particle_levelset_evolution.runge_kutta_order_levelset == 1);
-  // I wrote and tested the following code, which broke levelset advection
-  // into function calls. Because extrapolation and MPI calls are used
-  // implicitly in this function call, I think we cannot get rid of it.
-  {
-    typedef typename LEVELSET_ADVECTION_POLICY<GRID<TV> >
-        ::FAST_LEVELSET_ADVECTION_T T_FAST_LEVELSET_ADVECTION;
-    typedef typename LEVELSET_POLICY<GRID<TV> >
-        ::FAST_LEVELSET_T T_FAST_LEVELSET;
-    T_FAST_LEVELSET_ADVECTION& levelset_advection =
-        example.particle_levelset_evolution.levelset_advection;
-    GRID<TV>& grid = ((T_FAST_LEVELSET*)levelset_advection.levelset)->grid;
-    T_ARRAYS_SCALAR& phi = ((T_FAST_LEVELSET*)levelset_advection.levelset)->phi;
-    assert(grid.Is_MAC_Grid() && levelset_advection.advection);
-    T_ARRAYS_SCALAR phi_ghost(grid.Domain_Indices(
-            example.particle_levelset_evolution.particle_levelset.
-            number_of_ghost_cells));
-    T_ARRAYS_SCALAR::Copy(phi, phi_ghost);
-    levelset_advection.advection->Update_Advection_Equation_Cell(
-        grid, phi, phi_ghost, example.face_velocities,
-        *((T_FAST_LEVELSET*)levelset_advection.levelset)->boundary, dt, time);
-    ((T_FAST_LEVELSET*)levelset_advection.levelset)->boundary->Apply_Boundary_Condition(
-        grid, phi, time + dt);
-  }
-
-  // Save State.
-  // example.Save_To_Nimbus(job, da, current_frame + 1);
-
-  return true;
-}
-
-template<class TV> bool WATER_DRIVER<TV>::
-StepParticlesImpl(const nimbus::Job *job,
-                  const nimbus::DataArray &da,
-                  T dt) {
-  //Advect Particles 12.1% (Parallelized)
-  // NOT THREAD SAFE!!! LOG::Time("Step Particles");
-  example.particle_levelset_evolution.particle_levelset.Euler_Step_Particles(
-      example.face_velocities_ghost, dt, time, true, true, false, false);
-
-  // Save State.
-  // example.Save_To_Nimbus(job, da, current_frame + 1);
-
-  return true;
-}
-
-template<class TV> bool WATER_DRIVER<TV>::
-AdvectRemovedParticlesImpl(const nimbus::Job *job,
-                           const nimbus::DataArray &da,
-                           T dt) {
-  //Advect removed particles (Parallelized)
-  // NOT THREAD SAFE!!! LOG::Time("Advect Removed Particles");
-  RANGE<TV_INT> domain(example.mac_grid.Domain_Indices());
-  domain.max_corner += TV_INT::All_Ones_Vector();
-  DOMAIN_ITERATOR_THREADED_ALPHA<WATER_DRIVER<TV>,TV>(domain,0).template Run<T,T>(
-      *this, &WATER_DRIVER<TV>::Run, dt, time);
-
-  // Save State.
-  // example.Save_To_Nimbus(job, da, current_frame + 1);
-
-  return true;
-}
-
-template<class TV> bool WATER_DRIVER<TV>::
-AdvectVImpl(const nimbus::Job *job,
-            const nimbus::DataArray &da,
-            T dt) {
-  //Advect Velocities 26% (Parallelized)
-  // NOT THREAD SAFE!!! LOG::Time("Advect V");
-  example.incompressible.advection->Update_Advection_Equation_Face(
-      example.mac_grid, example.face_velocities, example.face_velocities_ghost,
-      example.face_velocities_ghost, *example.incompressible.boundary, dt, time);
-
-  // Save State.
-  // example.Save_To_Nimbus(job, da, current_frame + 1);
-
-  return true;
-}
-
-template<class TV> bool WATER_DRIVER<TV>::
-ApplyForcesImpl(const nimbus::Job *job,
-           const nimbus::DataArray &da,
-           T dt) {
-  //Add Forces 0%
-  // NOT THREAD SAFE!!! LOG::Time("Forces");
-  example.incompressible.Advance_One_Time_Step_Forces(
-      example.face_velocities, example.face_velocities_ghost, dt, time, true, 0, example.number_of_ghost_cells);
-
-  // Save State.
-  // example.Save_To_Nimbus(job, da, current_frame + 1);
-
-  return true;
-}
-
-template<class TV> bool WATER_DRIVER<TV>::
-ModifyLevelSetPartOneImpl(const nimbus::Job *job,
-                          const nimbus::DataArray &da,
-                          const nimbus::GeometricRegion &local_region,
-                          T dt) {
-    // NOT THREAD SAFE!!! LOG::Time("Modify Levelset Part one ...\n");
-
-    example.particle_levelset_evolution.
-        Modify_Levelset_And_Particles_Nimbus_One(&example.
-                                                 face_velocities_ghost);
-    example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(
-        example.mac_grid,
-        example.particle_levelset_evolution.phi,
-        example.phi_ghost_bandwidth_seven,
-        0, time+dt, 7);
-
-    // save state
-    // example.Save_To_Nimbus(job, da, current_frame+1);
-
-    return true;
-}
-
-template<class TV> bool WATER_DRIVER<TV>::
-ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
-                          const nimbus::DataArray &da,
-                          const nimbus::GeometricRegion &local_region,
-                          T dt) {
-    // NOT THREAD SAFE!!! LOG::Time("Modify Levelset Part two ...\n");
-
-    // TODO: this involves redundant copy operation. can get rid of some/ all
-    // of this after merging with Hang's updates.
-    int ghost_cells = 7;
-    example.particle_levelset_evolution.
-        Modify_Levelset_And_Particles_Nimbus_Two(&example.face_velocities_ghost,
-                                                 &example.phi_ghost_bandwidth_seven,
-                                                 ghost_cells);
-
-    // save state
-    // example.Save_To_Nimbus(job, da, current_frame+1);
-
-    return true;
-}
-
-
-template<class TV> bool WATER_DRIVER<TV>::
-MakeSignedDistanceImpl(const nimbus::Job *job,
-                          const nimbus::DataArray &da,
-                          const nimbus::GeometricRegion &local_region,
-                          T dt) {
-    // NOT THREAD SAFE!!! LOG::Time("Make Signed Distance ...\n");
-
-    int ghost_cells = 7;
-    example.particle_levelset_evolution.
-        Make_Signed_Distance_Nimbus(&example.face_velocities_ghost,
-                                     &example.phi_ghost_bandwidth_seven,
-                                     ghost_cells);
-
-    // save state
-    example.Save_To_Nimbus(job, da, current_frame+1);
-
-    return true;
-}
-
-template<class TV> bool WATER_DRIVER<TV>::
-AdjustPhiImpl(const nimbus::Job *job,
-        const nimbus::DataArray &da,
-        T dt) {
-    // NOT THREAD SAFE!!! LOG::Time("Adjust Phi ...\n");
-
-    // adjust phi with sources
-    example.Adjust_Phi_With_Sources(time+dt);
-
-    // Save State.
-    // example.Save_To_Nimbus(job, da, current_frame + 1);
-
-    return true;
-}
-
-template<class TV> bool WATER_DRIVER<TV>::
-DeleteParticlesImpl(const nimbus::Job *job,
-                    const nimbus::DataArray &da,
-                    T dt) {
-    // NOT THREAD SAFE!!! LOG::Time("Delete Particles ...\n");
-
-    // delete particles
-    int lid1 = example.particle_levelset_evolution.particle_levelset.last_unique_particle_id;
-    example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
-    example.particle_levelset_evolution.particle_levelset.
-        Delete_Particles_In_Local_Maximum_Phi_Cells(1);
-    example.particle_levelset_evolution.particle_levelset.
-        Delete_Particles_Far_From_Interface(); // uses visibility
-    example.particle_levelset_evolution.particle_levelset.
-        Identify_And_Remove_Escaped_Particles(example.face_velocities_ghost,
-                1.5,
-                time + dt);
-
-
-    // save state
-    // example.Save_To_Nimbus(job, da, current_frame+1);
-    int lid2 = example.particle_levelset_evolution.particle_levelset.last_unique_particle_id;
-    if (lid1 != lid2) {
-      dbg(APP_LOG, "***** last unique particle id are different, %i and %i\n", lid1, lid2);
-      exit(-1);
-    }
-
-    return true;
-}
-
-template<class TV> bool WATER_DRIVER<TV>::
-ReincorporateParticlesImpl(const nimbus::Job *job,
-                           const nimbus::DataArray &da,
-                           T dt) {
-    // NOT THREAD SAFE!!! LOG::Time("Reincorporate Removed Particles ...\n");
-
-    // reincorporate removed particles
-    if (example.particle_levelset_evolution.particle_levelset.
-            use_removed_positive_particles ||
-            example.particle_levelset_evolution.particle_levelset.
-            use_removed_negative_particles)
-        example.particle_levelset_evolution.particle_levelset.
-            Reincorporate_Removed_Particles(1, 1, 0, true);
-
-    // save state
-    // example.Save_To_Nimbus(job, da, current_frame+1);
-
-    return true;
-}
-
-//#####################################################################
-// Function Write_Substep
-//#####################################################################
-template<class TV> void WATER_DRIVER<TV>::
-Write_Substep(const std::string& title,const int substep,const int level)
-{
-    if(level<=example.write_substeps_level){
-        example.frame_title=title;
-        std::stringstream ss;ss<<"Writing substep ["<<example.frame_title<<"]: output_number="<<output_number+1<<", time="<<time<<", frame="<<current_frame<<", substep="<<substep<<std::endl;
-        LOG::filecout(ss.str());
-        Write_Output_Files(++output_number);example.frame_title="";}
-}
-//#####################################################################
-// Write_Output_Files
-//#####################################################################
-template<class TV> void WATER_DRIVER<TV>::
-Write_Output_Files(const int frame, int rank)
-{
-    if (rank != -1) {
-      std::string rank_name = "";
-      std::stringstream temp_ss;
-      temp_ss << "split_output/" << rank;
-      rank_name = temp_ss.str();
-      FILE_UTILITIES::Create_Directory("split_output/");
-      FILE_UTILITIES::Create_Directory(rank_name);
-      FILE_UTILITIES::Create_Directory(rank_name+STRING_UTILITIES::string_sprintf("/%d",frame));
-      FILE_UTILITIES::Create_Directory(rank_name+"/common");
-      FILE_UTILITIES::Write_To_Text_File(rank_name+STRING_UTILITIES::string_sprintf("/%d/frame_title",frame),example.frame_title);
-      if(frame==example.first_frame)
-        FILE_UTILITIES::Write_To_Text_File(rank_name+"/common/first_frame",frame,"\n");
-      example.Write_Output_Files(frame, rank);
-      FILE_UTILITIES::Write_To_Text_File(rank_name+"/common/last_frame",frame,"\n");
-    } else {
-      FILE_UTILITIES::Create_Directory(example.output_directory);
-      FILE_UTILITIES::Create_Directory(example.output_directory+STRING_UTILITIES::string_sprintf("/%d",frame));
-      FILE_UTILITIES::Create_Directory(example.output_directory+"/common");
-      FILE_UTILITIES::Write_To_Text_File(example.output_directory+STRING_UTILITIES::string_sprintf("/%d/frame_title",frame),example.frame_title);
-      if(frame==example.first_frame)
-        FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/first_frame",frame,"\n");
-      example.Write_Output_Files(frame);
-      FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/last_frame",frame,"\n");
-    }
-}
 //#####################################################################
 template class WATER_DRIVER<VECTOR<float,3> >;

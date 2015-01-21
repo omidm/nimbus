@@ -84,8 +84,6 @@ WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
     static_config_u_interface = NULL;
     static_config_force = NULL;
     static_config_collision_body = cache_collision_body;
-    // Initialize_Particles();
-    // Initialize_Read_Write_General_Structures();
 }
 //#####################################################################
 // WATER_EXAMPLE
@@ -136,8 +134,6 @@ WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
     static_config_u_interface = cache->static_config_u_interface;
     static_config_force = cache->static_config_force;
     static_config_collision_body = cache_collision_body;
-    // Initialize_Particles();
-    // Initialize_Read_Write_General_Structures();
 }
 //#####################################################################
 // WATER_EXAMPLE
@@ -189,8 +185,6 @@ WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
     static_config_u_interface = cache->static_config_u_interface;
     static_config_force = cache->static_config_force;
     static_config_collision_body = cache_collision_body;
-    // Initialize_Particles();
-    // Initialize_Read_Write_General_Structures();
 }
 //#####################################################################
 // ~WATER_EXAMPLE
@@ -755,8 +749,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       static_config_force = NULL;
     }
 
-    // nimbus::int_dimension_t array_shift[3] = {
-    //     local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
     nimbus::PdiVector pdv;
 
     GeometricRegion array_reg_central(local_region);
@@ -1139,7 +1131,7 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
                 job, std::string(APP_DT), da, &pdv,
                 application::READ_ACCESS)) {
         dbg(APP_LOG, "Reducing DT min(");
-        // TODO(quhang) maybe not safe. To be put the MAX float value.
+        // Note(quhang) maybe not safe. To be put the MAX float value.
         dt_buffer = 1e6;
         nimbus::PdiVector::const_iterator iter = pdv.begin();
         for (; iter != pdv.end(); ++iter) {
@@ -1266,8 +1258,6 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
       return;
     }
 
-    // nimbus::int_dimension_t array_shift[3] = {
-    //    local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
     nimbus::PdiVector pdv;
 
     GeometricRegion array_reg_central(local_region);
@@ -1336,7 +1326,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
                 job, std::string(APP_DT), da, &pdv,
                 application::READ_ACCESS)) {
         dbg(APP_LOG, "Reducing DT min(");
-        // TODO(quhang) maybe not safe. To be put the MAX float value.
+        // NOTE(quhang) maybe not safe. To be put the MAX float value.
         dt_buffer = 1e6;
         nimbus::PdiVector::const_iterator iter = pdv.begin();
         for (; iter != pdv.end(); ++iter) {
@@ -1392,24 +1382,27 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     }
 
     typedef nimbus::Data Data;
+    /*
     if (cache_matrix_a) {
-      // TODO(quhang) matrix_a reading is not handled, because the only job that
+      // Variable matrix_a reading is not handled, because the only job that
       // touches matrix_a is CONSTRUCT_MATRIX, which doesn't need to read.
-      // laplace_solver_wrapper.A_array(1) = *(cache_matrix_a->data());
+      laplace_solver_wrapper.A_array(1) = *(cache_matrix_a->data());
     }
     if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
-      // TODO(quhang) index_m2c reading is not handled,
+      // Variable index_m2c reading is not handled,
       // because the only job that touches matrix_a is CONSTRUCT_MATRIX,
       // which doesn't need to read.
-      // &laplace_solver_wrapper.matrix_index_to_cell_index_array(1) =
-      //     *(cache_index_m2c->data());
+      &laplace_solver_wrapper.matrix_index_to_cell_index_array(1) =
+        *(cache_index_m2c->data());
     }
     // VECTOR_B.
     if (cache_vector_b) {
-      // VECTOR_B is never read inside WATER_EXAMPLE.
-      // laplace_solver_wrapper.b_array(1).n = cache_vector_b->data()->n;
-      // laplace_solver_wrapper.b_array(1).x = cache_vector_b->data()->x;
+      // Variable VECTOR_B reading is not handled, because it is never read
+      // inside WATER_EXAMPLE.
+      laplace_solver_wrapper.b_array(1).n = cache_vector_b->data()->n;
+      laplace_solver_wrapper.b_array(1).x = cache_vector_b->data()->x;
     }
+    */
     // INDEX_C2M.
     if (cache_index_c2m) {
       typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;

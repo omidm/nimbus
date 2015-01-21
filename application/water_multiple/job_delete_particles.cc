@@ -67,6 +67,8 @@ void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArr
 
     InitConfig init_config;
     init_config.use_cache = true;
+    init_config.set_boundary_condition = false;
+
     std::string params_str(params.ser_data().data_ptr_raw(),
                            params.ser_data().size());
     LoadParameter(params_str, &init_config);
@@ -77,7 +79,6 @@ void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArr
     PhysBAM::WATER_EXAMPLE<TV> *example;
     PhysBAM::WATER_DRIVER<TV> *driver;
 
-    init_config.set_boundary_condition = false;
     DataConfig data_config;
     data_config.SetFlag(DataConfig::VELOCITY_GHOST);
     data_config.SetFlag(DataConfig::LEVELSET);
@@ -85,20 +86,17 @@ void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArr
     data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
     data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
     data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
-    // TODO(quhang), why this is needed?
-    // data_config.SetAll();
     data_config.SetFlag(DataConfig::VALID_MASK);
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
 
     {
-      //nimbus::Timer timer(std::string("delete_particles_") + id().ToNetworkData());
       application::ScopeTimer scope_timer(name());
       driver->DeleteParticlesImpl(this, da, dt);
     }
 
+    // Write, free resources.
     example->Save_To_Nimbus(this, da, driver->current_frame + 1);
-    // free resources
     DestroyExampleAndDriver(example, driver);
 
     dbg(APP_LOG, "Completed executing delete particles job\n");

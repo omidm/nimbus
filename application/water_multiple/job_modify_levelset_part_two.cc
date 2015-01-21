@@ -92,14 +92,12 @@ void JobModifyLevelsetPartTwo::Execute(nimbus::Parameter params, const nimbus::D
                                this, da, example, driver);
 
     {
-      //nimbus::Timer timer(std::string("modify_levelset_part_two_")
-      //                    + id().ToNetworkData());
       application::ScopeTimer scope_timer(name());
       driver->ModifyLevelSetPartTwoImpl(this, da, init_config.local_region, dt);
     }
 
+    // Write, free resources.
     example->Save_To_Nimbus(this, da, driver->current_frame + 1);
-    // free resources
     DestroyExampleAndDriver(example, driver);
 
     dbg(APP_LOG, "Completed executing modify levelset job -- part two\n");

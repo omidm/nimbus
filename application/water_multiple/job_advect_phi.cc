@@ -69,6 +69,7 @@ void JobAdvectPhi::Execute(nimbus::Parameter params,
   // get time, dt, frame from the parameters.
   InitConfig init_config;
   init_config.use_cache = true;
+
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
   LoadParameter(params_str, &init_config);
@@ -97,8 +98,8 @@ void JobAdvectPhi::Execute(nimbus::Parameter params,
     driver->AdvectPhiImpl(this, da, dt);
   }
 
+  // Write, free resources.
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
-  // Free resources.
   DestroyExampleAndDriver(example, driver);
 
   dbg(APP_LOG, "Completed executing advect phi.\n");
