@@ -37,7 +37,8 @@
  * functionality as WATER_DRIVER, but is seperated out with code that is not
  * related to other parts of the simulation.
  *
- * Author: Hang Qu<quhang@stanford.edu>
+ * Author: Hang Qu <quhang@stanford.edu>
+ * Edited for application cache by Chinmayee Shah <chshah@stanford.edu>
  */
 
 #include <cassert>

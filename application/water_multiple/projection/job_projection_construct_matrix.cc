@@ -105,9 +105,9 @@ void JobProjectionConstructMatrix::Execute(
     application::ScopeTimer scope_timer(name());
     driver->ProjectionConstructMatrixImpl(this, da, dt);
   }
-  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 
-  // Free resources.
+  // Write, free resources.
+  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
   DestroyExampleAndDriver(example, driver);
 
   dbg(APP_LOG, "Completed executing PROJECTION_CONSTRUCT_MATRIX job\n");

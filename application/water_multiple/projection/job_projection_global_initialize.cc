@@ -71,6 +71,7 @@ void JobProjectionGlobalInitialize::Execute(
 
   InitConfig init_config;
   init_config.use_cache = true;
+
   // TODO(quhang), process iteration number.
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
