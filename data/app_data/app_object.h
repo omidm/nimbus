@@ -33,21 +33,21 @@
  */
 
 /*
- * A CacheObject is an application object corresponding to one/ multiple nimbus
+ * An AppObject is an application object corresponding to one/ multiple nimbus
  * variables.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_DATA_CACHE_CACHE_OBJECT_H_
-#define NIMBUS_DATA_CACHE_CACHE_OBJECT_H_
+#ifndef NIMBUS_DATA_APP_DATA_APP_OBJECT_H_
+#define NIMBUS_DATA_APP_DATA_APP_OBJECT_H_
 
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
 
-#include "data/cache/cache_defs.h"
+#include "data/app_data/app_data_defs.h"
 #include "shared/nimbus_types.h"
 
 namespace nimbus {
@@ -58,27 +58,30 @@ typedef std::set<Data *> DataSet;
 class GeometricRegion;
 
 /**
- * \class CacheObject
+ * \class AppObject
  * \details Application object corresponding to one/ multiple nimbus variables.
- * CacheVariable and CacheStruct, that inherit from CacheObject, provide the
- * one variable and multiple variable implementation respectively.
+ * AppVar and AppStruct, that inherit from AppObject, provide one variable and
+ * multiple variable implementation respectively.
  */
-class CacheObject {
+class  AppObject {
+    // list friend classes here
     friend class CacheManager;
     friend class CacheTable;
+    friend class Data;
+
     public:
         /**
-         * \brief Creates a CacheObject
-         * \return Constructed CacheObject instance
+         * \brief Creates an AppObject
+         * \return Constructed AppObject instance
          */
-        explicit CacheObject();
+        explicit AppObject();
 
         /**
-         * \brief Creates a CbcheObject
+         * \brief Creates an AppObject
          * \param  ob_reg specifies application object region
-         * \return Constructed CacheObject instance
+         * \return Constructed AppObject instance
          */
-        explicit CacheObject(const GeometricRegion &ob_reg);
+        explicit AppObject(const GeometricRegion &ob_reg);
 
         /**
          * \brief Makes this instance a prototype. The application writer must
@@ -90,7 +93,7 @@ class CacheObject {
          * \brief Accessor for id_ member
          * \return Instance's prototype id, type co_id_t
          */
-        cache::co_id_t id() const;
+        app_data::ob_id_t id() const;
 
         /**
          * \brief Accessor for object_region_ member
@@ -125,38 +128,23 @@ class CacheObject {
          */
         virtual void DumpData(std::string file_name) {}
 
-        /**
-         * TODO: Make this protected
-         * \brief Unsets mapping between data and CacheObject instance
-         * \param d denotes the data to unmap
-         */
-        virtual void UnsetData(Data *d) = 0;
-
-        /**
-         * TODO: Make this protected
-         * \brief Unsets dirty data mapping between data and CacheObject
-         * instance
-         * \param d denotes the data to unmap
-         */
-        virtual void UnsetDirtyData(Data *d) = 0;
-
     private:
         std::string name_;
         uint64_t unique_id_;
 
         // prototype information
-        static cache::co_id_t ids_allocated_;
-        cache::co_id_t id_;
+        static app_data::ob_id_t ids_allocated_;
+        app_data::ob_id_t id_;
 
         // access information
-        cache::CacheAccess access_;
+        app_data::Access access_;
         int users_;
 
-        void set_id(cache::co_id_t id);
+        void set_id(app_data::ob_id_t id);
 
-        void AcquireAccess(cache::CacheAccess access);
+        void AcquireAccess(app_data::Access access);
         void ReleaseAccessInternal();
-        bool IsAvailable(cache::CacheAccess access) const;
+        bool IsAvailable(app_data::Access access) const;
 
     protected:
         // read/ write/ object region information
@@ -164,20 +152,33 @@ class CacheObject {
         GeometricRegion write_region_;
 
         /**
-         * \brief Flushes data from cache, removes corresponding dirty data
-         * mapping
+         * \brief Pull data from AppObject to corresponding nimbus physical
+         * data object - this is unsafe, should be used with appropriate checks
+         * and flags set
          * \param d is data to flush to
          */
         virtual void PullData(Data *d) = 0;
 
-        // method for cache manager for profiling
+        /**
+         * \brief Unsets mapping between data and AppObject instance
+         * \param d denotes the data to unmap
+         */
+        virtual void UnsetData(Data *d) = 0;
+
+        /**
+         * \brief Unsets dirty data mapping between data and AppObject instance
+         * \param d denotes the data to unmap
+         */
+        virtual void UnsetDirtyData(Data *d) = 0;
+
+        // method for memory profiling
         virtual size_t memory_size() {
           return sizeof(*this);
         }
-};  // class CacheObject
+};  // class AppObject
 
-typedef std::vector<CacheObject *> CacheObjects;
+typedef std::vector<AppObject *> AppObjects;
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_CACHE_CACHE_OBJECT_H_
+#endif  // NIMBUS_DATA_APP_DATA_APP_OBJECT_H_

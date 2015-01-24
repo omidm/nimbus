@@ -33,28 +33,26 @@
  */
 
 /*
- * Helper functions for cache class objects.
+ * Helper functions for app data class objects.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_DATA_CACHE_CACHE_DEFS_H_
-#define NIMBUS_DATA_CACHE_CACHE_DEFS_H_
+#ifndef NIMBUS_DATA_APP_DATA_APP_DATA_DEFS_H_
+#define NIMBUS_DATA_APP_DATA_APP_DATA_DEFS_H_
 
 #include "shared/geometric_region.h"
 #include "shared/idset.h"
 #include "shared/nimbus_types.h"
 
-#define MAGIC_CACHE_TYPE 114
-
 namespace nimbus {
-namespace cache {
-enum CacheAccess { SHARED, EXCLUSIVE };
-enum CacheTType { VAR, STRUCT };
-typedef uint64_t type_id_t;
-typedef uint64_t co_id_t;
-typedef uint64_t distance_t;
-}  // namespace cache
+namespace app_data {
+enum Access { SHARED, EXCLUSIVE };  // access mode
+typedef uint64_t type_id_t;         // variable type
+typedef uint64_t ob_id_t;           // application object prototype id type
+typedef uint64_t distance_t;        // type to express cost/ distance between a
+                                    // set of nimbus objects and app objects
+}  // namespace app_data
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_CACHE_CACHE_DEFS_H_
+#endif  // NIMBUS_DATA_APP_DATA_APP_DATA_DEFS_H_

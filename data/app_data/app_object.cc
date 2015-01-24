@@ -33,7 +33,7 @@
  */
 
 /*
- * A CacheObject is an application object corresponding to one/ multiple nimbus
+ * A AppObject is an application object corresponding to one/ multiple nimbus
  * variables.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>
@@ -44,8 +44,8 @@
 #include <string>
 #include <vector>
 
-#include "data/cache/cache_defs.h"
-#include "data/cache/cache_object.h"
+#include "data/app_data/app_data_defs.h"
+#include "data/app_data/app_object.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
@@ -54,48 +54,49 @@
 namespace nimbus {
 
 // TODO(concurrency) needs to be protected.
-cache::co_id_t CacheObject::ids_allocated_ = 0;
+app_data::ob_id_t AppObject::ids_allocated_ = 0;
 
 /**
  * \details
  */
-CacheObject::CacheObject() : unique_id_(0), id_(0),
-    access_(cache::SHARED), users_(0) {
+AppObject::AppObject() : unique_id_(0), id_(0),
+    access_(app_data::SHARED), users_(0) {
   name_ = "default";
 }
 
 /**
  * \details
  */
-CacheObject::CacheObject(const GeometricRegion &ob_reg) : unique_id_(0),
-    access_(cache::SHARED), users_(0),
+AppObject::AppObject(const GeometricRegion &ob_reg) : unique_id_(0),
+    access_(app_data::SHARED), users_(0),
     object_region_(ob_reg) {
   name_ = "default";
 }
 
 /**
- * \details MakePrototype() increases ids_allocated_ for CacheObject
+ * \details MakePrototype() increases ids_allocated_ for AppObject
  * prototypes, and allocates a new id to the prototype. A prototype is used by
- * application when requesting an application object. CacheManager uses
- * prototype id to put all instances of a prototype together - if a cached
- * instance satisfies requested region and prototype id, the CacheManager can
- * return the instance (after updating to reflect the read set), provided the
- * instance is available.
+ * application when requesting an application object. AppManager uses
+ * prototype id to put all instances of a prototype together - if an existing
+ * instance satisfies requested region and prototype id, the AppManager can
+ * return the instance. NOTE that this method is not thread safe, so it should
+ * be called from one 
  */
-void CacheObject::MakePrototype() {
+void AppObject::MakePrototype() {
 // TODO(concurrency) needs to be protected.
     id_ = ++ids_allocated_;
 }
 
 /**
- * \details AcquireAccess(...) ensures that only one request in cache::EXCLUSIVE mode
- * holds the object, otherwise the object is in cache::SHARED mode. It sets object
+ * \details AcquireAccess(...) ensures that only one request in app_data::EXCLUSIVE mode
+ * holds the object, otherwise the object is in app_data::SHARED mode. It sets object
  * access mode to requested access mode, and increases the number of users by
  * one.
  */
-void CacheObject::AcquireAccess(cache::CacheAccess access) {
-    if (!(users_ == 0 || (access == cache::SHARED && access_ == cache::SHARED))) {
-        dbg(DBG_ERROR, "Cannot acquire cache object, it is already in use!");
+void AppObject::AcquireAccess(app_data::Access access) {
+    if (!(users_ == 0 ||
+          (access == app_data::SHARED && access_ == app_data::SHARED))) {
+        dbg(DBG_ERROR, "Cannot acquire app object, it is already in use!");
         exit(-1);
     }
     access_ = access;
@@ -107,43 +108,44 @@ void CacheObject::AcquireAccess(cache::CacheAccess access) {
  * (example, application job) must release an object when it is done reading/
  * writing.
  */
-void CacheObject::ReleaseAccessInternal() {
+void AppObject::ReleaseAccessInternal() {
     users_--;
-    if (users_ != 0 && access_ == cache::EXCLUSIVE) {
-        dbg(DBG_ERROR, "Incocistency in number of users using cache object!");
+    if (users_ != 0 && access_ == app_data::EXCLUSIVE) {
+        dbg(DBG_ERROR, "Incocistency in number of users using app object!");
         exit(-1);
     }
 }
 
 /**
  * \details IsAvailable(...) returns true if an object is available, otherwise
- * it returns false. An object is available in cache::EXCLUSIVE mode if the number of
- * users using it is zero. An object is available in cache::SHARED mode if number of
- * users is zero, or the current access mode for the object is cache::SHARED.
+ * it returns false. An object is available in app_data::EXCLUSIVE mode if the number of
+ * users using it is zero. An object is available in app_data::SHARED mode if number of
+ * users is zero, or the current access mode for the object is app_data::SHARED.
  */
-bool CacheObject::IsAvailable(cache::CacheAccess access) const {
-    return ((access == cache::EXCLUSIVE && users_ == 0) ||
-            (access == cache::SHARED && (access_ == cache::SHARED || users_ == 0)));
+bool AppObject::IsAvailable(app_data::Access access) const {
+    return ((access == app_data::EXCLUSIVE && users_ == 0) ||
+            (access == app_data::SHARED &&
+             (access_ == app_data::SHARED || users_ == 0)));
 }
 
 /**
  * \details
  */
-cache::co_id_t CacheObject::id() const {
+app_data::ob_id_t AppObject::id() const {
     return id_;
 }
 
 /**
  * \details
  */
-GeometricRegion CacheObject::object_region() const {
+GeometricRegion AppObject::object_region() const {
     return object_region_;
 }
 
 /**
  * \details
  */
-void CacheObject::set_object_region(const GeometricRegion &object_region) {
+void AppObject::set_object_region(const GeometricRegion &object_region) {
     object_region_ = object_region;
 }
 

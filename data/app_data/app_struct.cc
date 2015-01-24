@@ -33,8 +33,8 @@
  */
 
 /*
- * A CacheStruct is an application object corresponding to a set of nimbus
- * variables cached by the cache manager.
+ * An AppStruct is an application object corresponding to a set of nimbus
+ * variables provided by app managers.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
@@ -44,8 +44,8 @@
 #include <string>
 #include <vector>
 
-#include "data/cache/cache_defs.h"
-#include "data/cache/cache_struct.h"
+#include "data/app_data/app_data_defs.h"
+#include "data/app_data/app_struct.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
@@ -56,16 +56,16 @@ namespace nimbus {
 /**
  * \details
  */
-CacheStruct::CacheStruct(size_t num_variables) : num_variables_(num_variables),
-                                                 data_maps_(num_variables),
-                                                 write_backs_(num_variables) {
+AppStruct::AppStruct(size_t num_variables) : num_variables_(num_variables),
+                                             data_maps_(num_variables),
+                                             write_backs_(num_variables) {
 }
 
 /**
  * \details
  */
-CacheStruct::CacheStruct(size_t num_variables, const GeometricRegion &ob_reg)
-    : CacheObject(ob_reg),
+AppStruct::AppStruct(size_t num_variables, const GeometricRegion &ob_reg)
+    : AppObject(ob_reg),
       num_variables_(num_variables),
       data_maps_(num_variables),
       write_backs_(num_variables) {
@@ -76,10 +76,9 @@ CacheStruct::CacheStruct(size_t num_variables, const GeometricRegion &ob_reg)
  * map in data_maps_ for the data d, since no prior type information is
  * available (just like PullData).
  */
-void CacheStruct::UnsetData(Data *d) {
+void AppStruct::UnsetData(Data *d) {
     GeometricRegion dreg = d->region();
-    cache::type_id_t type = d->cache_type();
-    assert(type != MAGIC_CACHE_TYPE);
+    app_data::type_id_t type = d->app_data_type();
     assert(type < num_variables_);
     DMap &data_map_t = data_maps_[type];
     bool success = false;
@@ -94,9 +93,8 @@ void CacheStruct::UnsetData(Data *d) {
 /**
  * \details UnsetDirtyData(...) removes d from write_backs_.
  */
-void CacheStruct::UnsetDirtyData(Data *d) {
-    cache::type_id_t type = d->cache_type();
-    assert(type != MAGIC_CACHE_TYPE);
+void AppStruct::UnsetDirtyData(Data *d) {
+    app_data::type_id_t type = d->app_data_type();
     assert(type < num_variables_);
     DataSet &write_back_t = write_backs_[type];
     assert(write_back_t.find(d) != write_back_t.end());
@@ -104,36 +102,36 @@ void CacheStruct::UnsetDirtyData(Data *d) {
 }
 
 /**
- * \details PullData(...) pulls data from cache, after locking the struct.
- * When data needs to be updated from outside CacheStruct, use PullData.
+ * \details PullData(...) pulls data from app, after locking the struct.
+ * When data needs to be updated from outside AppStruct, use PullData.
  * PullData(...)
  * checks each write_back set in the list write_backs_, and finds out which
  * type this data corresponds to. This may be a bad idea, but with twin copy
  * implementation, I expect the overhead to be small. -- Chinmayee
  */
-void CacheStruct::PullData(Data *d) {
-    cache::type_id_t type = d->cache_type();
-    std::vector<cache::type_id_t> var_type(1, type);
+void AppStruct::PullData(Data *d) {
+    app_data::type_id_t type = d->app_data_type();
+    std::vector<app_data::type_id_t> var_type(1, type);
     std::vector<DataArray> write_sets(1, DataArray(1, d));
     GeometricRegion dreg = d->region();
     GeometricRegion wreg = GeometricRegion::
         GetIntersection(write_region_, dreg);
-    WriteFromCache(var_type, write_sets, wreg);
+    WriteAppData(var_type, write_sets, wreg);
 }
 
 /**
- * \details GetDistance(...) gives the cost of using the CacheStruct instance,
+ * \details GetDistance(...) gives the cost of using the AppStruct instance,
  * given the read set. Current cost function is the sum of geometric sizes of
  * data in the read set.
  * The function does not have a separate argument for write set
  * - if you want write set included in the cost function, either add  another
  * argument or append it to read set that is passed to GetDistance.
  */
-cache::distance_t CacheStruct::GetDistance(const std::vector<cache::type_id_t> &var_type,
+app_data::distance_t AppStruct::GetDistance(const std::vector<app_data::type_id_t> &var_type,
                                            const std::vector<DataArray> &read_sets) const {
-    cache::distance_t cur_distance = 0;
+    app_data::distance_t cur_distance = 0;
     for (size_t t = 0; t < num_variables_; ++t) {
-        cache::type_id_t type = var_type[t];
+        app_data::type_id_t type = var_type[t];
         if (type > num_variables_) {
             dbg(DBG_WARN, "Invalid type %u passed to GetDistance, ignoring it\n", type);
             continue;
@@ -154,81 +152,31 @@ cache::distance_t CacheStruct::GetDistance(const std::vector<cache::type_id_t> &
 }
 
 /**
- * \details If data is not already in existing data, create the mappings.
- * If it replaces existing data, flush existing data if dirty. Create
- * dirty object mapping with all data in write set and set write region.
- */
-void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
-                             const std::vector<DataArray> &write_sets,
-                             GeometricRegion write_region) {
-    // TODO(quhang): synchronization not implemented.
-    assert(false);
-    size_t num_vars = var_type.size();
-    assert(write_sets.size() == num_vars);
-    assert(num_vars <= num_variables_);
-    std::vector<DataArray> flush_sets;
-    for (size_t t = 0; t < num_vars; ++t) {
-        const DataArray &write_set_t = write_sets[t];
-        DataArray &flush_t = flush_sets[t];
-        cache::type_id_t type = var_type[t];
-        DMap &data_map_t = data_maps_[type];
-        DataSet &write_back_t = write_backs_[type];
-        for (size_t i = 0; i < write_set_t.size(); ++i) {
-            Data *d = write_set_t.at(i);
-            GeometricRegion dreg = d->region();
-            DMap::iterator it = data_map_t.find(dreg);
-            if (it != data_map_t.end()) {
-                Data *d_old = it->second;
-                if (d_old != d) {
-                    if (write_back_t.find(d_old) != write_back_t.end()) {
-                        flush_t.push_back(d_old);
-                        write_back_t.erase(d_old);
-                        d_old->UnsetDirtyCacheObject(this);
-                        d_old->UnsetCacheObject(this);
-                        assert(d_old->co_size() == 0);
-                    }
-                    d_old->UnsetCacheObject(this);
-                }
-            }
-            d->InvalidateMappings();
-            data_map_t[dreg] = d;
-            d->SetUpCacheObject(this);
-            write_back_t.insert(d);
-            d->SetUpDirtyCacheObject(this);
-            d->set_cache_type(t);
-        }
-    }
-    GeometricRegion write_region_old = write_region_;
-    write_region_ = write_region;
-    WriteFromCache(var_type, flush_sets, write_region_old);
-}
-
-/**
- * \details For read set, if data is not already in cache object, insert it in
- * diff set to read, and sync it if necessary. If
- * it replaces existing data, flush existing data if dirty. For write set, if
- * data is not already in existing data, just create the mappings.
+ * \details For read set, if data is not already in app object, insert it in
+ * diff set to read, and sync it if necessary. If it replaces existing data,
+ * flush existing data if dirty. For write set,
+ * if data is not already in existing data, just create the mappings.
  * If it replaces existing data, flush existing data if dirty. Finally create
  * dirty object mapping with all data in write set.
  */
-void CacheStruct::SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,
+void AppStruct::SetUpReadWrite(const std::vector<app_data::type_id_t> &var_type,
                                  const std::vector<DataArray> &read_sets,
                                  const std::vector<DataArray> &write_sets,
                                  std::vector<DataArray> *flush_sets,
                                  std::vector<DataArray> *diff_sets,
                                  std::vector<DataArray> *sync_sets,
-                                 std::vector<CacheObjects> *sync_co_sets) {
+                                 std::vector<AppObjects> *sync_ob_sets) {
     assert(flush_sets != NULL);
     assert(diff_sets != NULL);
     assert(sync_sets != NULL);
-    assert(sync_co_sets != NULL);
+    assert(sync_ob_sets != NULL);
     size_t num_vars = var_type.size();
     assert(read_sets.size() == num_vars &&
            write_sets.size() == num_vars &&
            flush_sets->size() == num_vars &&
            diff_sets->size() == num_vars &&
            sync_sets->size() == num_vars &&
-           sync_co_sets->size() == num_vars);
+           sync_ob_sets->size() == num_vars);
     assert(num_vars <= num_variables_);
     for (size_t t = 0; t < num_vars; ++t) {
         const DataArray &read_set_t = read_sets[t];
@@ -236,8 +184,8 @@ void CacheStruct::SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,
         DataArray &flush_t = flush_sets->at(t);
         DataArray &diff_t = diff_sets->at(t);
         DataArray &sync_t = sync_sets->at(t);
-        CacheObjects &sync_co_t = sync_co_sets->at(t);
-        cache::type_id_t type = var_type[t];
+        AppObjects &sync_ob_t = sync_ob_sets->at(t);
+        app_data::type_id_t type = var_type[t];
         DMap &data_map_t = data_maps_[type];
         DataSet &write_back_t = write_backs_[type];
         for (size_t i = 0; i < read_set_t.size(); ++i) {
@@ -245,37 +193,37 @@ void CacheStruct::SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,
             GeometricRegion dreg = d->region();
             DMap::iterator it = data_map_t.find(dreg);
             if (it == data_map_t.end()) {
-                if (d->dirty_cache_object()) {
+                if (d->dirty_app_object()) {
                     sync_t.push_back(d);
-                    sync_co_t.push_back(d->dirty_cache_object());
+                    sync_ob_t.push_back(d->dirty_app_object());
                     d->ClearDirtyMappings();
-                    assert(d->co_size() == 1);
+                    assert(d->app_ob_size() == 1);
                 }
                 diff_t.push_back(d);
                 data_map_t[dreg] = d;
-                d->SetUpCacheObject(this);
-                d->set_cache_type(type);
+                d->SetUpAppObject(this);
+                d->set_app_data_type(type);
             } else {
                 Data *d_old = it->second;
                 if (d_old != d) {
-                    if (d->dirty_cache_object()) {
+                    if (d->dirty_app_object()) {
                         sync_t.push_back(d);
-                        sync_co_t.push_back(d->dirty_cache_object());
+                        sync_ob_t.push_back(d->dirty_app_object());
                         d->ClearDirtyMappings();
-                        assert(d->co_size() == 1);
+                        assert(d->app_ob_size() == 1);
                     }
                     if (write_back_t.find(d_old) != write_back_t.end()) {
                         flush_t.push_back(d_old);
                         write_back_t.erase(d_old);
-                        d_old->UnsetDirtyCacheObject(this);
-                        d_old->UnsetCacheObject(this);
-                        assert(d_old->co_size() == 0);
+                        d_old->UnsetDirtyAppObject(this);
+                        d_old->UnsetAppObject(this);
+                        assert(d_old->app_ob_size() == 0);
                     }
-                    d_old->UnsetCacheObject(this);
+                    d_old->UnsetAppObject(this);
                     diff_t.push_back(d);
                     data_map_t[dreg] = d;
-                    d->SetUpCacheObject(this);
-                    d->set_cache_type(type);
+                    d->SetUpAppObject(this);
+                    d->set_app_data_type(type);
                 }
             }
         }
@@ -289,19 +237,19 @@ void CacheStruct::SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,
                     if (write_back_t.find(d_old) != write_back_t.end()) {
                         flush_t.push_back(d_old);
                         write_back_t.erase(d_old);
-                        d_old->UnsetDirtyCacheObject(this);
-                        d_old->UnsetCacheObject(this);
-                        assert(d_old->co_size() == 0);
+                        d_old->UnsetDirtyAppObject(this);
+                        d_old->UnsetAppObject(this);
+                        assert(d_old->app_ob_size() == 0);
                     }
-                    d_old->UnsetCacheObject(this);
+                    d_old->UnsetAppObject(this);
                 }
             }
             d->InvalidateMappings();
             data_map_t[dreg] = d;
-            d->SetUpCacheObject(this);
+            d->SetUpAppObject(this);
             write_back_t.insert(d);
-            d->SetUpDirtyCacheObject(this);
-            d->set_cache_type(t);
+            d->SetUpDirtyAppObject(this);
+            d->set_app_data_type(t);
         }
         for (size_t i = 0; i < flush_t.size(); ++i) {
           assert(flush_t.at(i)->pending_flag() == 0);
@@ -324,8 +272,8 @@ void CacheStruct::SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,
     }
 }
 
-bool CacheStruct::CheckPendingFlag(
-        const std::vector<cache::type_id_t> &var_type,
+bool AppStruct::CheckPendingFlag(
+        const std::vector<app_data::type_id_t> &var_type,
         const std::vector<DataArray> &read_sets,
         const std::vector<DataArray> &write_sets) {
     size_t num_vars = var_type.size();
@@ -336,7 +284,7 @@ bool CacheStruct::CheckPendingFlag(
     for (size_t t = 0; t < num_vars; ++t) {
       const DataArray &read_set_t = read_sets[t];
       const DataArray &write_set_t = write_sets[t];
-      cache::type_id_t type = var_type[t];
+      app_data::type_id_t type = var_type[t];
       DMap &data_map_t = data_maps_[type];
       DataSet &write_back_t = write_backs_[type];
       for (size_t i = 0; i < read_set_t.size(); ++i) {
@@ -347,7 +295,7 @@ bool CacheStruct::CheckPendingFlag(
         GeometricRegion dreg = d->region();
         DMap::iterator it = data_map_t.find(dreg);
         if (it == data_map_t.end()) {
-          if (d->dirty_cache_object()) {
+          if (d->dirty_app_object()) {
             if (d->pending_flag() != 0) {
               return false;
             }
@@ -355,7 +303,7 @@ bool CacheStruct::CheckPendingFlag(
         } else {
           Data *d_old = it->second;
           if (d_old != d) {
-            if (d->dirty_cache_object()) {
+            if (d->dirty_app_object()) {
               if (d->pending_flag() != 0) {
                 return false;
               }
@@ -390,8 +338,8 @@ bool CacheStruct::CheckPendingFlag(
     return true;
 }
 
-void CacheStruct::ReleasePendingFlag(
-        const std::vector<cache::type_id_t> &var_type,
+void AppStruct::ReleasePendingFlag(
+        const std::vector<app_data::type_id_t> &var_type,
         std::vector<DataArray> *flush_sets,
         std::vector<DataArray> *diff_sets,
         std::vector<DataArray> *sync_sets) {

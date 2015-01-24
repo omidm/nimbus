@@ -33,22 +33,22 @@
  */
 
 /*
- * A CacheVar is an application object corresponding to one nimbus
- * variable, cached by the cache manager.
+ * An AppVar is an application object corresponding to one nimbus
+ * variable, provided by application managers.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_DATA_CACHE_CACHE_VAR_H_
-#define NIMBUS_DATA_CACHE_CACHE_VAR_H_
+#ifndef NIMBUS_DATA_APP_DATA_APP_VAR_H_
+#define NIMBUS_DATA_APP_DATA_APP_VAR_H_
 
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
 
-#include "data/cache/cache_defs.h"
-#include "data/cache/cache_object.h"
+#include "data/app_data/app_data_defs.h"
+#include "data/app_data/app_object.h"
 #include "shared/nimbus_types.h"
 
 namespace nimbus {
@@ -59,56 +59,41 @@ typedef std::set<Data *> DataSet;
 class GeometricRegion;
 
 /**
- * \class CacheVar
- * \details Application object corresponding to one numbus variable cached by
- * the cache manager. A CacheVar can must be defined over a geometric region.
+ * \class AppVar
+ * \details Application object corresponding to one numbus variable provided
+ * by app managers. An AppVar can must be defined over a geometric region.
  */
-class CacheVar : public CacheObject {
+class AppVar : public AppObject {
     friend class CacheManager;
     friend class CacheTable;
     public:
         /**
-         * \brief Creates a CacheVar
-         * \return Constructed CacheVar instance
+         * \brief Creates an AppVar
+         * \return Constructed AppVar instance
          */
-        explicit CacheVar();
+        explicit AppVar();
 
         /**
-         * \brief Creates a CacheVar
-         * \param  ob_reg specifies application object (CacheVar) region
-         * \return Constructed CacheVar instance
+         * \brief Creates an AppVar
+         * \param  ob_reg specifies application object (AppVar) region
+         * \return Constructed AppVar instance
          */
-        explicit CacheVar(const GeometricRegion &ob_reg);
-
-        /**
-         * TODO: Make this protected
-         * \brief Unsets mapping between data and CacheVar instance
-         * \param d denotes the data to unmap
-         */
-        virtual void UnsetData(Data *d);
-
-        /**
-         * TODO: Make this protected
-         * \brief Unsets dirty data mapping between data and CacheVar
-         * instance
-         * \param d denotes the data to unmap
-         */
-        virtual void UnsetDirtyData(Data *d);
+        explicit AppVar(const GeometricRegion &ob_reg);
 
     private:
-        // cache-data mappings
+        // app-data mappings
         typedef std::map<GeometricRegion,
                          Data *> DMap;
         DMap data_map_;
         DataSet write_back_;
 
-        // methods for cache manager to manage mappings and control access
+        // methods for app manager to manage mappings and control access
         void SetUpReadWrite(const DataArray &read_set,
                             const DataArray &write_set,
                             DataArray *flush,
                             DataArray *diff,
                             DataArray *sync,
-                            CacheObjects *sync_co);
+                            AppObjects *sync_co);
 
         bool CheckPendingFlag(const DataArray &read_set,
                               const DataArray &write_set);
@@ -116,55 +101,67 @@ class CacheVar : public CacheObject {
                                 DataArray *diff,
                                 DataArray *sync);
 
-        cache::distance_t GetDistance(const DataArray &read_set) const;
+        app_data::distance_t GetDistance(const DataArray &read_set) const;
 
     protected:
         /**
-         * \brief Reads data from read_sets into CacheVar instance
+         * \brief Reads data from read_sets into AppVar instance
          * \param read_set is a data array corresponding to nimbus variables
          * \param read_region is the geometric region to read
          * \details This function must be overwritten by the application
          * writer. It provides the transformation from a set of nimbus data to
-         * (application) cached instance.
+         * application instance.
          */
-        virtual void ReadToCache(const DataArray &read_set,
+        virtual void ReadAppData(const DataArray &read_set,
                                  const GeometricRegion &read_region) = 0;
 
         /**
-         * \brief Writes data from CacheVar instance to write_sets
+         * \brief Writes data from AppVar instance to write_sets
          * \param write_set is a data array corresponding to nimbus variables
          * \param write_region is the geometric region to write
          * \details This function must be overwritten by the application
-         * writer. It provides the transformation from (application) cached
-         * instance to nimbus data.
+         * writer. It provides the transformation from application instance to
+         * nimbus data.
          */
-        virtual void WriteFromCache(const DataArray &write_set,
-                                    const GeometricRegion &write_region) const = 0;
+        virtual void WriteAppData(const DataArray &write_set,
+                                  const GeometricRegion &write_region) const = 0;
 
         /**
-         * \brief Creates a new CacheVar instance using current instance
+         * \brief Creates a new AppVar instance using current instance
          * parameters
-         * \param struct_region specifies the spatial domain of the CacheVar
+         * \param struct_region specifies the spatial domain of the AppVar
          * instance
-         * \return Returns a pointer to the newly allocated CacheVar instance
+         * \return Returns a pointer to the newly allocated AppVar instance
          * \details This is a virtual function that must be over-written by application
-         * writer. When CacheManager cannot satisfy an application object request,
-         * using the instances it has already cached, it calls CreateNew(..) on the
+         * writer. When AppManager cannot satisfy an application object request,
+         * using the instances it already has, it calls CreateNew(..) on the
          * prototype passed in the request.
          */
-        virtual CacheVar *CreateNew(const GeometricRegion &struct_region) const = 0;
+        virtual AppVar *CreateNew(const GeometricRegion &struct_region) const = 0;
 
     protected:
         /**
-         * \brief Pulls data from cache, removes corresponding dirty data
-         * mapping. Locks the cache object when pulling the data.
+         * \brief Pulls data from app, removes corresponding dirty data
+         * mapping. Locks the app object when pulling the data.
          * \param d is data to flush to
          */
         virtual void PullData(Data *d);
-};  // class CacheVar
 
-typedef std::vector<CacheVar *> CacheVars;
+        /**
+         * \brief Unsets mapping between data and AppVar instance
+         * \param d denotes the data to unmap
+         */
+        virtual void UnsetData(Data *d);
+
+        /**
+         * \brief Unsets dirty data mapping between data and AppVar instance
+         * \param d denotes the data to unmap
+         */
+        virtual void UnsetDirtyData(Data *d);
+};  // class AppVar
+
+typedef std::vector<AppVar *> AppVars;
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_CACHE_CACHE_VAR_H_
+#endif  // NIMBUS_DATA_APP_DATA_APP_VAR_H_

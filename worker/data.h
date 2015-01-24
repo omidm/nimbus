@@ -53,7 +53,7 @@
 #include <set>
 #include <string>
 #include <vector>
-#include "data/cache/cache_defs.h"
+#include "data/app_data/app_data_defs.h"
 #include "shared/cluster.h"
 #include "shared/idset.h"
 #include "shared/serialized_data.h"
@@ -124,50 +124,50 @@ class Data {
   void InvalidateMappings();
 
   /**
-   * \brief Inserts a mapping between this data instance and cache object co
-   * \param co is the cache object to map to
+   * \brief Inserts a mapping between this data instance and app object ob
+   * \param ob is the app object to map to
    */
-  void SetUpCacheObject(CacheObject *co);
+  void SetUpAppObject(AppObject *ob);
 
   /**
-   * \brief Removes mapping between this data instance and cache object co
-   * \param co is the cache object to unmap
+   * \brief Removes mapping between this data instance and app object ob
+   * \param ob is the cache object to unmap
    */
-  void UnsetCacheObject(CacheObject *co);
+  void UnsetAppObject(AppObject *ob);
 
   /**
    * \brief Accessor for dirty data
-   * \return Cache bject
+   * \return App object
    */
-  CacheObject *dirty_cache_object();
+  AppObject *dirty_app_object();
 
   /**
-   * \brief Inserts a dirty object mapping between this data instance and cache
-   * object co
-   * \param co is the cache object to map to
+   * \brief Inserts a dirty object mapping between this data instance and app
+   * object ob
+   * \param ob is the app object to map to
    */
-  void SetUpDirtyCacheObject(CacheObject *co);
+  void SetUpDirtyAppObject(AppObject *ob);
 
   /**
-   * \brief Removes dirty object mapping between this data instance and cache
-   * object co
-   * \param co is the cache object to unmap
+   * \brief Removes dirty object mapping between this data instance and app
+   * object ob
+   * \param ob is the app object to unmap
    */
-  void UnsetDirtyCacheObject(CacheObject *co);
+  void UnsetDirtyAppObject(AppObject *ob);
 
   /**
-   * \brief Accessor for cache type
+   * \brief Accessor for application var type
    * \return Cache variable type (used if cache object is cache struct)
    */
-  cache::type_id_t cache_type();
+  app_data::type_id_t app_data_type();
 
   /**
-   * \brief Setter for cache type
+   * \brief Setter for application var type
    * \param Cache variable type (used if cache object is cache struct)
    */
-  void set_cache_type(cache::type_id_t t);
+  void set_app_data_type(app_data::type_id_t t);
 
-  size_t co_size() { return cache_objects_.size(); }
+  size_t app_ob_size() { return app_objects_.size(); }
 
   int pending_flag() {
     return pending_flag_;
@@ -205,10 +205,10 @@ class Data {
   // Set of partition ids neighbor to this partition.
   IDSet<partition_id_t> neighbor_partitions_;
 
-  // Set of cache objects that this data corresponds to
-  std::set<CacheObject *> cache_objects_;
-  CacheObject *dirty_cache_object_;
-  cache::type_id_t cache_type_;
+  // Set of application objects that this data corresponds to
+  std::set<AppObject *> app_objects_;
+  AppObject *dirty_app_object_;
+  app_data::type_id_t app_data_type_;
 };
 
 typedef std::vector<Data*> DataArray;

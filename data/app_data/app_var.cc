@@ -33,8 +33,8 @@
  */
 
 /*
- * A CacheVar is an application object corresponding to one nimbus
- * variable, cached by the cache manager.
+ * An AppVar is an application object corresponding to one nimbus
+ * variable, provided by app managers.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
@@ -44,8 +44,8 @@
 #include <string>
 #include <vector>
 
-#include "data/cache/cache_defs.h"
-#include "data/cache/cache_var.h"
+#include "data/app_data/app_data_defs.h"
+#include "data/app_data/app_var.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
@@ -56,18 +56,18 @@ namespace nimbus {
 /**
  * \details
  */
-CacheVar::CacheVar() {}
+AppVar::AppVar() {}
 
 /**
  * \details
  */
-CacheVar::CacheVar(const GeometricRegion &ob_reg) : CacheObject(ob_reg) {
+AppVar::AppVar(const GeometricRegion &ob_reg) : AppObject(ob_reg) {
 }
 
 /**
  * \details UnsetData(...) removes data d from data_map_.
  */
-void CacheVar::UnsetData(Data *d) {
+void AppVar::UnsetData(Data *d) {
     GeometricRegion dreg = d->region();
     if (data_map_.find(dreg) != data_map_.end()) {
         assert(data_map_[dreg] == d);
@@ -78,32 +78,32 @@ void CacheVar::UnsetData(Data *d) {
 /**
  * \details UnsetDirtyData(...) removes d from write_back_.
  */
-void CacheVar::UnsetDirtyData(Data *d) {
+void AppVar::UnsetDirtyData(Data *d) {
     write_back_.erase(d);
 }
 
 /**
- * \details PullData(...) pulls data from cache, after locking the struct.
- * When data needs to be updated from outside CacheVar, use PullData.
+ * \details PullData(...) pulls data from app, after locking the struct.
+ * When data needs to be updated from outside AppVar, use PullData.
  */
-void CacheVar::PullData(Data *d) {
+void AppVar::PullData(Data *d) {
     DataArray write_set(1, d);
     GeometricRegion dreg = d->region();
     GeometricRegion wreg = GeometricRegion::
         GetIntersection(write_region_, dreg);
-    WriteFromCache(write_set, wreg);
+    WriteAppData(write_set, wreg);
 }
 
 /**
- * \details GetDistance(...) gives the cost of using the CacheVar instance,
+ * \details GetDistance(...) gives the cost of using the AppVar instance,
  * given the read set. Current cost function is the sum of geometric sizes of
  * data in the read set.
  * The function does not have a separate argument for write set
  * - if you want write set included in the cost function, either add  another
  * argument or append it to read set that is passed to GetDistance.
  */
-cache::distance_t CacheVar::GetDistance(const DataArray &read_set) const {
-    cache::distance_t cur_distance = 0;
+app_data::distance_t AppVar::GetDistance(const DataArray &read_set) const {
+    app_data::distance_t cur_distance = 0;
     for (size_t i = 0; i < read_set.size(); ++i) {
         Data *d = read_set.at(i);
         GeometricRegion dreg = d->region();
@@ -118,57 +118,57 @@ cache::distance_t CacheVar::GetDistance(const DataArray &read_set) const {
 }
 
 /**
- * \details For read set, if data is not already in cache object, insert it in
+ * \details For read set, if data is not already in app object, insert it in
  * diff set to read, and sync it if necessary. If
  * it replaces existing data, flush existing data if dirty. For write set, if
  * data is not already in existing data, just create the mappings.
  * If it replaces existing data, flush existing data if dirty. Finally create
  * dirty object mapping with all data in write set.
  */
-void CacheVar::SetUpReadWrite(const DataArray &read_set,
+void AppVar::SetUpReadWrite(const DataArray &read_set,
                               const DataArray &write_set,
                               DataArray *flush,
                               DataArray *diff,
                               DataArray *sync,
-                              CacheObjects *sync_co) {
+                              AppObjects *sync_ob) {
     assert(flush != NULL);
     assert(diff != NULL);
     assert(sync != NULL);
-    assert(sync_co != NULL);
+    assert(sync_ob != NULL);
     for (size_t i = 0; i < read_set.size(); ++i) {
         Data *d = read_set.at(i);
         GeometricRegion dreg = d->region();
         DMap::iterator it = data_map_.find(dreg);
         if (it == data_map_.end()) {
-            if (d->dirty_cache_object()) {
+            if (d->dirty_app_object()) {
                 sync->push_back(d);
-                sync_co->push_back(d->dirty_cache_object());
+                sync_ob->push_back(d->dirty_app_object());
                 d->ClearDirtyMappings();
-                assert(d->co_size() == 1);
+                assert(d->app_ob_size() == 1);
             }
             diff->push_back(d);
             data_map_[dreg] = d;
-            d->SetUpCacheObject(this);
+            d->SetUpAppObject(this);
         } else {
             Data *d_old = it->second;
             if (d_old != d) {
-                if (d->dirty_cache_object()) {
+                if (d->dirty_app_object()) {
                     sync->push_back(d);
-                    sync_co->push_back(d->dirty_cache_object());
+                    sync_ob->push_back(d->dirty_app_object());
                     d->ClearDirtyMappings();
-                    assert(d->co_size() == 1);
+                    assert(d->app_ob_size() == 1);
                 }
                 if (write_back_.find(d_old) != write_back_.end()) {
                     flush->push_back(d_old);
                     write_back_.erase(d_old);
-                    d_old->UnsetDirtyCacheObject(this);
-                    d_old->UnsetCacheObject(this);
-                    assert(d_old->co_size() == 0);
+                    d_old->UnsetDirtyAppObject(this);
+                    d_old->UnsetAppObject(this);
+                    assert(d_old->app_ob_size() == 0);
                 }
-                d_old->UnsetCacheObject(this);
+                d_old->UnsetAppObject(this);
                 diff->push_back(d);
                 data_map_[dreg] = d;
-                d->SetUpCacheObject(this);
+                d->SetUpAppObject(this);
             }
         }
     }
@@ -182,18 +182,18 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
                 if (write_back_.find(d_old) != write_back_.end()) {
                     flush->push_back(d_old);
                     write_back_.erase(d_old);
-                    d_old->UnsetDirtyCacheObject(this);
-                    d_old->UnsetCacheObject(this);
-                    assert(d_old->co_size() == 0);
+                    d_old->UnsetDirtyAppObject(this);
+                    d_old->UnsetAppObject(this);
+                    assert(d_old->app_ob_size() == 0);
                 }
-                d_old->UnsetCacheObject(this);
+                d_old->UnsetAppObject(this);
             }
         }
         d->InvalidateMappings();
         data_map_[dreg] = d;
-        d->SetUpCacheObject(this);
+        d->SetUpAppObject(this);
         write_back_.insert(d);
-        d->SetUpDirtyCacheObject(this);
+        d->SetUpDirtyAppObject(this);
     }
     for (size_t i = 0; i < flush->size(); ++i) {
       flush->at(i)->set_pending_flag(Data::WRITE);
@@ -215,9 +215,9 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
     }
 }
 
-// method for cache manager to manage mappings and control access - checks if
+// method for app manager to manage mappings and control access - checks if
 // any data in read/ write set has pending flag set
-bool CacheVar::CheckPendingFlag(const DataArray &read_set,
+bool AppVar::CheckPendingFlag(const DataArray &read_set,
                                 const DataArray &write_set) {
     for (size_t i = 0; i < read_set.size(); ++i) {
       Data *d = read_set.at(i);
@@ -228,7 +228,7 @@ bool CacheVar::CheckPendingFlag(const DataArray &read_set,
       GeometricRegion dreg = d->region();
       DMap::iterator it = data_map_.find(dreg);
       if (it == data_map_.end()) {
-        if (d->dirty_cache_object()) {
+        if (d->dirty_app_object()) {
           if (d->pending_flag() != 0) {
             return false;
           }
@@ -236,7 +236,7 @@ bool CacheVar::CheckPendingFlag(const DataArray &read_set,
       } else {
         Data *d_old = it->second;
         if (d_old != d) {
-          if (d->dirty_cache_object()) {
+          if (d->dirty_app_object()) {
             if (d->pending_flag() != 0) {
               return false;
             }
@@ -273,9 +273,9 @@ bool CacheVar::CheckPendingFlag(const DataArray &read_set,
     return true;
 }
 
-// method for cache manager to manage mappings and control access - unset pending
+// method for app manager to manage mappings and control access - unset pending
 // flag for all data in flush, diff and sync sets
-void CacheVar::ReleasePendingFlag(DataArray *flush,
+void AppVar::ReleasePendingFlag(DataArray *flush,
                                   DataArray *diff,
                                   DataArray *sync) {
     assert(flush != NULL);
