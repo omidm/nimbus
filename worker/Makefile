@@ -20,3 +20,6 @@ clean: clean-files
 
 worker_job_graph:
 	cd worker_job_graph; make; cd ..
+
+app_data_managers:
+	echo "No rule to make app data managers yet!"

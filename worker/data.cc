@@ -38,15 +38,14 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "data/cache/cache_defs.h"
-#include "data/cache/cache_object.h"
+#include "data/app_data/app_data_defs.h"
+#include "data/app_data/app_object.h"
 #include "worker/data.h"
 
 using namespace nimbus; // NOLINT
 
 Data::Data() {
-  dirty_cache_object_ = NULL;
-  cache_type_ = MAGIC_CACHE_TYPE;
+  dirty_app_object_ = NULL;
   pending_flag_ = 0;
 }
 
@@ -103,10 +102,10 @@ void Data::set_version(data_version_t version) {
  *
  */
 void Data::ClearDirtyMappings() {
-  assert(dirty_cache_object_);
-  if (dirty_cache_object_) {
-    dirty_cache_object_->UnsetDirtyData(this);
-    dirty_cache_object_ = NULL;
+  assert(dirty_app_object_);
+  if (dirty_app_object_) {
+    dirty_app_object_->UnsetDirtyData(this);
+    dirty_app_object_ = NULL;
   }
 }
 
@@ -114,66 +113,66 @@ void Data::ClearDirtyMappings() {
  * \details
  */
 void Data::InvalidateMappings() {
-  std::set<CacheObject *>::iterator iter = cache_objects_.begin();
-  for (; iter != cache_objects_.end(); ++iter) {
-    CacheObject *c = *iter;
+  std::set<AppObject *>::iterator iter = app_objects_.begin();
+  for (; iter != app_objects_.end(); ++iter) {
+    AppObject *c = *iter;
     c->UnsetData(this);
   }
-  cache_objects_.clear();
-  if (dirty_cache_object_)
-    dirty_cache_object_->UnsetDirtyData(this);
-  dirty_cache_object_ = NULL;
+  app_objects_.clear();
+  if (dirty_app_object_)
+    dirty_app_object_->UnsetDirtyData(this);
+  dirty_app_object_ = NULL;
 }
 
 /**
  * \details
  */
-void Data::SetUpCacheObject(CacheObject *co) {
-  cache_objects_.insert(co);
+void Data::SetUpAppObject(AppObject *co) {
+  app_objects_.insert(co);
 }
 
 /**
  * \details
  */
-void Data::UnsetCacheObject(CacheObject *co) {
-  cache_objects_.erase(co);
+void Data::UnsetAppObject(AppObject *co) {
+  app_objects_.erase(co);
 }
 
 /**
  * \detials
  */
-CacheObject *Data::dirty_cache_object() {
-  return dirty_cache_object_;
+AppObject *Data::dirty_app_object() {
+  return dirty_app_object_;
 }
 
 /**
  * \details
  */
-void Data::SetUpDirtyCacheObject(CacheObject *co) {
-  assert(dirty_cache_object_ == NULL || dirty_cache_object_ == co);
-  dirty_cache_object_ = co;
+void Data::SetUpDirtyAppObject(AppObject *co) {
+  assert(dirty_app_object_ == NULL || dirty_app_object_ == co);
+  dirty_app_object_ = co;
 }
 
 /**
  * \details
  */
-void Data::UnsetDirtyCacheObject(CacheObject *co) {
-  if (dirty_cache_object_ != co)
-    dbg(DBG_ERROR, "Data dirty co %p, passed co %p\n", dirty_cache_object_, co);
-  assert(dirty_cache_object_ == co);
-  dirty_cache_object_ = NULL;
+void Data::UnsetDirtyAppObject(AppObject *co) {
+  if (dirty_app_object_ != co)
+    dbg(DBG_ERROR, "Data dirty co %p, passed co %p\n", dirty_app_object_, co);
+  assert(dirty_app_object_ == co);
+  dirty_app_object_ = NULL;
 }
 
 /**
  * \detials
  */
-cache::type_id_t Data::cache_type() {
-    return cache_type_;
+app_data::type_id_t Data::app_data_type() {
+    return app_data_type_;
 }
 
 /**
  * \details
  */
-void Data::set_cache_type(cache::type_id_t t) {
-    cache_type_ = t;
+void Data::set_app_data_type(app_data::type_id_t t) {
+    app_data_type_ = t;
 }

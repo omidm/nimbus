@@ -70,7 +70,7 @@ class AppDataManager {
          * \brief Creates an AppDataManager instance
          * \return Constructed AppDataManager instance
          */
-        AppDataManager();
+        AppDataManager() {}
 
         /**
          * \brief Requests an AppVar instance of type prototype, from the
@@ -87,15 +87,15 @@ class AppDataManager {
          * EXCLUSIVE or SHARED, and is ignored when there is no caching
          * \return A pointer to AppVar instance that application can use
          */
-        AppVar *GetAppVar(const DataArray &read_set,
-                          const GeometricRegion &read_region,
-                          const DataArray &write_set,
-                          const GeometricRegion &write_region,
-                          const AppVar &prototype,
-                          const GeometricRegion &region,
-                          appdata::Access access = appdata::EXCLUSIVE,
-                          void (*aux)(AppVar*, void*) = NULL,
-                          void* aux_data = NULL) = 0;
+        virtual AppVar *GetAppVar(const DataArray &read_set,
+                                  const GeometricRegion &read_region,
+                                  const DataArray &write_set,
+                                  const GeometricRegion &write_region,
+                                  const AppVar &prototype,
+                                  const GeometricRegion &region,
+                                  app_data::Access access = app_data::EXCLUSIVE,
+                                  void (*aux)(AppVar*, void*) = NULL,
+                                  void* aux_data = NULL) = 0;
 
         /**
          * \brief Requests an AppStruct instance of type prototype, from the
@@ -114,28 +114,28 @@ class AppDataManager {
          * EXCLUSIVE or SHARED
          * \return A pointer to AppStruct instance that application can use
          */
-        AppStruct *GetAppStruct(const std::vector<appdata::type_id_t> &var_type,
-                                const std::vector<DataArray> &read_sets,
-                                const GeometricRegion &read_region,
-                                const std::vector<DataArray> &write_sets,
-                                const GeometricRegion &write_region,
-                                const AppStruct &prototype,
-                                const GeometricRegion &region,
-                                appdata::Access access) = 0;
+        virtual AppStruct *GetAppStruct(const std::vector<app_data::type_id_t> &var_type,
+                                        const std::vector<DataArray> &read_sets,
+                                        const GeometricRegion &read_region,
+                                        const std::vector<DataArray> &write_sets,
+                                        const GeometricRegion &write_region,
+                                        const AppStruct &prototype,
+                                        const GeometricRegion &region,
+                                        app_data::Access access) = 0;
 
         /**
          * \brief Informs application data manager that access to app_object is
          * no longer needed
          * \param app_object specified the application object to release
          */
-        void ReleaseAccess(AppObject* app_object) = 0;
+        virtual void ReleaseAccess(AppObject* app_object) = 0;
 
         /**
          * \brief Writes data to write_set back nimbus objects synchronously
          * \param app_var is the application variable to write from
          * \param write_set is the set of nimbus objects to write to
          */
-        void WriteImmediately(AppVar *app_var, const DataArray &write_set) = 0;
+        virtual void WriteImmediately(AppVar *app_var, const DataArray &write_set) = 0;
 
         /**
          * \brief Writes data to write_set back nimbus objects synchronously
@@ -144,9 +144,9 @@ class AppDataManager {
          * are to be written, corresponding to write_sets
          * \param write_sets is the set of nimbus objects to write to
          */
-        void WriteImmediately(AppStruct *app_struct,
-                              const std::vector<appdata::type_id_t> &var_type,
-                              const std::vector<DataArray> &write_sets);
+        virtual void WriteImmediately(AppStruct *app_struct,
+                                      const std::vector<app_data::type_id_t> &var_type,
+                                      const std::vector<DataArray> &write_sets) = 0;
 
         /**
          * \brief If data is dirty, syncs with corresponding dirty application
@@ -154,20 +154,20 @@ class AppDataManager {
          * caching
          * \param Data d to 
          */
-        void SyncData(Data *d);
+        virtual void SyncData(Data *d) = 0;
 
         /**
          * \brief Invalidates mapping between d and all application objects ,
          * dirty or not dirty, no-op in case there is no caching
          * \param Data d
          */
-        void InvalidateMappings(Data *d);
+        virtual void InvalidateMappings(Data *d) = 0;
 
         /**
          * \brief Sets log file names for application data manager
          * \param Worker id, to be used in file names
          */
-        void SetLogNames(std::string wid_str);
+        virtual void SetLogNames(std::string wid_str) = 0;
 
     private:
         FILE* time_log;

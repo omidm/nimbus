@@ -68,7 +68,7 @@ class Application;
 typedef std::map<int, Application*> AppMap;
 
 // forward declaration
-class CacheManager;
+class AppDataManager;
 class StaticConfigVariable;
 class StaticConfigManager;
 
@@ -176,12 +176,12 @@ class Application {
                                     const std::string& variable,
                                     const GeometricRegion* r);
 
-  CacheManager* cache_manager() const;
+  AppDataManager* app_data_manager() const;
   StaticConfigManager* static_config_manager() const;
 
   void WriteToLog(std::string str);
 
-  void SetCacheManagerLogNames(std::string wid_str);
+  void SetAppDataManagerLogNames(std::string wid_str);
 
  private:
   Log log_;
@@ -202,7 +202,7 @@ class Application {
   SchedulerClient* client_;
   IDMaker* id_maker_;
   WorkerLdoMap* ldo_map_;
-  CacheManager* cache_manager_;
+  AppDataManager* app_data_manager_;
   StaticConfigManager* static_config_manager_;
   class LockGuard {
    public:

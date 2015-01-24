@@ -40,12 +40,13 @@
 
 #include <time.h>
 #include "worker/application.h"
-#include "worker/cache_manager.h"
+#include "worker/app_data_manager.h"
 #include "worker/static_config_manager.h"
 
 using namespace nimbus; // NOLINT
 
 Application::Application() {
+  app_data_manager_ = NULL;
   static_config_manager_ = new StaticConfigManager;
   pthread_mutex_init(&lock_job_table_, NULL);
   pthread_mutex_init(&lock_data_table_, NULL);
@@ -63,7 +64,7 @@ void Application::WriteToLog(std::string str) {
 }
 
 Application::~Application() {
-  delete cache_manager_;
+  delete app_data_manager_;
   delete static_config_manager_;
   pthread_mutex_destroy(&lock_job_table_);
   pthread_mutex_destroy(&lock_data_table_);
@@ -82,7 +83,6 @@ void Application::Start(SchedulerClient* client,
   client_ = client;
   id_maker_ = id_maker;
   ldo_map_ = ldo_map;
-  cache_manager_ = new CacheManager();
   Load();
 }
 
@@ -347,8 +347,8 @@ int Application::GetIntersectingLogicalObjects(CLdoVector* result,
   }
 }
 
-CacheManager* Application::cache_manager() const {
-  return cache_manager_;
+AppDataManager* Application::app_data_manager() const {
+  return app_data_manager_;
 }
 
 StaticConfigManager* Application::static_config_manager() const {
@@ -356,7 +356,6 @@ StaticConfigManager* Application::static_config_manager() const {
 }
 
 
-void Application::SetCacheManagerLogNames(std::string wid_str) {
-  cache_manager_->SetLogNames(wid_str);
+void Application::SetAppDataManagerLogNames(std::string wid_str) {
+  app_data_manager_->SetLogNames(wid_str);
 }
-

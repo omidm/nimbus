@@ -70,13 +70,13 @@ void WorkerThreadMonitor::Run() {
   while (true) {
     // count = (count + 1) % 10000;
     // if (count == 0) {
-    //   CacheManager* cache_manager =
-    //       worker_manager_->worker_->application_->cache_manager();
-    //   if (cache_manager) {
+    //   AppDataManager* app_data_manager =
+    //       worker_manager_->worker_->application_->app_data_manager();
+    //   if (app_data_manager) {
     //     std::stringstream s;
-    //     cache_manager->PrintProfile(&s);
+    //     app_data_manager->PrintProfile(&s);
     //     // TODO(quhang): temporary usage.
-    //     // printf("\nCache profile\n%s\n", s.str().c_str());
+    //     // printf("\nApplication data manager profile\n%s\n", s.str().c_str());
     //   }
     // }
     usleep(10000);

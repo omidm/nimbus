@@ -67,7 +67,7 @@ typedef std::map<logical_data_id_t, Data*> LogicalDataMap;
 typedef std::map<std::string, Data*> DataTable;
 
 // forward declaration
-class CacheObject;
+class AppObject;
 
 class Data {
  public:

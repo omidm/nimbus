@@ -41,7 +41,7 @@
 #include <time.h>
 #include "worker/job.h"
 #include "worker/application.h"
-#include "worker/cache_manager.h"
+#include "worker/app_data_manager.h"
 
 using namespace nimbus; // NOLINT
 
@@ -563,8 +563,8 @@ void Job::set_wait_time(double wait_time) {
   wait_time_ = wait_time;
 }
 
-CacheManager* Job::GetCacheManager() const {
-  return application_->cache_manager();
+AppDataManager* Job::GetAppDataManager() const {
+  return application_->app_data_manager();
 }
 
 StaticConfigManager* Job::GetStaticConfigManager() const {
@@ -581,15 +581,13 @@ RemoteCopySendJob::~RemoteCopySendJob() {
 
 // TODO(quhang) data exchanger is thread-safe?
 void RemoteCopySendJob::Execute(Parameter params, const DataArray& da) {
-  CacheManager *cm = GetCacheManager();
-  // cm->PrintTimeStamp("start", "RCS job");
-  cm->SyncData(da[0]);
+  AppDataManager *am = GetAppDataManager();
+  am->SyncData(da[0]);
   SerializedData ser_data;
   da[0]->Serialize(&ser_data);
   data_exchanger_->SendSerializedData(receive_job_id().elem(),
       to_worker_id_.elem(), ser_data, da[0]->version());
   // delete ser_data.data_ptr(); // Not needed with shared pointer.
-  // cm->PrintTimeStamp("end", "RCS job");
 }
 
 Job* RemoteCopySendJob::Clone() {
@@ -638,9 +636,8 @@ RemoteCopyReceiveJob::~RemoteCopyReceiveJob() {
 }
 
 void RemoteCopyReceiveJob::Execute(Parameter params, const DataArray& da) {
-  CacheManager *cm = GetCacheManager();
-  // cm->PrintTimeStamp("start", "RCR job");
-  cm->InvalidateMappings(da[0]);
+  AppDataManager *am = GetAppDataManager();
+  am->InvalidateMappings(da[0]);
   Data * data_copy = NULL;
   da[0]->DeSerialize(*serialized_data_, &data_copy);
   da[0]->Copy(data_copy);
@@ -649,7 +646,6 @@ void RemoteCopyReceiveJob::Execute(Parameter params, const DataArray& da) {
   data_copy->Destroy();
   // delete serialized_data_->data_ptr(); // Not needed with shared pointer.
   delete serialized_data_;
-  // cm->PrintTimeStamp("end", "RCR job");
 }
 
 Job* RemoteCopyReceiveJob::Clone() {
@@ -673,9 +669,8 @@ SaveDataJob::~SaveDataJob() {
 }
 
 void SaveDataJob::Execute(Parameter params, const DataArray& da) {
-  CacheManager *cm = GetCacheManager();
-  // cm->PrintTimeStamp("start", "SVD job");
-  cm->SyncData(da[0]);
+  AppDataManager *am = GetAppDataManager();
+  am->SyncData(da[0]);
 
   SerializedData ser_data;
   da[0]->Serialize(&ser_data);
@@ -688,7 +683,6 @@ void SaveDataJob::Execute(Parameter params, const DataArray& da) {
   }
 
   // delete ser_data.data_ptr(); // Not needed with shared pointer.
-  // cm->PrintTimeStamp("end", "SVD job");
 }
 
 Job* SaveDataJob::Clone() {
@@ -716,9 +710,8 @@ LoadDataJob::~LoadDataJob() {
 }
 
 void LoadDataJob::Execute(Parameter params, const DataArray& da) {
-  CacheManager *cm = GetCacheManager();
-  // cm->PrintTimeStamp("start", "LOD job");
-  cm->InvalidateMappings(da[0]);
+  AppDataManager *am = GetAppDataManager();
+  am->InvalidateMappings(da[0]);
 
   std::string value;
   if (!ddb_->Get(handle_, &value)) {
@@ -735,7 +728,6 @@ void LoadDataJob::Execute(Parameter params, const DataArray& da) {
   data_copy->Destroy();
   // delete serialized_data_->data_ptr(); // Not needed with shared pointer.
   // delete serialized_data; // Not needed, goes out of context.
-  // cm->PrintTimeStamp("end", "LOD job");
 }
 
 Job* LoadDataJob::Clone() {
@@ -765,10 +757,9 @@ void LocalCopyJob::Execute(Parameter params, const DataArray& da) {
   struct timespec start_time;
   struct timespec t;
   clock_gettime(CLOCK_REALTIME, &start_time);
-  CacheManager *cm = GetCacheManager();
-  // cm->PrintTimeStamp("start", "LC job");
-  cm->SyncData(da[0]);
-  cm->InvalidateMappings(da[1]);
+  AppDataManager *am = GetAppDataManager();
+  am->SyncData(da[0]);
+  am->InvalidateMappings(da[1]);
   da[1]->Copy(da[0]);
   da[1]->set_version(da[0]->version());
   clock_gettime(CLOCK_REALTIME, &t);
@@ -787,7 +778,6 @@ void LocalCopyJob::Execute(Parameter params, const DataArray& da) {
   //   // printf("[PROFILE] Central Copy %s, %s\n", da[1]->name().c_str(),
   //   //        region.ToNetworkData().c_str());
   // }
-  // cm->PrintTimeStamp("end", "LC job");
 }
 
 void LocalCopyJob::PrintTimeProfile() {

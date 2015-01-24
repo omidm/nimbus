@@ -91,7 +91,7 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     log_.InitTime();
     id_ = -1;
     ip_address_ = NIMBUS_RECEIVER_KNOWN_IP;
-    cache_log = NULL;
+    app_data_log = NULL;
     worker_manager_ = new WorkerManager();
     ddb_ = new DistributedDB();
     DUMB_JOB_ID = std::numeric_limits<job_id_t>::max();
@@ -122,10 +122,10 @@ void Worker::PrintTimeStamp(const char* format, ...) {
 }
 
 void Worker::Run() {
-  if (cache_log) {
+  if (app_data_log) {
     std::stringstream msg;
-    msg << "~~~ Worker starts : " << cache_log->GetTime();
-    cache_log->WriteToFile(msg.str());
+    msg << "~~~ Worker starts : " << app_data_log->GetTime();
+    app_data_log->WriteToFile(msg.str());
   }
 
   std::cout << "Running the Worker" << std::endl;
@@ -144,7 +144,7 @@ void Worker::WorkerCoreProcessor() {
   std::cout << "Base Worker Core Processor" << std::endl;
   worker_manager_->worker_ = this;
   worker_manager_->SetLoggingInterface(&log_, &version_log_, &data_hash_log_,
-                                       cache_log,
+                                       app_data_log,
                                        &timer_);
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Launching worker threads.\n");
   worker_manager_->StartWorkerThreads();
@@ -314,7 +314,7 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
   std::string wstr = int2string(id_);
   // TODO(quhang) thread-safety(log).
   worker_manager_->SetEventLog(wstr);
-  application_->SetCacheManagerLogNames(wstr);
+  application_->SetAppDataManagerLogNames(wstr);
   event_log = fopen((wstr + "_event_fe.txt").c_str(), "w");
   alloc_log = fopen((wstr + "_data_objects.txt").c_str(), "w");
   version_log_.set_file_name(wstr + "_version_log.txt");
@@ -517,10 +517,10 @@ void Worker::ProcessPartitionRemoveCommand(PartitionRemoveCommand* cm) {
 }
 
 void Worker::ProcessTerminateCommand(TerminateCommand* cm) {
-  if (cache_log) {
+  if (app_data_log) {
     std::stringstream msg;
-    msg << "~~~ Completed application : " << cache_log->GetTime();
-    cache_log->WriteToFile(msg.str());
+    msg << "~~~ Completed application : " << app_data_log->GetTime();
+    app_data_log->WriteToFile(msg.str());
   }
   // profiler_thread_->interrupt();
   // profiler_thread_->join();

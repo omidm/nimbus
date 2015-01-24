@@ -54,7 +54,7 @@
 #include "shared/serialized_data.h"
 #include "shared/worker_data_exchanger.h"
 #include "shared/distributed_db.h"
-#include "worker/cache_manager.h"
+#include "worker/app_data_manager.h"
 #include "worker/data.h"
 #include "worker/ldo_index_cache.h"
 #include "worker/dependency_query.h"
@@ -202,7 +202,7 @@ class Job {
     // TODO(quhang) should add accesssors.
     DataArray data_array;
 
-    CacheManager* GetCacheManager() const;
+    AppDataManager* GetAppDataManager() const;
     StaticConfigManager* GetStaticConfigManager() const;
 
     void set_core_quota(int core_quota) {

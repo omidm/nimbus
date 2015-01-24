@@ -171,7 +171,7 @@ class CacheManager {
         pthread_cond_t cache_cond;
 
         uint64_t unique_id_allocator_;
-        typedef std::map<cache::co_id_t,
+        typedef std::map<cache::ad_id_t,
                          CacheTable *> Pool;
         Pool *pool_;
 

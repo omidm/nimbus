@@ -125,7 +125,7 @@ class Worker {
     client_->SendCommand(command);
   }
 
-  Log *cache_log;
+  Log *app_data_log;
 
  protected:
   SchedulerClient* client_;
