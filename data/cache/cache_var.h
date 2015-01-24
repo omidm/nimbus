@@ -112,13 +112,9 @@ class CacheVar : public CacheObject {
 
         bool CheckPendingFlag(const DataArray &read_set,
                               const DataArray &write_set);
-
-        bool CheckWritePendingFlag(const DataArray &write_set,
-                                   GeometricRegion &write_region);
         void ReleasePendingFlag(DataArray *flush,
                                 DataArray *diff,
-                                DataArray *sync,
-                                CacheObjects *sync_co);
+                                DataArray *sync);
 
         cache::distance_t GetDistance(const DataArray &read_set) const;
 
@@ -165,11 +161,6 @@ class CacheVar : public CacheObject {
          * \param d is data to flush to
          */
         virtual void PullData(Data *d);
-
-        // method for cache manager for profiling
-        virtual size_t memory_size() {
-          return sizeof(*this);
-        }
 };  // class CacheVar
 
 typedef std::vector<CacheVar *> CacheVars;
