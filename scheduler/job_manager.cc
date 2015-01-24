@@ -672,6 +672,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
   size_t num = 0;
   list->clear();
 
+  // JobEntryList temp_list;
   JobEntryMap::iterator iter = jobs_ready_to_assign_.begin();
   for (; (iter != jobs_ready_to_assign_.end()) && (num < max_num);) {
     JobEntry* job = iter->second;
@@ -695,11 +696,28 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
       }
     } else {
       list->push_back(job);
+      // temp_list.push_back(job);
       jobs_pending_to_assign_[iter->first] = job;
       jobs_ready_to_assign_.erase(iter++);
       ++num;
     }
   }
+
+//  if (temp_list.size() > 0) {
+//    JobEntryList::reverse_iterator it = temp_list.rbegin();
+//    if ((*it)->job_name() == "--reincorporate_particles" ||
+//        (*it)->job_name() == "--delete_particles" ||
+//        (*it)->job_name() == "--adjust_phi") {
+//      for (; it != temp_list.rend(); ++it) {
+//        list->push_back(*it);
+//      }
+//    } else {
+//      JobEntryList::iterator i = temp_list.begin();
+//      for (; i != temp_list.end(); ++i) {
+//        list->push_back(*i);
+//      }
+//    }
+//  }
 
   return num;
 }

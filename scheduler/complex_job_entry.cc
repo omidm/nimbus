@@ -158,6 +158,7 @@ size_t ComplexJobEntry::GetJobsForAssignment(JobEntryList* list, size_t max_num,
     list->clear();
   }
 
+  // JobEntryList temp_list;
   while (count < max_num) {
     size_t index = cursor_.index();
     assert(index < inner_job_ids_.size());
@@ -190,6 +191,7 @@ size_t ComplexJobEntry::GetJobsForAssignment(JobEntryList* list, size_t max_num,
     }
 
     list->push_back(shadow_job);
+    // temp_list.push_back(shadow_job);
     ++count;
 
     if (cursor_.state() == Cursor::END_ALL) {
@@ -202,6 +204,23 @@ size_t ComplexJobEntry::GetJobsForAssignment(JobEntryList* list, size_t max_num,
       template_entry_->AdvanceCursorForAssignment(&cursor_);
     }
   }
+
+
+//  if (temp_list.size() > 0) {
+//    JobEntryList::reverse_iterator iter = temp_list.rbegin();
+//    if ((*iter)->job_name() == "--reincorporate_particles" ||
+//        (*iter)->job_name() == "--delete_particles" ||
+//        (*iter)->job_name() == "--adjust_phi") {
+//      for (; iter != temp_list.rend(); ++iter) {
+//        list->push_back(*iter);
+//      }
+//    } else {
+//      JobEntryList::iterator it = temp_list.begin();
+//      for (; it != temp_list.end(); ++it) {
+//        list->push_back(*it);
+//      }
+//    }
+//  }
 
   return count;
 }
