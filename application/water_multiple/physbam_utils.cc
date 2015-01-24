@@ -254,40 +254,55 @@ void GetAppCacheObjects(
     if (l7w) write7 = write;
     if (l8r) read8 = read;
     if (l8w) write8 = write;
-    nimbus::DataArray write_empty;
-    if (l || lr || lw) {
-      nimbus::CacheVar *cache_var =
-        cm->GetAppVar(
-            read3, array_reg_outer_3,
-            write3, array_reg_outer_3,
-            kCachePhi3, array_reg_outer_3,
-            nimbus::cache::SHARED);
-      cache->phi3 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
-      assert(cache->phi3 != NULL);
+
+    int order[3] = {3, 7, 8};
+    if (l || lw) {
+      order[0] = 7;
+      order[1] = 8;
+      order[2] = 3;
+    } else if (l7w) {
+      order[0] = 3;
+      order[1] = 8;
+      order[2] = 7;
     }
-    if (l7r || l7w) {
-      if (cache->phi3)
-        cm->WriteImmediately(cache->phi3, write7);
-      nimbus::CacheVar *cache_var =
-        cm->GetAppVar(
-            read7, array_reg_outer_7,
-            write7, array_reg_outer_7,
-            kCachePhi7, array_reg_outer_7,
-            nimbus::cache::SHARED);
-      cache->phi7 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
-      assert(cache->phi7 != NULL);
-    }
-    if (l8r || l8w) {
-      if (cache->phi3)
-	cm->WriteImmediately(cache->phi3, write8);
-      nimbus::CacheVar *cache_var =
-        cm->GetAppVar(
-            read8, array_reg_outer_8,
-            write8, array_reg_outer_8,
-            kCachePhi8, array_reg_outer_8,
-            nimbus::cache::SHARED);
-      cache->phi8 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
-      assert(cache->phi8 != NULL);
+
+    for (int i = 0; i < 3; ++i) {
+      if (order[i] == 3) {
+        if (l || lr || lw) {
+          nimbus::CacheVar *cache_var =
+            cm->GetAppVar(
+                read3, array_reg_outer_3,
+                write3, array_reg_outer_3,
+                kCachePhi3, array_reg_outer_3,
+                nimbus::cache::SHARED);
+          cache->phi3 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
+          assert(cache->phi3 != NULL);
+        }
+      }
+      if (order[i] == 7) {
+        if (l7r || l7w) {
+          nimbus::CacheVar *cache_var =
+            cm->GetAppVar(
+                read7, array_reg_outer_7,
+                write7, array_reg_outer_7,
+                kCachePhi7, array_reg_outer_7,
+                nimbus::cache::SHARED);
+          cache->phi7 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
+          assert(cache->phi7 != NULL);
+        }
+      }
+      if (order[i] == 8) {
+        if (l8r || l8w) {
+          nimbus::CacheVar *cache_var =
+            cm->GetAppVar(
+                read8, array_reg_outer_8,
+                write8, array_reg_outer_8,
+                kCachePhi8, array_reg_outer_8,
+                nimbus::cache::SHARED);
+          cache->phi8 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
+          assert(cache->phi8 != NULL);
+        }
+      }
     }
   }
   // psi_d.
