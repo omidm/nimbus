@@ -33,6 +33,11 @@
  */
 
 /*
+ * The base class for a static config variable. A static config variable is
+ * a simulation variable that is not changed after initialization, so Nimbus
+ * tries to cache static config variables so that they are constructed only once
+ * during a simulation.
+ *
  * Author: Hang Qu <quhang@stanford.edu>
  */
 

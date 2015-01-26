@@ -33,6 +33,12 @@
  */
 
 /*
+ * The static config manager maintains all the cached static config variables.
+ * It returns matched static config variables, or construct a new one
+ * upon the request of application code.
+ * A static config variable is a simulation variable that remains unchanged after
+ * initialization.
+ *
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
@@ -53,10 +59,13 @@ class StaticConfigManager {
  public:
   StaticConfigManager();
   ~StaticConfigManager();
+  // Registers the prototype of a static config variable.
   void RegisterPrototype(const std::string& config_name,
                          StaticConfigVariable* config_variable);
+  // Requests a static config variable with the given name and region.
   StaticConfigVariable* GetStaticConfigVariable(
       const std::string& config_name, const GeometricRegion& local_region);
+  // Releases a static config variable, i.e. no further access.
   void ReleaseStaticConfigVariable(StaticConfigVariable* config_variable);
   // void Clean();
 
