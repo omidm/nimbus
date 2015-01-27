@@ -54,6 +54,16 @@ TemplateEntry::TemplateEntry() {
 
 TemplateEntry::~TemplateEntry() {
   // Used shared ptr for allocated pointers. -omidm
+
+  // Clean the access pattern meta data
+  AccessIndex::iterator iter = access_pattern_.begin();
+  for (; iter != access_pattern_.end(); ++iter) {
+    VersionIndex::iterator it = iter->second->begin();
+    for (; it != iter->second->end(); ++it) {
+      delete it->second;
+    }
+    delete iter->second;
+  }
 }
 
 bool TemplateEntry::finalized() {
@@ -478,6 +488,50 @@ bool TemplateEntry::AdvanceCursorForAssignment(ComplexJobEntry::Cursor* cursor) 
 
   return true;
 }
+
+void TemplateEntry::AddToAccessPattern(const logical_data_id_t& ldid,
+                                       const data_version_t& diff_version,
+                                       const size_t& job_index) {
+  AccessIndex::iterator iter = access_pattern_.find(ldid);
+  if (iter != access_pattern_.end()) {
+    VersionIndex::iterator it = iter->second->find(diff_version);
+    if (it != iter->second->end()) {
+      it->second->push_back(job_index);
+    } else {
+      Bucket *b = new Bucket();
+      b->push_back(job_index);
+      iter->second->insert(make_pair(diff_version, b));
+    }
+  } else {
+    VersionIndex *vi = new VersionIndex();
+    Bucket *b = new Bucket();
+    b->push_back(job_index);
+    vi->insert(make_pair(diff_version, b));
+    access_pattern_.insert(make_pair(ldid, vi));
+  }
+}
+
+size_t TemplateEntry::QueryAccessPattern(const logical_data_id_t& ldid,
+                                         const data_version_t& diff_version,
+                                         std::list<size_t>* indices) {
+  size_t count = 0;
+  indices->clear();
+
+  AccessIndex::iterator iter = access_pattern_.find(ldid);
+  if (iter != access_pattern_.end()) {
+    VersionIndex::iterator it = iter->second->find(diff_version);
+    if (it != iter->second->end()) {
+      Bucket::iterator i = it->second->begin();
+      for (; i != it->second->end(); ++i) {
+        indices->push_back(*i);
+        ++count;
+      }
+    }
+  }
+
+  return count;
+}
+
 
 
 
