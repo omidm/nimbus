@@ -498,7 +498,7 @@ void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
       assert(false);
     }
     log.StopTimer();
-    std::cout << "OMID SPAWN TEMPLATE. " << cm->job_graph_name() << log.timer() << std::endl;
+    std::cout << "OMID SPAWN NEW TEMPLATE. " << cm->job_graph_name() << log.timer() << std::endl;
   }
 }
 
@@ -529,7 +529,7 @@ void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
       dbg(DBG_ERROR, "ERROR: parent of template with job id %lu is not in the graph.\n", job_id);
       assert(false);
     }
-    std::cout << "OMID START TEMPLATE\n.";
+    std::cout << "OMID START TEMPLATE " << template_name << std::endl;
   }
 }
 
@@ -539,7 +539,7 @@ void Scheduler::ProcessEndTemplateCommand(EndTemplateCommand* cm) {
     template_manager_->FinalizeNewTemplate(cm->job_graph_name());
     DefinedTemplateCommand command(cm->job_graph_name());
     server_->BroadcastCommand(&command);
-    std::cout << "OMID END TEMPLATE\n.";
+    std::cout << "OMID END TEMPLATE " << cm->job_graph_name() << std::endl;
   }
 }
 

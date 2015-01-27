@@ -279,8 +279,16 @@ size_t ComplexJobEntry::GetParentJobs(ShadowJobEntryList* list, bool append) {
   return count;
 }
 
+bool ComplexJobEntry::GetShadowJobEntryByIndex(size_t index, ShadowJobEntry*& shadow_job) {
+  assert(index >= 0);
+  assert(index < inner_job_ids_.size());
 
-bool ComplexJobEntry::GetShadowJobEntry(job_id_t job_id, ShadowJobEntry*& shadow_job) {
+  return GetShadowJobEntry(inner_job_ids_[index], shadow_job, index);
+}
+
+bool ComplexJobEntry::GetShadowJobEntry(job_id_t job_id,
+                                        ShadowJobEntry*& shadow_job,
+                                        size_t safe_idx) {
   {
     boost::unique_lock<boost::mutex> lock(mutex_);
     if (removed_job_ids_.size() != 0) {
@@ -291,49 +299,46 @@ bool ComplexJobEntry::GetShadowJobEntry(job_id_t job_id, ShadowJobEntry*& shadow
     }
   }
 
-  if (job_map_complete_) {
-    ShadowJobEntryMap::iterator iter = jobs_.find(job_id);
-    if (iter != jobs_.end()) {
-      shadow_job = iter->second;
-      return true;
-    }
-  } else {
-    size_t index;
-    if (GetJobIndex(job_id, &index)) {
-      ShadowJobEntryMap::iterator iter = jobs_.find(inner_job_ids_[index]);
-      if (iter != jobs_.end()) {
-        shadow_job = iter->second;
-        return true;
-      } else {
-        TemplateJobEntry* job = template_entry_->GetJobAtIndex(index);
-        IDSet<job_id_t> before_set;
-        template_entry_->LoadBeforeSet(&before_set, index, inner_job_ids_, outer_job_ids_);
-
-        ShadowJobEntry* sj =
-          new ShadowJobEntry(job->job_name(),
-              inner_job_ids_[index],
-              job->read_set_p(),
-              job->write_set_p(),
-              job->union_set_p(),
-              before_set,
-              job->vmap_read_diff(),
-              job->vmap_write_diff(),
-              parent_job_id_,
-              0,  // future_job_id, currently not supported - omidm
-              job->sterile(),
-              job->region(),
-              parameters_[index],
-              job,
-              this);
-        jobs_[inner_job_ids_[index]] = sj;
-        shadow_job = sj;
-        return true;
-      }
-    }
+  ShadowJobEntryMap::iterator iter = jobs_.find(job_id);
+  if (iter != jobs_.end()) {
+    shadow_job = iter->second;
+    return true;
   }
 
-  shadow_job = NULL;
-  return false;
+  size_t index;
+  if (safe_idx > 0) {
+    index = safe_idx;
+  } else if (!GetJobIndex(job_id, &index)) {
+    shadow_job = NULL;
+    return false;
+  }
+
+  assert(job_id == inner_job_ids_[index]);
+
+  TemplateJobEntry* tj = template_entry_->GetJobAtIndex(index);
+  IDSet<job_id_t> before_set;
+  template_entry_->LoadBeforeSet(&before_set, index, inner_job_ids_, outer_job_ids_);
+
+  ShadowJobEntry* sj =
+    new ShadowJobEntry(tj->job_name(),
+                       job_id,
+                       tj->read_set_p(),
+                       tj->write_set_p(),
+                       tj->union_set_p(),
+                       before_set,
+                       tj->vmap_read_diff(),
+                       tj->vmap_write_diff(),
+                       parent_job_id_,
+                       0,  // future_job_id, currently not supported - omidm
+                       tj->sterile(),
+                       tj->region(),
+                       parameters_[index],
+                       tj,
+                       this);
+
+  jobs_[job_id] = sj;
+  shadow_job = sj;
+  return true;
 }
 
 

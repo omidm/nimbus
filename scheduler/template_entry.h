@@ -119,6 +119,14 @@ class TemplateEntry {
 
     bool AdvanceCursorForAssignment(ComplexJobEntry::Cursor* cursor);
 
+    void AddToAccessPattern(const logical_data_id_t& ldid,
+                        const data_version_t& diff_version,
+                        const size_t& job_index);
+
+    size_t QueryAccessPattern(const logical_data_id_t& ldid,
+                              const data_version_t& diff_version,
+                              std::list<size_t>* indices);
+
   private:
     typedef std::vector<boost::shared_ptr<job_id_t> > PtrList;
     typedef boost::unordered_set<boost::shared_ptr<job_id_t> > PtrSet;
@@ -170,14 +178,6 @@ class TemplateEntry {
     typedef boost::unordered_map<logical_data_id_t, VersionIndex*> AccessIndex;
 
     AccessIndex access_pattern_;
-
-    void AddToAccessPattern(const logical_data_id_t& ldid,
-                        const data_version_t& diff_version,
-                        const size_t& job_index);
-
-    size_t QueryAccessPattern(const logical_data_id_t& ldid,
-                              const data_version_t& diff_version,
-                              std::list<size_t>* indices);
 
     bool finalized_;
     Graph<TemplateJobEntry, job_id_t> job_graph_;

@@ -102,7 +102,9 @@ class ComplexJobEntry : public JobEntry {
 
     size_t GetParentJobs(ShadowJobEntryList* list, bool append = false);
 
-    bool GetShadowJobEntry(job_id_t job_id, ShadowJobEntry*& shadow_job);
+    bool GetShadowJobEntry(job_id_t job_id, ShadowJobEntry*& shadow_job, size_t safe_idx = 0);
+
+    bool GetShadowJobEntryByIndex(size_t index, ShadowJobEntry*& shadow_job);
 
     void MarkJobAssigned(job_id_t job_id);
 
