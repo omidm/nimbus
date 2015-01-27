@@ -178,6 +178,7 @@ class TemplateEntry {
     typedef boost::unordered_map<logical_data_id_t, VersionIndex*> AccessIndex;
 
     AccessIndex access_pattern_;
+    boost::mutex access_pattern_mutex_;
 
     bool finalized_;
     Graph<TemplateJobEntry, job_id_t> job_graph_;

@@ -492,6 +492,8 @@ bool TemplateEntry::AdvanceCursorForAssignment(ComplexJobEntry::Cursor* cursor) 
 void TemplateEntry::AddToAccessPattern(const logical_data_id_t& ldid,
                                        const data_version_t& diff_version,
                                        const size_t& job_index) {
+  boost::unique_lock<boost::mutex> lock(access_pattern_mutex_);
+
   AccessIndex::iterator iter = access_pattern_.find(ldid);
   if (iter != access_pattern_.end()) {
     VersionIndex::iterator it = iter->second->find(diff_version);
@@ -514,6 +516,8 @@ void TemplateEntry::AddToAccessPattern(const logical_data_id_t& ldid,
 size_t TemplateEntry::QueryAccessPattern(const logical_data_id_t& ldid,
                                          const data_version_t& diff_version,
                                          std::list<size_t>* indices) {
+  boost::unique_lock<boost::mutex> lock(access_pattern_mutex_);
+
   size_t count = 0;
   indices->clear();
 
