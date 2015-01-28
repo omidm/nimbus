@@ -299,11 +299,15 @@ bool ComplexJobEntry::GetShadowJobEntry(job_id_t job_id,
     }
   }
 
-  ShadowJobEntryMap::iterator iter = jobs_.find(job_id);
-  if (iter != jobs_.end()) {
-    shadow_job = iter->second;
-    return true;
+  {
+    boost::unique_lock<boost::mutex> lock(mutex_);
+    ShadowJobEntryMap::iterator iter = jobs_.find(job_id);
+    if (iter != jobs_.end()) {
+      shadow_job = iter->second;
+      return true;
+    }
   }
+
 
   size_t index;
   if (safe_idx > 0) {
@@ -336,7 +340,11 @@ bool ComplexJobEntry::GetShadowJobEntry(job_id_t job_id,
                        tj,
                        this);
 
-  jobs_[job_id] = sj;
+  {
+    boost::unique_lock<boost::mutex> lock(mutex_);
+    jobs_[job_id] = sj;
+  }
+
   shadow_job = sj;
   return true;
 }
