@@ -60,7 +60,7 @@ struct InitConfig {
   bool set_boundary_condition;
   nimbus::GeometricRegion global_region;
   nimbus::GeometricRegion local_region;
-  bool use_cache;
+  bool use_app_data;
   int projection_iteration;
 
   // TODO(quhang), global region and local region should be passed as parameters
@@ -74,7 +74,7 @@ struct InitConfig {
     init_phase = false;
     init_part = 0;
     set_boundary_condition = true;
-    use_cache = false;
+    use_app_data = false;
     projection_iteration = 0;
   }
 };

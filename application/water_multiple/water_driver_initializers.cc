@@ -2,6 +2,9 @@
 // Copyright 2009, Michael Lentine.
 // This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
 //#####################################################################
+// This file contains initializers for water driver/ example, and
+// different members contained in the example.
+//#####################################################################
 #include "stdio.h"
 #include "string.h"
 
@@ -15,8 +18,11 @@
 #include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 
+
+
 using namespace PhysBAM;
 
+// Distirbuted initialization for the first time
 template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
     const nimbus::Job *job,
     const nimbus::DataArray &da) {
@@ -136,12 +142,13 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
     example.Set_Boundary_Conditions(time); // get so CFL is correct
   }
   // write, save
-//  Write_Output_Files(example.first_frame);
+  //  Write_Output_Files(example.first_frame);
   // example.collision_bodies_affecting_fluid->Compute_Occupied_Blocks(true,0,0);
   example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
-  example.Save_To_Nimbus_No_Cache(job, da, current_frame);
+  example.Save_To_Nimbus_No_AppData(job, da, current_frame);
 }
 
+// Initialize without app_data
 template<class TV> void WATER_DRIVER<TV>::Initialize(
     const nimbus::Job *job,
     const nimbus::DataArray &da) {
@@ -264,7 +271,8 @@ template<class TV> void WATER_DRIVER<TV>::Initialize(
   }
 }
 
-template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
+// Initialize when application app_data is being used, with app_data
+template<class TV> void WATER_DRIVER<TV>::InitializeUseAppData(
     const nimbus::Job *job,
     const nimbus::DataArray &da) {
   typedef application::DataConfig DataConfig;
@@ -292,7 +300,7 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
   // allocates array for levelset/ particles/ removed particles
   {
     application::ScopeTimer scope_timer("part_2.1");
-    InitializeParticleLevelsetEvolutionHelperUseCache(
+    InitializeParticleLevelsetEvolutionHelperUseAppData(
         example.data_config,
         example.mac_grid,
         &example.particle_levelset_evolution);
@@ -590,7 +598,7 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHel
   return true;
 }
 
-template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHelperUseCache(
+template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHelperUseAppData(
     const application::DataConfig& data_config,
     const GRID<TV>& grid_input,
     PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >*
@@ -600,7 +608,7 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHel
   PARTICLE_LEVELSET_UNIFORM<GRID<TV> >* particle_levelset =
     &particle_levelset_evolution->particle_levelset;
   assert(grid_input.Is_MAC_Grid());
-  // If this flag is true, it suggests that the ple is not a cached version.
+  // If this flag is true, it suggests that the ple is not a app_datad version.
   if (example.create_destroy_ple) {
     {
       application::ScopeTimer scope_timer("part_2.1.1");

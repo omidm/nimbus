@@ -39,7 +39,7 @@
 #include <vector>
 
 #include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/cache_particle_levelset_evolution.h"
+#include "application/water_multiple/app_data_particle_levelset_evolution.h"
 #include "application/water_multiple/data_particle_array.h"
 #include "application/water_multiple/job_synchronize_particles.h"
 #include "application/water_multiple/job_names.h"
@@ -69,7 +69,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
 
     // get time, dt, frame from the parameters.
     InitConfig init_config;
-    init_config.use_cache = true;
+    init_config.use_app_data = true;
 
     std::string params_str(params.ser_data().data_ptr_raw(),
                            params.ser_data().size());
@@ -79,7 +79,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
         init_config.frame, init_config.time, dt);
 
 
-    if (!kUseCache) {
+    if (!kUseAppData) {
         // initializing the example and driver with state and configuration variables
         PhysBAM::WATER_EXAMPLE<TV> *example;
         PhysBAM::WATER_DRIVER<TV> *driver;
@@ -105,9 +105,9 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
             init_config.local_region.NewEnlarged(kGhostNum));
 
     typedef std::vector<nimbus::GeometricRegion> GRegArray;
-    nimbus::cache::type_id_t vars[] = {POS, NEG, POS_REM, NEG_REM};
-    std::vector<nimbus::cache::type_id_t> var_type(
-            vars, vars + sizeof(vars)/sizeof(nimbus::cache::type_id_t));
+    nimbus::app_data::type_id_t vars[] = {POS, NEG, POS_REM, NEG_REM};
+    std::vector<nimbus::app_data::type_id_t> var_type(
+            vars, vars + sizeof(vars)/sizeof(nimbus::app_data::type_id_t));
     std::vector<nimbus::DataArray> read(4), write(4), read_inner(4), read_outer(4);
     std::vector<GRegArray> reg(4);
     std::string dtype[] = {  APP_POS_PARTICLES,
@@ -128,27 +128,27 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
             if (array_inner.Covers(&dreg)) {
                 read_inner_t.push_back(d);
             } else{
-                assert(d->dirty_cache_object() == NULL);
+                assert(d->dirty_app_object() == NULL);
                 read_outer_t.push_back(d);
                 reg_t.push_back(dreg);
             }
         }
     }
 
-    nimbus::CacheManager *cm = GetCacheManager();
-    nimbus::CacheStruct *cache_struct =
+    nimbus::AppDataManager *cm = GetAppDataManager();
+    nimbus::AppStruct *app_struct =
       cm->GetAppStruct(
               var_type,
               read_inner, array_outer,
               write, array_outer,
-              kCachePLE, array_outer,
-              nimbus::cache::SHARED);
-    CacheParticleLevelsetEvolution<T> *cache_ple =
-        dynamic_cast<CacheParticleLevelsetEvolution<T> *>(cache_struct);
-    assert(cache_ple != NULL);
+              kAppDataPLE, array_outer,
+              nimbus::app_data::SHARED);
+    AppDataParticleLevelsetEvolution<T> *app_data_ple =
+        dynamic_cast<AppDataParticleLevelsetEvolution<T> *>(app_struct);
+    assert(app_data_ple != NULL);
 
     PhysBAM::PARTICLE_LEVELSET_EVOLUTION_UNIFORM<PhysBAM::GRID<TV> >
-        *particle_levelset_evolution = cache_ple->data();
+        *particle_levelset_evolution = app_data_ple->data();
     PhysBAM::PARTICLE_LEVELSET_UNIFORM<PhysBAM::GRID<TV> >
         *particle_levelset = &particle_levelset_evolution->particle_levelset;
 
@@ -170,7 +170,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     Translator::ReadRemovedParticles(array_outer, shift, read_outer[POS_REM], particle_levelset, scale, true, true);
     Translator::ReadRemovedParticles(array_outer, shift, read_outer[NEG_REM], particle_levelset, scale, false, true);
 
-    cm->ReleaseAccess(cache_ple);
+    cm->ReleaseAccess(app_data_ple);
 
     dbg(APP_LOG, "Completed executing synchronize particles job\n");
 }

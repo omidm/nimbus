@@ -38,7 +38,7 @@
  * related to other parts of the simulation.
  *
  * Author: Hang Qu <quhang@stanford.edu>
- * Edited for application cache by Chinmayee Shah <chshah@stanford.edu>
+ * Edited for application app_data by Chinmayee Shah <chshah@stanford.edu>
  */
 
 #include <cassert>
@@ -47,7 +47,7 @@
 #include <PhysBAM_Tools/Parallel_Computation/SPARSE_MATRIX_PARTITION.h>
 #include <PhysBAM_Tools/Vectors/SPARSE_VECTOR_ND.h>
 
-#include "application/water_multiple/cache_prototypes.h"
+#include "application/water_multiple/app_data_prototypes.h"
 #include "application/water_multiple/data_include.h"
 #include "application/water_multiple/physbam_utils.h"
 #include "data/scalar_data.h"
@@ -293,8 +293,8 @@ bool ProjectionDriver::DecideToSpawnNextIteration() {
 void ProjectionDriver::LoadFromNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
   application::ScopeTimer scope_timer("projection_load");
-  if (application::kUseCache) {
-    Cache_LoadFromNimbus(job, da);
+  if (application::kUseAppData) {
+    AppData_LoadFromNimbus(job, da);
     return;
   }
   nimbus::int_dimension_t array_shift[3] = {
@@ -663,8 +663,8 @@ void ProjectionDriver::ReadVectorData(
 void ProjectionDriver::SaveToNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
   application::ScopeTimer scope_timer("projection_save");
-  if (application::kUseCache) {
-    Cache_SaveToNimbus(job, da);
+  if (application::kUseAppData) {
+    AppData_SaveToNimbus(job, da);
     return;
   }
   nimbus::int_dimension_t array_shift[3] = {

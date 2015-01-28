@@ -125,8 +125,6 @@ class Worker {
     client_->SendCommand(command);
   }
 
-  Log *app_data_log;
-
  protected:
   SchedulerClient* client_;
   WorkerDataExchanger* data_exchanger_;
@@ -152,6 +150,7 @@ class Worker {
   Log log_;
   Log version_log_;
   Log data_hash_log_;
+
   Computer host_;
   boost::thread* client_thread_;
   boost::thread* data_exchanger_thread_;

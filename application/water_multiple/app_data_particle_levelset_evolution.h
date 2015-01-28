@@ -42,7 +42,7 @@
 #include <string>
 
 #include "application/water_multiple/physbam_include.h"
-#include "data/cache/cache_struct.h"
+#include "data/app_data/app_struct.h"
 #include "data/physbam/translator_physbam.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
@@ -58,7 +58,7 @@ enum Particles {
 };
 
 template<class TS = float>
-class CacheParticleLevelsetEvolution : public nimbus::CacheStruct {
+class AppDataParticleLevelsetEvolution : public nimbus::AppStruct {
         typedef typename PhysBAM::VECTOR<TS, 3> TV;
         typedef typename PhysBAM::VECTOR<int, 3> TV_INT;
         typedef typename PhysBAM::RANGE<TV> Range;
@@ -70,7 +70,7 @@ class CacheParticleLevelsetEvolution : public nimbus::CacheStruct {
         typedef typename nimbus::TranslatorPhysBAM<TS> Translator;
 
     public:
-        explicit CacheParticleLevelsetEvolution(
+        explicit AppDataParticleLevelsetEvolution(
                 const nimbus::GeometricRegion &global_reg,
                 int ghost_width,
                 bool make_proto,
@@ -88,20 +88,20 @@ class CacheParticleLevelsetEvolution : public nimbus::CacheStruct {
         }
 
     protected:
-        virtual nimbus::CacheStruct *CreateNew(
+        virtual nimbus::AppStruct *CreateNew(
                 const nimbus::GeometricRegion &ob_reg) const;
 
-        virtual void ReadToCache(
-                const std::vector<nimbus::cache::type_id_t> &var_type,
+        virtual void ReadAppData(
+                const std::vector<nimbus::app_data::type_id_t> &var_type,
                 const std::vector<nimbus::DataArray> &read_sets,
                 const nimbus::GeometricRegion &read_reg);
-        virtual void WriteFromCache(
-                const std::vector<nimbus::cache::type_id_t> &var_type,
+        virtual void WriteAppData(
+                const std::vector<nimbus::app_data::type_id_t> &var_type,
                 const std::vector<nimbus::DataArray> &write_sets,
                 const nimbus::GeometricRegion &write_reg) const;
 
     private:
-        explicit CacheParticleLevelsetEvolution(
+        explicit AppDataParticleLevelsetEvolution(
                 const nimbus::GeometricRegion &global_reg,
                 const nimbus::GeometricRegion &ob_reg,
                 const int ghost_width);
@@ -115,7 +115,7 @@ class CacheParticleLevelsetEvolution : public nimbus::CacheStruct {
         PhysBAMPLE *data_;
         Grid mac_grid_;
         int scale_;
-}; // class CacheParticleLevelsetEvolution
+}; // class AppDataParticleLevelsetEvolution
 } // namespace application
 
 #endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PARTICLE_LEVELSET_EVOLUTION_H_

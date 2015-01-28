@@ -42,7 +42,7 @@
 #include <string>
 
 #include "application/water_multiple/physbam_include.h"
-#include "data/cache/cache_var.h"
+#include "data/app_data/app_var.h"
 #include "data/physbam/translator_physbam.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
@@ -50,7 +50,7 @@
 namespace application {
 
 template<class T>
-class CacheCompressedScalarArray : public nimbus::CacheVar {
+class AppDataCompressedScalarArray : public nimbus::AppVar {
   typedef PhysBAM::VECTOR_ND<float> DataType;
   // Cell index to matrix index.
   typedef typename PhysBAM::VECTOR<int, 3> TV_INT;
@@ -58,7 +58,7 @@ class CacheCompressedScalarArray : public nimbus::CacheVar {
   typedef typename nimbus::TranslatorPhysBAM<float> Translator;
 
  public:
-  explicit CacheCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
+  explicit AppDataCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
                                       const int ghost_width,
                                       bool make_proto,
                                       const std::string& name);
@@ -82,17 +82,17 @@ class CacheCompressedScalarArray : public nimbus::CacheVar {
   }
 
  protected:
-  explicit CacheCompressedScalarArray(
+  explicit AppDataCompressedScalarArray(
       const nimbus::GeometricRegion &global_reg,
       const nimbus::GeometricRegion &ob_reg,
       const int ghost_width);
 
-  virtual nimbus::CacheVar *CreateNew(const nimbus::GeometricRegion &ob_reg) const;
+  virtual nimbus::AppVar *CreateNew(const nimbus::GeometricRegion &ob_reg) const;
 
   // The data should be DataCompressedScalarArray (corresponding nimbus type).
-  virtual void ReadToCache(const nimbus::DataArray &read_set,
+  virtual void ReadAppData(const nimbus::DataArray &read_set,
                            const nimbus::GeometricRegion &read_reg);
-  virtual void WriteFromCache(const nimbus::DataArray &write_set,
+  virtual void WriteAppData(const nimbus::DataArray &write_set,
                               const nimbus::GeometricRegion &write_reg) const;
 
  private:
@@ -104,7 +104,7 @@ class CacheCompressedScalarArray : public nimbus::CacheVar {
   // Index data should be external. This object does not have ownership.
   IndexType* index_data_;
   nimbus::int_dimension_t data_length_;
-}; // class CacheCompressedScalarArray
+}; // class AppDataCompressedScalarArray
 
 } // namespace application
 

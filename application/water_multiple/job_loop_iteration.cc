@@ -94,7 +94,7 @@ namespace application {
     data_config.SetFlag(DataConfig::DT);
     example->data_config.Set(data_config);
 
-    // Since this job uses only DT, it does not need to use cache.
+    // Since this job uses only DT, it does not need to use app_data.
     example->Load_From_Nimbus(this, da, frame);
 
     // check whether the frame is done or not
@@ -121,7 +121,7 @@ namespace application {
     SpawnWithBreakAllGranularity(false, init_config.frame, init_config.time,
                                  dt, da, init_config.global_region);
 
-    // Write, free resources. This job does not use cache.
+    // Write, free resources. This job does not use app_data.
     example->Save_To_Nimbus(this, da, frame+1);
     delete example;
   }

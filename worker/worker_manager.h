@@ -134,7 +134,7 @@ class WorkerManager {
  public:
   // Logging: set up logging interface.
   void SetLoggingInterface(
-      Log* log, Log* version_log, Log* data_hash_log, Log* app_data_log,
+      Log* log, Log* version_log, Log* data_hash_log,
       HighResolutionTimer* timer);
 
   void SetEventLog(std::string wid_str);
@@ -147,7 +147,6 @@ class WorkerManager {
   Log* log_;
   Log* version_log_;
   Log* data_hash_log_;
-  Log* app_data_log_;
   HighResolutionTimer* timer_;
   // Performance measurement.
   int64_t dispatched_computation_job_count_;

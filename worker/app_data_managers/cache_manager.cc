@@ -33,8 +33,8 @@
  */
 
 /*
- * CacheManager is the interface for application jobs to cache. Application
- * jobs send their request for application objects to the cache manager.
+ * CacheManager implements application data manager with simple caching of
+ * application data across jobs.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
@@ -47,12 +47,12 @@
 #include <vector>
 #include <string>
 
-#include "data/cache/cache_defs.h"
-#include "data/cache/cache_object.h"
-#include "data/cache/cache_table.h"
+#include "data/app_data/app_data_defs.h"
+#include "data/app_data/app_object.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
-#include "worker/cache_manager.h"
+#include "worker/app_data_managers/cache_manager.h"
+#include "worker/app_data_managers/cache_table.h"
 #include "worker/data.h"
 
 #define FIRST_UNIQUE_ID 1000
@@ -88,20 +88,19 @@ CacheManager::CacheManager() {
  * nimbus objects. Note that this is not thread safe, this function does not
  * use locks or pending flags. This is guaranteed to work correctly only under
  * the assumption:
- * The mapping for the cache object and corresponding nimbus objects (dirty) is
- * not edited simultaneously by other thread. This will hold for a thread if
- * the write_back set = write set for the job, since the guarantee is the
- * provided by the Nimbus controller.
- * Locking should probably not add much overhead, but it is not necessary at
- * the moment.
+ * The mapping for the cached object and corresponding nimbus objects (dirty)
+ * should not be edited simultaneously by other thread. This will hold for a
+ * thread if the write_back set is a subset of write set for the job.
+ * Locking should probably not add much overhead, but it is not necessary right
+ * now.
  */
-void CacheManager::WriteImmediately(CacheVar *cache_var,
+void CacheManager::WriteImmediately(AppVar *app_var,
                                     const DataArray &write_set) {
     double timestamps[6];
     int order = 0;
     RecordTs();  // start WIV stage
     DataArray flush_set;
-    DataSet &write_back = cache_var->write_back_;
+    DataSet &write_back = app_var->write_back_;
     // size_t write_bytes = 0;
     RecordTs();  // start WIV mapping
     for (size_t i = 0; i < write_set.size(); ++i) {
@@ -113,16 +112,16 @@ void CacheManager::WriteImmediately(CacheVar *cache_var,
     }
     for (size_t i = 0; i < flush_set.size(); ++i) {
         Data *d = flush_set[i];
-        d->UnsetDirtyCacheObject(cache_var);
+        d->UnsetDirtyAppObject(app_var);
         write_back.erase(d);
     }
     RecordTs();  // end WIV mapping
 
-    // std::string size_str = "WIV wfcsize " + cache_var->name();
+    // std::string size_str = "WIV wfcsize " + app_var->name();
     // PrintSizeStamp(size_str.c_str(), write_bytes);
 
     RecordTs();  // start WIV wfc
-    cache_var->WriteFromCache(flush_set, cache_var->write_region_);
+    app_var->WriteAppData(flush_set, app_var->write_region_);
     RecordTs();  // end WIV wfc
     RecordTs();  // end WIV stage
     {
@@ -146,13 +145,12 @@ void CacheManager::WriteImmediately(CacheVar *cache_var,
  * the assumption:
  * The mapping for the cache object and corresponding nimbus objects (dirty) is
  * not edited simultaneously by other thread. This will hold for a thread if
- * the write_back set = write set for the job, since the guarantee is the
- * provided by the Nimbus controller.
+ * the write_back set is a subset of write set for the job.
  * Locking should probably not add much overhead, but it is not necessary at
- * the moment.
+ * right now.
  */
-void CacheManager::WriteImmediately(CacheStruct *cache_struct,
-                                    const std::vector<cache::type_id_t> &var_type,
+void CacheManager::WriteImmediately(AppStruct *app_struct,
+                                    const std::vector<app_data::type_id_t> &var_type,
                                     const std::vector<DataArray> &write_sets) {
     double timestamps[6];
     int order = 0;
@@ -163,13 +161,13 @@ void CacheManager::WriteImmediately(CacheStruct *cache_struct,
         exit(-1);
     }
     std::vector<DataArray> flush_sets(num_vars);
-    std::vector<DataSet> &write_backs = cache_struct->write_backs_;
+    std::vector<DataSet> &write_backs = app_struct->write_backs_;
     // size_t write_bytes = 0;
     RecordTs();  // start WIS mapping
     for (size_t t = 0; t < num_vars; ++t) {
         DataArray &flush_t = flush_sets[t];
         const DataArray &write_set_t = write_sets[t];
-        cache::type_id_t type = var_type[t];
+        app_data::type_id_t type = var_type[t];
         DataSet &write_back_t = write_backs[type];
         for (size_t i = 0; i < write_set_t.size(); ++i) {
             Data *d = write_set_t[i];
@@ -181,22 +179,22 @@ void CacheManager::WriteImmediately(CacheStruct *cache_struct,
     }
     for (size_t t = 0; t < num_vars; ++t) {
         const DataArray &flush_t = flush_sets[t];
-        cache::type_id_t type = var_type[t];
+        app_data::type_id_t type = var_type[t];
         DataSet &write_back_t = write_backs[type];
         for (size_t i = 0; i < flush_t.size(); ++i) {
             Data *d = flush_t[i];
-            d->UnsetDirtyCacheObject(cache_struct);
+            d->UnsetDirtyAppObject(app_struct);
             write_back_t.erase(d);
         }
     }
     RecordTs();  // end WIS mapping
 
-    // std::string size_str = "WIS wfcsize " + cache_struct->name();
+    // std::string size_str = "WIS wfcsize " + app_struct->name();
     // PrintSizeStamp(size_str.c_str(), write_bytes);
 
     RecordTs();  // start WIS wfc
-    cache_struct->WriteFromCache(var_type, flush_sets,
-                                 cache_struct->write_region_);
+    app_struct->WriteAppData(var_type, flush_sets,
+                             app_struct->write_region_);
     RecordTs();  // end WIS wfc
     RecordTs();  // end WIS stage
     {
@@ -222,26 +220,28 @@ void CacheManager::WriteImmediately(CacheStruct *cache_struct,
  * The access mode is overwritten as EXCLUSIVE right now, meaning 2 parallel
  * compute jobs cannot operate on the same cache object.
  */
-CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
-                                  const GeometricRegion &read_region,
-                                  const DataArray &write_set,
-                                  const GeometricRegion &write_region,
-                                  const CacheVar &prototype,
-                                  const GeometricRegion &region,
-                                  cache::CacheAccess access,
-                                  void (*aux)(CacheVar*, void*),
-                                  void* aux_data) {
-    access = cache::EXCLUSIVE;
+// TODO(hang/chinmayee): remove *aux, aux_data.
+AppVar *CacheManager::GetAppVarV(const DataArray &read_set,
+                                 const GeometricRegion &read_region,
+                                 const DataArray &write_set,
+                                 const GeometricRegion &write_region,
+                                 const AppVar &prototype,
+                                 const GeometricRegion &region,
+                                 app_data::Access access,
+                                 void (*aux)(AppVar*, void*),
+                                 void* aux_data) {
+    // TODO(chinmayee): Remove this when application objects can be shared by compute jobs
+    access = app_data::EXCLUSIVE;
     double timestamps[14];
     int order = 0;
     RecordTs();  // start GAV stage
     RecordTs();  // start GAV lock
     pthread_mutex_lock(&cache_lock);
     RecordTs();  // end GAV lock
-    CacheVar *cv = NULL;
+    AppVar *cv = NULL;
     // Get a cache object form the cache table.
     if (pool_->find(prototype.id()) == pool_->end()) {
-        CacheTable *ct = new CacheTable(cache::VAR);
+        CacheTable *ct = new CacheTable(app_data::VAR);
         (*pool_)[prototype.id()] = ct;
         cv = prototype.CreateNew(region);
         cv->set_unique_id(unique_id_allocator_++);
@@ -259,7 +259,7 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     }
     cv->AcquireAccess(access);
     DataArray flush, sync, diff;
-    CacheObjects sync_co;
+    AppObjects sync_co;
     RecordTs();  // start GAV block
     while (!cv->CheckPendingFlag(read_set, write_set)) {
       pthread_cond_wait(&cache_cond, &cache_lock);
@@ -292,7 +292,7 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     // PrintSizeStamp(size_str.c_str(), write_bytes);
 
     RecordTs();  // start GAV wfc
-    cv->WriteFromCache(flush, write_region_old);
+    cv->WriteAppData(flush, write_region_old);
     for (size_t i = 0; i < sync.size(); ++i) {
         sync_co[i]->PullData(sync[i]);
     }
@@ -314,7 +314,7 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     pthread_mutex_unlock(&cache_lock);
 
     RecordTs();  // start GAV rtc
-    cv->ReadToCache(diff, read_region);
+    cv->ReadAppData(diff, read_region);
     RecordTs();  // end GAV rtc
 
     RecordTs();  // end GAV stage
@@ -366,24 +366,25 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
  * The access mode is overwritten as EXCLUSIVE right now, meaning 2 parallel
  * compute jobs cannot operate on the same cache object.
  */
-CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var_type,
-                                        const std::vector<DataArray> &read_sets,
-                                        const GeometricRegion &read_region,
-                                        const std::vector<DataArray> &write_sets,
-                                        const GeometricRegion &write_region,
-                                        const CacheStruct &prototype,
-                                        const GeometricRegion &region,
-                                        cache::CacheAccess access) {
-    access = cache::EXCLUSIVE;
+AppStruct *CacheManager::GetAppStructV(const std::vector<app_data::type_id_t> &var_type,
+                                       const std::vector<DataArray> &read_sets,
+                                       const GeometricRegion &read_region,
+                                       const std::vector<DataArray> &write_sets,
+                                       const GeometricRegion &write_region,
+                                       const AppStruct &prototype,
+                                       const GeometricRegion &region,
+                                       app_data::Access access) {
+    // TODO(chinmayee): Remove this when application objects can be shared by compute jobs
+    access = app_data::EXCLUSIVE;
     double timestamps[14];
     int order = 0;
     RecordTs();  // start GAS stage
     RecordTs();  // start GAS lock
     pthread_mutex_lock(&cache_lock);
     RecordTs();  // end GAS lock
-    CacheStruct *cs = NULL;
+    AppStruct *cs = NULL;
     if (pool_->find(prototype.id()) == pool_->end()) {
-        CacheTable *ct = new CacheTable(cache::STRUCT);
+        CacheTable *ct = new CacheTable(app_data::STRUCT);
         (*pool_)[prototype.id()] = ct;
         cs = prototype.CreateNew(region);
         cs->set_unique_id(unique_id_allocator_++);
@@ -403,7 +404,7 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
     std::vector<DataArray> flush_sets(num_var),
                            sync_sets(num_var),
                            diff_sets(num_var);
-    std::vector<CacheObjects> sync_co_sets(num_var);
+    std::vector<AppObjects> sync_co_sets(num_var);
     RecordTs();  // start GAS block
     // Move here.
     cs->AcquireAccess(access);
@@ -440,10 +441,10 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
     // PrintSizeStamp(size_str.c_str(), write_bytes);
 
     RecordTs();  // start GAS wfc
-    cs->WriteFromCache(var_type, flush_sets, write_region_old);
+    cs->WriteAppData(var_type, flush_sets, write_region_old);
     for (size_t t = 0; t < num_var; ++t) {
         DataArray &sync_t = sync_sets[t];
-        CacheObjects &sync_co_t = sync_co_sets[t];
+        AppObjects &sync_co_t = sync_co_sets[t];
         for (size_t i = 0; i < sync_t.size(); ++i) {
             sync_co_t[i]->PullData(sync_t[i]);
         }
@@ -470,7 +471,7 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
     pthread_mutex_unlock(&cache_lock);
 
     RecordTs();  // start GAS rtc
-    cs->ReadToCache(var_type, diff_sets, read_region);
+    cs->ReadAppData(var_type, diff_sets, read_region);
     RecordTs();  // end GAS rtc
 
     RecordTs();  // end GAS stage
@@ -498,14 +499,14 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
 }
 
 /**
- * \details Pulls data from dirty cache object (if there is one), updates
+ * \details Pulls data from dirty app object (if there is one), updates
  * mappings and returns.
  */
 void CacheManager::SyncData(Data *d) {
     double timestamps[14];
     int order = 0;
     RecordTs();  // start SD stage
-    CacheObject *co = NULL;
+    AppObject *co = NULL;
     RecordTs();  // start SD lock
     pthread_mutex_lock(&cache_lock);
     RecordTs();  // end SD lock
@@ -514,7 +515,7 @@ void CacheManager::SyncData(Data *d) {
        pthread_cond_wait(&cache_cond, &cache_lock);
     }
     RecordTs();  // end SD block
-    co = d->dirty_cache_object();
+    co = d->dirty_app_object();
     if (!co) {
         pthread_mutex_unlock(&cache_lock);
         RecordTs();  // end SD stage
@@ -532,7 +533,7 @@ void CacheManager::SyncData(Data *d) {
         }
         return;
     }
-    // assert(co->IsAvailable(cache::EXCLUSIVE));
+    // assert(co->IsAvailable(app_data::EXCLUSIVE));
     RecordTs();  // start SD mapping
     d->set_pending_flag(Data::WRITE);
     RecordTs();  // end SD mapping
@@ -579,7 +580,7 @@ void CacheManager::SyncData(Data *d) {
 
 /**
  * \details Removes mappings between this data object and any corresponding
- * cache objects.
+ * cached application objects.
  */
 void CacheManager::InvalidateMappings(Data *d) {
     double timestamps[8];
@@ -614,9 +615,9 @@ void CacheManager::InvalidateMappings(Data *d) {
     }
 }
 
-void CacheManager::ReleaseAccess(CacheObject* cache_object) {
+void CacheManager::ReleaseAccess(AppObject* app_object) {
     pthread_mutex_lock(&cache_lock);
-    cache_object->ReleaseAccessInternal();
+    app_object->ReleaseAccessInternal();
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
 }

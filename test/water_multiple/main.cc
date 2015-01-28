@@ -158,14 +158,5 @@ int main(int argc, char *argv[]) {
     w->set_ip_address(ip_address);
   }
 
-  // TODO: Extra logging information for cache experiments, remove later on
-#ifdef CACHE_LOG
-  std::string log_file_name = "worker-log";
-  log_file_name += "-";
-  log_file_name += log_id;
-  Log *cache_log = new Log(std::string(log_file_name));
-  w->cache_log = cache_log;
-  app->translator_log = cache_log;
-#endif
   w->Run();
 }

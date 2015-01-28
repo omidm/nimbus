@@ -100,12 +100,11 @@ void WorkerManager::PrintTimeStamp(
 }
 
 void WorkerManager::SetLoggingInterface(
-    Log* log, Log* version_log, Log* data_hash_log, Log* app_data_log,
+    Log* log, Log* version_log, Log* data_hash_log,
     HighResolutionTimer* timer) {
   log_ = log;
   version_log_ = version_log;
   data_hash_log_ = data_hash_log;
-  app_data_log_ = app_data_log;
   timer_ = timer;
   log_ready_ = true;
 }
@@ -220,7 +219,7 @@ bool WorkerManager::SendCommand(SchedulerCommand* command) {
 bool WorkerManager::LaunchThread(WorkerThread* worker_thread) {
   assert(log_ready_);
   worker_thread->SetLoggingInterface(
-      log_, version_log_, data_hash_log_, app_data_log_, timer_);
+      log_, version_log_, data_hash_log_, timer_);
   int error_code =
       pthread_create(&worker_thread->thread_id, NULL,
                      ThreadEntryPoint, worker_thread);

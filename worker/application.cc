@@ -41,6 +41,8 @@
 #include <time.h>
 #include "worker/application.h"
 #include "worker/app_data_manager.h"
+// NOTE: include application data manager implementation here
+#include "worker/app_data_managers/cache_manager.h"
 #include "worker/static_config_manager.h"
 
 using namespace nimbus; // NOLINT
@@ -83,6 +85,9 @@ void Application::Start(SchedulerClient* client,
   client_ = client;
   id_maker_ = id_maker;
   ldo_map_ = ldo_map;
+  // NOTE: define which application data manager to use here
+  // TODO(chinmayee): should we move this to an interface for application?
+  app_data_manager_ = new CacheManager();
   Load();
 }
 

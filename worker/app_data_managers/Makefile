@@ -1,4 +1,4 @@
-all: check app_data
+all: check cache_t
 
 NIMBUS_ROOT = ../..
 include $(NIMBUS_ROOT)/Makeinclude
@@ -8,9 +8,7 @@ CFILES = $(wildcard *.cc)
 HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
 
-.PHONY: app_data
-
-app_data: $(OBJFILES) $(HFILES)
+cache_t: $(OBJFILES) $(HFILES)
 
 %.o: %.cc
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 

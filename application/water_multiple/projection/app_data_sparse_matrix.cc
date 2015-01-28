@@ -40,51 +40,50 @@
 
 #include "application/water_multiple/physbam_include.h"
 #include "application/water_multiple/physbam_tools.h"
-#include "data/cache/cache_var.h"
+#include "data/app_data/app_var.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
 
-#include "application/water_multiple/projection/data_raw_vector_nd.h"
-#include "application/water_multiple/projection/cache_vector.h"
+#include "application/water_multiple/projection/app_data_sparse_matrix.h"
 
 namespace application {
 
-CacheVector::CacheVector(const nimbus::GeometricRegion &global_reg,
-                         bool make_proto,
-                         const std::string& name)
+AppDataSparseMatrix::AppDataSparseMatrix(const nimbus::GeometricRegion &global_reg,
+                                     bool make_proto, const std::string& name)
     : global_region_(global_reg) {
   set_name(name);
+  data_ = NULL;
   if (make_proto)
     MakePrototype();
 }
 
-CacheVector::CacheVector(const nimbus::GeometricRegion &global_reg,
-                         const nimbus::GeometricRegion &ob_reg)
-    : CacheVar(ob_reg), global_region_(global_reg), local_region_(ob_reg) {
+AppDataSparseMatrix::AppDataSparseMatrix(const nimbus::GeometricRegion &global_reg,
+                                     const nimbus::GeometricRegion &ob_reg)
+    : AppVar(ob_reg), global_region_(global_reg), local_region_(ob_reg) {
   data_ = new DATA_TYPE;
 }
 
-nimbus::CacheVar* CacheVector::CreateNew(
+nimbus::AppVar* AppDataSparseMatrix::CreateNew(
     const nimbus::GeometricRegion &ob_reg) const {
-  nimbus::CacheVar* temp = new CacheVector(global_region_, ob_reg);
+  nimbus::AppVar* temp = new AppDataSparseMatrix(global_region_, ob_reg);
   temp->set_name(name());
   return temp;
 }
 
-void CacheVector::ReadToCache(const nimbus::DataArray &read_set,
-                              const nimbus::GeometricRegion &read_reg) {
+void AppDataSparseMatrix::ReadAppData(const nimbus::DataArray &read_set,
+                                   const nimbus::GeometricRegion &read_reg) {
   if (read_set.size() == 0) {
     return;
   }
   assert(read_set.size() == 1);
   assert(read_set[0]->region().IsEqual(&read_reg));
   assert(object_region().IsEqual(&read_reg));
-  assert(dynamic_cast<DataRawVectorNd*>(read_set[0]));
-  dynamic_cast<DataRawVectorNd*>(read_set[0])->LoadFromNimbus(data_);
+  assert(dynamic_cast<DataSparseMatrix*>(read_set[0]));
+  dynamic_cast<DataSparseMatrix*>(read_set[0])->LoadFromNimbus(data_);
 }
 
-void CacheVector::WriteFromCache(
+void AppDataSparseMatrix::WriteAppData(
     const nimbus::DataArray &write_set,
     const nimbus::GeometricRegion &write_reg) const {
   if (write_set.size() == 0) {
@@ -95,8 +94,8 @@ void CacheVector::WriteFromCache(
   assert(write_set.size() == 1);
   assert(write_set[0]->region().IsEqual(&write_reg));
   assert(object_region().IsEqual(&write_reg));
-  assert(dynamic_cast<DataRawVectorNd*>(write_set[0]));
-  dynamic_cast<DataRawVectorNd*>(write_set[0])->SaveToNimbus(*data_);
+  assert(dynamic_cast<DataSparseMatrix*>(write_set[0]));
+  dynamic_cast<DataSparseMatrix*>(write_set[0])->SaveToNimbus(*data_);
 }
 
 } // namespace application

@@ -19,9 +19,9 @@
 #include <PhysBAM_Dynamics/Boundaries/BOUNDARY_PHI_WATER.h>
 #include <PhysBAM_Dynamics/Level_Sets/LEVELSET_CALLBACKS.h>
 #include <PhysBAM_Dynamics/Level_Sets/PARTICLE_LEVELSET_EVOLUTION_UNIFORM.h>
-#include "application/water_multiple/cache_data_include.h"
-#include "application/water_multiple/cache_face_array.h"
-#include "application/water_multiple/cache_options.h"
+#include "application/water_multiple/app_data_include.h"
+#include "application/water_multiple/app_data_face_array.h"
+#include "application/water_multiple/app_data_options.h"
 #include "application/water_multiple/nimbus_thread_queue.h"
 #include "application/water_multiple/options.h"
 #include "application/water_multiple/projection/laplace_solver_wrapper.h"
@@ -109,40 +109,40 @@ public:
     StaticConfigUInterface* static_config_u_interface;
     StaticConfigForce* static_config_force;
     StaticConfigCollisionBody* static_config_collision_body;
-    // cache objects
-    bool use_cache;
-    typedef typename application::CacheFaceArray<T> TCacheFaceArray;
-    typedef typename application::CacheFaceArray<bool> BoolCacheFaceArray;
-    typedef typename application::CacheScalarArray<T> TCacheScalarArray;
-    typedef typename application::CacheScalarArray<int> IntCacheScalarArray;
-    typedef typename application::CacheScalarArray<bool> BoolCacheScalarArray;
-    typedef typename application::CacheParticleLevelsetEvolution<float> TCachePLE;
-    typedef application::CacheSparseMatrix TCacheSparseMatrix;
-    typedef application::CacheArrayM2C TCacheArrayM2C;
-    TCacheFaceArray *cache_fv;
-    TCacheFaceArray *cache_fvg;
-    BoolCacheFaceArray *cache_psi_n;
-    TCacheScalarArray *cache_phi3, *cache_phi7, *cache_phi8;
-    TCacheScalarArray *cache_pressure, *cache_divergence;
-    IntCacheScalarArray *cache_colors;
-    application::CacheRawGridArray *cache_index_c2m;
-    BoolCacheScalarArray *cache_psi_d;
-    TCachePLE *cache_ple;
-    TCacheSparseMatrix *cache_matrix_a;
-    TCacheArrayM2C *cache_index_m2c;
-    application::CacheVector *cache_vector_b;
+    // app_data objects
+    bool use_app_data;
+    typedef typename application::AppDataFaceArray<T> TAppDataFaceArray;
+    typedef typename application::AppDataFaceArray<bool> BoolAppDataFaceArray;
+    typedef typename application::AppDataScalarArray<T> TAppDataScalarArray;
+    typedef typename application::AppDataScalarArray<int> IntAppDataScalarArray;
+    typedef typename application::AppDataScalarArray<bool> BoolAppDataScalarArray;
+    typedef typename application::AppDataParticleLevelsetEvolution<float> TAppDataPLE;
+    typedef application::AppDataSparseMatrix TAppDataSparseMatrix;
+    typedef application::AppDataArrayM2C TAppDataArrayM2C;
+    TAppDataFaceArray *app_data_fv;
+    TAppDataFaceArray *app_data_fvg;
+    BoolAppDataFaceArray *app_data_psi_n;
+    TAppDataScalarArray *app_data_phi3, *app_data_phi7, *app_data_phi8;
+    TAppDataScalarArray *app_data_pressure, *app_data_divergence;
+    IntAppDataScalarArray *app_data_colors;
+    application::AppDataRawGridArray *app_data_index_c2m;
+    BoolAppDataScalarArray *app_data_psi_d;
+    TAppDataPLE *app_data_ple;
+    TAppDataSparseMatrix *app_data_matrix_a;
+    TAppDataArrayM2C *app_data_index_m2c;
+    application::AppDataVector *app_data_vector_b;
     bool create_destroy_ple;
 
-    WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
+    WATER_EXAMPLE(StaticConfigCollisionBody* app_data_collision_body,
                   const STREAM_TYPE stream_type_input,
                   nimbus::TaskThreadPool::TaskThreadList* allocated_threads);
-    WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
+    WATER_EXAMPLE(StaticConfigCollisionBody* app_data_collision_body,
                   const STREAM_TYPE stream_type_input,
-                  application::AppCacheObjects *cache,
+                  application::AppAppObjects *app_data,
                   nimbus::TaskThreadPool::TaskThreadList* allocated_threads);
-    WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
+    WATER_EXAMPLE(StaticConfigCollisionBody* app_data_collision_body,
                   const STREAM_TYPE stream_type_input,
-                  application::AppCacheObjects *cache,
+                  application::AppAppObjects *app_data,
                   PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple,
                   nimbus::TaskThreadPool::TaskThreadList* allocated_threads);
     virtual ~WATER_EXAMPLE();
@@ -163,9 +163,9 @@ public:
     void Write_Output_Files(const int frame, int rank = -1);
     void Read_Output_Files(const int frame);
 
-    void Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
+    void Save_To_Nimbus_No_AppData(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
     void Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
-    void Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
+    void Load_From_Nimbus_No_AppData(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
     void Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
 
 //#####################################################################

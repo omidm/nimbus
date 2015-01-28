@@ -79,56 +79,7 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
   log_->StartTimer();
   timer_->Start(job->id().elem());
 #endif  // MUTE_LOG
-#ifdef CACHE_LOG
-  uint64_t phys_mem;
-  uint64_t virtual_mem;
-  std::ifstream ifs;
-  ifs.open("/proc/self/status");
-  std::string line;
-  while (getline(ifs, line)) {
-    if (line.compare(0, 7, "VmSize:") == 0) {
-      virtual_mem = ParseLine(line) * 1024;
-    } else if (line.compare(0, 6, "VmRSS:") == 0) {
-      phys_mem  = ParseLine(line) * 1024;
-      break;
-    }
-  }
-  ifs.close();
 
-  std::string jname = job->name();
-  bool print_clog = false;
-  bool print_cclog = false;
-  if (cache_log_) {
-    if (jname.substr(0, 7) == "Compute") {
-      print_clog = true;
-    } else if (jname.find("Copy") != std::string::npos) {
-      print_cclog = true;
-    }
-    if (print_clog) {
-      std::stringstream msg;
-      pid_t tid = syscall(SYS_gettid);
-      msg << "~~~ TID: " << tid << " App compute job start : " << jname << " " <<
-        cache_log_->GetTime();
-      cache_log_->WriteToFile(msg.str());
-    }
-    if (print_cclog) {
-      std::stringstream msg;
-      pid_t tid = syscall(SYS_gettid);
-      msg << "~~~ TID: " << tid << " App copy job start : " << jname << " " <<
-        cache_log_->GetTime();
-      cache_log_->WriteToFile(msg.str());
-    }
-
-    {
-      std::stringstream msg;
-      pid_t tid = syscall(SYS_gettid);
-      msg << "*** TID " << tid << " Before Job: << " << jname << " Virtual: " << virtual_mem
-          << " Physical: " << phys_mem;
-      cache_log_->WriteToFile(msg.str());
-    }
-  }
-
-#endif
   ProfilerMalloc::ResetBaseAlloc();
   dbg(DBG_WORKER, "[WORKER_THREAD] Execute job, name=%s, id=%lld. \n",
       job->name().c_str(), job->id().elem());
@@ -138,56 +89,6 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
   // size_t max_alloc = ProfilerMalloc::AllocMaxTid(pthread_self());
   // job->set_max_alloc(max_alloc);
 
-#ifdef CACHE_LOG
-  ifs.open("/proc/self/status");
-  while (getline(ifs, line)) {
-    if (line.compare(0, 7, "VmSize:") == 0) {
-      virtual_mem = ParseLine(line) * 1024;
-    } else if (line.compare(0, 6, "VmRSS:") == 0) {
-      phys_mem = ParseLine(line) * 1024;
-      break;
-    }
-  }
-  ifs.close();
-
-  if (cache_log_) {
-    if (print_clog) {
-      std::stringstream msg;
-      pid_t tid = syscall(SYS_gettid);
-      msg << "~~~ TID: " << tid << " App compute job end : " << jname << " " <<
-        cache_log_->GetTime();
-      cache_log_->WriteToFile(msg.str());
-    }
-    if (print_cclog) {
-      std::stringstream msg;
-      pid_t tid = syscall(SYS_gettid);
-      msg << "~~~ TID: " << tid << " App copy job end : " << jname << " " <<
-        cache_log_->GetTime();
-      cache_log_->WriteToFile(msg.str());
-    }
-
-    {
-      std::stringstream msg;
-      pid_t tid = syscall(SYS_gettid);
-      msg << "*** TID " << tid << " After Job: << " << jname << " Virtual: " << virtual_mem <<
-             " Physical: " << phys_mem;
-      cache_log_->WriteToFile(msg.str());
-    }
-
-    {
-      std::stringstream msg;
-      size_t base = ProfilerMalloc::GetBaseAlloc();
-      size_t curr = ProfilerMalloc::GetCurrAlloc();
-      size_t max = ProfilerMalloc::GetMaxAlloc();
-      pid_t tid = syscall(SYS_gettid);
-      msg << "*** TID: " << tid << " Job: " << jname
-          << " Before: " << base
-          << " After: " << curr
-          << " Max: " << max;
-      cache_log_->WriteToFile(msg.str());
-    }
-  }
-#endif
 #ifndef MUTE_LOG
   double run_time = timer_->Stop(job->id().elem());
   log_->StopTimer();

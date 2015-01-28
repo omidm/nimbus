@@ -91,7 +91,6 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     log_.InitTime();
     id_ = -1;
     ip_address_ = NIMBUS_RECEIVER_KNOWN_IP;
-    app_data_log = NULL;
     worker_manager_ = new WorkerManager();
     ddb_ = new DistributedDB();
     DUMB_JOB_ID = std::numeric_limits<job_id_t>::max();
@@ -122,12 +121,6 @@ void Worker::PrintTimeStamp(const char* format, ...) {
 }
 
 void Worker::Run() {
-  if (app_data_log) {
-    std::stringstream msg;
-    msg << "~~~ Worker starts : " << app_data_log->GetTime();
-    app_data_log->WriteToFile(msg.str());
-  }
-
   std::cout << "Running the Worker" << std::endl;
 
   SetupSchedulerInterface();
@@ -144,7 +137,6 @@ void Worker::WorkerCoreProcessor() {
   std::cout << "Base Worker Core Processor" << std::endl;
   worker_manager_->worker_ = this;
   worker_manager_->SetLoggingInterface(&log_, &version_log_, &data_hash_log_,
-                                       app_data_log,
                                        &timer_);
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Launching worker threads.\n");
   worker_manager_->StartWorkerThreads();
@@ -517,11 +509,6 @@ void Worker::ProcessPartitionRemoveCommand(PartitionRemoveCommand* cm) {
 }
 
 void Worker::ProcessTerminateCommand(TerminateCommand* cm) {
-  if (app_data_log) {
-    std::stringstream msg;
-    msg << "~~~ Completed application : " << app_data_log->GetTime();
-    app_data_log->WriteToFile(msg.str());
-  }
   // profiler_thread_->interrupt();
   // profiler_thread_->join();
   exit(cm->exit_status().elem());

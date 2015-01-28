@@ -42,7 +42,7 @@
 #include <string>
 
 #include "application/water_multiple/physbam_include.h"
-#include "data/cache/cache_var.h"
+#include "data/app_data/app_var.h"
 #include "data/physbam/translator_physbam.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
@@ -50,7 +50,7 @@
 namespace application {
 
 template<class T, class TS = float>
-class CacheFaceArray : public nimbus::CacheVar {
+class AppDataFaceArray : public nimbus::AppVar {
         typedef typename PhysBAM::VECTOR<TS, 3> TV;
         typedef typename PhysBAM::VECTOR<int, 3> TV_INT;
         typedef typename PhysBAM::RANGE<TV> Range;
@@ -60,7 +60,7 @@ class CacheFaceArray : public nimbus::CacheVar {
         typedef typename nimbus::TranslatorPhysBAM<TS> Translator;
 
     public:
-        explicit CacheFaceArray(const nimbus::GeometricRegion &global_reg,
+        explicit AppDataFaceArray(const nimbus::GeometricRegion &global_reg,
                                 const int ghost_width,
                                 bool make_proto,
                                 const std::string& name);
@@ -78,15 +78,15 @@ class CacheFaceArray : public nimbus::CacheVar {
         virtual void DumpData(std::string file_name);
 
     protected:
-        explicit CacheFaceArray(const nimbus::GeometricRegion &global_reg,
+        explicit AppDataFaceArray(const nimbus::GeometricRegion &global_reg,
                                 const nimbus::GeometricRegion &ob_reg,
                                 const int ghost_width);
 
-        virtual nimbus::CacheVar *CreateNew(const nimbus::GeometricRegion &ob_reg) const;
+        virtual nimbus::AppVar *CreateNew(const nimbus::GeometricRegion &ob_reg) const;
 
-        virtual void ReadToCache(const nimbus::DataArray &read_set,
+        virtual void ReadAppData(const nimbus::DataArray &read_set,
                                  const nimbus::GeometricRegion &read_reg);
-        virtual void WriteFromCache(const nimbus::DataArray &write_set,
+        virtual void WriteAppData(const nimbus::DataArray &write_set,
                                     const nimbus::GeometricRegion &write_reg) const;
 
     private:
@@ -96,7 +96,7 @@ class CacheFaceArray : public nimbus::CacheVar {
         nimbus::Coord shift_;
         PhysBAMFaceArray *data_;
         Grid mac_grid_;
-}; // class CacheFaceArray
+}; // class AppDataFaceArray
 
 } // namespace application
 

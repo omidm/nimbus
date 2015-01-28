@@ -48,6 +48,7 @@
 namespace nimbus {
 namespace app_data {
 enum Access { SHARED, EXCLUSIVE };  // access mode
+enum AppDataType { STRUCT, VAR };   // application data types
 typedef uint64_t type_id_t;         // variable type
 typedef uint64_t ob_id_t;           // application object prototype id type
 typedef uint64_t distance_t;        // type to express cost/ distance between a

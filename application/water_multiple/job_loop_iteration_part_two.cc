@@ -95,7 +95,7 @@ void JobLoopIterationPartTwo::Execute(
 
   // done = true;
 
-  // This job does not use application cache.
+  // This job does not use application app_data.
   delete example;
 
   SpawnJobs(

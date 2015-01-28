@@ -39,24 +39,24 @@
 #include <string>
 #include <vector>
 
-#include "application/water_multiple/cache_particle_levelset_evolution.h"
+#include "application/water_multiple/app_data_particle_levelset_evolution.h"
 #include "application/water_multiple/data_names.h"
 #include "application/water_multiple/physbam_include.h"
 #include "application/water_multiple/physbam_tools.h"
-#include "data/cache/cache_object.h"
+#include "data/app_data/app_object.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
 
 namespace application {
 
-template<class TS> CacheParticleLevelsetEvolution<TS>::
-CacheParticleLevelsetEvolution(
+template<class TS> AppDataParticleLevelsetEvolution<TS>::
+AppDataParticleLevelsetEvolution(
         const nimbus::GeometricRegion &global_reg,
         int ghost_width,
         bool make_proto,
         const std::string& name)
-    : CacheStruct(NUM_PARTICLE_TYPES),
+    : AppStruct(NUM_PARTICLE_TYPES),
       global_region_(global_reg),
       ghost_width_(ghost_width) {
     set_name(name);
@@ -64,12 +64,12 @@ CacheParticleLevelsetEvolution(
         MakePrototype();
 }
 
-template<class TS> CacheParticleLevelsetEvolution<TS>::
-CacheParticleLevelsetEvolution(
+template<class TS> AppDataParticleLevelsetEvolution<TS>::
+AppDataParticleLevelsetEvolution(
         const nimbus::GeometricRegion &global_reg,
         const nimbus::GeometricRegion &ob_reg,
         const int ghost_width)
-    : CacheStruct(NUM_PARTICLE_TYPES, ob_reg),
+    : AppStruct(NUM_PARTICLE_TYPES, ob_reg),
       global_region_(global_reg),
       local_region_(ob_reg.NewEnlarged(-ghost_width)),
       inner_region_(ob_reg.NewEnlarged(-2*ghost_width)),
@@ -172,9 +172,9 @@ CacheParticleLevelsetEvolution(
     }
 }
 
-template<class TS> nimbus::CacheStruct *CacheParticleLevelsetEvolution<TS>::
+template<class TS> nimbus::AppStruct *AppDataParticleLevelsetEvolution<TS>::
 CreateNew(const nimbus::GeometricRegion &ob_reg) const {
-    nimbus::CacheStruct* temp = new CacheParticleLevelsetEvolution(
+    nimbus::AppStruct* temp = new AppDataParticleLevelsetEvolution(
         global_region_,
         ob_reg,
         ghost_width_);
@@ -182,9 +182,9 @@ CreateNew(const nimbus::GeometricRegion &ob_reg) const {
     return temp;
 }
 
-template<class TS> void CacheParticleLevelsetEvolution<TS>::
-ReadToCache(
-        const std::vector<nimbus::cache::type_id_t> &var_type,
+template<class TS> void AppDataParticleLevelsetEvolution<TS>::
+ReadAppData(
+        const std::vector<nimbus::app_data::type_id_t> &var_type,
         const std::vector<nimbus::DataArray> &read_sets,
         const nimbus::GeometricRegion &read_reg) {
     // dbg(DBG_WARN, "\n--- Reading %i elements into particles for region %s\n", read_set.size(), reg.ToNetworkData().c_str());
@@ -226,15 +226,15 @@ ReadToCache(
                         particle_levelset, scale_, false, merge);
                 break;
             default:
-                dbg(DBG_ERROR, "Unexpected particle type in ReadToCache function\n");
+                dbg(DBG_ERROR, "Unexpected particle type in ReadAppData function\n");
                 exit(-1);
         }
     }
 }
 
-template<class TS> void CacheParticleLevelsetEvolution<TS>::
-WriteFromCache(
-        const std::vector<nimbus::cache::type_id_t> &var_type,
+template<class TS> void AppDataParticleLevelsetEvolution<TS>::
+WriteAppData(
+        const std::vector<nimbus::app_data::type_id_t> &var_type,
         const std::vector<nimbus::DataArray> &write_sets,
         const nimbus::GeometricRegion &write_reg) const {
     // dbg(DBG_WARN, "\n--- Writing %i elements into particles for region %s\n", write_set.size(), reg.ToNetworkData().c_str());
@@ -265,12 +265,12 @@ WriteFromCache(
                         particle_levelset, scale_, false);
                 break;
             default:
-                dbg(DBG_ERROR, "Unexpected particle type in WriteFromCache function\n");
+                dbg(DBG_ERROR, "Unexpected particle type in WriteAppData function\n");
                 exit(-1);
         }
     }
 }
 
-template class CacheParticleLevelsetEvolution<float>;
+template class AppDataParticleLevelsetEvolution<float>;
 
 } // namespace application

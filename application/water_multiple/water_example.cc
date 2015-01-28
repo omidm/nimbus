@@ -19,8 +19,8 @@
 #include <PhysBAM_Dynamics/Geometry/GENERAL_GEOMETRY_FORWARD.h>
 
 #include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/cache_prototypes.h"
-#include "application/water_multiple/cache_options.h"
+#include "application/water_multiple/app_data_prototypes.h"
+#include "application/water_multiple/app_data_options.h"
 #include "application/water_multiple/data_include.h"
 #include "application/water_multiple/options.h"
 #include "application/water_multiple/parameters.h"
@@ -37,10 +37,10 @@
 
 using namespace PhysBAM;
 //#####################################################################
-// WATER_EXAMPLE
+// WATER_EXAMPLE : NO CACHE
 //#####################################################################
 template<class TV> WATER_EXAMPLE<TV>::
-WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
+WATER_EXAMPLE(StaticConfigCollisionBody* app_data_collision_body,
               const STREAM_TYPE stream_type_input,
               nimbus::TaskThreadPool::TaskThreadList* allocated_threads) :
     nimbus_thread_queue(allocated_threads->size() != 0 ?
@@ -61,37 +61,37 @@ WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
     particle_levelset_evolution(*new  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >(mac_grid,number_of_ghost_cells)),
     incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
-    collision_bodies_affecting_fluid(cache_collision_body!=NULL?cache_collision_body->GetData():NULL)
+    collision_bodies_affecting_fluid(app_data_collision_body!=NULL?app_data_collision_body->GetData():NULL)
 {
-    use_cache   = false;
-    cache_fv    = NULL;
-    cache_fvg   = NULL;
-    cache_psi_n = NULL;
-    cache_phi3  = NULL;
-    cache_phi7  = NULL;
-    cache_phi8  = NULL;
-    cache_psi_d = NULL;
-    cache_ple   = NULL;
-    cache_pressure = NULL;
-    cache_colors = NULL;
-    cache_divergence = NULL;
-    cache_matrix_a = NULL;
-    cache_index_m2c = NULL;
-    cache_index_c2m = NULL;
-    cache_vector_b = NULL;
+    use_app_data   = false;
+    app_data_fv    = NULL;
+    app_data_fvg   = NULL;
+    app_data_psi_n = NULL;
+    app_data_phi3  = NULL;
+    app_data_phi7  = NULL;
+    app_data_phi8  = NULL;
+    app_data_psi_d = NULL;
+    app_data_ple   = NULL;
+    app_data_pressure = NULL;
+    app_data_colors = NULL;
+    app_data_divergence = NULL;
+    app_data_matrix_a = NULL;
+    app_data_index_m2c = NULL;
+    app_data_index_c2m = NULL;
+    app_data_vector_b = NULL;
     create_destroy_ple = true;
     static_config_valid_mask = NULL;
     static_config_u_interface = NULL;
     static_config_force = NULL;
-    static_config_collision_body = cache_collision_body;
+    static_config_collision_body = app_data_collision_body;
 }
 //#####################################################################
-// WATER_EXAMPLE
+// WATER_EXAMPLE : CACHE FOR ALL VARIABLES EXCEPT CACHE PLE
 //#####################################################################
 template<class TV> WATER_EXAMPLE<TV>::
-WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
+WATER_EXAMPLE(StaticConfigCollisionBody* app_data_collision_body,
               const STREAM_TYPE stream_type_input,
-              application::AppCacheObjects *cache,
+              application::AppAppObjects *app_data,
               nimbus::TaskThreadPool::TaskThreadList* allocated_threads) :
     nimbus_thread_queue(allocated_threads->size() != 0 ?
                         new nimbus::NimbusThreadQueue(allocated_threads) :
@@ -111,37 +111,37 @@ WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
     particle_levelset_evolution(*new  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >(mac_grid,number_of_ghost_cells)),
     incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
-    collision_bodies_affecting_fluid(cache_collision_body!=NULL?cache_collision_body->GetData():NULL)
+    collision_bodies_affecting_fluid(app_data_collision_body!=NULL?app_data_collision_body->GetData():NULL)
 {
-    use_cache   = false;
-    cache_fv    = cache->fv;
-    cache_fvg   = cache->fvg;
-    cache_psi_n = cache->psi_n;
-    cache_phi3  = cache->phi3;
-    cache_phi7  = cache->phi7;
-    cache_phi8  = cache->phi8;
-    cache_psi_d = cache->psi_d;
-    cache_ple   = cache->ple;
-    cache_pressure = cache->pressure;
-    cache_colors = cache->color;
-    cache_divergence = cache->divergence;
-    cache_matrix_a = cache->matrix_a;
-    cache_index_m2c = cache->index_m2c;
-    cache_index_c2m = cache->index_c2m;
-    cache_vector_b = cache->vector_b;
+    use_app_data   = false;
+    app_data_fv    = app_data->fv;
+    app_data_fvg   = app_data->fvg;
+    app_data_psi_n = app_data->psi_n;
+    app_data_phi3  = app_data->phi3;
+    app_data_phi7  = app_data->phi7;
+    app_data_phi8  = app_data->phi8;
+    app_data_psi_d = app_data->psi_d;
+    app_data_ple   = app_data->ple;
+    app_data_pressure = app_data->pressure;
+    app_data_colors = app_data->color;
+    app_data_divergence = app_data->divergence;
+    app_data_matrix_a = app_data->matrix_a;
+    app_data_index_m2c = app_data->index_m2c;
+    app_data_index_c2m = app_data->index_c2m;
+    app_data_vector_b = app_data->vector_b;
     create_destroy_ple = true;
-    static_config_valid_mask = cache->static_config_valid_mask;
-    static_config_u_interface = cache->static_config_u_interface;
-    static_config_force = cache->static_config_force;
-    static_config_collision_body = cache_collision_body;
+    static_config_valid_mask = app_data->static_config_valid_mask;
+    static_config_u_interface = app_data->static_config_u_interface;
+    static_config_force = app_data->static_config_force;
+    static_config_collision_body = app_data_collision_body;
 }
 //#####################################################################
-// WATER_EXAMPLE
+// WATER_EXAMPLE : CACHE FOR EVERYTHING
 //#####################################################################
 template<class TV> WATER_EXAMPLE<TV>::
-WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
+WATER_EXAMPLE(StaticConfigCollisionBody* app_data_collision_body,
               const STREAM_TYPE stream_type_input,
-              application::AppCacheObjects *cache,
+              application::AppAppObjects *app_data,
               PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple,
               nimbus::TaskThreadPool::TaskThreadList* allocated_threads) :
     nimbus_thread_queue(allocated_threads->size() != 0 ?
@@ -162,29 +162,29 @@ WATER_EXAMPLE(StaticConfigCollisionBody* cache_collision_body,
     particle_levelset_evolution(*ple),
     incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
-    collision_bodies_affecting_fluid(cache_collision_body!=NULL?cache_collision_body->GetData():NULL)
+    collision_bodies_affecting_fluid(app_data_collision_body!=NULL?app_data_collision_body->GetData():NULL)
 {
-    use_cache   = false;
-    cache_fv    = cache->fv;
-    cache_fvg   = cache->fvg;
-    cache_psi_n = cache->psi_n;
-    cache_phi3  = cache->phi3;
-    cache_phi7  = cache->phi7;
-    cache_phi8  = cache->phi8;
-    cache_psi_d = cache->psi_d;
-    cache_ple   = cache->ple;
-    cache_pressure = cache->pressure;
-    cache_colors = cache->color;
-    cache_divergence = cache->divergence;
-    cache_matrix_a = cache->matrix_a;
-    cache_index_m2c = cache->index_m2c;
-    cache_index_c2m = cache->index_c2m;
-    cache_vector_b = cache->vector_b;
+    use_app_data   = false;
+    app_data_fv    = app_data->fv;
+    app_data_fvg   = app_data->fvg;
+    app_data_psi_n = app_data->psi_n;
+    app_data_phi3  = app_data->phi3;
+    app_data_phi7  = app_data->phi7;
+    app_data_phi8  = app_data->phi8;
+    app_data_psi_d = app_data->psi_d;
+    app_data_ple   = app_data->ple;
+    app_data_pressure = app_data->pressure;
+    app_data_colors = app_data->color;
+    app_data_divergence = app_data->divergence;
+    app_data_matrix_a = app_data->matrix_a;
+    app_data_index_m2c = app_data->index_m2c;
+    app_data_index_c2m = app_data->index_c2m;
+    app_data_vector_b = app_data->vector_b;
     create_destroy_ple = false;
-    static_config_valid_mask = cache->static_config_valid_mask;
-    static_config_u_interface = cache->static_config_u_interface;
-    static_config_force = cache->static_config_force;
-    static_config_collision_body = cache_collision_body;
+    static_config_valid_mask = app_data->static_config_valid_mask;
+    static_config_u_interface = app_data->static_config_u_interface;
+    static_config_force = app_data->static_config_force;
+    static_config_collision_body = app_data_collision_body;
 }
 //#####################################################################
 // ~WATER_EXAMPLE
@@ -440,7 +440,7 @@ Read_Output_Files(const int frame)
 // Write_Output_Files
 //#####################################################################
 template<class TV> void WATER_EXAMPLE<TV>::
-Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
+Save_To_Nimbus_No_AppData(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
     nimbus::int_dimension_t array_shift[3] = {
         local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
@@ -722,8 +722,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     }
 
     application::ScopeTimer scope_timer("saving_water_example");
-    if (!(use_cache && application::kUseCache)) {
-      Save_To_Nimbus_No_Cache(job, da, frame);
+    if (!(use_app_data && application::kUseAppData)) {
+      Save_To_Nimbus_No_AppData(job, da, frame);
       return;
     }
 
@@ -764,23 +764,23 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
                             local_region.dy()+2*application::kGhostNum,
                             local_region.dz()+2*application::kGhostNum);
 
-    nimbus::CacheManager *cm = job->GetCacheManager();
+    nimbus::AppDataManager *cm = job->GetAppDataManager();
     // mac velocities
-    if (cache_fv) {
-        T_FACE_ARRAY *fv = cache_fv->data();
+    if (app_data_fv) {
+        T_FACE_ARRAY *fv = app_data_fv->data();
 	T_FACE_ARRAY::Nimbus_Copy_Arrays(*fv, face_velocities);
 	T_FACE_ARRAY::Nimbus_Copy_Arrays(face_velocities, t_face_dummy);
-        cm->ReleaseAccess(cache_fv);
-        cache_fv = NULL;
+        cm->ReleaseAccess(app_data_fv);
+        app_data_fv = NULL;
     }
 
     // mac velocities ghost
-    if (cache_fvg) {
-        T_FACE_ARRAY *fvg = cache_fvg->data();
+    if (app_data_fvg) {
+        T_FACE_ARRAY *fvg = app_data_fvg->data();
 	T_FACE_ARRAY::Nimbus_Copy_Arrays(*fvg, face_velocities_ghost);
         T_FACE_ARRAY::Nimbus_Copy_Arrays(face_velocities_ghost, t_face_dummy);
-        cm->ReleaseAccess(cache_fvg);
-        cache_fvg = NULL;
+        cm->ReleaseAccess(app_data_fvg);
+        app_data_fvg = NULL;
     }
 
     {
@@ -789,26 +789,26 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         nimbus::DataArray write;
         application::GetWriteData(*job, APP_PHI, da, &write);
       // levelset
-      if (cache_phi3) {
-          T_SCALAR_ARRAY *phi3 = cache_phi3->data();
+      if (app_data_phi3) {
+          T_SCALAR_ARRAY *phi3 = app_data_phi3->data();
 	  T_SCALAR_ARRAY::Nimbus_Copy_Arrays(*phi3, particle_levelset.levelset.phi);
 	  T_SCALAR_ARRAY::Nimbus_Copy_Arrays(particle_levelset.levelset.phi, t_scalar_dummy);
-          cm->ReleaseAccess(cache_phi3);
-          cache_phi3 = NULL;
+          cm->ReleaseAccess(app_data_phi3);
+          app_data_phi3 = NULL;
       }
-      if (cache_phi7) {
-          T_SCALAR_ARRAY *phi7 = cache_phi7->data();
+      if (app_data_phi7) {
+          T_SCALAR_ARRAY *phi7 = app_data_phi7->data();
 	  T_SCALAR_ARRAY::Nimbus_Copy_Arrays(*phi7, phi_ghost_bandwidth_seven); 
 	  T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_seven, t_scalar_dummy);
-          cm->ReleaseAccess(cache_phi7);
-          cache_phi7 = NULL;
+          cm->ReleaseAccess(app_data_phi7);
+          app_data_phi7 = NULL;
       }
-      if (cache_phi8) {
-          T_SCALAR_ARRAY *phi8 = cache_phi8->data();
+      if (app_data_phi8) {
+          T_SCALAR_ARRAY *phi8 = app_data_phi8->data();
 	  T_SCALAR_ARRAY::Nimbus_Copy_Arrays(*phi8, phi_ghost_bandwidth_eight); 
 	  T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_eight, t_scalar_dummy);
-          cm->ReleaseAccess(cache_phi8);
-          cache_phi8 = NULL;
+          cm->ReleaseAccess(app_data_phi8);
+          app_data_phi8 = NULL;
       }
       // last unique particle id
       const std::string lupistring = std::string(APP_LAST_UNIQUE_PARTICLE_ID);
@@ -827,14 +827,14 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       }
 
       // ** there should not be any accesses to particle levelset after this **
-      if (cache_ple) {
+      if (app_data_ple) {
           if (data_config.GetFlag(DataConfig::SHARED_PARTICLES_FLUSH)) {
-              nimbus::cache::type_id_t vars[] = { application::POS,
+              nimbus::app_data::type_id_t vars[] = { application::POS,
                                                   application::NEG,
                                                   application::POS_REM,
                                                   application::NEG_REM };
-              std::vector<nimbus::cache::type_id_t> var_type(
-                  vars, vars + sizeof(vars)/sizeof(nimbus::cache::type_id_t));
+              std::vector<nimbus::app_data::type_id_t> var_type(
+                  vars, vars + sizeof(vars)/sizeof(nimbus::app_data::type_id_t));
               std::vector<nimbus::DataArray> write(4), shared(4);
               std::string dtype[] = { APP_POS_PARTICLES,
                                       APP_NEG_PARTICLES,
@@ -856,101 +856,101 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
                       }
                   }
               }
-              cm->WriteImmediately(cache_ple, var_type, shared);
+              cm->WriteImmediately(app_data_ple, var_type, shared);
           }
           particle_levelset_evolution.particle_levelset.Set_Thread_Queue(NULL);
           particle_levelset_evolution.particle_levelset.levelset.thread_queue=NULL;
-          cm->ReleaseAccess(cache_ple);
-          cache_ple = NULL;
+          cm->ReleaseAccess(app_data_ple);
+          app_data_ple = NULL;
       }
     }
 
     // psi_d.
-    if (cache_psi_d) {
-        BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
+    if (app_data_psi_d) {
+        BOOL_SCALAR_ARRAY *psi_d = app_data_psi_d->data();
 	BOOL_SCALAR_ARRAY::Nimbus_Copy_Arrays(*psi_d, projection.laplace->psi_D);
         BOOL_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->psi_D, b_scalar_dummy);
         nimbus::DataArray write;
-        cm->ReleaseAccess(cache_psi_d);
-        cache_psi_d = NULL;
+        cm->ReleaseAccess(app_data_psi_d);
+        app_data_psi_d = NULL;
     }
 
     // psi_n.
-    if (cache_psi_n) {
-        BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
+    if (app_data_psi_n) {
+        BOOL_FACE_ARRAY *psi_n = app_data_psi_n->data();
         BOOL_FACE_ARRAY::Nimbus_Copy_Arrays(*psi_n, projection.laplace->psi_N);
         BOOL_FACE_ARRAY::Nimbus_Copy_Arrays(projection.laplace->psi_N, b_face_dummy);
         nimbus::DataArray write;
-        cm->ReleaseAccess(cache_psi_n);
-        cache_psi_n = NULL;
+        cm->ReleaseAccess(app_data_psi_n);
+        app_data_psi_n = NULL;
     }
 
     // pressure.
-    if (cache_pressure) {
-        T_SCALAR_ARRAY* pressure = cache_pressure->data();
+    if (app_data_pressure) {
+        T_SCALAR_ARRAY* pressure = app_data_pressure->data();
         T_SCALAR_ARRAY::Nimbus_Copy_Arrays(*pressure, projection.p);
         T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.p, t_scalar_dummy);
-        cm->ReleaseAccess(cache_pressure);
-	cache_pressure = NULL;
+        cm->ReleaseAccess(app_data_pressure);
+	app_data_pressure = NULL;
     }
     // colors.
-    if (cache_colors) {
+    if (app_data_colors) {
       typedef typename PhysBAM::ARRAY<int, TV_INT> INT_SCALAR_ARRAY;
-      INT_SCALAR_ARRAY* colors = cache_colors->data();
+      INT_SCALAR_ARRAY* colors = app_data_colors->data();
       INT_SCALAR_ARRAY::Nimbus_Copy_Arrays(
           *colors, projection.laplace->filled_region_colors);
       INT_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->filled_region_colors,
           i_scalar_dummy);
-      cm->ReleaseAccess(cache_colors);
-      cache_colors = NULL;
+      cm->ReleaseAccess(app_data_colors);
+      app_data_colors = NULL;
     }
     // divergence.
-    if (cache_divergence) {
-      T_SCALAR_ARRAY* divergence = cache_divergence->data();
+    if (app_data_divergence) {
+      T_SCALAR_ARRAY* divergence = app_data_divergence->data();
       T_SCALAR_ARRAY::Nimbus_Copy_Arrays(*divergence, projection.laplace->f);
       T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->f, t_scalar_dummy);
-      cm->ReleaseAccess(cache_divergence);
-      cache_divergence = NULL;
+      cm->ReleaseAccess(app_data_divergence);
+      app_data_divergence = NULL;
     }
 
     typedef nimbus::Data Data;
     if (data_config.GetFlag(DataConfig::MATRIX_A)) {
       // TODO(quhang) swap rather than copy.
-      assert(cache_matrix_a);
-      assert(cache_matrix_a->data() != NULL);
-      cache_matrix_a->data()->C = NULL;
-      cache_matrix_a->data()->Reset();
-      *(cache_matrix_a->data()) = laplace_solver_wrapper.A_array(1);
-      cm->ReleaseAccess(cache_matrix_a);
-      cache_matrix_a = NULL;
+      assert(app_data_matrix_a);
+      assert(app_data_matrix_a->data() != NULL);
+      app_data_matrix_a->data()->C = NULL;
+      app_data_matrix_a->data()->Reset();
+      *(app_data_matrix_a->data()) = laplace_solver_wrapper.A_array(1);
+      cm->ReleaseAccess(app_data_matrix_a);
+      app_data_matrix_a = NULL;
     }
     if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
       // TODO(quhang) swap rather than copy.
-      assert(cache_index_m2c);
-      *(cache_index_m2c->data()) =
+      assert(app_data_index_m2c);
+      *(app_data_index_m2c->data()) =
           laplace_solver_wrapper.matrix_index_to_cell_index_array(1);
-      cm->ReleaseAccess(cache_index_m2c);
-      cache_index_m2c = NULL;
+      cm->ReleaseAccess(app_data_index_m2c);
+      app_data_index_m2c = NULL;
     }
     if (data_config.GetFlag(DataConfig::VECTOR_B)) {
-      assert(cache_vector_b);
-      cache_vector_b->data()->n = laplace_solver_wrapper.b_array(1).n;
-      cache_vector_b->data()->x = laplace_solver_wrapper.b_array(1).x;
+      assert(app_data_vector_b);
+      app_data_vector_b->data()->n = laplace_solver_wrapper.b_array(1).n;
+      app_data_vector_b->data()->x = laplace_solver_wrapper.b_array(1).x;
       laplace_solver_wrapper.b_array(1).n = 0;
       laplace_solver_wrapper.b_array(1).x = NULL;
-      cm->ReleaseAccess(cache_vector_b);
-      cache_vector_b = NULL;
+      cm->ReleaseAccess(app_data_vector_b);
+      app_data_vector_b = NULL;
     }
     if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
-      assert(cache_index_c2m);
+      assert(app_data_index_c2m);
       typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
-      T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
+      T_SCALAR_ARRAY* index_c2m = app_data_index_c2m->data();
       T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
           *index_c2m, laplace_solver_wrapper.cell_index_to_matrix_index);
       T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
           laplace_solver_wrapper.cell_index_to_matrix_index, i_scalar_dummy);
-      cm->ReleaseAccess(cache_index_c2m);
-      cache_index_c2m = NULL;
+      cm->ReleaseAccess(app_data_index_c2m);
+      app_data_index_c2m = NULL;
     }
     if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
       Data* data_temp = application::GetTheOnlyData(
@@ -990,7 +990,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 // Write_Output_Files
 //#####################################################################
 template<class TV> void WATER_EXAMPLE<TV>::
-Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
+Load_From_Nimbus_No_AppData(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
     nimbus::int_dimension_t array_shift[3] = {
         local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
@@ -1253,8 +1253,8 @@ template<class TV> void WATER_EXAMPLE<TV>::
 Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
     application::ScopeTimer scope_timer("loading_water_example");
-    if (!(use_cache && application::kUseCache)) {
-      Load_From_Nimbus_No_Cache(job, da, frame);
+    if (!(use_app_data && application::kUseAppData)) {
+      Load_From_Nimbus_No_AppData(job, da, frame);
       return;
     }
 
@@ -1274,17 +1274,17 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
                             local_region.dz()+2*application::kGhostNum);
 
     // mac velocities
-    if (cache_fv)
+    if (app_data_fv)
     {
-        T_FACE_ARRAY *fv = cache_fv->data();
+        T_FACE_ARRAY *fv = app_data_fv->data();
 	face_velocities.Nimbus_Delete_Base_Pointer();
 	T_FACE_ARRAY::Nimbus_Copy_Arrays(face_velocities, *fv);
     }
 
     // mac velocities ghost
-    if (cache_fvg)
+    if (app_data_fvg)
     {
-        T_FACE_ARRAY *fvg = cache_fvg->data();
+        T_FACE_ARRAY *fvg = app_data_fvg->data();
 	face_velocities_ghost.Nimbus_Delete_Base_Pointer();
 	T_FACE_ARRAY::Nimbus_Copy_Arrays(face_velocities_ghost, *fvg);
     }
@@ -1293,21 +1293,21 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
 
     // levelset
-    if (cache_phi3)
+    if (app_data_phi3)
     {
-        T_SCALAR_ARRAY *phi3 = cache_phi3->data();
+        T_SCALAR_ARRAY *phi3 = app_data_phi3->data();
 	particle_levelset.levelset.phi.Nimbus_Delete_Base_Pointer_Scalar();
 	T_SCALAR_ARRAY::Nimbus_Copy_Arrays(particle_levelset.levelset.phi, *phi3);
     }
-    if (cache_phi7)
+    if (app_data_phi7)
     {
-        T_SCALAR_ARRAY *phi7 = cache_phi7->data();
+        T_SCALAR_ARRAY *phi7 = app_data_phi7->data();
 	phi_ghost_bandwidth_seven.Nimbus_Delete_Base_Pointer_Scalar();
 	T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_seven, *phi7); 
     }
-    if (cache_phi8)
+    if (app_data_phi8)
     {
-        T_SCALAR_ARRAY *phi8 = cache_phi8->data();
+        T_SCALAR_ARRAY *phi8 = app_data_phi8->data();
 	phi_ghost_bandwidth_eight.Nimbus_Delete_Base_Pointer_Scalar();
 	T_SCALAR_ARRAY::Nimbus_Copy_Arrays(phi_ghost_bandwidth_eight, *phi8); 
     }
@@ -1345,68 +1345,68 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     dbg(APP_LOG, "Finish reduce dt.\n");
 
     // psi_d.
-    if (cache_psi_d)
+    if (app_data_psi_d)
     {
-        BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
+        BOOL_SCALAR_ARRAY *psi_d = app_data_psi_d->data();
 	projection.laplace->psi_D.Nimbus_Delete_Base_Pointer_Scalar();
 	BOOL_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->psi_D, *psi_d);
     }
 
     // psi_n.
-    if (cache_psi_n)
+    if (app_data_psi_n)
     {
-        BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
+        BOOL_FACE_ARRAY *psi_n = app_data_psi_n->data();
 	projection.laplace->psi_N.Nimbus_Delete_Base_Pointer();
         BOOL_FACE_ARRAY::Nimbus_Copy_Arrays(projection.laplace->psi_N, *psi_n);
     }
 
     // pressure.
-    if (cache_pressure) {
-      T_SCALAR_ARRAY* pressure = cache_pressure->data();
+    if (app_data_pressure) {
+      T_SCALAR_ARRAY* pressure = app_data_pressure->data();
       projection.p.Nimbus_Delete_Base_Pointer_Scalar();
       T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.p, *pressure);
     }
     // colors.
-    if (cache_colors) {
+    if (app_data_colors) {
       typedef typename PhysBAM::ARRAY<int, TV_INT> INT_SCALAR_ARRAY;
-      INT_SCALAR_ARRAY* colors = cache_colors->data();
+      INT_SCALAR_ARRAY* colors = app_data_colors->data();
       projection.laplace->filled_region_colors.Nimbus_Delete_Base_Pointer_Scalar();
       INT_SCALAR_ARRAY::Nimbus_Copy_Arrays(
           projection.laplace->filled_region_colors, *colors);
     }
     // divergence.
-    if (cache_divergence) {
-      T_SCALAR_ARRAY* divergence = cache_divergence->data();
+    if (app_data_divergence) {
+      T_SCALAR_ARRAY* divergence = app_data_divergence->data();
       projection.laplace->f.Nimbus_Delete_Base_Pointer_Scalar();
       T_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->f, *divergence);
     }
 
     typedef nimbus::Data Data;
     /*
-    if (cache_matrix_a) {
+    if (app_data_matrix_a) {
       // Variable matrix_a reading is not handled, because the only job that
       // touches matrix_a is CONSTRUCT_MATRIX, which doesn't need to read.
-      laplace_solver_wrapper.A_array(1) = *(cache_matrix_a->data());
+      laplace_solver_wrapper.A_array(1) = *(app_data_matrix_a->data());
     }
     if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
       // Variable index_m2c reading is not handled,
       // because the only job that touches matrix_a is CONSTRUCT_MATRIX,
       // which doesn't need to read.
       &laplace_solver_wrapper.matrix_index_to_cell_index_array(1) =
-        *(cache_index_m2c->data());
+        *(app_data_index_m2c->data());
     }
     // VECTOR_B.
-    if (cache_vector_b) {
+    if (app_data_vector_b) {
       // Variable VECTOR_B reading is not handled, because it is never read
       // inside WATER_EXAMPLE.
-      laplace_solver_wrapper.b_array(1).n = cache_vector_b->data()->n;
-      laplace_solver_wrapper.b_array(1).x = cache_vector_b->data()->x;
+      laplace_solver_wrapper.b_array(1).n = app_data_vector_b->data()->n;
+      laplace_solver_wrapper.b_array(1).x = app_data_vector_b->data()->x;
     }
     */
     // INDEX_C2M.
-    if (cache_index_c2m) {
+    if (app_data_index_c2m) {
       typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
-      T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
+      T_SCALAR_ARRAY* index_c2m = app_data_index_c2m->data();
       laplace_solver_wrapper.cell_index_to_matrix_index.Nimbus_Delete_Base_Pointer_Scalar();
       T_SCALAR_ARRAY::Nimbus_Copy_Arrays(
           laplace_solver_wrapper.cell_index_to_matrix_index, *index_c2m);

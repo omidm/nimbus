@@ -47,7 +47,7 @@
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_UTILS_H_
 
 #include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/cache_options.h"
+#include "application/water_multiple/app_data_options.h"
 #include "application/water_multiple/options.h"
 #include "application/water_multiple/parameters.h"
 #include "shared/geometric_region.h"
@@ -70,13 +70,13 @@ Range GridToRange(
      const GeometricRegion& global_region,
      const GeometricRegion& local_region);
 
-// Get cache objects for initialization
-void GetAppCacheObjects(
+// Get app_data objects for initialization
+void GetAppAppObjects(
     const InitConfig &init_config,
     const DataConfig &data_config,
     const nimbus::Job &job,
     const nimbus::DataArray &da,
-    AppCacheObjects *cache);
+    AppAppObjects *app_data);
 
 // Initialzes WATER_EXAMPLE and WATER_DRIVER with the given "init_config"
 // and the simulation variables in data array.

@@ -36,43 +36,43 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#include "application/water_multiple/cache_prototypes.h"
+#include "application/water_multiple/app_data_prototypes.h"
 #include "application/water_multiple/parameters.h"
 
 namespace application {
 
-CacheFaceArray<T> kCacheFaceVel(kDefaultRegion, 0, true, "face_vel");
-CacheFaceArray<T> kCacheFaceVelGhost(kDefaultRegion, 3, true, "face_vel_ghost");
-CacheFaceArray<bool> kCachePsiN(kDefaultRegion, 1, true, "psi_n");
+AppDataFaceArray<T> kAppDataFaceVel(kDefaultRegion, 0, true, "face_vel");
+AppDataFaceArray<T> kAppDataFaceVelGhost(kDefaultRegion, 3, true, "face_vel_ghost");
+AppDataFaceArray<bool> kAppDataPsiN(kDefaultRegion, 1, true, "psi_n");
 
-CacheScalarArray<T> kCachePhi3(kDefaultRegion, 3, true, "phi_3");
-CacheScalarArray<T> kCachePhi7(kDefaultRegion, 7, true, "phi_7");
-CacheScalarArray<T> kCachePhi8(kDefaultRegion, 8, true, "phi_8");
-CacheScalarArray<bool> kCachePsiD(kDefaultRegion, 1, true, "psi_d");
+AppDataScalarArray<T> kAppDataPhi3(kDefaultRegion, 3, true, "phi_3");
+AppDataScalarArray<T> kAppDataPhi7(kDefaultRegion, 7, true, "phi_7");
+AppDataScalarArray<T> kAppDataPhi8(kDefaultRegion, 8, true, "phi_8");
+AppDataScalarArray<bool> kAppDataPsiD(kDefaultRegion, 1, true, "psi_d");
 
 // Varibales for projection.
-CacheScalarArray<T> kCachePressure(kDefaultRegion, 1, true, "pressure");
-CacheScalarArray<int> kCacheColors(kDefaultRegion, 1, true,
+AppDataScalarArray<T> kAppDataPressure(kDefaultRegion, 1, true, "pressure");
+AppDataScalarArray<int> kAppDataColors(kDefaultRegion, 1, true,
                                    "filled_region_colors");
-CacheScalarArray<T> kCacheDivergence(kDefaultRegion, 1, true, "divergence");
-// TODO(quhang): this cache variable is questionable, because it cannot be
+AppDataScalarArray<T> kAppDataDivergence(kDefaultRegion, 1, true, "divergence");
+// TODO(quhang): this app_data variable is questionable, because it cannot be
 // deleted if meta_p is being used.
-CacheRawGridArray kCacheIndexC2M(kDefaultRegion, true, "index_c2m");
+AppDataRawGridArray kAppDataIndexC2M(kDefaultRegion, true, "index_c2m");
 
-CacheParticleLevelsetEvolution<float> kCachePLE(kDefaultRegion, 3, true,
+AppDataParticleLevelsetEvolution<float> kAppDataPLE(kDefaultRegion, 3, true,
                                                 "particle_container");
 
-CacheSparseMatrix kCacheSparseMatrixA(kDefaultRegion, true, "matrix_c");
-CacheSparseMatrix kCacheSparseMatrixC(kDefaultRegion, true, "matrix_a");
+AppDataSparseMatrix kAppDataSparseMatrixA(kDefaultRegion, true, "matrix_c");
+AppDataSparseMatrix kAppDataSparseMatrixC(kDefaultRegion, true, "matrix_a");
 
-CacheArrayM2C kCacheArrayM2C(kDefaultRegion, true, "index_m2c");
+AppDataArrayM2C kAppDataArrayM2C(kDefaultRegion, true, "index_m2c");
 
-CacheCompressedScalarArray<float> kCacheMetaP(kDefaultRegion, 1, true,
+AppDataCompressedScalarArray<float> kAppDataMetaP(kDefaultRegion, 1, true,
                                               "vector_p_meta_format");
 
-CacheVector kCacheVectorB(kDefaultRegion, true, "vector_b");
-CacheVector kCacheVectorPressure(kDefaultRegion, true, "vector_pressure");
-CacheVector kCacheVectorZ(kDefaultRegion, true, "vector_z");
-CacheVector kCacheVectorTemp(kDefaultRegion, true, "vector_temp");
+AppDataVector kAppDataVectorB(kDefaultRegion, true, "vector_b");
+AppDataVector kAppDataVectorPressure(kDefaultRegion, true, "vector_pressure");
+AppDataVector kAppDataVectorZ(kDefaultRegion, true, "vector_z");
+AppDataVector kAppDataVectorTemp(kDefaultRegion, true, "vector_temp");
 } // namespace application
 

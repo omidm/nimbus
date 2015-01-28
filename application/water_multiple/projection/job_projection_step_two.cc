@@ -69,7 +69,7 @@ void JobProjectionStepTwo::Execute(
   dbg(APP_LOG, "Executing PROJECTION_STEP_TWO job.\n");
 
   InitConfig init_config;
-  init_config.use_cache = true;
+  init_config.use_app_data = true;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
   LoadParameter(params_str, &init_config);

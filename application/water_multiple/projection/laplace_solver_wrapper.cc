@@ -57,7 +57,7 @@ void LaplaceSolverWrapper::BindLaplaceAndInitialize(
   matrix_index_to_cell_index_array.Resize(number_of_regions);
   // cell_index_to_matrix_index.Resize(laplace->grid.Domain_Indices(1));
   // Intialize array since it may contain old data/ garbage when read from
-  // cache (added by Chinmayee)
+  // app_data (added by Chinmayee)
   // ARRAYS_COMPUTATIONS::Fill(cell_index_to_matrix_index.array, 0);
   // cell_index_to_matrix_index.hash_code = 0;
   A_array.Resize(number_of_regions);

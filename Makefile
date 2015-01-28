@@ -38,19 +38,19 @@ lib: $(LIBRARY)
 
 .PHONY: scheduler_t worker_t data_t shared_t
 scheduler_t: shared_t 
-	cd scheduler; make -j 12; cd ..
+	cd scheduler && make -j 12 && cd ..
 
 worker_t: shared_t
-	cd worker; make -j 12; cd ..
+	cd worker && make -j 12 && cd ..
 
 data_t: shared_t
-	cd data; make -j 12; cd ..
+	cd data && make -j 12 && cd ..
 
 shared_t:
-	cd shared; make -j 12; cd ..
+	cd shared && make -j 12 && cd ..
 
 leveldb_t:
-	cd leveldb; make -j 12; cd ..
+	cd leveldb && make -j 12 && cd ..
 
 $(LIBRARY): shared_t scheduler_t worker_t data_t leveldb_t
 	$(CPP) $(SHARED_FLAGS) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJFILES) -o $(LIBRARY) $(LINK_FLAG) $(LFLAGS)

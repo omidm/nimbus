@@ -49,7 +49,7 @@ public:
         const nimbus::DataArray &da);
     void Initialize(const nimbus::Job *job,
                     const nimbus::DataArray &da);
-    void InitializeUseCache(const nimbus::Job *job,
+    void InitializeUseAppData(const nimbus::Job *job,
                     const nimbus::DataArray &da);
 
     bool InitializeIncompressibleProjectionHelper(
@@ -65,7 +65,7 @@ public:
         PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >*
         particle_levelset_evolution,
         bool forced_alloc = false);
-    bool InitializeParticleLevelsetEvolutionHelperUseCache(
+    bool InitializeParticleLevelsetEvolutionHelperUseAppData(
         const application::DataConfig& data_config,
         const GRID<TV>& grid_input,
         PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >*

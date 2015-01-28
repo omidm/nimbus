@@ -87,15 +87,19 @@ class AppDataManager {
          * EXCLUSIVE or SHARED, and is ignored when there is no caching
          * \return A pointer to AppVar instance that application can use
          */
-        virtual AppVar *GetAppVar(const DataArray &read_set,
-                                  const GeometricRegion &read_region,
-                                  const DataArray &write_set,
-                                  const GeometricRegion &write_region,
-                                  const AppVar &prototype,
-                                  const GeometricRegion &region,
-                                  app_data::Access access = app_data::EXCLUSIVE,
-                                  void (*aux)(AppVar*, void*) = NULL,
-                                  void* aux_data = NULL) = 0;
+        AppVar *GetAppVar(const DataArray &read_set,
+                          const GeometricRegion &read_region,
+                          const DataArray &write_set,
+                          const GeometricRegion &write_region,
+                          const AppVar &prototype,
+                          const GeometricRegion &region,
+                          app_data::Access access = app_data::EXCLUSIVE,
+                          void (*aux)(AppVar*, void*) = NULL,
+                          void* aux_data = NULL) {
+            return (GetAppVarV(
+                        read_set, read_region, write_set, write_region,
+                        prototype, region, access, aux, aux_data));
+        }
 
         /**
          * \brief Requests an AppStruct instance of type prototype, from the
@@ -114,14 +118,19 @@ class AppDataManager {
          * EXCLUSIVE or SHARED
          * \return A pointer to AppStruct instance that application can use
          */
-        virtual AppStruct *GetAppStruct(const std::vector<app_data::type_id_t> &var_type,
-                                        const std::vector<DataArray> &read_sets,
-                                        const GeometricRegion &read_region,
-                                        const std::vector<DataArray> &write_sets,
-                                        const GeometricRegion &write_region,
-                                        const AppStruct &prototype,
-                                        const GeometricRegion &region,
-                                        app_data::Access access) = 0;
+        AppStruct *GetAppStruct(const std::vector<app_data::type_id_t> &var_type,
+                                const std::vector<DataArray> &read_sets,
+                                const GeometricRegion &read_region,
+                                const std::vector<DataArray> &write_sets,
+                                const GeometricRegion &write_region,
+                                const AppStruct &prototype,
+                                const GeometricRegion &region,
+                                app_data::Access access = app_data::EXCLUSIVE) {
+            return(GetAppStructV(
+                        var_type, read_sets, read_region,
+                        write_sets, write_region,
+                          prototype, region, access));
+        }
 
         /**
          * \brief Informs application data manager that access to app_object is
@@ -169,7 +178,58 @@ class AppDataManager {
          */
         virtual void SetLogNames(std::string wid_str) = 0;
 
-    private:
+    protected:
+        /**
+         * \brief Requests an AppVar instance of type prototype, from the
+         * AppDataManager
+         * \param read_set specifies the data that should be read in the
+         * AppVar instance
+         * \param read_region indicates read region
+         * \param write_set specifies the data that should be marked as being
+         * written
+         * \param write_region indicates write region
+         * \param prototype represents the application object type
+         * \param region is the application object region
+         * \access indicates whether application object access should be
+         * EXCLUSIVE or SHARED, and is ignored when there is no caching
+         * \return A pointer to AppVar instance that application can use
+         */
+        virtual AppVar *GetAppVarV(const DataArray &read_set,
+                                   const GeometricRegion &read_region,
+                                   const DataArray &write_set,
+                                   const GeometricRegion &write_region,
+                                   const AppVar &prototype,
+                                   const GeometricRegion &region,
+                                   app_data::Access access,
+                                   void (*aux)(AppVar*, void*),
+                                   void* aux_data);
+
+        /**
+         * \brief Requests an AppStruct instance of type prototype, from the
+         * AppDataManager
+         * \param var_type specifies the application variable types for the
+         * lists in read_sets/ write_sets
+         * \param read_sets specifies the data that should be read in the
+         * AppVar instance
+         * \param read_region indicates read region
+         * \param write_sets specifies the data that should be marked as being
+         * written
+         * \param write_region indicates write region
+         * \param prototype represents the application object type
+         * \param region is the application object region
+         * \access indicates whether application object access should be
+         * EXCLUSIVE or SHARED
+         * \return A pointer to AppStruct instance that application can use
+         */
+        virtual AppStruct *GetAppStructV(const std::vector<app_data::type_id_t> &var_type,
+                                         const std::vector<DataArray> &read_sets,
+                                         const GeometricRegion &read_region,
+                                         const std::vector<DataArray> &write_sets,
+                                         const GeometricRegion &write_region,
+                                         const AppStruct &prototype,
+                                         const GeometricRegion &region,
+                                         app_data::Access access);
+
         FILE* time_log;
         FILE* block_log;
         FILE* alloc_log;

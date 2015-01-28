@@ -40,9 +40,9 @@
 #include <vector>
 
 #include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/cache_data_include.h"
-#include "application/water_multiple/cache_options.h"
-#include "application/water_multiple/cache_prototypes.h"
+#include "application/water_multiple/app_data_include.h"
+#include "application/water_multiple/app_data_options.h"
+#include "application/water_multiple/app_data_prototypes.h"
 #include "application/water_multiple/data_names.h"
 #include "application/water_multiple/options.h"
 #include "application/water_multiple/parameters.h"
@@ -80,12 +80,12 @@ Range GridToRange(
   return Range(start, end);
 }
 
-void GetAppCacheObjects(
+void GetAppAppObjects(
     const InitConfig &init_config,
     const DataConfig &data_config,
     const nimbus::Job &job,
     const nimbus::DataArray &da,
-    AppCacheObjects *cache) {
+    AppAppObjects *app_data) {
   nimbus::GeometricRegion local_region = init_config.local_region;
   nimbus::GeometricRegion array_reg(local_region);
   nimbus::GeometricRegion array_reg_outer_1(array_reg.NewEnlarged(1));
@@ -93,7 +93,7 @@ void GetAppCacheObjects(
   nimbus::GeometricRegion array_reg_outer_7(array_reg.NewEnlarged(7));
   nimbus::GeometricRegion array_reg_outer_8(array_reg.NewEnlarged(8));
 
-  nimbus::CacheManager *cm = job.GetCacheManager();
+  nimbus::AppDataManager *cm = job.GetAppDataManager();
 
   // vector_b.
   if (data_config.GetFlag(DataConfig::VECTOR_B)) {
@@ -101,14 +101,14 @@ void GetAppCacheObjects(
     const std::string vector_b_string = std::string(APP_VECTOR_B);
     GetReadData(job, vector_b_string, da, &read);
     GetWriteData(job, vector_b_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* app_var =
         cm->GetAppVar(
             read, array_reg,
             write, array_reg,
-            kCacheVectorB, array_reg,
-            nimbus::cache::SHARED);
-    cache->vector_b = dynamic_cast<CacheVector*>(cache_var);
-    assert(cache->vector_b != NULL);
+            kAppDataVectorB, array_reg,
+            nimbus::app_data::SHARED);
+    app_data->vector_b = dynamic_cast<AppDataVector*>(app_var);
+    assert(app_data->vector_b != NULL);
   }
   // matrix_a.
   if (data_config.GetFlag(DataConfig::MATRIX_A)) {
@@ -116,14 +116,14 @@ void GetAppCacheObjects(
     const std::string matrix_a_string = std::string(APP_MATRIX_A);
     GetReadData(job, matrix_a_string, da, &read);
     GetWriteData(job, matrix_a_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* app_var =
         cm->GetAppVar(
             read, array_reg,
             write, array_reg,
-            kCacheSparseMatrixA, array_reg,
-            nimbus::cache::SHARED);
-    cache->matrix_a = dynamic_cast<CacheSparseMatrix*>(cache_var);
-    assert(cache->matrix_a != NULL);
+            kAppDataSparseMatrixA, array_reg,
+            nimbus::app_data::SHARED);
+    app_data->matrix_a = dynamic_cast<AppDataSparseMatrix*>(app_var);
+    assert(app_data->matrix_a != NULL);
   }
   // index_m2c.
   if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
@@ -131,14 +131,14 @@ void GetAppCacheObjects(
     const std::string index_m2c_string = std::string(APP_INDEX_M2C);
     GetReadData(job, index_m2c_string, da, &read);
     GetWriteData(job, index_m2c_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* app_var =
         cm->GetAppVar(
             read, array_reg,
             write, array_reg,
-            kCacheArrayM2C, array_reg,
-            nimbus::cache::SHARED);
-    cache->index_m2c = dynamic_cast<CacheArrayM2C*>(cache_var);
-    assert(cache->index_m2c != NULL);
+            kAppDataArrayM2C, array_reg,
+            nimbus::app_data::SHARED);
+    app_data->index_m2c = dynamic_cast<AppDataArrayM2C*>(app_var);
+    assert(app_data->index_m2c != NULL);
   }
   // pressure.
   if (data_config.GetFlag(DataConfig::PRESSURE)) {
@@ -146,14 +146,14 @@ void GetAppCacheObjects(
     const std::string pressure_string = std::string(APP_PRESSURE);
     GetReadData(job, pressure_string, da, &read);
     GetWriteData(job, pressure_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* app_var =
         cm->GetAppVar(
             read, array_reg_outer_1,
             write, array_reg_outer_1,
-            kCachePressure, array_reg_outer_1,
-            nimbus::cache::SHARED);
-    cache->pressure = dynamic_cast<CacheScalarArray<T>*>(cache_var);
-    assert(cache->pressure != NULL);
+            kAppDataPressure, array_reg_outer_1,
+            nimbus::app_data::SHARED);
+    app_data->pressure = dynamic_cast<AppDataScalarArray<T>*>(app_var);
+    assert(app_data->pressure != NULL);
   }
   // index_c2m.
   if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
@@ -161,14 +161,14 @@ void GetAppCacheObjects(
     const std::string index_c2m_string = std::string(APP_INDEX_C2M);
     GetReadData(job, index_c2m_string, da, &read);
     GetWriteData(job, index_c2m_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* app_var =
         cm->GetAppVar(
             read, array_reg,
             write, array_reg,
-            kCacheIndexC2M, array_reg,
-            nimbus::cache::SHARED);
-    cache->index_c2m = dynamic_cast<CacheRawGridArray*>(cache_var);
-    assert(cache->index_c2m != NULL);
+            kAppDataIndexC2M, array_reg,
+            nimbus::app_data::SHARED);
+    app_data->index_c2m = dynamic_cast<AppDataRawGridArray*>(app_var);
+    assert(app_data->index_c2m != NULL);
   }
   // filled_region_colors.
   if (data_config.GetFlag(DataConfig::REGION_COLORS)) {
@@ -176,14 +176,14 @@ void GetAppCacheObjects(
     const std::string color_string = std::string(APP_FILLED_REGION_COLORS);
     GetReadData(job, color_string, da, &read);
     GetWriteData(job, color_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* app_var =
         cm->GetAppVar(
             read, array_reg_outer_1,
             write, array_reg_outer_1,
-            kCacheColors, array_reg_outer_1,
-            nimbus::cache::SHARED);
-    cache->color = dynamic_cast<CacheScalarArray<int>*>(cache_var);
-    assert(cache->color != NULL);
+            kAppDataColors, array_reg_outer_1,
+            nimbus::app_data::SHARED);
+    app_data->color = dynamic_cast<AppDataScalarArray<int>*>(app_var);
+    assert(app_data->color != NULL);
   }
   // divergence.
   if (data_config.GetFlag(DataConfig::DIVERGENCE)) {
@@ -191,14 +191,14 @@ void GetAppCacheObjects(
     const std::string divergence_string = std::string(APP_DIVERGENCE);
     GetReadData(job, divergence_string, da, &read);
     GetWriteData(job, divergence_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* app_var =
         cm->GetAppVar(
             read, array_reg_outer_1,
             write, array_reg_outer_1,
-            kCacheDivergence, array_reg_outer_1,
-            nimbus::cache::SHARED);
-    cache->divergence = dynamic_cast<CacheScalarArray<T>*>(cache_var);
-    assert(cache->divergence != NULL);
+            kAppDataDivergence, array_reg_outer_1,
+            nimbus::app_data::SHARED);
+    app_data->divergence = dynamic_cast<AppDataScalarArray<T>*>(app_var);
+    assert(app_data->divergence != NULL);
   }
   // mac velocities
   if (data_config.GetFlag(DataConfig::VELOCITY))
@@ -207,14 +207,14 @@ void GetAppCacheObjects(
     const std::string fvstring = std::string(APP_FACE_VEL);
     GetReadData(job, fvstring, da, &read);
     GetWriteData(job, fvstring, da, &write);
-    nimbus::CacheVar *cache_var =
+    nimbus::AppVar *app_var =
       cm->GetAppVar(
           read, array_reg,
           write, array_reg,
-          kCacheFaceVel, array_reg,
-          nimbus::cache::SHARED);
-    cache->fv = dynamic_cast<CacheFaceArray<T> *>(cache_var);
-    assert(cache->fv != NULL);
+          kAppDataFaceVel, array_reg,
+          nimbus::app_data::SHARED);
+    app_data->fv = dynamic_cast<AppDataFaceArray<T> *>(app_var);
+    assert(app_data->fv != NULL);
   }
   // mac velocities ghost
   if (data_config.GetFlag(DataConfig::VELOCITY_GHOST))
@@ -223,14 +223,14 @@ void GetAppCacheObjects(
     const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
     GetReadData(job, fvgstring, da, &read);
     GetWriteData(job, fvgstring, da, &write);
-    nimbus::CacheObject *cache_var =
+    nimbus::AppObject *app_var =
       cm->GetAppVar(
           read, array_reg_outer_3,
           write, array_reg_outer_3,
-          kCacheFaceVelGhost, array_reg_outer_3,
-          nimbus::cache::SHARED);
-    cache->fvg = dynamic_cast<CacheFaceArray<T> *>(cache_var);
-    assert(cache->fvg != NULL);
+          kAppDataFaceVelGhost, array_reg_outer_3,
+          nimbus::app_data::SHARED);
+    app_data->fvg = dynamic_cast<AppDataFaceArray<T> *>(app_var);
+    assert(app_data->fvg != NULL);
   }
   // levelset
   {
@@ -256,38 +256,38 @@ void GetAppCacheObjects(
     if (l8w) write8 = write;
     nimbus::DataArray write_empty;
     if (l || lr || lw) {
-      nimbus::CacheVar *cache_var =
+      nimbus::AppVar *app_var =
         cm->GetAppVar(
             read3, array_reg_outer_3,
             write3, array_reg_outer_3,
-            kCachePhi3, array_reg_outer_3,
-            nimbus::cache::SHARED);
-      cache->phi3 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
-      assert(cache->phi3 != NULL);
+            kAppDataPhi3, array_reg_outer_3,
+            nimbus::app_data::SHARED);
+      app_data->phi3 = dynamic_cast<AppDataScalarArray<T> *>(app_var);
+      assert(app_data->phi3 != NULL);
     }
     if (l7r || l7w) {
-      if (cache->phi3)
-        cm->WriteImmediately(cache->phi3, write7);
-      nimbus::CacheVar *cache_var =
+      if (app_data->phi3)
+        cm->WriteImmediately(app_data->phi3, write7);
+      nimbus::AppVar *app_var =
         cm->GetAppVar(
             read7, array_reg_outer_7,
             write7, array_reg_outer_7,
-            kCachePhi7, array_reg_outer_7,
-            nimbus::cache::SHARED);
-      cache->phi7 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
-      assert(cache->phi7 != NULL);
+            kAppDataPhi7, array_reg_outer_7,
+            nimbus::app_data::SHARED);
+      app_data->phi7 = dynamic_cast<AppDataScalarArray<T> *>(app_var);
+      assert(app_data->phi7 != NULL);
     }
     if (l8r || l8w) {
-      if (cache->phi3)
-	cm->WriteImmediately(cache->phi3, write8);
-      nimbus::CacheVar *cache_var =
+      if (app_data->phi3)
+	cm->WriteImmediately(app_data->phi3, write8);
+      nimbus::AppVar *app_var =
         cm->GetAppVar(
             read8, array_reg_outer_8,
             write8, array_reg_outer_8,
-            kCachePhi8, array_reg_outer_8,
-            nimbus::cache::SHARED);
-      cache->phi8 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
-      assert(cache->phi8 != NULL);
+            kAppDataPhi8, array_reg_outer_8,
+            nimbus::app_data::SHARED);
+      app_data->phi8 = dynamic_cast<AppDataScalarArray<T> *>(app_var);
+      assert(app_data->phi8 != NULL);
     }
   }
   // psi_d.
@@ -297,14 +297,14 @@ void GetAppCacheObjects(
     const std::string psi_d_string = std::string(APP_PSI_D);
     GetReadData(job, psi_d_string, da, &read);
     GetWriteData(job, psi_d_string, da, &write);
-    nimbus::CacheVar *cache_var =
+    nimbus::AppVar *app_var =
       cm->GetAppVar(
           read, array_reg_outer_1,
           write, array_reg_outer_1,
-          kCachePsiD, array_reg_outer_1,
-          nimbus::cache::SHARED);
-    cache->psi_d = dynamic_cast<CacheScalarArray<bool> *>(cache_var);
-    assert(cache->psi_d != NULL);
+          kAppDataPsiD, array_reg_outer_1,
+          nimbus::app_data::SHARED);
+    app_data->psi_d = dynamic_cast<AppDataScalarArray<bool> *>(app_var);
+    assert(app_data->psi_d != NULL);
   }
   // psi_n.
   if (data_config.GetFlag(DataConfig::PSI_N))
@@ -313,14 +313,14 @@ void GetAppCacheObjects(
     const std::string psi_n_string = std::string(APP_PSI_N);
     GetReadData(job, psi_n_string, da, &read);
     GetWriteData(job, psi_n_string, da, &write);
-    nimbus::CacheVar *cache_var =
+    nimbus::AppVar *app_var =
       cm->GetAppVar(
           read, array_reg_outer_1,
           write, array_reg_outer_1,
-          kCachePsiN, array_reg_outer_1,
-          nimbus::cache::SHARED);
-    cache->psi_n = dynamic_cast<CacheFaceArray<bool> *>(cache_var);
-    assert(cache->psi_n != NULL);
+          kAppDataPsiN, array_reg_outer_1,
+          nimbus::app_data::SHARED);
+    app_data->psi_n = dynamic_cast<AppDataFaceArray<bool> *>(app_var);
+    assert(app_data->psi_n != NULL);
   }
   bool dflag[] = {  data_config.GetFlag(DataConfig::POSITIVE_PARTICLE),
                     data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE),
@@ -328,9 +328,9 @@ void GetAppCacheObjects(
                     data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)
                  };
   if (dflag[POS] || dflag[NEG] || dflag[POS_REM] || dflag[NEG_REM]) {
-    nimbus::cache::type_id_t vars[] = {POS, NEG, POS_REM, NEG_REM};
-    std::vector<nimbus::cache::type_id_t> var_type(
-        vars, vars + sizeof(vars)/sizeof(nimbus::cache::type_id_t));
+    nimbus::app_data::type_id_t vars[] = {POS, NEG, POS_REM, NEG_REM};
+    std::vector<nimbus::app_data::type_id_t> var_type(
+        vars, vars + sizeof(vars)/sizeof(nimbus::app_data::type_id_t));
     std::vector<nimbus::DataArray> read(4), write(4);
     std::string dtype[] = { APP_POS_PARTICLES,
                             APP_NEG_PARTICLES,
@@ -343,34 +343,34 @@ void GetAppCacheObjects(
       GetReadData(job, dtype[t], da, &read[t], false);
       GetWriteData(job, dtype[t], da, &write[t], false);
     }
-    nimbus::CacheStruct *cache_struct =
+    nimbus::AppStruct *app_struct =
       cm->GetAppStruct(
           var_type,
           read, array_reg_outer_3,
           write, array_reg_outer_3,
-          kCachePLE, array_reg_outer_3,
-          nimbus::cache::SHARED);
-    cache->ple = dynamic_cast<CacheParticleLevelsetEvolution<T> *>(cache_struct);
-    assert(cache->ple != NULL);
+          kAppDataPLE, array_reg_outer_3,
+          nimbus::app_data::SHARED);
+    app_data->ple = dynamic_cast<AppDataParticleLevelsetEvolution<T> *>(app_struct);
+    assert(app_data->ple != NULL);
   }
 
   nimbus::StaticConfigManager *config_manager = job.GetStaticConfigManager();
   if (data_config.GetFlag(DataConfig::VALID_MASK)) {
-    cache->static_config_valid_mask = dynamic_cast<StaticConfigValidMask*>(
+    app_data->static_config_valid_mask = dynamic_cast<StaticConfigValidMask*>(
         config_manager->GetStaticConfigVariable(STATIC_CONFIG_VALID_MASK,
                                                 local_region));
-    assert(cache->static_config_valid_mask != NULL);
+    assert(app_data->static_config_valid_mask != NULL);
   }
   if (data_config.GetFlag(DataConfig::U_INTERFACE)) {
-    cache->static_config_u_interface = dynamic_cast<StaticConfigUInterface*>(
+    app_data->static_config_u_interface = dynamic_cast<StaticConfigUInterface*>(
         config_manager->GetStaticConfigVariable(STATIC_CONFIG_U_INTERFACE,
                                                 local_region));
-    assert(cache->static_config_u_interface != NULL);
+    assert(app_data->static_config_u_interface != NULL);
   }
-  cache->static_config_force = dynamic_cast<StaticConfigForce*>(
+  app_data->static_config_force = dynamic_cast<StaticConfigForce*>(
       config_manager->GetStaticConfigVariable(STATIC_CONFIG_FORCE,
                                               local_region));
-  assert(cache->static_config_force != NULL);
+  assert(app_data->static_config_force != NULL);
 }
 
 bool InitializeExampleAndDriver(
@@ -380,29 +380,19 @@ bool InitializeExampleAndDriver(
     const nimbus::DataArray& da,
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver) {
-
-//   static Log init_log(std::string("physbam-init-log"));
-//
-// #ifdef PHYSBAM_INIT_LOG
-//   {
-//     std::stringstream msg;
-//     msg << "~~~ App InitializeExampleAndDriver start : " << init_log.GetTime();
-//     init_log.WriteToFile(msg.str());
-//   }
-// #endif
-
-
   dbg(APP_LOG, "Enter initialize_example_driver.\n");
   dbg(APP_LOG, "Global region: %s\n", init_config.global_region.ToNetworkData().c_str());
   dbg(APP_LOG, "Local region: %s\n", init_config.local_region.ToNetworkData().c_str());
   {
     application::ScopeTimer* example_scope_timer = NULL;
-    if (init_config.use_cache && kUseCache) {
-      application::ScopeTimer* cache_scope_timer =
-          new application::ScopeTimer("cache_lookup");
-      AppCacheObjects cache;
-      GetAppCacheObjects(init_config, data_config, *job, da, &cache);
-      delete cache_scope_timer;
+    // BRANCH ON CACHE/ NO CACHE
+    if (init_config.use_app_data && kUseAppData) {
+      // CASE CACHE
+      application::ScopeTimer* app_data_scope_timer =
+          new application::ScopeTimer("app_data_lookup");
+      AppAppObjects app_data;
+      GetAppAppObjects(init_config, data_config, *job, da, &app_data);
+      delete app_data_scope_timer;
       example_scope_timer =
           new application::ScopeTimer("init_example");
 
@@ -412,19 +402,20 @@ bool InitializeExampleAndDriver(
           ->GetStaticConfigVariable(STATIC_CONFIG_COLLISION_BODY,
                                     init_config.local_region));
       assert(collision_body != NULL);
-      if (cache.ple)
+      if (app_data.ple)
         example = new PhysBAM::WATER_EXAMPLE<TV>(collision_body,
                                                  PhysBAM::STREAM_TYPE((RW())),
-                                                 &cache,
-                                                 cache.ple->data(),
+                                                 &app_data,
+                                                 app_data.ple->data(),
                                                  &job->worker_thread()->allocated_threads);
       else
         example = new PhysBAM::WATER_EXAMPLE<TV>(collision_body,
                                                  PhysBAM::STREAM_TYPE((RW())),
-                                                 &cache,
+                                                 &app_data,
                                                  &job->worker_thread()->allocated_threads);
-      example->use_cache = true;
+      example->use_app_data = true;
     } else {
+      // CASE NO CACE
       example_scope_timer =
           new application::ScopeTimer("init_example");
       StaticConfigCollisionBody* collision_body
@@ -436,8 +427,9 @@ bool InitializeExampleAndDriver(
       example = new PhysBAM::WATER_EXAMPLE<TV>(collision_body,
                                                PhysBAM::STREAM_TYPE((RW())),
                                                &job->worker_thread()->allocated_threads);
-      example->use_cache = false;
+      example->use_app_data = false;
     }
+    // END BRANCH ON CACHE/ NO CACHE
     // parameters for nimbus
     example->local_region = init_config.local_region;
     example->kScale = init_config.global_region.dx();
@@ -445,7 +437,7 @@ bool InitializeExampleAndDriver(
         init_config.local_region.dx(),
         init_config.local_region.dy(),
         init_config.local_region.dz());
-    // physbam intiialization
+    // physbam grid and source intiialization
     example->Initialize_Grid(
         TV_INT(init_config.local_region.dx(),
           init_config.local_region.dy(),
@@ -463,24 +455,14 @@ bool InitializeExampleAndDriver(
     driver->current_frame = init_config.frame;
     driver->time = init_config.time;
     dbg(APP_LOG, "Before enter driver->Initialize.\n");
-    // physbam initialization
+    // physbam driver initialization
     if (init_config.init_phase)
       driver->InitializeFirstDistributed(job, da);
-      // driver->InitializeFirst(job, da);
-    else if (init_config.use_cache && kUseCache)
-      driver->InitializeUseCache(job, da);
+    else if (init_config.use_app_data && kUseAppData)
+      driver->InitializeUseAppData(job, da);
     else
       driver->Initialize(job, da);
   }
-
-// #ifdef PHYSBAM_INIT_LOG
-//   {
-//     std::stringstream msg;
-//     msg << "~~~ App InitializeExampleAndDriver end : " << init_log.GetTime();
-//     init_log.WriteToFile(msg.str());
-//   }
-// #endif
-
   return true;
 }
 

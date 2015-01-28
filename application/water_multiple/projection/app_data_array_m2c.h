@@ -33,47 +33,58 @@
  */
 
 /*
- * Author: Chinmayee Shah <chshah@stanford.edu>
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_ARRAY_M2C_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_ARRAY_M2C_H_
 
-#include "application/water_multiple/cache_data_include.h"
+#include <string>
+
 #include "application/water_multiple/parameters.h"
+#include "application/water_multiple/physbam_include.h"
+#include "application/water_multiple/projection/data_raw_array_m2c.h"
+#include "data/app_data/app_var.h"
+#include "shared/geometric_region.h"
+#include "worker/data.h"
 
 namespace application {
 
-extern CacheFaceArray<T> kCacheFaceVel;
-extern CacheFaceArray<T> kCacheFaceVelGhost;
-extern CacheFaceArray<bool> kCachePsiN;
+class AppDataArrayM2C : public nimbus::AppVar {
+ public:
+  typedef PhysBAM::ARRAY<application::TV_INT> DATA_TYPE;
+  explicit AppDataArrayM2C(const nimbus::GeometricRegion& global_reg,
+                         bool make_proto,
+                         const std::string& name);
 
-extern CacheScalarArray<T> kCachePhi3;
-extern CacheScalarArray<T> kCachePhi7;
-extern CacheScalarArray<T> kCachePhi8;
-extern CacheScalarArray<bool> kCachePsiD;
+  DATA_TYPE* data() {
+    return data_;
+  }
+  void set_data(DATA_TYPE* d) {
+    data_ = d;
+  }
 
-// Varibales for projection.
-extern CacheScalarArray<T> kCachePressure;
-extern CacheScalarArray<int> kCacheColors;
-extern CacheScalarArray<T> kCacheDivergence;
-extern CacheRawGridArray kCacheIndexC2M;
+  virtual size_t memory_size() {
+    return data_ ? sizeof(*this) + data_->memory_size() : sizeof(*this);
+  }
 
-extern CacheParticleLevelsetEvolution<float> kCachePLE;
+ protected:
+  explicit AppDataArrayM2C(const nimbus::GeometricRegion& global_reg,
+                         const nimbus::GeometricRegion& ob_reg);
 
-extern CacheSparseMatrix kCacheSparseMatrixA;
-extern CacheSparseMatrix kCacheSparseMatrixC;
+  virtual nimbus::AppVar* CreateNew(const nimbus::GeometricRegion &ob_reg) const;
 
-extern CacheArrayM2C kCacheArrayM2C;
+  virtual void ReadAppData(const nimbus::DataArray& read_set,
+                           const nimbus::GeometricRegion& read_reg);
+  virtual void WriteAppData(const nimbus::DataArray& write_set,
+                              const nimbus::GeometricRegion& write_reg) const;
 
-extern CacheCompressedScalarArray<float> kCacheMetaP;
+ private:
+  nimbus::GeometricRegion global_region_;
+  nimbus::GeometricRegion local_region_;
+  DATA_TYPE* data_;
+};  // class AppDataArrayM2C
 
-extern CacheVector kCacheVectorB;
-extern CacheVector kCacheVectorPressure;
-extern CacheVector kCacheVectorZ;
-extern CacheVector kCacheVectorTemp;
+}  // namespace application
 
-
-} // namespace application
-
-#endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_ARRAY_M2C_H_

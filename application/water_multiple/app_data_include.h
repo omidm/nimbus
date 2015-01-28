@@ -36,56 +36,20 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_
 
-#include "application/water_multiple/cache_data_include.h"
-#include "application/water_multiple/cache_prototypes.h"
+#include "application/water_multiple/app_data_compressed_scalar_array.h"
+#include "application/water_multiple/app_data_face_array.h"
+#include "application/water_multiple/app_data_particle_levelset_evolution.h"
+#include "application/water_multiple/app_data_scalar_array.h"
+#include "application/water_multiple/projection/app_data_sparse_matrix.h"
+#include "application/water_multiple/projection/app_data_array_m2c.h"
+#include "application/water_multiple/projection/app_data_vector.h"
+#include "application/water_multiple/projection/app_data_raw_grid_array.h"
+#include "application/water_multiple/static_config_valid_mask.h"
+#include "application/water_multiple/static_config_u_interface.h"
+#include "application/water_multiple/static_config_force.h"
+#include "application/water_multiple/static_config_collision_body.h"
 
-namespace application {
-
-struct AppCacheObjects {
-  CacheFaceArray<T> *fv;
-  CacheFaceArray<T> *fvg;
-  CacheFaceArray<bool> *psi_n;
-  CacheScalarArray<T> *phi3;
-  CacheScalarArray<T> *phi7;
-  CacheScalarArray<T> *phi8;
-  CacheScalarArray<bool> *psi_d;
-  CacheParticleLevelsetEvolution<T> *ple;
-  CacheScalarArray<T> *pressure;
-  CacheScalarArray<int> *color;
-  CacheScalarArray<T> *divergence;
-  CacheSparseMatrix *matrix_a;
-  CacheArrayM2C * index_m2c;
-  CacheRawGridArray *index_c2m;
-  CacheVector* vector_b;
-  StaticConfigValidMask* static_config_valid_mask;
-  StaticConfigUInterface* static_config_u_interface;
-  StaticConfigForce* static_config_force;
-
-  AppCacheObjects() {
-    fv    = NULL;
-    fvg   = NULL;
-    psi_n = NULL;
-    phi3  = NULL;
-    phi7  = NULL;
-    phi8  = NULL;
-    psi_d = NULL;
-    ple   = NULL;
-    pressure = NULL;
-    color = NULL;
-    divergence = NULL;
-    matrix_a = NULL;
-    index_m2c = NULL;
-    index_c2m = NULL;
-    vector_b = NULL;
-    static_config_valid_mask = NULL;
-    static_config_u_interface = NULL;
-    static_config_force = NULL;
-  }
-};
-
-}  // namespace application
-
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_
+#endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_

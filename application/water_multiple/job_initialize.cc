@@ -78,8 +78,8 @@ namespace application {
         // Free resources.
         DestroyExampleAndDriver(example, driver);
 
-        // This job does not save anything to cache, because it does not use
-        // cache. This job initializes the nimbus objects, and the cache
+        // This job does not save anything to app_data, because it does not use
+        // app_data. This job initializes the nimbus objects, and the app_data
         // objects are initialized using the nimbus objects by later jobs.
 
         dbg(APP_LOG, "Completed executing initialize job\n");

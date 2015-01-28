@@ -111,17 +111,17 @@ class ProjectionDriver {
     projection_data.iteration = 0;
     projection_data.matrix_a = NULL;
     projection_data.matrix_index_to_cell_index = NULL;
-    cache_vector_z = NULL;
-    cache_vector_b = NULL;
-    cache_vector_pressure = NULL;
-    cache_vector_temp = NULL;
-    cache_pressure = NULL;
-    cache_vector_p = NULL;
-    cache_matrix_a = NULL;
-    cache_matrix_c = NULL;
-    cache_index_m2c = NULL;
-    cache_index_c2m = NULL;
-    cache_meta_p = NULL;
+    app_data_vector_z = NULL;
+    app_data_vector_b = NULL;
+    app_data_vector_pressure = NULL;
+    app_data_vector_temp = NULL;
+    app_data_pressure = NULL;
+    app_data_vector_p = NULL;
+    app_data_matrix_a = NULL;
+    app_data_matrix_c = NULL;
+    app_data_index_m2c = NULL;
+    app_data_index_c2m = NULL;
+    app_data_meta_p = NULL;
   }
 
   virtual ~ProjectionDriver() {
@@ -178,19 +178,19 @@ class ProjectionDriver {
   DataConfig& data_config;
 
   SPARSE_MATRIX_PARTITION partition;
-  typedef typename application::CacheScalarArray<T> TCacheScalarArray;
-  typedef typename application::CacheScalarArray<int> IntCacheScalarArray;
-  TCacheScalarArray *cache_pressure;
-  TCacheScalarArray *cache_vector_p;
-  application::CacheRawGridArray *cache_index_c2m;
-  application::CacheSparseMatrix *cache_matrix_a;
-  application::CacheSparseMatrix *cache_matrix_c;
-  application::CacheArrayM2C * cache_index_m2c;
-  application::CacheCompressedScalarArray<float>* cache_meta_p;
-  application::CacheVector* cache_vector_z;
-  application::CacheVector* cache_vector_b;
-  application::CacheVector* cache_vector_pressure;
-  application::CacheVector* cache_vector_temp;
+  typedef typename application::AppDataScalarArray<T> TAppDataScalarArray;
+  typedef typename application::AppDataScalarArray<int> IntAppDataScalarArray;
+  TAppDataScalarArray *app_data_pressure;
+  TAppDataScalarArray *app_data_vector_p;
+  application::AppDataRawGridArray *app_data_index_c2m;
+  application::AppDataSparseMatrix *app_data_matrix_a;
+  application::AppDataSparseMatrix *app_data_matrix_c;
+  application::AppDataArrayM2C * app_data_index_m2c;
+  application::AppDataCompressedScalarArray<float>* app_data_meta_p;
+  application::AppDataVector* app_data_vector_z;
+  application::AppDataVector* app_data_vector_b;
+  application::AppDataVector* app_data_vector_pressure;
+  application::AppDataVector* app_data_vector_temp;
 
   template<class TYPE> TYPE Global_Sum(const TYPE& input) {
     return input;
@@ -200,7 +200,7 @@ class ProjectionDriver {
   }
 
   void Initialize(int local_n, int interior_n);
-  void Cache_Initialize(int local_n, int interior_n);
+  void AppData_Initialize(int local_n, int interior_n);
   void LocalInitialize();
   void GlobalInitialize();
   void TransformPressureResult();
@@ -217,9 +217,9 @@ class ProjectionDriver {
   void CalculateLocalResidual();
   bool DecideToSpawnNextIteration();
   void LoadFromNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
-  void Cache_LoadFromNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
+  void AppData_LoadFromNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
   void SaveToNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
-  void Cache_SaveToNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
+  void AppData_SaveToNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
   template<typename TYPE_NAME> void ReadScalarData(
       const nimbus::Job* job, const nimbus::DataArray& da,
       const char* variable_name, TYPE_NAME& value);

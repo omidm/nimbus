@@ -70,7 +70,7 @@ void JobProjectionGlobalInitialize::Execute(
   dbg(APP_LOG, "Executing PROJECTION_GLOBA_INITIALIZE job.\n");
 
   InitConfig init_config;
-  init_config.use_cache = true;
+  init_config.use_app_data = true;
 
   // TODO(quhang), process iteration number.
   std::string params_str(params.ser_data().data_ptr_raw(),

@@ -59,7 +59,7 @@ class WorkerThread {
   explicit WorkerThread(WorkerManager* worker_manager);
   virtual ~WorkerThread();
   void SetLoggingInterface(
-      Log* log, Log* version_log, Log* data_hash_log, Log* cache_log,
+      Log* log, Log* version_log, Log* data_hash_log,
       HighResolutionTimer* timer);
   virtual void Run() = 0;
 
@@ -72,7 +72,6 @@ class WorkerThread {
   WorkerManager* worker_manager_;
   // Logging data structures.
   Log* log_;
-  Log* cache_log_;
   Log* version_log_;
   Log* data_hash_log_;
   HighResolutionTimer* timer_;
