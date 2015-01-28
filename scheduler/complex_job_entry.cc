@@ -117,6 +117,8 @@ const std::vector<Parameter>* ComplexJobEntry::parameters_p() const {
 
 
 void ComplexJobEntry::SetParentJobIds() {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   if (parent_job_ids_set_) {
     return;
   }
@@ -141,6 +143,8 @@ void ComplexJobEntry::SetParentJobIds() {
 
 
 size_t ComplexJobEntry::GetParentJobIds(std::list<job_id_t>* list) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   if (!parent_job_ids_set_) {
     SetParentJobIds();
   }
@@ -151,6 +155,8 @@ size_t ComplexJobEntry::GetParentJobIds(std::list<job_id_t>* list) {
 }
 
 size_t ComplexJobEntry::GetJobsForAssignment(JobEntryList* list, size_t max_num, bool append) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   assert(initialized_cursor_);
 
   size_t count = 0;
@@ -227,6 +233,8 @@ size_t ComplexJobEntry::GetJobsForAssignment(JobEntryList* list, size_t max_num,
 
 
 size_t ComplexJobEntry::GetParentJobs(ShadowJobEntryList* list, bool append) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   if (!parent_job_ids_set_) {
     SetParentJobIds();
   }
@@ -280,6 +288,8 @@ size_t ComplexJobEntry::GetParentJobs(ShadowJobEntryList* list, bool append) {
 }
 
 bool ComplexJobEntry::GetShadowJobEntryByIndex(size_t index, ShadowJobEntry*& shadow_job) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   assert(index >= 0);
   assert(index < inner_job_ids_.size());
 
@@ -289,25 +299,20 @@ bool ComplexJobEntry::GetShadowJobEntryByIndex(size_t index, ShadowJobEntry*& sh
 bool ComplexJobEntry::GetShadowJobEntry(job_id_t job_id,
                                         ShadowJobEntry*& shadow_job,
                                         size_t safe_idx) {
-  {
-    boost::unique_lock<boost::mutex> lock(mutex_);
-    if (removed_job_ids_.size() != 0) {
-      if (removed_job_ids_.find(job_id) != removed_job_ids_.end()) {
-        shadow_job = NULL;
-        return false;
-      }
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
+  if (removed_job_ids_.size() != 0) {
+    if (removed_job_ids_.find(job_id) != removed_job_ids_.end()) {
+      shadow_job = NULL;
+      return false;
     }
   }
 
-  {
-    boost::unique_lock<boost::mutex> lock(mutex_);
-    ShadowJobEntryMap::iterator iter = jobs_.find(job_id);
-    if (iter != jobs_.end()) {
-      shadow_job = iter->second;
-      return true;
-    }
+  ShadowJobEntryMap::iterator iter = jobs_.find(job_id);
+  if (iter != jobs_.end()) {
+    shadow_job = iter->second;
+    return true;
   }
-
 
   size_t index;
   if (safe_idx > 0) {
@@ -340,17 +345,15 @@ bool ComplexJobEntry::GetShadowJobEntry(job_id_t job_id,
                        tj,
                        this);
 
-  {
-    boost::unique_lock<boost::mutex> lock(mutex_);
-    jobs_[job_id] = sj;
-  }
-
+  jobs_[job_id] = sj;
   shadow_job = sj;
   return true;
 }
 
 
 ShadowJobEntryMap ComplexJobEntry::jobs() {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   if (!job_map_complete_) {
     CompleteJobMap();
   }
@@ -359,6 +362,8 @@ ShadowJobEntryMap ComplexJobEntry::jobs() {
 }
 
 const ShadowJobEntryMap* ComplexJobEntry::jobs_p() {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   if (!job_map_complete_) {
     CompleteJobMap();
   }
@@ -367,6 +372,8 @@ const ShadowJobEntryMap* ComplexJobEntry::jobs_p() {
 }
 
 void ComplexJobEntry::CompleteJobMap() {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   if (job_map_complete_) {
     return;
   }
@@ -406,6 +413,7 @@ void ComplexJobEntry::CompleteJobMap() {
 }
 
 bool ComplexJobEntry::GetJobIndex(job_id_t job_id, size_t* index) {
+  // It is only read only operation and safe, no locking required - omidm
   size_t idx = 0;
   std::vector<job_id_t>::iterator iter = inner_job_ids_.begin();
   for (; iter != inner_job_ids_.end(); ++iter) {
@@ -421,6 +429,8 @@ bool ComplexJobEntry::GetJobIndex(job_id_t job_id, size_t* index) {
 }
 
 bool ComplexJobEntry::DrainedAllJobsForAssignment() {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   return drained_all_;
 }
 
@@ -429,21 +439,26 @@ void ComplexJobEntry::MarkJobAssigned(job_id_t job_id) {
 }
 
 void ComplexJobEntry::MarkJobDone(job_id_t job_id) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   done_job_ids_.insert(job_id);
 }
 
 bool ComplexJobEntry::AllJobsDone() {
-  boost::unique_lock<boost::mutex> lock(mutex_);
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   return (done_job_ids_.size() == inner_job_ids_.size());
 }
 
 void ComplexJobEntry::MarkJobRemoved(job_id_t job_id) {
-  boost::unique_lock<boost::mutex> lock(mutex_);
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   removed_job_ids_.insert(job_id);
 }
 
 bool ComplexJobEntry::AllJobsRemoved() {
-  boost::unique_lock<boost::mutex> lock(mutex_);
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   return (removed_job_ids_.size() == inner_job_ids_.size());
 }
 

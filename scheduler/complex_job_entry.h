@@ -150,7 +150,6 @@ class ComplexJobEntry : public JobEntry {
     std::vector<Parameter> parameters_;
     IdPool done_job_ids_;
     IdPool removed_job_ids_;
-    boost::mutex mutex_;
     ShadowJobEntryMap jobs_;
     std::list<size_t> parent_job_ids_;
     bool parent_job_ids_set_;
@@ -158,6 +157,8 @@ class ComplexJobEntry : public JobEntry {
     Cursor cursor_;
     bool drained_all_;
     bool initialized_cursor_;
+
+    boost::recursive_mutex mutex_;
 
     void SetParentJobIds();
 
