@@ -51,6 +51,7 @@
 #include "data/app_data/app_object.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
+#include "worker/app_data_manager.h"
 #include "worker/app_data_managers/cache_manager.h"
 #include "worker/app_data_managers/cache_table.h"
 #include "worker/data.h"
@@ -82,6 +83,8 @@ CacheManager::CacheManager() {
     pthread_mutex_init(&cache_lock, NULL);
     pthread_cond_init(&cache_cond, NULL);
 }
+
+CacheManager::~CacheManager() {}
 
 /**
  * \detials CacheManager writes back all the dirty data from write_sets back to

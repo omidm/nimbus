@@ -110,7 +110,7 @@ public:
     StaticConfigForce* static_config_force;
     StaticConfigCollisionBody* static_config_collision_body;
     // app_data objects
-    bool use_app_data;
+    bool use_cached_app_data;
     typedef typename application::AppDataFaceArray<T> TAppDataFaceArray;
     typedef typename application::AppDataFaceArray<bool> BoolAppDataFaceArray;
     typedef typename application::AppDataScalarArray<T> TAppDataScalarArray;

@@ -63,7 +63,7 @@ WATER_EXAMPLE(StaticConfigCollisionBody* app_data_collision_body,
     boundary(0),
     collision_bodies_affecting_fluid(app_data_collision_body!=NULL?app_data_collision_body->GetData():NULL)
 {
-    use_app_data   = false;
+    use_cached_app_data   = false;
     app_data_fv    = NULL;
     app_data_fvg   = NULL;
     app_data_psi_n = NULL;
@@ -113,7 +113,7 @@ WATER_EXAMPLE(StaticConfigCollisionBody* app_data_collision_body,
     boundary(0),
     collision_bodies_affecting_fluid(app_data_collision_body!=NULL?app_data_collision_body->GetData():NULL)
 {
-    use_app_data   = false;
+    use_cached_app_data   = false;
     app_data_fv    = app_data->fv;
     app_data_fvg   = app_data->fvg;
     app_data_psi_n = app_data->psi_n;
@@ -164,7 +164,7 @@ WATER_EXAMPLE(StaticConfigCollisionBody* app_data_collision_body,
     boundary(0),
     collision_bodies_affecting_fluid(app_data_collision_body!=NULL?app_data_collision_body->GetData():NULL)
 {
-    use_app_data   = false;
+    use_cached_app_data   = false;
     app_data_fv    = app_data->fv;
     app_data_fvg   = app_data->fvg;
     app_data_psi_n = app_data->psi_n;
@@ -722,7 +722,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     }
 
     application::ScopeTimer scope_timer("saving_water_example");
-    if (!(use_app_data && application::kUseAppData)) {
+    if (!(use_cached_app_data && application::kUseCachedAppData)) {
       Save_To_Nimbus_No_AppData(job, da, frame);
       return;
     }
@@ -1253,7 +1253,7 @@ template<class TV> void WATER_EXAMPLE<TV>::
 Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
     application::ScopeTimer scope_timer("loading_water_example");
-    if (!(use_app_data && application::kUseAppData)) {
+    if (!(use_cached_app_data && application::kUseCachedAppData)) {
       Load_From_Nimbus_No_AppData(job, da, frame);
       return;
     }

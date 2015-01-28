@@ -67,12 +67,6 @@ class GeometricRegion;
 class AppDataManager {
     public:
         /**
-         * \brief Creates an AppDataManager instance
-         * \return Constructed AppDataManager instance
-         */
-        AppDataManager() {}
-
-        /**
          * \brief Requests an AppVar instance of type prototype, from the
          * AppDataManager
          * \param read_set specifies the data that should be read in the
@@ -202,7 +196,7 @@ class AppDataManager {
                                    const GeometricRegion &region,
                                    app_data::Access access,
                                    void (*aux)(AppVar*, void*),
-                                   void* aux_data);
+                                   void* aux_data) = 0;
 
         /**
          * \brief Requests an AppStruct instance of type prototype, from the
@@ -228,7 +222,7 @@ class AppDataManager {
                                          const GeometricRegion &write_region,
                                          const AppStruct &prototype,
                                          const GeometricRegion &region,
-                                         app_data::Access access);
+                                         app_data::Access access) = 0;
 
         FILE* time_log;
         FILE* block_log;

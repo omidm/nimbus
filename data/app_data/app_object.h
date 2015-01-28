@@ -65,6 +65,7 @@ class GeometricRegion;
  */
 class  AppObject {
     // list friend classes here
+    friend class AppDataManager;
     friend class CacheManager;
     friend class CacheTable;
     friend class Data;

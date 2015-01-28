@@ -64,6 +64,7 @@ class GeometricRegion;
  * class are visible to only CacheManager.
  */
 class CacheTable {
+    friend class AppDataManager;
     friend class CacheManager;
 
     private:

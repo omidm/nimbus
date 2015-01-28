@@ -272,7 +272,7 @@ template<class TV> void WATER_DRIVER<TV>::Initialize(
 }
 
 // Initialize when application app_data is being used, with app_data
-template<class TV> void WATER_DRIVER<TV>::InitializeUseAppData(
+template<class TV> void WATER_DRIVER<TV>::InitializeUseCachedAppData(
     const nimbus::Job *job,
     const nimbus::DataArray &da) {
   typedef application::DataConfig DataConfig;
@@ -300,7 +300,7 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseAppData(
   // allocates array for levelset/ particles/ removed particles
   {
     application::ScopeTimer scope_timer("part_2.1");
-    InitializeParticleLevelsetEvolutionHelperUseAppData(
+    InitializeParticleLevelsetEvolutionHelperUseCachedAppData(
         example.data_config,
         example.mac_grid,
         &example.particle_levelset_evolution);
@@ -598,7 +598,7 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHel
   return true;
 }
 
-template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHelperUseAppData(
+template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHelperUseCachedAppData(
     const application::DataConfig& data_config,
     const GRID<TV>& grid_input,
     PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >*

@@ -64,6 +64,7 @@ class GeometricRegion;
  * by app managers. An AppVar can must be defined over a geometric region.
  */
 class AppVar : public AppObject {
+    friend class AppDataManager;
     friend class CacheManager;
     friend class CacheTable;
     public:

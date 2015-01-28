@@ -80,6 +80,11 @@ class CacheManager : public AppDataManager {
         CacheManager();
 
         /**
+         * Destructor
+         */
+        ~CacheManager();
+
+        /**
          * \brief Informs application data manager that access to app_object is
          * no longer needed
          * \param app_object specified the application object to release

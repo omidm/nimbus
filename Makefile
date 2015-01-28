@@ -9,8 +9,8 @@ LIBRARY = libnimbus.so
 CFLAGS += -fPIC
 
 SCHED_CFILES  = $(wildcard scheduler/*.cc)
-WORKER_CFILES = $(wildcard worker/*.cc) $(wildcard worker/worker_job_graph/*.cc)
-DATA_CFILES   = $(wildcard data/*.cc) $(wildcard data/physbam/*.cc) $(wildcard data/cache/*.cc)
+WORKER_CFILES = $(wildcard worker/*.cc) $(wildcard worker/app_data_managers/*.cc) $(wildcard worker/worker_job_graph/*.cc)
+DATA_CFILES   = $(wildcard data/*.cc) $(wildcard data/physbam/*.cc) $(wildcard data/app_data/*.cc)
 SHARED_CFILES = $(wildcard shared/*.cc)
 
 CFILES = $(SCHED_CFILES) $(WORKER_CFILES) $(DATA_CFILES) $(SHARED_CFILES) $(SHARED_BUF_CFILES)

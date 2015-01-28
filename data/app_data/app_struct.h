@@ -68,6 +68,7 @@ class GeometricRegion;
  * (exclusive).
  */
 class AppStruct : public AppObject {
+    friend class AppDataManager;
     friend class CacheManager;
     friend class CacheTable;
     public:
