@@ -507,7 +507,7 @@ bool JobManager::RemoveJobEntry(JobEntry* job) {
 bool JobManager::ResolveJobDataVersions(JobEntry *job) {
   if (!job->IsReadyForCompleteVersioning()) {
     dbg(DBG_ERROR, "ERROR: job %lu is not reaqdy for complete versioing.\n", job->job_id());
-    exit(-1);
+    assert(false);
     return false;
   }
 
@@ -516,7 +516,7 @@ bool JobManager::ResolveJobDataVersions(JobEntry *job) {
     return true;
   } else {
     dbg(DBG_ERROR, "ERROR: could not version job %lu.\n", job->job_id());
-    exit(-1);
+    assert(false);
     return false;
   }
 }
@@ -846,6 +846,8 @@ void JobManager::NotifyJobDone(JobEntry *job) {
       if (xj->AllJobsDone()) {
         xj->set_done(true);
         complex_jobs_.erase(xj->job_id());
+        // Let the version manager clean the complex job from its track.
+        version_manager_.NotifyJobDone(xj);
         jobs_done_.push_back(xj);
       }
     }

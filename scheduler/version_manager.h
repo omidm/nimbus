@@ -69,6 +69,7 @@ class VersionManager {
     typedef std::pair<logical_data_id_t, data_version_t> VLD;
     typedef boost::unordered_map<logical_data_id_t, VersionEntry*> Index;
     typedef std::map<job_id_t, JobEntry*> ParentMap;
+    typedef std::map<job_id_t, ComplexJobEntry*> ComplexJobMap;
     typedef std::map<job_id_t, counter_t> ChildCounter;
 
     VersionManager();
@@ -112,6 +113,7 @@ class VersionManager {
     size_t non_sterile_counter_;
     IDSet<job_id_t> snap_shot_;
     ParentMap parent_map_;
+    ComplexJobMap complex_jobs_;
     ChildCounter child_counter_;
     boost::recursive_mutex snap_shot_mutex_;
     const LdoMap* ldo_map_p_;
@@ -125,6 +127,8 @@ class VersionManager {
     bool CreateCheckPoint(JobEntry *job);
 
     bool DetectNewJob(JobEntry *job);
+
+    bool DetectNewComplexJob(ComplexJobEntry *xj);
 
     bool DetectVersionedJob(JobEntry *job);
 

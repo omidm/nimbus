@@ -174,6 +174,7 @@ bool JobAssigner::AssignJob(JobEntry *job) {
 
   log_version_manager_.log_ResumeTimer();
   job_manager_->ResolveJobDataVersions(job);
+  assert(job->versioned());
   if (job->memoize()) {
     job_manager_->MemoizeVersionsForTemplate(job);
   }
