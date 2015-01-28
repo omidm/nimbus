@@ -64,7 +64,6 @@ void JobReseedParticles::Execute(nimbus::Parameter params,
   dbg(APP_LOG, "Executing RESEED_PARTICLES job.\n");
 
   InitConfig init_config;
-  init_config.use_cached_app_data = true;
   init_config.set_boundary_condition = false;
 
   std::string params_str(params.ser_data().data_ptr_raw(),

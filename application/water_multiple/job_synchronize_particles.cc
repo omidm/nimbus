@@ -69,7 +69,6 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
 
     // get time, dt, frame from the parameters.
     InitConfig init_config;
-    init_config.use_cached_app_data = true;
 
     std::string params_str(params.ser_data().data_ptr_raw(),
                            params.ser_data().size());
@@ -77,27 +76,6 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     T dt = init_config.dt;
     dbg(APP_LOG, " Loaded parameters (Frame=%d, Time=%f, dt=%f).\n",
         init_config.frame, init_config.time, dt);
-
-
-    if (!kUseCachedAppData) {
-        // initializing the example and driver with state and configuration variables
-        PhysBAM::WATER_EXAMPLE<TV> *example;
-        PhysBAM::WATER_DRIVER<TV> *driver;
-        DataConfig data_config;
-        data_config.SetFlag(DataConfig::POSITIVE_PARTICLE);
-        data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
-        data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
-        data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
-        InitializeExampleAndDriver(init_config, data_config, this,
-                                   da, example, driver);
-
-        // Write, free resources.
-        example->Save_To_Nimbus(this, da, init_config.frame + 1);
-        DestroyExampleAndDriver(example, driver);
-        return;
-    }
-
-    // else
 
     nimbus::GeometricRegion array_inner(
             init_config.local_region.NewEnlarged(-kGhostNum));

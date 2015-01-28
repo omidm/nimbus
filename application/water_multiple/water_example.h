@@ -110,7 +110,6 @@ public:
     StaticConfigForce* static_config_force;
     StaticConfigCollisionBody* static_config_collision_body;
     // app_data objects
-    bool use_cached_app_data;
     typedef typename application::AppDataFaceArray<T> TAppDataFaceArray;
     typedef typename application::AppDataFaceArray<bool> BoolAppDataFaceArray;
     typedef typename application::AppDataScalarArray<T> TAppDataScalarArray;
@@ -165,7 +164,6 @@ public:
 
     void Save_To_Nimbus_No_AppData(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
     void Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
-    void Load_From_Nimbus_No_AppData(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
     void Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
 
 //#####################################################################

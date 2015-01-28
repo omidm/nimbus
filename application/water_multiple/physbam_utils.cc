@@ -401,8 +401,8 @@ bool InitializeExampleAndDriver(
   dbg(APP_LOG, "Local region: %s\n", init_config.local_region.ToNetworkData().c_str());
   {
     application::ScopeTimer* example_scope_timer = NULL;
-    // BRANCH ON CACHE/ NO CACHE
-    if (init_config.use_cached_app_data && kUseCachedAppData) {
+    // Branch on CACHE/ NO CACHE, depending on the stage
+    if (!init_config.init_phase) {
       // CASE CACHE
       application::ScopeTimer* app_data_scope_timer =
           new application::ScopeTimer("app_data_lookup");
@@ -429,9 +429,8 @@ bool InitializeExampleAndDriver(
                                                  PhysBAM::STREAM_TYPE((RW())),
                                                  &app_data,
                                                  &job->worker_thread()->allocated_threads);
-      example->use_cached_app_data = true;
     } else {
-      // CASE NO CACE
+      // CASE NO CACHE
       example_scope_timer =
           new application::ScopeTimer("init_example");
       StaticConfigCollisionBody* collision_body
@@ -443,9 +442,7 @@ bool InitializeExampleAndDriver(
       example = new PhysBAM::WATER_EXAMPLE<TV>(collision_body,
                                                PhysBAM::STREAM_TYPE((RW())),
                                                &job->worker_thread()->allocated_threads);
-      example->use_cached_app_data = false;
     }
-    // END BRANCH ON CACHE/ NO CACHE
     // parameters for nimbus
     example->local_region = init_config.local_region;
     example->kScale = init_config.global_region.dx();
@@ -474,10 +471,8 @@ bool InitializeExampleAndDriver(
     // physbam driver initialization
     if (init_config.init_phase)
       driver->InitializeFirstDistributed(job, da);
-    else if (init_config.use_cached_app_data && kUseCachedAppData)
-      driver->InitializeUseCachedAppData(job, da);
     else
-      driver->Initialize(job, da);
+      driver->InitializeUseCachedAppData(job, da);
   }
   return true;
 }
