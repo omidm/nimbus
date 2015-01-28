@@ -254,40 +254,56 @@ void GetAppAppObjects(
     if (l7w) write7 = write;
     if (l8r) read8 = read;
     if (l8w) write8 = write;
-    nimbus::DataArray write_empty;
-    if (l || lr || lw) {
-      nimbus::AppVar *app_var =
-        cm->GetAppVar(
-            read3, array_reg_outer_3,
-            write3, array_reg_outer_3,
-            kAppDataPhi3, array_reg_outer_3,
-            nimbus::app_data::SHARED);
-      app_data->phi3 = dynamic_cast<AppDataScalarArray<T> *>(app_var);
-      assert(app_data->phi3 != NULL);
+
+    int order[3] = {3, 7, 8};
+
+    if (l || lw) {
+      order[0] = 7;
+      order[1] = 8;
+      order[2] = 3;
+    } else if (l7w) {
+      order[0] = 3;
+      order[1] = 8;
+      order[2] = 7;
     }
-    if (l7r || l7w) {
-      if (app_data->phi3)
-        cm->WriteImmediately(app_data->phi3, write7);
-      nimbus::AppVar *app_var =
-        cm->GetAppVar(
-            read7, array_reg_outer_7,
-            write7, array_reg_outer_7,
-            kAppDataPhi7, array_reg_outer_7,
-            nimbus::app_data::SHARED);
-      app_data->phi7 = dynamic_cast<AppDataScalarArray<T> *>(app_var);
-      assert(app_data->phi7 != NULL);
-    }
-    if (l8r || l8w) {
-      if (app_data->phi3)
-	cm->WriteImmediately(app_data->phi3, write8);
-      nimbus::AppVar *app_var =
-        cm->GetAppVar(
-            read8, array_reg_outer_8,
-            write8, array_reg_outer_8,
-            kAppDataPhi8, array_reg_outer_8,
-            nimbus::app_data::SHARED);
-      app_data->phi8 = dynamic_cast<AppDataScalarArray<T> *>(app_var);
-      assert(app_data->phi8 != NULL);
+
+    for (int i = 0; i < 3; ++i) {
+      if (order[i] == 3) {
+        if (l || lr || lw) {
+          nimbus::AppVar *app_var =
+            cm->GetAppVar(
+                read3, array_reg_outer_3,
+                write3, array_reg_outer_3,
+                kAppDataPhi3, array_reg_outer_3,
+                nimbus::app_data::SHARED);
+          app_data->phi3 = dynamic_cast<AppDataScalarArray<T> *>(app_var);
+          assert(app_data->phi3 != NULL);
+        }
+      }
+      if (order[i] == 7) {
+        if (l7r || l7w) {
+          nimbus::AppVar *app_var =
+            cm->GetAppVar(
+                read7, array_reg_outer_7,
+                write7, array_reg_outer_7,
+                kAppDataPhi7, array_reg_outer_7,
+                nimbus::app_data::SHARED);
+          app_data->phi7 = dynamic_cast<AppDataScalarArray<T> *>(app_var);
+          assert(app_data->phi7 != NULL);
+        }
+      }
+      if (order[i] == 8) {
+        if (l8r || l8w) {
+          nimbus::AppVar *app_var =
+            cm->GetAppVar(
+                read8, array_reg_outer_8,
+                write8, array_reg_outer_8,
+                kAppDataPhi8, array_reg_outer_8,
+                nimbus::app_data::SHARED);
+          app_data->phi8 = dynamic_cast<AppDataScalarArray<T> *>(app_var);
+          assert(app_data->phi8 != NULL);
+        }
+      }
     }
   }
   // psi_d.
