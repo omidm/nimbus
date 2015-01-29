@@ -150,7 +150,9 @@ plt.ylabel('Time (seconds)')
 title  = 'PhysBAM Water Simulation Size 256 Cube, 64 uniform partitions, 100 projection iteration\n'
 title += '8 c3.2xlarge EC2 workers each with 8 threads, c3.4xlarge controller with 8 assigning threads\n'
 # title += 'job done optimization and disabled Nagle\'s algorithm'
-title += 'worker templates activated'
+# title += 'worker templates activated'
+# title += 'all non-sterile jobs templatized'
+title += 'all non-sterile jobs templatized with complex jobs and memoization'
 
 plt.title(title)
 xticks = []
@@ -165,7 +167,7 @@ plt.xticks(ind+width/2., xticks )
 
 plt.legend(reversed(Parts), reversed(Legends))
 
-# plt.ylim(0, 35)
+plt.ylim(0, 35)
 
 plt.savefig("test.png")
 plt.show()
