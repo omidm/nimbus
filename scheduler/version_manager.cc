@@ -466,6 +466,8 @@ size_t VersionManager::GetJobsNeedDataVersion(
   size_t count = 0;
   list->clear();
 
+  assert(complex_jobs_.size() <= 1);
+
   {
     ComplexJobMap::iterator iter = complex_jobs_.begin();
     for (; iter != complex_jobs_.end(); ++iter) {
@@ -520,13 +522,7 @@ size_t VersionManager::GetJobsNeedDataVersion(
         }
       }
 
-      JobEntryList temp_list;
-      iter->second->GetJobsNeedVersion(&temp_list, vld.second);
-      JobEntryList::iterator it = temp_list.begin();
-      for (; it != temp_list.end(); ++it) {
-        list->push_back(*it);
-        ++count;
-      }
+      count += iter->second->GetJobsNeedVersion(list, vld.second, true);
     }
   }
 

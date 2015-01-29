@@ -105,7 +105,7 @@ bool VersionEntry::AddJobEntryWriter(JobEntry *job) {
 }
 
 size_t VersionEntry::GetJobsNeedVersion(
-    JobEntryList* list, data_version_t version) {
+    JobEntryList* list, data_version_t version, bool append) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
 
   if (!UpdateLdl()) {
@@ -113,7 +113,9 @@ size_t VersionEntry::GetJobsNeedVersion(
   }
 
   size_t count = 0;
-  list->clear();
+  if (!append) {
+    list->clear();
+  }
 
   BucketIter iter = pending_reader_jobs_.begin();
   for (; iter != pending_reader_jobs_.end();) {
