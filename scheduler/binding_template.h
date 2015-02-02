@@ -113,10 +113,10 @@ class BindingTemplate {
       public:
         ComputeJobCommandTemplate(const std::string& job_name,
                                   JobIdPtr job_id_ptr,
-                                  PhyIdPtrSet& read_set_ptr,
-                                  PhyIdPtrSet& write_set_ptr,
-                                  JobIdPtrSet& before_set_ptr,
-                                  JobIdPtrSet& after_set_ptr,
+                                  const PhyIdPtrSet& read_set_ptr,
+                                  const PhyIdPtrSet& write_set_ptr,
+                                  const JobIdPtrSet& before_set_ptr,
+                                  const JobIdPtrSet& after_set_ptr,
                                   JobIdPtr future_job_id_ptr,
                                   const bool& sterile,
                                   const GeometricRegion& region)
@@ -134,15 +134,84 @@ class BindingTemplate {
 
         std::string job_name_;
         JobIdPtr job_id_ptr_;
-        PhyIdPtrSet& read_set_ptr_;
-        PhyIdPtrSet& write_set_ptr_;
-        JobIdPtrSet& before_set_ptr_;
-        JobIdPtrSet& after_set_ptr_;
+        PhyIdPtrSet read_set_ptr_;
+        PhyIdPtrSet write_set_ptr_;
+        JobIdPtrSet before_set_ptr_;
+        JobIdPtrSet after_set_ptr_;
         JobIdPtr future_job_id_ptr_;
         bool sterile_;
         GeometricRegion region_;
         Parameter params_;
     };
+
+    class LocalCopyCommandTemplate {
+      public:
+        LocalCopyCommandTemplate(JobIdPtr job_id_ptr,
+                                 PhyIdPtr from_physical_data_id_ptr,
+                                 PhyIdPtr to_physical_data_id_ptr,
+                                 const JobIdPtrSet& before_set_ptr)
+          : job_id_ptr_(job_id_ptr),
+            from_physical_data_id_ptr_(from_physical_data_id_ptr),
+            to_physical_data_id_ptr_(to_physical_data_id_ptr),
+            before_set_ptr_(before_set_ptr) {}
+
+        ~LocalCopyCommandTemplate() {}
+
+        JobIdPtr job_id_ptr_;
+        PhyIdPtr from_physical_data_id_ptr_;
+        PhyIdPtr to_physical_data_id_ptr_;
+        JobIdPtrSet before_set_ptr_;
+    };
+
+
+    class RemoteCopySendCommandTemplate {
+      public:
+        RemoteCopySendCommandTemplate(JobIdPtr job_id_ptr,
+                                      JobIdPtr receive_job_id_ptr,
+                                      PhyIdPtr from_physical_data_id_ptr,
+                                      const ID<worker_id_t>& to_worker_id,
+                                      const std::string to_ip,
+                                      const ID<port_t>& to_port,
+                                      const JobIdPtrSet& before_set_ptr)
+          : job_id_ptr_(job_id_ptr),
+            receive_job_id_ptr_(receive_job_id_ptr),
+            from_physical_data_id_ptr_(from_physical_data_id_ptr),
+            to_worker_id_(to_worker_id),
+            to_ip_(to_ip),
+            to_port_(to_port),
+            before_set_ptr_(before_set_ptr) {}
+
+        ~RemoteCopySendCommandTemplate() {}
+
+        JobIdPtr job_id_ptr_;
+        JobIdPtr receive_job_id_ptr_;
+        PhyIdPtr from_physical_data_id_ptr_;
+        ID<worker_id_t> to_worker_id_;
+        std::string to_ip_;
+        ID<port_t> to_port_;
+        JobIdPtrSet before_set_ptr_;
+    };
+
+    class RemoteCopyReceiveCommandTemplate {
+      public:
+        RemoteCopyReceiveCommandTemplate(JobIdPtr job_id_ptr,
+                                         PhyIdPtr to_physical_data_id_ptr,
+                                         const JobIdPtrSet& before_set_ptr)
+          : job_id_ptr_(job_id_ptr),
+            to_physical_data_id_ptr_(to_physical_data_id_ptr),
+            before_set_ptr_(before_set_ptr) {}
+
+        ~RemoteCopyReceiveCommandTemplate() {}
+
+        JobIdPtr job_id_ptr_;
+        PhyIdPtr to_physical_data_id_ptr_;
+        JobIdPtrSet before_set_ptr_;
+    };
+
+
+
+
+
 
 
 
