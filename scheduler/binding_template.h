@@ -57,12 +57,11 @@
 #include <algorithm>
 #include <map>
 #include "shared/nimbus_types.h"
+#include "shared/scheduler_command_include.h"
 #include "shared/dbg.h"
 #include "shared/log.h"
 
 namespace nimbus {
-
-class JobManager;
 
 class BindingTemplate {
   public:
@@ -77,26 +76,81 @@ class BindingTemplate {
       return false;
     }
 
-    bool AddComputeJob() {
-      return false;
-    }
+    enum VERSION_TYPE {
+      REGULAR,
+      WILD_CARD
+    };
 
-    bool AddLocalCopyJob() {
-      return false;
-    }
+    bool TrackDataObject(const logical_data_id_t& ldid,
+                         const physical_data_id_t& pdid,
+                         VERSION_TYPE version_type,
+                         data_version_t version_diff_from_base = 0);
 
-    bool AddRemoteCopySendJob() {
-      return false;
-    }
+    bool AddComputeJobCommand(const ComputeJobCommand& command,
+                              worker_id_t w_id);
 
-    bool AddRemoteCopyReceiveJob() {
-      return false;
-    }
+    bool AddLocalCopyCommand(const LocalCopyCommand& command,
+                             worker_id_t w_id);
+
+    bool AddRemoteCopySendCommand(const RemoteCopySendCommand& command,
+                                  worker_id_t w_id);
+
+    bool AddRemoteCopyReceiveCommand(const RemoteCopyReceiveCommand& command,
+                                     worker_id_t w_id);
 
   private:
-    typedef std::vector<boost::shared_ptr<job_id_t> > PtrList;
-    typedef boost::unordered_set<boost::shared_ptr<job_id_t> > PtrSet;
-    typedef boost::unordered_map<job_id_t, boost::shared_ptr<job_id_t> > PtrMap;
+    typedef boost::shared_ptr<job_id_t> JobIdPtr;
+    typedef std::vector<JobIdPtr> JobIdPtrList;
+    typedef boost::unordered_set<JobIdPtr> JobIdPtrSet;
+    typedef boost::unordered_map<job_id_t, JobIdPtr> JobIdPtrMap;
+
+    typedef boost::shared_ptr<physical_data_id_t> PhyIdPtr;
+    typedef std::vector<PhyIdPtr> PhyIdPtrList;
+    typedef boost::unordered_set<PhyIdPtr> PhyIdPtrSet;
+    typedef boost::unordered_map<job_id_t, PhyIdPtr> PhyIdPtrMap;
+
+    class ComputeJobCommandTemplate {
+      public:
+        ComputeJobCommandTemplate(const std::string& job_name,
+                                  JobIdPtr job_id_ptr,
+                                  PhyIdPtrSet& read_set_ptr,
+                                  PhyIdPtrSet& write_set_ptr,
+                                  JobIdPtrSet& before_set_ptr,
+                                  JobIdPtrSet& after_set_ptr,
+                                  JobIdPtr future_job_id_ptr,
+                                  const bool& sterile,
+                                  const GeometricRegion& region)
+          : job_name_(job_name),
+            job_id_ptr_(job_id_ptr),
+            read_set_ptr_(read_set_ptr),
+            write_set_ptr_(write_set_ptr),
+            before_set_ptr_(before_set_ptr),
+            after_set_ptr_(after_set_ptr),
+            future_job_id_ptr_(future_job_id_ptr),
+            sterile_(sterile),
+            region_(region) {}
+
+        ~ComputeJobCommandTemplate() {}
+
+        std::string job_name_;
+        JobIdPtr job_id_ptr_;
+        PhyIdPtrSet& read_set_ptr_;
+        PhyIdPtrSet& write_set_ptr_;
+        JobIdPtrSet& before_set_ptr_;
+        JobIdPtrSet& after_set_ptr_;
+        JobIdPtr future_job_id_ptr_;
+        bool sterile_;
+        GeometricRegion region_;
+        Parameter params_;
+    };
+
+
+
+
+
+
+
+    bool finalized_;
 };
 
 }  // namespace nimbus

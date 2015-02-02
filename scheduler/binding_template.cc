@@ -46,9 +46,38 @@
 using namespace nimbus; // NOLINT
 
 BindingTemplate::BindingTemplate() {
+  finalized_ = false;
 }
 
 BindingTemplate::~BindingTemplate() {
 }
+
+bool BindingTemplate::TrackDataObject(const logical_data_id_t& ldid,
+                                      const physical_data_id_t& pdid,
+                                      VERSION_TYPE version_type,
+                                      data_version_t version_diff_from_base) {
+  return false;
+}
+
+bool BindingTemplate::AddComputeJobCommand(const ComputeJobCommand& command,
+                                           worker_id_t w_id) {
+  return false;
+}
+
+bool BindingTemplate::AddLocalCopyCommand(const LocalCopyCommand& command,
+                                          worker_id_t w_id) {
+  return false;
+}
+
+bool BindingTemplate::AddRemoteCopySendCommand(const RemoteCopySendCommand& command,
+                                               worker_id_t w_id) {
+  return false;
+}
+
+bool BindingTemplate::AddRemoteCopyReceiveCommand(const RemoteCopyReceiveCommand& command,
+                                                  worker_id_t w_id) {
+  return false;
+}
+
 
 
