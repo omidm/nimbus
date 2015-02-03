@@ -70,7 +70,7 @@ bool TemplateManager::DetectNewTemplate(const std::string& template_name) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   TemplateMap::iterator iter = template_map_.find(template_name);
   if (iter == template_map_.end()) {
-    template_map_[template_name] = new TemplateEntry();
+    template_map_[template_name] = new TemplateEntry(template_name);
   } else {
     if (!iter->second->finalized()) {
       if (iter->second->CleanPartiallyFilledTemplate()) {

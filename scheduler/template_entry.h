@@ -68,10 +68,11 @@ class JobManager;
 
 class TemplateEntry {
   public:
-    TemplateEntry();
+    explicit TemplateEntry(std::string template_name);
     ~TemplateEntry();
 
     bool finalized();
+    std::string template_name();
     boost::shared_ptr<VersionMap> vmap_base() const;
 
     virtual void set_vmap_base(boost::shared_ptr<VersionMap> vmap_base);
@@ -176,6 +177,8 @@ class TemplateEntry {
     typedef std::list<size_t> Bucket;
     typedef boost::unordered_map<data_version_t, Bucket*> VersionIndex;
     typedef boost::unordered_map<logical_data_id_t, VersionIndex*> AccessIndex;
+
+    std::string template_name_;
 
     AccessIndex access_pattern_;
     boost::mutex access_pattern_mutex_;

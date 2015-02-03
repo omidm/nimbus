@@ -46,8 +46,9 @@ using namespace nimbus; // NOLINT
 #define MAX_DEPTH 100
 #define ACTIVE_INSTANTIATION true
 
-TemplateEntry::TemplateEntry() {
+TemplateEntry::TemplateEntry(std::string template_name) {
   finalized_ = false;
+  template_name_ = template_name;
   // TODO(omidm): currently we do not support future job id in templates!
   future_job_id_ptr_ = boost::shared_ptr<job_id_t>(new job_id_t(0));
 }
@@ -68,6 +69,10 @@ TemplateEntry::~TemplateEntry() {
 
 bool TemplateEntry::finalized() {
   return finalized_;
+}
+
+std::string TemplateEntry::template_name() {
+  return template_name_;
 }
 
 boost::shared_ptr<VersionMap> TemplateEntry::vmap_base() const {
