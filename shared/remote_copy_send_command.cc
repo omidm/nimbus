@@ -152,6 +152,10 @@ IDSet<job_id_t> RemoteCopySendCommand::before_set() {
   return before_set_;
 }
 
+IDSet<job_id_t>* RemoteCopySendCommand::before_set_p() {
+  return &before_set_;
+}
+
 bool RemoteCopySendCommand::ReadFromProtobuf(const RemoteCopySendPBuf& buf) {
   job_id_.set_elem(buf.job_id());
   receive_job_id_.set_elem(buf.receive_job_id());

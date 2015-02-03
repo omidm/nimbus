@@ -247,12 +247,6 @@ class BindingTemplate {
     };
 
 
-
-
-
-
-
-
     bool finalized_;
     // Currently we do not support future job - omidm
     JobIdPtr future_job_id_ptr_;
@@ -263,18 +257,19 @@ class BindingTemplate {
     PhyIdPtrMap phy_id_map_;
     PhyIdPtrList phy_id_list_;
 
-    JobIdPtrMap job_id_map_;
-    JobIdPtrList job_id_list_;
+    JobIdPtrMap copy_job_id_map_;
+    JobIdPtrList copy_job_id_list_;
 
-    CommandTemplateVector compute_job_commands_;
-    CommandTemplateVector local_copy_commands_;
-    CommandTemplateVector rempte_copy_send_commands_;
-    CommandTemplateVector rempte_copy_receive_commands_;
+    JobIdPtrMap compute_job_id_map_;
+    JobIdPtrList compute_job_id_list_;
 
+    CommandTemplateVector command_templates_;
 
+    JobIdPtr GetCopyJobIdPtr(job_id_t job_id);
+    JobIdPtr GetExistingCopyJobIdPtr(job_id_t job_id);
 
-    JobIdPtr GetJobIdPtr(job_id_t job_id);
-    JobIdPtr GetExistingJobIdPtr(job_id_t job_id);
+    JobIdPtr GetComputeJobIdPtr(job_id_t job_id);
+    JobIdPtr GetExistingComputeJobIdPtr(job_id_t job_id);
 
     PhyIdPtr GetPhyIdPtr(physical_data_id_t pdid);
     PhyIdPtr GetExistingPhyIdPtr(physical_data_id_t pdid);

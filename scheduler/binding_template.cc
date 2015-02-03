@@ -75,7 +75,7 @@ bool BindingTemplate::TrackDataObject(const logical_data_id_t& ldid,
 
 bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
                                            worker_id_t w_id) {
-  JobIdPtr job_id_ptr = GetJobIdPtr(command->job_id().elem());
+  JobIdPtr job_id_ptr = GetComputeJobIdPtr(command->job_id().elem());
 
   PhyIdPtrSet read_set;
   {
@@ -99,7 +99,12 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
   {
     IDSet<job_id_t>::IDSetIter iter = command->before_set_p()->begin();
     for (; iter != command->before_set_p()->end(); ++iter) {
-      JobIdPtr job_id_ptr = GetJobIdPtr(*iter);
+      JobIdPtr job_id_ptr;
+      if (IDMaker::SchedulerProducedJobID(*iter)) {
+        job_id_ptr = GetExistingCopyJobIdPtr(*iter);
+      } else {
+        job_id_ptr = GetComputeJobIdPtr(*iter);
+      }
       before_set.insert(job_id_ptr);
     }
   }
@@ -108,8 +113,13 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
   {
     IDSet<job_id_t>::IDSetIter iter = command->after_set_p()->begin();
     for (; iter != command->after_set_p()->end(); ++iter) {
-      JobIdPtr job_id_ptr = GetJobIdPtr(*iter);
-      after_set.insert(job_id_ptr);
+      JobIdPtr job_id_ptr;
+      if (IDMaker::SchedulerProducedJobID(*iter)) {
+        job_id_ptr = GetExistingCopyJobIdPtr(*iter);
+      } else {
+        job_id_ptr = GetComputeJobIdPtr(*iter);
+      }
+      before_set.insert(job_id_ptr);
     }
   }
 
@@ -125,46 +135,165 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
                                   command->region(),
                                   w_id);
 
-  compute_job_commands_.push_back(cm);
+  command_templates_.push_back(cm);
 
-  return false;
+  return true;
 }
 
 bool BindingTemplate::AddLocalCopyCommand(LocalCopyCommand* command,
                                           worker_id_t w_id) {
-  return false;
+  JobIdPtr job_id_ptr = GetCopyJobIdPtr(command->job_id().elem());
+
+  PhyIdPtr from_physical_data_id_ptr =
+    GetExistingPhyIdPtr(command->from_physical_data_id().elem());
+
+  PhyIdPtr to_physical_data_id_ptr =
+    GetExistingPhyIdPtr(command->to_physical_data_id().elem());
+
+  JobIdPtrSet before_set;
+  {
+    IDSet<job_id_t>::IDSetIter iter = command->before_set_p()->begin();
+    for (; iter != command->before_set_p()->end(); ++iter) {
+      JobIdPtr job_id_ptr;
+      if (IDMaker::SchedulerProducedJobID(*iter)) {
+        job_id_ptr = GetExistingCopyJobIdPtr(*iter);
+      } else {
+        job_id_ptr = GetComputeJobIdPtr(*iter);
+      }
+      before_set.insert(job_id_ptr);
+    }
+  }
+
+  LocalCopyCommandTemplate *cm =
+    new LocalCopyCommandTemplate(job_id_ptr,
+                                 from_physical_data_id_ptr,
+                                 to_physical_data_id_ptr,
+                                 before_set,
+                                 w_id);
+
+  command_templates_.push_back(cm);
+
+  return true;
 }
 
 bool BindingTemplate::AddRemoteCopySendCommand(RemoteCopySendCommand* command,
                                                worker_id_t w_id) {
-  return false;
+  JobIdPtr job_id_ptr = GetCopyJobIdPtr(command->job_id().elem());
+
+  JobIdPtr receive_job_id_ptr = GetCopyJobIdPtr(command->receive_job_id().elem());
+
+  PhyIdPtr from_physical_data_id_ptr =
+    GetExistingPhyIdPtr(command->from_physical_data_id().elem());
+
+  JobIdPtrSet before_set;
+  {
+    IDSet<job_id_t>::IDSetIter iter = command->before_set_p()->begin();
+    for (; iter != command->before_set_p()->end(); ++iter) {
+      JobIdPtr job_id_ptr;
+      if (IDMaker::SchedulerProducedJobID(*iter)) {
+        job_id_ptr = GetExistingCopyJobIdPtr(*iter);
+      } else {
+        job_id_ptr = GetComputeJobIdPtr(*iter);
+      }
+      before_set.insert(job_id_ptr);
+    }
+  }
+
+  RemoteCopySendCommandTemplate *cm =
+    new RemoteCopySendCommandTemplate(job_id_ptr,
+                                      receive_job_id_ptr,
+                                      from_physical_data_id_ptr,
+                                      command->to_worker_id(),
+                                      command->to_ip(),
+                                      command->to_port(),
+                                      before_set,
+                                      w_id);
+
+  command_templates_.push_back(cm);
+
+  return true;
 }
 
 bool BindingTemplate::AddRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* command,
                                                   worker_id_t w_id) {
-  return false;
+  JobIdPtr job_id_ptr = GetCopyJobIdPtr(command->job_id().elem());
+
+  PhyIdPtr to_physical_data_id_ptr =
+    GetExistingPhyIdPtr(command->to_physical_data_id().elem());
+
+  JobIdPtrSet before_set;
+  {
+    IDSet<job_id_t>::IDSetIter iter = command->before_set_p()->begin();
+    for (; iter != command->before_set_p()->end(); ++iter) {
+      JobIdPtr job_id_ptr;
+      if (IDMaker::SchedulerProducedJobID(*iter)) {
+        job_id_ptr = GetExistingCopyJobIdPtr(*iter);
+      } else {
+        job_id_ptr = GetComputeJobIdPtr(*iter);
+      }
+      before_set.insert(job_id_ptr);
+    }
+  }
+
+  RemoteCopyReceiveCommandTemplate *cm =
+    new RemoteCopyReceiveCommandTemplate(job_id_ptr,
+                                         to_physical_data_id_ptr,
+                                         before_set,
+                                         w_id);
+
+  command_templates_.push_back(cm);
+
+  return true;
 }
 
-BindingTemplate::JobIdPtr BindingTemplate::GetJobIdPtr(job_id_t job_id) {
+BindingTemplate::JobIdPtr BindingTemplate::GetCopyJobIdPtr(job_id_t job_id) {
   JobIdPtr job_id_ptr;
 
-  JobIdPtrMap::iterator iter = job_id_map_.find(job_id);
-  if (iter != job_id_map_.end()) {
+  JobIdPtrMap::iterator iter = copy_job_id_map_.find(job_id);
+  if (iter != copy_job_id_map_.end()) {
     job_id_ptr = iter->second;
   } else {
     job_id_ptr = JobIdPtr(new job_id_t(job_id));
-    job_id_map_[job_id] = job_id_ptr;
-    job_id_list_.push_back(job_id_ptr);
+    copy_job_id_map_[job_id] = job_id_ptr;
+    copy_job_id_list_.push_back(job_id_ptr);
   }
 
   return job_id_ptr;
 }
 
-BindingTemplate::JobIdPtr BindingTemplate::GetExistingJobIdPtr(job_id_t job_id) {
+BindingTemplate::JobIdPtr BindingTemplate::GetExistingCopyJobIdPtr(job_id_t job_id) {
   JobIdPtr job_id_ptr;
 
-  JobIdPtrMap::iterator iter = job_id_map_.find(job_id);
-  if (iter != job_id_map_.end()) {
+  JobIdPtrMap::iterator iter = copy_job_id_map_.find(job_id);
+  if (iter != copy_job_id_map_.end()) {
+    job_id_ptr = iter->second;
+  } else {
+    assert(false);
+  }
+
+  return job_id_ptr;
+}
+
+BindingTemplate::JobIdPtr BindingTemplate::GetComputeJobIdPtr(job_id_t job_id) {
+  JobIdPtr job_id_ptr;
+
+  JobIdPtrMap::iterator iter = compute_job_id_map_.find(job_id);
+  if (iter != compute_job_id_map_.end()) {
+    job_id_ptr = iter->second;
+  } else {
+    job_id_ptr = JobIdPtr(new job_id_t(job_id));
+    compute_job_id_map_[job_id] = job_id_ptr;
+    compute_job_id_list_.push_back(job_id_ptr);
+  }
+
+  return job_id_ptr;
+}
+
+BindingTemplate::JobIdPtr BindingTemplate::GetExistingComputeJobIdPtr(job_id_t job_id) {
+  JobIdPtr job_id_ptr;
+
+  JobIdPtrMap::iterator iter = compute_job_id_map_.find(job_id);
+  if (iter != compute_job_id_map_.end()) {
     job_id_ptr = iter->second;
   } else {
     assert(false);
@@ -200,8 +329,5 @@ BindingTemplate::PhyIdPtr BindingTemplate::GetExistingPhyIdPtr(physical_data_id_
 
   return phy_id_ptr;
 }
-
-
-
 
 
