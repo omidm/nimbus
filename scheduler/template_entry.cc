@@ -542,6 +542,30 @@ size_t TemplateEntry::QueryAccessPattern(const logical_data_id_t& ldid,
 }
 
 
+bool TemplateEntry::AddBindingRecord(size_t binding_tag,
+                                     BindingTemplate* binding_template) {
+  BindingMap::iterator iter = binding_records_.find(binding_tag);
+  if (iter != binding_records_.end()) {
+    return false;
+  }
+
+  binding_records_[binding_tag] = binding_template;
+  return true;
+}
+
+bool TemplateEntry::QueryBindingRecord(size_t binding_tag,
+                                       BindingTemplate*& binding_template) {
+  BindingMap::iterator iter = binding_records_.find(binding_tag);
+  if (iter == binding_records_.end()) {
+    binding_template = NULL;
+    return false;
+  }
+
+  binding_template = iter->second;
+  return true;
+}
+
+
 
 
 

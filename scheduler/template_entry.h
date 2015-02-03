@@ -61,6 +61,7 @@
 #include "scheduler/shadow_job_entry.h"
 #include "scheduler/complex_job_entry.h"
 #include "scheduler/template_job_entry.h"
+#include "scheduler/binding_template.h"
 
 namespace nimbus {
 
@@ -128,6 +129,12 @@ class TemplateEntry {
                               const data_version_t& diff_version,
                               std::list<size_t>* indices);
 
+    bool AddBindingRecord(size_t binding_tag,
+                          BindingTemplate* binding_template);
+
+    bool QueryBindingRecord(size_t binding_tag,
+                            BindingTemplate*& binding_template);
+
   private:
     typedef std::vector<boost::shared_ptr<job_id_t> > PtrList;
     typedef boost::unordered_set<boost::shared_ptr<job_id_t> > PtrSet;
@@ -178,10 +185,14 @@ class TemplateEntry {
     typedef boost::unordered_map<data_version_t, Bucket*> VersionIndex;
     typedef boost::unordered_map<logical_data_id_t, VersionIndex*> AccessIndex;
 
+    typedef boost::unordered_map<size_t, BindingTemplate*> BindingMap;
+
     std::string template_name_;
 
     AccessIndex access_pattern_;
     boost::mutex access_pattern_mutex_;
+
+    BindingMap binding_records_;
 
     bool finalized_;
     Graph<TemplateJobEntry, job_id_t> job_graph_;

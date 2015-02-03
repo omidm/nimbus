@@ -273,8 +273,6 @@ class BindingTemplate {
 
     PhyIdPtr GetPhyIdPtr(physical_data_id_t pdid);
     PhyIdPtr GetExistingPhyIdPtr(physical_data_id_t pdid);
-
-    //
 };
 
 }  // namespace nimbus
