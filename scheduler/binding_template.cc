@@ -56,7 +56,21 @@ bool BindingTemplate::TrackDataObject(const logical_data_id_t& ldid,
                                       const physical_data_id_t& pdid,
                                       VERSION_TYPE version_type,
                                       data_version_t version_diff_from_base) {
-  return false;
+  PhyIdPtrMap::iterator iter =  phy_id_map_.find(pdid);
+  if (iter != phy_id_map_.end()) {
+    return true;
+  }
+
+  PatternEntry *pattern =
+    new PatternEntry(ldid, version_type, version_diff_from_base);
+
+  entry_pattern_.push_back(pattern);
+
+  PhyIdPtr pdid_ptr = PhyIdPtr(new physical_data_id_t(pdid));
+  phy_id_map_[pdid] = pdid_ptr;
+  phy_id_list_.push_back(pdid_ptr);
+
+  return true;
 }
 
 bool BindingTemplate::AddComputeJobCommand(const ComputeJobCommand& command,

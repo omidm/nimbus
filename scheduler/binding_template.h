@@ -81,10 +81,29 @@ class BindingTemplate {
       WILD_CARD
     };
 
+    class PatternEntry {
+      public:
+        PatternEntry(const logical_data_id_t& ldid,
+                    VERSION_TYPE version_type,
+                    data_version_t version_diff_from_base)
+          : ldid_(ldid),
+            version_type_(version_type),
+            version_diff_from_base_(version_diff_from_base) {}
+
+        ~PatternEntry();
+
+        logical_data_id_t ldid_;
+        VERSION_TYPE version_type_;
+        data_version_t version_diff_from_base_;
+    };
+
+    typedef std::vector<PatternEntry*> Pattern;
+
+
     bool TrackDataObject(const logical_data_id_t& ldid,
                          const physical_data_id_t& pdid,
                          VERSION_TYPE version_type,
-                         data_version_t version_diff_from_base = 0);
+                         data_version_t version_diff_from_base);
 
     bool AddComputeJobCommand(const ComputeJobCommand& command,
                               worker_id_t w_id);
@@ -109,7 +128,15 @@ class BindingTemplate {
     typedef boost::unordered_set<PhyIdPtr> PhyIdPtrSet;
     typedef boost::unordered_map<job_id_t, PhyIdPtr> PhyIdPtrMap;
 
-    class ComputeJobCommandTemplate {
+    class CommandTemplate {
+      public:
+        CommandTemplate();
+        ~CommandTemplate();
+    };
+
+    typedef std::vector<CommandTemplate*> CommandTemplateVector;
+
+    class ComputeJobCommandTemplate : public CommandTemplate {
       public:
         ComputeJobCommandTemplate(const std::string& job_name,
                                   JobIdPtr job_id_ptr,
@@ -119,7 +146,8 @@ class BindingTemplate {
                                   const JobIdPtrSet& after_set_ptr,
                                   JobIdPtr future_job_id_ptr,
                                   const bool& sterile,
-                                  const GeometricRegion& region)
+                                  const GeometricRegion& region,
+                                  const worker_id_t& worker_id)
           : job_name_(job_name),
             job_id_ptr_(job_id_ptr),
             read_set_ptr_(read_set_ptr),
@@ -128,7 +156,8 @@ class BindingTemplate {
             after_set_ptr_(after_set_ptr),
             future_job_id_ptr_(future_job_id_ptr),
             sterile_(sterile),
-            region_(region) {}
+            region_(region),
+            worker_id_(worker_id) {}
 
         ~ComputeJobCommandTemplate() {}
 
@@ -141,19 +170,21 @@ class BindingTemplate {
         JobIdPtr future_job_id_ptr_;
         bool sterile_;
         GeometricRegion region_;
-        Parameter params_;
+        worker_id_t worker_id_;
     };
 
-    class LocalCopyCommandTemplate {
+    class LocalCopyCommandTemplate : public CommandTemplate {
       public:
         LocalCopyCommandTemplate(JobIdPtr job_id_ptr,
                                  PhyIdPtr from_physical_data_id_ptr,
                                  PhyIdPtr to_physical_data_id_ptr,
-                                 const JobIdPtrSet& before_set_ptr)
+                                 const JobIdPtrSet& before_set_ptr,
+                                 const worker_id_t& worker_id)
           : job_id_ptr_(job_id_ptr),
             from_physical_data_id_ptr_(from_physical_data_id_ptr),
             to_physical_data_id_ptr_(to_physical_data_id_ptr),
-            before_set_ptr_(before_set_ptr) {}
+            before_set_ptr_(before_set_ptr),
+            worker_id_(worker_id) {}
 
         ~LocalCopyCommandTemplate() {}
 
@@ -161,10 +192,11 @@ class BindingTemplate {
         PhyIdPtr from_physical_data_id_ptr_;
         PhyIdPtr to_physical_data_id_ptr_;
         JobIdPtrSet before_set_ptr_;
+        worker_id_t worker_id_;
     };
 
 
-    class RemoteCopySendCommandTemplate {
+    class RemoteCopySendCommandTemplate : public CommandTemplate {
       public:
         RemoteCopySendCommandTemplate(JobIdPtr job_id_ptr,
                                       JobIdPtr receive_job_id_ptr,
@@ -172,14 +204,16 @@ class BindingTemplate {
                                       const ID<worker_id_t>& to_worker_id,
                                       const std::string to_ip,
                                       const ID<port_t>& to_port,
-                                      const JobIdPtrSet& before_set_ptr)
+                                      const JobIdPtrSet& before_set_ptr,
+                                      const worker_id_t& worker_id)
           : job_id_ptr_(job_id_ptr),
             receive_job_id_ptr_(receive_job_id_ptr),
             from_physical_data_id_ptr_(from_physical_data_id_ptr),
             to_worker_id_(to_worker_id),
             to_ip_(to_ip),
             to_port_(to_port),
-            before_set_ptr_(before_set_ptr) {}
+            before_set_ptr_(before_set_ptr),
+            worker_id_(worker_id) {}
 
         ~RemoteCopySendCommandTemplate() {}
 
@@ -190,27 +224,27 @@ class BindingTemplate {
         std::string to_ip_;
         ID<port_t> to_port_;
         JobIdPtrSet before_set_ptr_;
+        worker_id_t worker_id_;
     };
 
-    class RemoteCopyReceiveCommandTemplate {
+    class RemoteCopyReceiveCommandTemplate : public CommandTemplate {
       public:
         RemoteCopyReceiveCommandTemplate(JobIdPtr job_id_ptr,
                                          PhyIdPtr to_physical_data_id_ptr,
-                                         const JobIdPtrSet& before_set_ptr)
+                                         const JobIdPtrSet& before_set_ptr,
+                                         const worker_id_t& worker_id)
           : job_id_ptr_(job_id_ptr),
             to_physical_data_id_ptr_(to_physical_data_id_ptr),
-            before_set_ptr_(before_set_ptr) {}
+            before_set_ptr_(before_set_ptr),
+            worker_id_(worker_id) {}
 
         ~RemoteCopyReceiveCommandTemplate() {}
 
         JobIdPtr job_id_ptr_;
         PhyIdPtr to_physical_data_id_ptr_;
         JobIdPtrSet before_set_ptr_;
+        worker_id_t worker_id_;
     };
-
-
-
-
 
 
 
@@ -220,6 +254,23 @@ class BindingTemplate {
 
 
     bool finalized_;
+
+    Pattern entry_pattern_;
+    Pattern end_pattern_;
+
+    PhyIdPtrMap phy_id_map_;
+    PhyIdPtrList phy_id_list_;
+
+    JobIdPtrMap job_id_map_;
+    JobIdPtrList job_id_list_;
+
+    CommandTemplateVector compute_job_commands_;
+    CommandTemplateVector local_copy_commands_;
+    CommandTemplateVector rempte_copy_send_commands_;
+    CommandTemplateVector rempte_copy_receive_commands_;
+
+
+    //
 };
 
 }  // namespace nimbus
