@@ -53,6 +53,20 @@ BindingTemplate::BindingTemplate() {
 BindingTemplate::~BindingTemplate() {
 }
 
+bool BindingTemplate::finalized() {
+  return finalized_;
+}
+
+size_t BindingTemplate::copy_job_num() {
+  assert(finalized_);
+  return copy_job_id_list_.size();
+}
+
+size_t BindingTemplate::compute_job_num() {
+  assert(finalized_);
+  return compute_job_id_list_.size();
+}
+
 bool BindingTemplate::TrackDataObject(const logical_data_id_t& ldid,
                                       const physical_data_id_t& pdid,
                                       VERSION_TYPE version_type,

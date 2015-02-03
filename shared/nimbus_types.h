@@ -66,6 +66,7 @@
 #define LOGICAL_DATA_ID_BATCH (logical_data_id_t)(10000000000)
 #define PHYSICAL_DATA_ID_BATCH (physical_data_id_t)(10000000000)
 
+#define STATIC_BINDING_RECORD (size_t)(0)
 
 #define NIMBUS_KERNEL_JOB_NAME "kernel"
 #define NIMBUS_MAIN_JOB_NAME "main"

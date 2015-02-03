@@ -48,7 +48,10 @@ JobEntry::JobEntry() {
   job_depth_ = NIMBUS_INIT_JOB_DEPTH;
   sterile_ = false;
   memoize_ = false;
+  memoize_binding_ = false;
+  to_finalize_binding_template_ = false;
   template_job_ = NULL;
+  binding_template_ = NULL;
   region_ = GeometricRegion();
   partial_versioned_ = false;
   versioned_ = false;
@@ -181,8 +184,20 @@ bool JobEntry::memoize() const {
   return memoize_;
 }
 
+bool JobEntry::memoize_binding() const {
+  return memoize_binding_;
+}
+
+bool JobEntry::to_finalize_binding_template() const {
+  return to_finalize_binding_template_;
+}
+
 TemplateJobEntry* JobEntry::template_job() const {
   return template_job_;
+}
+
+BindingTemplate* JobEntry::binding_template() const {
+  return binding_template_;
 }
 
 GeometricRegion JobEntry::region() const {
@@ -349,8 +364,20 @@ void JobEntry::set_memoize(bool flag) {
   memoize_ = flag;
 }
 
+void JobEntry::set_memoize_binding(bool flag) {
+  memoize_binding_ = flag;
+}
+
+void JobEntry::set_to_finalize_binding_template(bool flag) {
+  to_finalize_binding_template_ = flag;
+}
+
 void JobEntry::set_template_job(TemplateJobEntry* template_job) {
   template_job_ = template_job;
+}
+
+void JobEntry::set_binding_template(BindingTemplate* binding_template) {
+  binding_template_ = binding_template;
 }
 
 void JobEntry::set_region(GeometricRegion region) {

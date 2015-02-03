@@ -68,6 +68,11 @@ class BindingTemplate {
     BindingTemplate();
     ~BindingTemplate();
 
+
+    bool finalized();
+    size_t copy_job_num();
+    size_t compute_job_num();
+
     bool Finalize() {
       return false;
     }
@@ -130,8 +135,8 @@ class BindingTemplate {
 
     class CommandTemplate {
       public:
-        CommandTemplate();
-        ~CommandTemplate();
+        CommandTemplate() {}
+        ~CommandTemplate() {}
     };
 
     typedef std::vector<CommandTemplate*> CommandTemplateVector;

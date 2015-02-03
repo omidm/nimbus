@@ -201,6 +201,7 @@ size_t ComplexJobEntry::GetJobsForAssignment(JobEntryList* list, size_t max_num,
     ++count;
 
     if (cursor_.state() == Cursor::END_ALL) {
+      shadow_job->set_to_finalize_binding_template(true);
       drained_all_ = true;
       break;
     } else if (cursor_.state() == Cursor::END_BATCH) {

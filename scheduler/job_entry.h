@@ -56,6 +56,7 @@
 #include "shared/geometric_region.h"
 #include "scheduler/version_map.h"
 #include "scheduler/data_manager.h"
+#include "scheduler/binding_template.h"
 #include "scheduler/scheduler_worker.h"
 #include "scheduler/meta_before_set.h"
 #include "scheduler/logical_data_lineage.h"
@@ -103,7 +104,10 @@ class JobEntry {
     virtual SchedulerWorker* assigned_worker() const;
     virtual bool sterile() const;
     virtual bool memoize() const;
+    virtual bool memoize_binding() const;
+    virtual bool to_finalize_binding_template() const;
     virtual TemplateJobEntry* template_job() const;
+    virtual BindingTemplate* binding_template() const;
     virtual GeometricRegion region() const;
     virtual bool partial_versioned() const;
     virtual bool versioned() const;
@@ -141,7 +145,10 @@ class JobEntry {
     virtual void set_assigned_worker(SchedulerWorker* assigned_worker);
     virtual void set_sterile(bool flag);
     virtual void set_memoize(bool flag);
+    virtual void set_memoize_binding(bool flag);
+    virtual void set_to_finalize_binding_template(bool flag);
     virtual void set_template_job(TemplateJobEntry* template_job);
+    virtual void set_binding_template(BindingTemplate* binding_template);
     virtual void set_region(GeometricRegion region);
     virtual void set_partial_versioned(bool flag);
     virtual void set_versioned(bool flag);
@@ -199,7 +206,10 @@ class JobEntry {
     SchedulerWorker *assigned_worker_;
     bool sterile_;
     bool memoize_;
+    bool memoize_binding_;
+    bool to_finalize_binding_template_;
     TemplateJobEntry* template_job_;
+    BindingTemplate* binding_template_;
     GeometricRegion region_;
     bool partial_versioned_;
     bool versioned_;

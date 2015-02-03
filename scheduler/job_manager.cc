@@ -40,6 +40,7 @@
   */
 
 #include "scheduler/job_manager.h"
+#include "scheduler/binding_template.h"
 
 using namespace nimbus; // NOLINT
 
@@ -680,12 +681,35 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
 
     if (job->job_type() == JOB_CMPX) {
       ComplexJobEntry* complex_job = reinterpret_cast<ComplexJobEntry*>(job);
+      TemplateEntry *te = complex_job->template_entry();
+      BindingTemplate *bt;
+      bool create_bt = true;
+      if (te->QueryBindingRecord(STATIC_BINDING_RECORD, bt)) {
+        create_bt = false;
+        if (bt->finalized()) {
+          complex_job->set_binding_template(bt);
+          jobs_pending_to_assign_[complex_job->job_id()] = complex_job;
+          jobs_ready_to_assign_.erase(iter++);
+          num += bt->compute_job_num();
+          continue;
+        }
+      }
+
+      if (create_bt) {
+        bt = new BindingTemplate();
+        if (!te->AddBindingRecord(STATIC_BINDING_RECORD, bt)) {
+          assert(false);
+        }
+      }
+
       JobEntryList l;
       size_t c_num = complex_job->GetJobsForAssignment(&l, max_num - num);
       assert(c_num > 0);
       num += c_num;
       JobEntryList::iterator it = l.begin();
       for (; it != l.end(); ++it) {
+        (*it)->set_memoize_binding(true);
+        (*it)->set_binding_template(bt);
         list->push_back(*it);
         jobs_pending_to_assign_[(*it)->job_id()] = *it;
       }
@@ -694,6 +718,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
       } else {
         ++iter;
       }
+
     } else {
       list->push_back(job);
       // temp_list.push_back(job);
