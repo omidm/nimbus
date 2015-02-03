@@ -105,16 +105,16 @@ class BindingTemplate {
                          VERSION_TYPE version_type,
                          data_version_t version_diff_from_base);
 
-    bool AddComputeJobCommand(const ComputeJobCommand& command,
+    bool AddComputeJobCommand(ComputeJobCommand* command,
                               worker_id_t w_id);
 
-    bool AddLocalCopyCommand(const LocalCopyCommand& command,
+    bool AddLocalCopyCommand(LocalCopyCommand* command,
                              worker_id_t w_id);
 
-    bool AddRemoteCopySendCommand(const RemoteCopySendCommand& command,
+    bool AddRemoteCopySendCommand(RemoteCopySendCommand* command,
                                   worker_id_t w_id);
 
-    bool AddRemoteCopyReceiveCommand(const RemoteCopyReceiveCommand& command,
+    bool AddRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* command,
                                      worker_id_t w_id);
 
   private:
@@ -254,6 +254,8 @@ class BindingTemplate {
 
 
     bool finalized_;
+    // Currently we do not support future job - omidm
+    JobIdPtr future_job_id_ptr_;
 
     Pattern entry_pattern_;
     Pattern end_pattern_;
@@ -269,6 +271,13 @@ class BindingTemplate {
     CommandTemplateVector rempte_copy_send_commands_;
     CommandTemplateVector rempte_copy_receive_commands_;
 
+
+
+    JobIdPtr GetJobIdPtr(job_id_t job_id);
+    JobIdPtr GetExistingJobIdPtr(job_id_t job_id);
+
+    PhyIdPtr GetPhyIdPtr(physical_data_id_t pdid);
+    PhyIdPtr GetExistingPhyIdPtr(physical_data_id_t pdid);
 
     //
 };
