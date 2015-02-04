@@ -50,11 +50,14 @@
 #include "shared/logical_data_object.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
+#include "shared/unordered_map_view.h"
 
 
 namespace nimbus {
 
   typedef boost::unordered_map<logical_data_id_t, PhysicalDataList*> PhysicalObjectMapType;
+  typedef boost::unordered_map_view<logical_data_id_t, PhysicalDataList*>
+      PhysicalObjectMapViewType;
 
   class PhysicalObjectMap {
   public:
@@ -98,7 +101,10 @@ namespace nimbus {
                                   PhysicalDataList* dest);
 
   private:
+    virtual bool BuildDataMapViewIfNeeded();
     PhysicalObjectMapType data_map_;
+    PhysicalObjectMapViewType data_map_view_;
+    bool is_static_;
   };
 }  // namespace nimbus
 

@@ -48,7 +48,9 @@ namespace nimbus {
  * \brief Brief description.
  * \return
 */
-nimbus::PhysicalObjectMap::PhysicalObjectMap() {}
+nimbus::PhysicalObjectMap::PhysicalObjectMap() {
+  is_static_ = false;
+}
 
 
 /**
@@ -67,12 +69,28 @@ nimbus::PhysicalObjectMap::~PhysicalObjectMap() {
 
 
 /**
+ * \fn void nimbus::PhysicalObjectMap::BuildDataMapViewIfNeeded()
+ * \brief Brief description.
+ * \param object
+ * \return
+*/
+bool nimbus::PhysicalObjectMap::BuildDataMapViewIfNeeded() {
+  if (is_static_) {
+    return false;
+  }
+  data_map_view_.snapshot(data_map_);
+  is_static_ = true;
+  return true;
+}
+
+/**
  * \fn void nimbus::PhysicalObjectMap::AddLogicalObject(LogicalDataObject *object)
  * \brief Brief description.
  * \param object
  * \return
 */
 bool nimbus::PhysicalObjectMap::AddLogicalObject(LogicalDataObject *object) {
+  assert(!is_static_);
   logical_data_id_t id = object->id();
 
   // Does not exist, insert
@@ -87,6 +105,7 @@ bool nimbus::PhysicalObjectMap::AddLogicalObject(LogicalDataObject *object) {
 }
 
 bool nimbus::PhysicalObjectMap::RemoveLogicalObject(logical_data_id_t id) {
+  assert(!is_static_);
   if (data_map_.find(id) == data_map_.end()) {  // Exists
     return false;
   } else {
@@ -105,11 +124,12 @@ bool nimbus::PhysicalObjectMap::RemoveLogicalObject(logical_data_id_t id) {
 */
 bool nimbus::PhysicalObjectMap::AddPhysicalInstance(LogicalDataObject* obj,
                                           const PhysicalData& instance) {
-  PhysicalObjectMapType::iterator iter = data_map_.find(obj->id());
-  if (iter == data_map_.end()) {
+  BuildDataMapViewIfNeeded();
+  PhysicalObjectMapViewType::iterator iter = data_map_view_.find(obj->id());
+  if (iter == data_map_view_.end()) {
     return false;
   } else {
-    PhysicalDataList* v = iter->second;
+    PhysicalDataList* v = *iter;
     v->push_back(instance);
     return true;
   }
@@ -124,11 +144,12 @@ bool nimbus::PhysicalObjectMap::AddPhysicalInstance(LogicalDataObject* obj,
 */
 bool nimbus::PhysicalObjectMap::RemovePhysicalInstance(LogicalDataObject* obj,
                                              const PhysicalData& instance) {
-  PhysicalObjectMapType::iterator iter = data_map_.find(obj->id());
-  if (iter == data_map_.end()) {
+  BuildDataMapViewIfNeeded();
+  PhysicalObjectMapViewType::iterator iter = data_map_view_.find(obj->id());
+  if (iter == data_map_view_.end()) {
     return false;
   } else {
-    PhysicalDataList* v = iter->second;
+    PhysicalDataList* v = *iter;
     PhysicalDataList::iterator it = v->begin();
     for (; it != v->end(); ++it) {
       PhysicalData pd = *it;
@@ -142,8 +163,9 @@ bool nimbus::PhysicalObjectMap::RemovePhysicalInstance(LogicalDataObject* obj,
 }
 
 size_t nimbus::PhysicalObjectMap::RemoveAllInstanceByWorker(worker_id_t worker_id) {
+  // Not optimized yet.
+  dbg(DBG_WARN, "Lookup not optimized!\n");
   size_t count = 0;
-
   PhysicalObjectMapType::iterator iter = data_map_.begin();
   for (; iter != data_map_.end(); ++iter) {
     PhysicalDataList *pdv = iter->second;
@@ -163,8 +185,9 @@ size_t nimbus::PhysicalObjectMap::RemoveAllInstanceByWorker(worker_id_t worker_i
 }
 
 size_t nimbus::PhysicalObjectMap::ResetAllInstances() {
+  // Not optimized yet.
+  dbg(DBG_WARN, "Lookup not optimized!\n");
   size_t count = 0;
-
   PhysicalObjectMapType::iterator iter = data_map_.begin();
   for (; iter != data_map_.end(); ++iter) {
     PhysicalDataList *pdv = iter->second;
@@ -191,13 +214,14 @@ size_t nimbus::PhysicalObjectMap::ResetAllInstances() {
 bool nimbus::PhysicalObjectMap::UpdatePhysicalInstance(LogicalDataObject* obj,
                                                        const PhysicalData& old_instance,
                                                        const PhysicalData& new_instance) {
+  BuildDataMapViewIfNeeded();
   assert(old_instance.id() == new_instance.id());
 
-  PhysicalObjectMapType::iterator iter = data_map_.find(obj->id());
-  if (iter == data_map_.end()) {
+  PhysicalObjectMapViewType::iterator iter = data_map_view_.find(obj->id());
+  if (iter == data_map_view_.end()) {
     return false;
   } else {
-    PhysicalDataList* v = iter->second;
+    PhysicalDataList* v = *iter;
     PhysicalDataList::iterator it = v->begin();
     for (; it != v->end(); ++it) {
       if (it->id() == old_instance.id()) {
@@ -219,11 +243,12 @@ bool nimbus::PhysicalObjectMap::UpdatePhysicalInstance(LogicalDataObject* obj,
  * \return
 */
 const PhysicalDataList * nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object) {
-  PhysicalObjectMapType::iterator iter = data_map_.find(object->id());
-  if (iter == data_map_.end()) {
+  BuildDataMapViewIfNeeded();
+  PhysicalObjectMapViewType::iterator iter = data_map_view_.find(object->id());
+  if (iter == data_map_view_.end()) {
     return NULL;
   } else {
-    PhysicalDataList* v = iter->second;
+    PhysicalDataList* v = *iter;
     return v;
   }
 }
@@ -239,12 +264,13 @@ const PhysicalDataList * nimbus::PhysicalObjectMap::AllInstances(LogicalDataObje
 */
 int nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object,
                                   PhysicalDataList *dest) {
+  BuildDataMapViewIfNeeded();
   dest->clear();
-  PhysicalObjectMapType::iterator iter = data_map_.find(object->id());
-  if (iter == data_map_.end()) {
+  PhysicalObjectMapViewType::iterator iter = data_map_view_.find(object->id());
+  if (iter == data_map_view_.end()) {
     return 0;
   } else {
-    PhysicalDataList* v = iter->second;
+    PhysicalDataList* v = *iter;
     PhysicalDataList::iterator it = v->begin();
     for (; it != v->end(); ++it) {
       dest->push_back(*it);
@@ -267,12 +293,13 @@ int nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object,
 int nimbus::PhysicalObjectMap::InstancesByWorker(LogicalDataObject *object,
                                    worker_id_t worker,
                                    PhysicalDataList *dest) {
+  BuildDataMapViewIfNeeded();
   dest->clear();
-  PhysicalObjectMapType::iterator iter = data_map_.find(object->id());
-  if (iter == data_map_.end()) {
+  PhysicalObjectMapViewType::iterator iter = data_map_view_.find(object->id());
+  if (iter == data_map_view_.end()) {
     return 0;
   } else {
-    PhysicalDataList* v = iter->second;
+    PhysicalDataList* v = *iter;
     PhysicalDataList::iterator it = v->begin();
     int count = 0;
 
@@ -301,12 +328,13 @@ int nimbus::PhysicalObjectMap::InstancesByWorker(LogicalDataObject *object,
 int nimbus::PhysicalObjectMap::InstancesByVersion(LogicalDataObject *object,
                                         data_version_t version,
                                         PhysicalDataList *dest) {
+  BuildDataMapViewIfNeeded();
   dest->clear();
-  PhysicalObjectMapType::iterator iter = data_map_.find(object->id());
-  if (iter == data_map_.end()) {
+  PhysicalObjectMapViewType::iterator iter = data_map_view_.find(object->id());
+  if (iter == data_map_view_.end()) {
     return 0;
   } else {
-    PhysicalDataList* v = iter->second;
+    PhysicalDataList* v = *iter;
     PhysicalDataList::iterator it = v->begin();
     int count = 0;
     for (; it != v->end(); ++it) {
@@ -335,12 +363,13 @@ int nimbus::PhysicalObjectMap::InstancesByWorkerAndVersion(LogicalDataObject *ob
                                    worker_id_t worker,
                                    data_version_t version,
                                    PhysicalDataList *dest) {
+  BuildDataMapViewIfNeeded();
   dest->clear();
-  PhysicalObjectMapType::iterator iter = data_map_.find(object->id());
-  if (iter == data_map_.end()) {
+  PhysicalObjectMapViewType::iterator iter = data_map_view_.find(object->id());
+  if (iter == data_map_view_.end()) {
     return 0;
   } else {
-    PhysicalDataList* v = iter->second;
+    PhysicalDataList* v = *iter;
     PhysicalDataList::iterator it = v->begin();
     int count = 0;
 
