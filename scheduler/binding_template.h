@@ -88,27 +88,35 @@ class BindingTemplate {
 
     class PatternEntry {
       public:
-        PatternEntry(const logical_data_id_t& ldid,
-                    VERSION_TYPE version_type,
-                    data_version_t version_diff_from_base)
-          : ldid_(ldid),
+        PatternEntry(const worker_id_t& worker_id,
+                     const logical_data_id_t& ldid,
+                     VERSION_TYPE version_type,
+                     data_version_t version_diff_from_base)
+          : worker_id_(worker_id),
+            ldid_(ldid),
             version_type_(version_type),
             version_diff_from_base_(version_diff_from_base) {}
 
         ~PatternEntry();
 
+        worker_id_t worker_id_;
         logical_data_id_t ldid_;
         VERSION_TYPE version_type_;
         data_version_t version_diff_from_base_;
     };
 
-    typedef std::vector<PatternEntry*> Pattern;
+    typedef std::vector<PatternEntry*> PatternList;
+    typedef boost::unordered_map<physical_data_id_t, PatternEntry*> PatternMap;
 
 
-    bool TrackDataObject(const logical_data_id_t& ldid,
+    bool TrackDataObject(const worker_id_t& worker_id,
+                         const logical_data_id_t& ldid,
                          const physical_data_id_t& pdid,
                          VERSION_TYPE version_type,
                          data_version_t version_diff_from_base);
+
+    bool UpdateDataObject(const physical_data_id_t& pdid,
+                          data_version_t version_diff_from_base);
 
     bool AddComputeJobCommand(ComputeJobCommand* command,
                               worker_id_t w_id);
@@ -256,8 +264,11 @@ class BindingTemplate {
     // Currently we do not support future job - omidm
     JobIdPtr future_job_id_ptr_;
 
-    Pattern entry_pattern_;
-    Pattern end_pattern_;
+    PatternMap entry_pattern_map_;
+    PatternList entry_pattern_list_;
+
+    PatternMap end_pattern_map_;
+    PatternList end_pattern_list_;
 
     PhyIdPtrMap phy_id_map_;
     PhyIdPtrList phy_id_list_;

@@ -67,7 +67,8 @@ size_t BindingTemplate::compute_job_num() {
   return compute_job_id_list_.size();
 }
 
-bool BindingTemplate::TrackDataObject(const logical_data_id_t& ldid,
+bool BindingTemplate::TrackDataObject(const worker_id_t& worker_id,
+                                      const logical_data_id_t& ldid,
                                       const physical_data_id_t& pdid,
                                       VERSION_TYPE version_type,
                                       data_version_t version_diff_from_base) {
@@ -80,9 +81,34 @@ bool BindingTemplate::TrackDataObject(const logical_data_id_t& ldid,
   phy_id_map_[pdid] = pdid_ptr;
   phy_id_list_.push_back(pdid_ptr);
 
-  PatternEntry *pattern =
-    new PatternEntry(ldid, version_type, version_diff_from_base);
-  entry_pattern_.push_back(pattern);
+  {
+    PatternEntry *pattern =
+      new PatternEntry(worker_id, ldid, version_type, version_diff_from_base);
+    entry_pattern_map_[pdid] = pattern;
+    entry_pattern_list_.push_back(pattern);
+  }
+
+  {
+    PatternEntry *pattern =
+      new PatternEntry(worker_id, ldid, version_type, version_diff_from_base);
+    end_pattern_map_[pdid] = pattern;
+    end_pattern_list_.push_back(pattern);
+  }
+
+  return true;
+}
+
+bool BindingTemplate::UpdateDataObject(const physical_data_id_t& pdid,
+                                       data_version_t version_diff_from_base) {
+  PatternMap::iterator iter =  end_pattern_map_.find(pdid);
+  if (iter == end_pattern_map_.end()) {
+    assert(false);
+    return false;
+  }
+
+  PatternEntry *pe = iter->second;
+  pe->version_type_ = REGULAR;
+  pe->version_diff_from_base_ = version_diff_from_base;
 
   return true;
 }

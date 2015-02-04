@@ -113,6 +113,8 @@ namespace nimbus {
 
     virtual bool AssignJob(JobEntry* job);
 
+    virtual bool AssignComplexJob(ComplexJobEntry* job);
+
     virtual bool PrepareDataForJobAtWorker(JobEntry* job,
                                            SchedulerWorker* worker,
                                            logical_data_id_t l_id);
