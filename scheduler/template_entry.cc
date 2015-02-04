@@ -71,6 +71,10 @@ bool TemplateEntry::finalized() {
   return finalized_;
 }
 
+size_t TemplateEntry::compute_jobs_num() {
+  return compute_jobs_.size();
+}
+
 std::string TemplateEntry::template_name() {
   return template_name_;
 }

@@ -210,6 +210,11 @@ bool JobAssigner::AssignJob(JobEntry *job) {
   if (prepared_data) {
     PrintLog(job);
 
+    log_job_manager_.log_ResumeTimer();
+    job_manager_->UpdateJobBeforeSet(job);
+    log_job_manager_.log_StopTimer();
+    SendComputeJobToWorker(worker, job);
+
     // BINDING MEMOIZE - omidm
     if (job->memoize_binding()) {
       assert(job->job_type() == JOB_SHDW);
@@ -219,11 +224,6 @@ bool JobAssigner::AssignJob(JobEntry *job) {
       }
     }
     // BINDING MEMOIZE - omidm
-
-    log_job_manager_.log_ResumeTimer();
-    job_manager_->UpdateJobBeforeSet(job);
-    log_job_manager_.log_StopTimer();
-    SendComputeJobToWorker(worker, job);
 
     log_job_manager_.log_ResumeTimer();
     job_manager_->NotifyJobAssignment(job);
@@ -388,7 +388,6 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     if (!found) {
       dbg(DBG_SCHED, "Avoiding unwanted serialization for data %lu (1).\n", l_id);
       GetFreeDataAtWorker(worker, ldo, &target_instance);
-      LocalCopyData(worker, ldo, &(*instances_at_worker.begin()), &target_instance);
 
       // BINDING MEMOIZE - omidm
       if (memoize_binding) {
@@ -406,6 +405,9 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
                              version_diff);
       }
       // BINDING MEMOIZE - omidm
+
+      // BINDING MEMOIZE - omidm
+      LocalCopyData(worker, ldo, &(*instances_at_worker.begin()), &target_instance, bt);
     }
 
     AllocateLdoInstanceToJob(job, ldo, target_instance);
@@ -444,7 +446,6 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
       log_job_manager_.log_StopTimer();
       dbg(DBG_SCHED, "Avoiding unwanted serialization for data %lu (2).\n", l_id);
       GetFreeDataAtWorker(worker, ldo, &target_instance);
-      LocalCopyData(worker, ldo, &(*instances_at_worker.begin()), &target_instance);
 
       // BINDING MEMOIZE - omidm
       if (memoize_binding) {
@@ -462,6 +463,9 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
                              version_diff);
       }
       // BINDING MEMOIZE - omidm
+
+      // BINDING MEMOIZE - omidm
+      LocalCopyData(worker, ldo, &(*instances_at_worker.begin()), &target_instance, bt);
     }
 
     AllocateLdoInstanceToJob(job, ldo, target_instance);
@@ -488,7 +492,6 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
       target_instance = *instances_at_worker.begin();
       PhysicalData copy_data;
       GetFreeDataAtWorker(worker, ldo, &copy_data);
-      LocalCopyData(worker, ldo, &target_instance, &copy_data);
 
       // BINDING MEMOIZE - omidm
       if (memoize_binding) {
@@ -506,11 +509,13 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
                              version_diff);
       }
       // BINDING MEMOIZE - omidm
+
+      // BINDING MEMOIZE - omidm
+      LocalCopyData(worker, ldo, &target_instance, &copy_data, bt);
     } else {
       log_job_manager_.log_StopTimer();
       dbg(DBG_SCHED, "Avoiding unwanted serialization for data %lu (3).\n", l_id);
       GetFreeDataAtWorker(worker, ldo, &target_instance);
-      LocalCopyData(worker, ldo, &(*instances_at_worker.begin()), &target_instance);
 
       // BINDING MEMOIZE - omidm
       if (memoize_binding) {
@@ -528,6 +533,9 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
                              version_diff);
       }
       // BINDING MEMOIZE - omidm
+
+      // BINDING MEMOIZE - omidm
+      LocalCopyData(worker, ldo, &(*instances_at_worker.begin()), &target_instance, bt);
     }
 
     AllocateLdoInstanceToJob(job, ldo, target_instance);
@@ -573,7 +581,6 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
 
     PhysicalData target_instance;
     GetFreeDataAtWorker(worker, ldo, &target_instance);
-    RemoteCopyData(worker_sender, worker, ldo, &from_instance, &target_instance);
 
     // BINDING MEMOIZE - omidm
     if (memoize_binding) {
@@ -591,6 +598,9 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
                            version_diff);
     }
     // BINDING MEMOIZE - omidm
+
+    // BINDING MEMOIZE - omidm
+    RemoteCopyData(worker_sender, worker, ldo, &from_instance, &target_instance, bt);
 
     AllocateLdoInstanceToJob(job, ldo, target_instance);
 
@@ -882,7 +892,8 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
                                  SchedulerWorker* to_worker,
                                  LogicalDataObject* ldo,
                                  PhysicalData* from_data,
-                                 PhysicalData* to_data) {
+                                 PhysicalData* to_data,
+                                 BindingTemplate *bt) {
   assert(from_worker->worker_id() == from_data->worker());
   assert(to_worker->worker_id() == to_data->worker());
 
@@ -919,6 +930,12 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
                                 before);
   server_->SendCommand(to_worker, &cm_r);
 
+  // BINDING MEMOIZE - omidm
+  if (bt) {
+    bt->AddRemoteCopyReceiveCommand(&cm_r, to_worker->worker_id());
+  }
+  // BINDING MEMOIZE - omidm
+
   // Notify assignment to job manager.
   // job->set_assigned_worker(to_worker);
   // job->set_before_set(before);
@@ -952,6 +969,12 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
                              before);
   server_->SendCommand(from_worker, &cm_s);
 
+  // BINDING MEMOIZE - omidm
+  if (bt) {
+    bt->AddRemoteCopySendCommand(&cm_s, from_worker->worker_id());
+  }
+  // BINDING MEMOIZE - omidm
+
   // Notify assignment to job manager.
   // job->set_assigned_worker(from_worker);
   // job->set_before_set(before);
@@ -967,7 +990,8 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
 bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
                                 LogicalDataObject* ldo,
                                 PhysicalData* from_data,
-                                PhysicalData* to_data) {
+                                PhysicalData* to_data,
+                                BindingTemplate *bt) {
   assert(worker->worker_id() == from_data->worker());
   assert(worker->worker_id() == to_data->worker());
 
@@ -1005,6 +1029,12 @@ bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
                         ID<physical_data_id_t>(to_data->id()),
                         before);
   server_->SendCommand(worker, &cm_c);
+
+  // BINDING MEMOIZE - omidm
+  if (bt) {
+    bt->AddLocalCopyCommand(&cm_c, worker->worker_id());
+  }
+  // BINDING MEMOIZE - omidm
 
   // Notify assignment to job manager.
   // job->set_assigned_worker(worker);
@@ -1050,6 +1080,16 @@ bool JobAssigner::SendComputeJobToWorker(SchedulerWorker* worker,
                          job->params());
     dbg(DBG_SCHED, "Sending compute job %lu to worker %lu.\n", job->job_id(), worker->worker_id());
     server_->SendCommand(worker, &cm);
+
+    // BINDING MEMOIZE - omidm
+    if (job->memoize_binding()) {
+      assert(job->job_type() == JOB_SHDW);
+      ShadowJobEntry *sj = reinterpret_cast<ShadowJobEntry*>(job);
+      BindingTemplate *bt = sj->binding_template();
+      bt->AddComputeJobCommand(&cm, worker->worker_id());
+    }
+    // BINDING MEMOIZE - omidm
+
     return true;
   } else {
     dbg(DBG_ERROR, "ERROR: Job with id %lu is not a compute job.\n", job->job_id());

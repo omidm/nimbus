@@ -56,6 +56,7 @@
 #include "scheduler/job_manager.h"
 #include "scheduler/region_map.h"
 #include "scheduler/straggler_map.h"
+#include "scheduler/binding_template.h"
 #include "shared/cluster.h"
 #include "shared/id_maker.h"
 #include "shared/scheduler_server.h"
@@ -133,12 +134,14 @@ namespace nimbus {
                                 SchedulerWorker* to_worker,
                                 LogicalDataObject* ldo,
                                 PhysicalData* from_data,
-                                PhysicalData* to_data);
+                                PhysicalData* to_data,
+                                BindingTemplate *bt = NULL);
 
     virtual bool LocalCopyData(SchedulerWorker* worker,
                                LogicalDataObject* ldo,
                                PhysicalData* created_data,
-                               PhysicalData* to_data);
+                               PhysicalData* to_data,
+                               BindingTemplate *bt = NULL);
 
     virtual bool SaveData(SchedulerWorker* worker,
                           LogicalDataObject* ldo,

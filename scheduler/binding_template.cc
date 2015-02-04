@@ -41,12 +41,14 @@
   */
 
 #include "scheduler/binding_template.h"
+#include "scheduler/template_entry.h"
 #include "scheduler/job_manager.h"
 
 using namespace nimbus; // NOLINT
 
-BindingTemplate::BindingTemplate() {
+BindingTemplate::BindingTemplate(TemplateEntry *template_entry) {
   finalized_ = false;
+  template_entry_ = template_entry;
   future_job_id_ptr_ = JobIdPtr(new job_id_t(0));
 }
 
@@ -66,6 +68,28 @@ size_t BindingTemplate::compute_job_num() {
   assert(finalized_);
   return compute_job_id_list_.size();
 }
+
+bool BindingTemplate::Finalize() {
+  assert(!finalized_);
+
+  assert(copy_job_id_map_.size() == copy_job_id_list_.size());
+  assert(compute_job_id_map_.size() == compute_job_id_list_.size());
+  assert(compute_job_id_map_.size() == template_entry_->compute_jobs_num());
+
+  assert(end_pattern_map_.size() == end_pattern_list_.size());
+  assert(entry_pattern_map_.size() == entry_pattern_list_.size());
+  assert(entry_pattern_map_.size() == end_pattern_map_.size());
+
+  PatternList::iterator iter = end_pattern_list_.begin();
+  for (; iter != end_pattern_list_.end(); ++iter) {
+    assert((*iter)->version_type_ == REGULAR);
+  }
+
+  finalized_ = true;
+  return true;
+}
+
+
 
 bool BindingTemplate::TrackDataObject(const worker_id_t& worker_id,
                                       const logical_data_id_t& ldid,
@@ -141,7 +165,9 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
     for (; iter != command->before_set_p()->end(); ++iter) {
       JobIdPtr job_id_ptr;
       if (IDMaker::SchedulerProducedJobID(*iter)) {
-        job_id_ptr = GetExistingCopyJobIdPtr(*iter);
+        if (!GetCopyJobIdPtrIfExisted(*iter, &job_id_ptr)) {
+          continue;
+        }
       } else {
         job_id_ptr = GetComputeJobIdPtr(*iter);
       }
@@ -155,7 +181,9 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
     for (; iter != command->after_set_p()->end(); ++iter) {
       JobIdPtr job_id_ptr;
       if (IDMaker::SchedulerProducedJobID(*iter)) {
-        job_id_ptr = GetExistingCopyJobIdPtr(*iter);
+        if (!GetCopyJobIdPtrIfExisted(*iter, &job_id_ptr)) {
+          continue;
+        }
       } else {
         job_id_ptr = GetComputeJobIdPtr(*iter);
       }
@@ -196,7 +224,9 @@ bool BindingTemplate::AddLocalCopyCommand(LocalCopyCommand* command,
     for (; iter != command->before_set_p()->end(); ++iter) {
       JobIdPtr job_id_ptr;
       if (IDMaker::SchedulerProducedJobID(*iter)) {
-        job_id_ptr = GetExistingCopyJobIdPtr(*iter);
+        if (!GetCopyJobIdPtrIfExisted(*iter, &job_id_ptr)) {
+          continue;
+        }
       } else {
         job_id_ptr = GetComputeJobIdPtr(*iter);
       }
@@ -231,7 +261,9 @@ bool BindingTemplate::AddRemoteCopySendCommand(RemoteCopySendCommand* command,
     for (; iter != command->before_set_p()->end(); ++iter) {
       JobIdPtr job_id_ptr;
       if (IDMaker::SchedulerProducedJobID(*iter)) {
-        job_id_ptr = GetExistingCopyJobIdPtr(*iter);
+        if (!GetCopyJobIdPtrIfExisted(*iter, &job_id_ptr)) {
+          continue;
+        }
       } else {
         job_id_ptr = GetComputeJobIdPtr(*iter);
       }
@@ -267,7 +299,9 @@ bool BindingTemplate::AddRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* comm
     for (; iter != command->before_set_p()->end(); ++iter) {
       JobIdPtr job_id_ptr;
       if (IDMaker::SchedulerProducedJobID(*iter)) {
-        job_id_ptr = GetExistingCopyJobIdPtr(*iter);
+        if (!GetCopyJobIdPtrIfExisted(*iter, &job_id_ptr)) {
+          continue;
+        }
       } else {
         job_id_ptr = GetComputeJobIdPtr(*iter);
       }
@@ -301,17 +335,14 @@ BindingTemplate::JobIdPtr BindingTemplate::GetCopyJobIdPtr(job_id_t job_id) {
   return job_id_ptr;
 }
 
-BindingTemplate::JobIdPtr BindingTemplate::GetExistingCopyJobIdPtr(job_id_t job_id) {
-  JobIdPtr job_id_ptr;
-
+bool BindingTemplate::GetCopyJobIdPtrIfExisted(job_id_t job_id, JobIdPtr *job_id_ptr) {
   JobIdPtrMap::iterator iter = copy_job_id_map_.find(job_id);
   if (iter != copy_job_id_map_.end()) {
-    job_id_ptr = iter->second;
-  } else {
-    assert(false);
+    *job_id_ptr = iter->second;
+    return true;
   }
 
-  return job_id_ptr;
+  return false;
 }
 
 BindingTemplate::JobIdPtr BindingTemplate::GetComputeJobIdPtr(job_id_t job_id) {
@@ -327,34 +358,6 @@ BindingTemplate::JobIdPtr BindingTemplate::GetComputeJobIdPtr(job_id_t job_id) {
   }
 
   return job_id_ptr;
-}
-
-BindingTemplate::JobIdPtr BindingTemplate::GetExistingComputeJobIdPtr(job_id_t job_id) {
-  JobIdPtr job_id_ptr;
-
-  JobIdPtrMap::iterator iter = compute_job_id_map_.find(job_id);
-  if (iter != compute_job_id_map_.end()) {
-    job_id_ptr = iter->second;
-  } else {
-    assert(false);
-  }
-
-  return job_id_ptr;
-}
-
-BindingTemplate::PhyIdPtr BindingTemplate::GetPhyIdPtr(physical_data_id_t pdid) {
-  PhyIdPtr phy_id_ptr;
-
-  PhyIdPtrMap::iterator iter = phy_id_map_.find(pdid);
-  if (iter != phy_id_map_.end()) {
-    phy_id_ptr = iter->second;
-  } else {
-    phy_id_ptr = JobIdPtr(new physical_data_id_t(pdid));
-    phy_id_map_[pdid] = phy_id_ptr;
-    phy_id_list_.push_back(phy_id_ptr);
-  }
-
-  return phy_id_ptr;
 }
 
 BindingTemplate::PhyIdPtr BindingTemplate::GetExistingPhyIdPtr(physical_data_id_t pdid) {

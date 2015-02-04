@@ -73,6 +73,7 @@ class TemplateEntry {
     ~TemplateEntry();
 
     bool finalized();
+    size_t compute_jobs_num();
     std::string template_name();
     boost::shared_ptr<VersionMap> vmap_base() const;
 

@@ -687,6 +687,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
       if (te->QueryBindingRecord(STATIC_BINDING_RECORD, bt)) {
         create_bt = false;
         if (bt->finalized()) {
+          list->push_back(complex_job);
           complex_job->set_binding_template(bt);
           jobs_pending_to_assign_[complex_job->job_id()] = complex_job;
           jobs_ready_to_assign_.erase(iter++);
@@ -696,7 +697,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
       }
 
       if (create_bt) {
-        bt = new BindingTemplate();
+        bt = new BindingTemplate(te);
         if (!te->AddBindingRecord(STATIC_BINDING_RECORD, bt)) {
           assert(false);
         }

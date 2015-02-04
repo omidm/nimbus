@@ -63,9 +63,11 @@
 
 namespace nimbus {
 
+class TemplateEntry;
+
 class BindingTemplate {
   public:
-    BindingTemplate();
+    explicit BindingTemplate(TemplateEntry* template_entry);
     ~BindingTemplate();
 
 
@@ -73,9 +75,7 @@ class BindingTemplate {
     size_t copy_job_num();
     size_t compute_job_num();
 
-    bool Finalize() {
-      return false;
-    }
+    bool Finalize();
 
     bool Instantiate() {
       return false;
@@ -261,6 +261,7 @@ class BindingTemplate {
 
 
     bool finalized_;
+    TemplateEntry *template_entry_;
     // Currently we do not support future job - omidm
     JobIdPtr future_job_id_ptr_;
 
@@ -282,12 +283,10 @@ class BindingTemplate {
     CommandTemplateVector command_templates_;
 
     JobIdPtr GetCopyJobIdPtr(job_id_t job_id);
-    JobIdPtr GetExistingCopyJobIdPtr(job_id_t job_id);
+    bool GetCopyJobIdPtrIfExisted(job_id_t job_id, JobIdPtr *job_id_ptr);
 
     JobIdPtr GetComputeJobIdPtr(job_id_t job_id);
-    JobIdPtr GetExistingComputeJobIdPtr(job_id_t job_id);
 
-    PhyIdPtr GetPhyIdPtr(physical_data_id_t pdid);
     PhyIdPtr GetExistingPhyIdPtr(physical_data_id_t pdid);
 };
 
