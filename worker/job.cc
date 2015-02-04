@@ -474,6 +474,14 @@ IDSet<physical_data_id_t> Job::write_set() const {
   return write_set_;
 }
 
+const IDSet<physical_data_id_t>& Job::get_read_set() const {
+  return read_set_;
+}
+
+const IDSet<physical_data_id_t>& Job::get_write_set() const {
+  return write_set_;
+}
+
 IDSet<job_id_t> Job::before_set() const {
   return before_set_;
 }

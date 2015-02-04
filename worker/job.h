@@ -169,6 +169,8 @@ class Job {
     ID<job_id_t> id() const;
     IDSet<physical_data_id_t> read_set() const;
     IDSet<physical_data_id_t> write_set() const;
+    const IDSet<physical_data_id_t>& get_read_set() const;
+    const IDSet<physical_data_id_t>& get_write_set() const;
     IDSet<job_id_t> before_set() const;
     IDSet<job_id_t> after_set() const;
     ID<job_id_t> future_job_id() const;

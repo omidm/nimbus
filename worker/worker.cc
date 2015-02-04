@@ -210,13 +210,13 @@ void Worker::ResolveDataArray(Job* job) {
   job->data_array.clear();
   IDSet<physical_data_id_t>::IDSetIter iter;
 
-  IDSet<physical_data_id_t> read = job->read_set();
+  const IDSet<physical_data_id_t>& read = job->get_read_set();
   for (iter = read.begin(); iter != read.end(); iter++) {
     job->data_array.push_back(
         data_map_.AcquireAccess(*iter, job->id().elem(),
                                 PhysicalDataMap::READ));
   }
-  IDSet<physical_data_id_t> write = job->write_set();
+  const IDSet<physical_data_id_t>& write = job->get_write_set();
   for (iter = write.begin(); iter != write.end(); iter++) {
     job->data_array.push_back(
         data_map_.AcquireAccess(*iter, job->id().elem(),
@@ -696,17 +696,19 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
     if (after_job_vertex->incoming_edges()->empty()) {
       after_job_vertex->entry()->set_state(WorkerJobEntry::READY);
       assert(after_job_vertex->entry()->get_job() != NULL);
+      PrintTimeStamp("Resolve\n");
       ResolveDataArray(after_job_vertex->entry()->get_job());
       Job* job = after_job_vertex->entry()->get_job();
-      PrintTimeStamp("dispatch_job(job_done) %s %lu %lu\n",
+      PrintTimeStamp("dispatch_job(job_done) %d %s %lu %lu\n",
+                     deletion_list.size(),
                      job->name().c_str(),
                      job->id().elem(),
                      vertex->entry()->get_job_id());
       job_list.push_back(after_job_vertex->entry()->get_job());
-#ifndef MUTE_LOG
-      double wait_time = timer_.Stop(after_job_vertex->entry()->get_job()->id().elem());
-      after_job_vertex->entry()->get_job()->set_wait_time(wait_time);
-#endif  // MUTE_LOG
+// #ifndef MUTE_LOG
+//       double wait_time = timer_.Stop(after_job_vertex->entry()->get_job()->id().elem());
+//       after_job_vertex->entry()->get_job()->set_wait_time(wait_time);
+// #endif  // MUTE_LOG
       after_job_vertex->entry()->set_job(NULL);
     }
   }
