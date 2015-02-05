@@ -57,7 +57,6 @@ class unordered_map_view {
  public:
   typedef K key_type;
   typedef T mapped_type;
-  typedef T* iterator;
 
   typedef std::size_t size_type;
 
@@ -131,19 +130,6 @@ class unordered_map_view {
     }
     return table_[key - down_limit_];
   }
-  iterator find(const key_type& key) {
-    assert(is_initialized_);
-    if (key < down_limit_ && key > up_limit_) {
-      return end();
-    }
-    if ((!is_continuous_) && (!exist_[key - down_limit_])) {
-      return end();
-    }
-    return &(table_[key - down_limit_]);
-  }
-  iterator end() const {
-    return NULL;
-  }
 
   void clear() {
     table_.clear();
@@ -151,22 +137,10 @@ class unordered_map_view {
     is_initialized_ = false;
   }
 
-  bool has_element(const key_type& key) {
-    assert(is_initialized_);
-    if (key < down_limit_ || key > up_limit_) {
-      return false;
-    }
-    if (!is_continuous_) {
-      return exist_[key - down_limit_];
-    } else {
-      return true;
-    }
-  }
-
  private:
   static const int max_factor = 100;
-  std::vector<T> table_;
-  std::vector<bool> exist_;
+  std::vector<key_type> table_;
+  std::vector<key_type> exist_;
   key_type down_limit_;
   key_type up_limit_;
   std::size_t size_;
