@@ -76,6 +76,7 @@ class BindingTemplate {
     size_t copy_job_num();
     size_t compute_job_num();
 
+
     bool Finalize(const std::vector<job_id_t>& compute_job_ids);
 
     bool Instantiate(const std::vector<job_id_t>& compute_job_ids,
@@ -116,6 +117,9 @@ class BindingTemplate {
     typedef boost::unordered_map<logical_data_id_t, PatternBucket> PatternSorted;
     typedef std::vector<std::pair<size_t, size_t> > PatternMetaData;
 
+    const PatternMetaData* patterns_meta_data_p() const;
+    const PatternList* entry_pattern_list_p() const;
+    const PatternList* end_pattern_list_p() const;
 
     bool TrackDataObject(const worker_id_t& worker_id,
                          const logical_data_id_t& ldid,

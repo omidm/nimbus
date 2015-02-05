@@ -69,6 +69,18 @@ size_t BindingTemplate::compute_job_num() {
   return compute_job_id_list_.size();
 }
 
+const BindingTemplate::PatternMetaData* BindingTemplate::patterns_meta_data_p() const {
+  return &patterns_meta_data_;
+}
+
+const BindingTemplate::PatternList* BindingTemplate::entry_pattern_list_p() const {
+  return &entry_pattern_list_;
+}
+
+const BindingTemplate::PatternList* BindingTemplate::end_pattern_list_p() const {
+  return &end_pattern_list_;
+}
+
 bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
   assert(!finalized_);
   assert(compute_job_id_map_.size() == template_entry_->compute_jobs_num());
@@ -163,9 +175,9 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
   assert(phy_id_map_.size() == phy_id_list_.size());
   assert(phy_id_map_.size() == end_pattern_map_.size());
   assert(phy_id_map_.size() == entry_pattern_map_.size());
-  assert(phy_id_map_.size() == (patterns_meta_data_.size() * 2));
   assert(end_pattern_map_.size() == end_pattern_list_.size());
   assert(entry_pattern_map_.size() == entry_pattern_list_.size());
+  assert(ordered_entry_patterns_.size() == patterns_meta_data_.size());
 
   finalized_ = true;
   return true;

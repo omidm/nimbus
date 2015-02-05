@@ -164,6 +164,25 @@ void JobAssigner::AssignJobs(const JobEntryList& list) {
   }
 }
 
+bool JobAssigner::QueryDataManagerForPatterns(
+                      ComplexJobEntry* job,
+                      const BindingTemplate::PatternList* patterns,
+                      const BindingTemplate::PatternMetaData* patterns_meta_data,
+                      std::vector<physical_data_id_t>* physical_ids) {
+  // TODO(omidm): Implement this
+  assert(false);
+  return true;
+}
+
+bool JobAssigner::UpdateDataManagerByPatterns(
+                      ComplexJobEntry* job,
+                      const BindingTemplate::PatternList* patterns,
+                      const std::vector<physical_data_id_t>* physical_ids) {
+  // TODO(omidm): Implement this
+  assert(false);
+  return true;
+}
+
 bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
   BindingTemplate *bt = job->binding_template();
   size_t copy_job_num = bt->copy_job_num();
@@ -175,14 +194,20 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
   id_maker_->GetNewJobID(&copy_job_ids, copy_job_num);
 
   std::vector<physical_data_id_t> physical_ids;
-  // TODO(omidm): Get physical objects;
+
+  QueryDataManagerForPatterns(job,
+                              bt->entry_pattern_list_p(),
+                              bt->patterns_meta_data_p(),
+                              &physical_ids);
 
   bt->Instantiate(job->inner_job_ids(),
                   copy_job_ids,
                   physical_ids,
                   server_);
 
-  // TODO(omidm): Update physical objects
+  UpdateDataManagerByPatterns(job,
+                              bt->end_pattern_list_p(),
+                              &physical_ids);
 
   return true;
 }

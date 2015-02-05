@@ -170,6 +170,17 @@ namespace nimbus {
 
     virtual void PrintLog(JobEntry *job);
 
+    virtual bool UpdateDataManagerByPatterns(
+                    ComplexJobEntry* job,
+                    const BindingTemplate::PatternList* patterns,
+                    const std::vector<physical_data_id_t>* physical_ids);
+
+    virtual bool QueryDataManagerForPatterns(
+                    ComplexJobEntry* job,
+                    const BindingTemplate::PatternList* patterns,
+                    const BindingTemplate::PatternMetaData* patterns_meta_data,
+                    std::vector<physical_data_id_t>* physical_ids);
+
   private:
     JobAssigner(const JobAssigner& other) {}
   };
