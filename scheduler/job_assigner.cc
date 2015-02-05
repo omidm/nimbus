@@ -175,7 +175,6 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
   id_maker_->GetNewJobID(&copy_job_ids, copy_job_num);
 
   std::vector<physical_data_id_t> physical_ids;
-
   // TODO(omidm): Get physical objects;
 
   bt->Instantiate(job->inner_job_ids(),
@@ -238,9 +237,11 @@ bool JobAssigner::AssignJob(JobEntry *job) {
     // BINDING MEMOIZE - omidm
     if (job->memoize_binding()) {
       assert(job->job_type() == JOB_SHDW);
+      ShadowJobEntry *sj = reinterpret_cast<ShadowJobEntry*>(job);
+      ComplexJobEntry *xj = sj->complex_job();
 
       if (job->to_finalize_binding_template()) {
-        job->binding_template()->Finalize();
+        job->binding_template()->Finalize(xj->inner_job_ids());
       }
     }
     // BINDING MEMOIZE - omidm

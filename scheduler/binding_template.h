@@ -76,7 +76,7 @@ class BindingTemplate {
     size_t copy_job_num();
     size_t compute_job_num();
 
-    bool Finalize();
+    bool Finalize(const std::vector<job_id_t>& compute_job_ids);
 
     bool Instantiate(const std::vector<job_id_t>& compute_job_ids,
                      const std::vector<job_id_t>& copy_job_ids,
@@ -143,10 +143,20 @@ class BindingTemplate {
     typedef boost::unordered_set<PhyIdPtr> PhyIdPtrSet;
     typedef boost::unordered_map<job_id_t, PhyIdPtr> PhyIdPtrMap;
 
+    enum CommandTemplateType {
+      BASE,
+      COMPUTE,
+      LC,
+      RCS,
+      RCR
+    };
+
     class CommandTemplate {
       public:
-        CommandTemplate() {}
+        CommandTemplate() {type_ = BASE;}
         ~CommandTemplate() {}
+
+        CommandTemplateType type_;
     };
 
     typedef std::vector<CommandTemplate*> CommandTemplateVector;
@@ -172,7 +182,7 @@ class BindingTemplate {
             future_job_id_ptr_(future_job_id_ptr),
             sterile_(sterile),
             region_(region),
-            worker_id_(worker_id) {}
+            worker_id_(worker_id) {type_ = COMPUTE;}
 
         ~ComputeJobCommandTemplate() {}
 
@@ -199,7 +209,7 @@ class BindingTemplate {
             from_physical_data_id_ptr_(from_physical_data_id_ptr),
             to_physical_data_id_ptr_(to_physical_data_id_ptr),
             before_set_ptr_(before_set_ptr),
-            worker_id_(worker_id) {}
+            worker_id_(worker_id) {type_ = LC;}
 
         ~LocalCopyCommandTemplate() {}
 
@@ -228,7 +238,7 @@ class BindingTemplate {
             to_ip_(to_ip),
             to_port_(to_port),
             before_set_ptr_(before_set_ptr),
-            worker_id_(worker_id) {}
+            worker_id_(worker_id) {type_ = RCS;}
 
         ~RemoteCopySendCommandTemplate() {}
 
@@ -251,7 +261,7 @@ class BindingTemplate {
           : job_id_ptr_(job_id_ptr),
             to_physical_data_id_ptr_(to_physical_data_id_ptr),
             before_set_ptr_(before_set_ptr),
-            worker_id_(worker_id) {}
+            worker_id_(worker_id) {type_ = RCR;}
 
         ~RemoteCopyReceiveCommandTemplate() {}
 

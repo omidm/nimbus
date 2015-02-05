@@ -69,7 +69,7 @@ size_t BindingTemplate::compute_job_num() {
   return compute_job_id_list_.size();
 }
 
-bool BindingTemplate::Finalize() {
+bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
   assert(!finalized_);
 
   assert(phy_id_map_.size() == phy_id_list_.size());
@@ -77,15 +77,29 @@ bool BindingTemplate::Finalize() {
   assert(copy_job_id_map_.size() == copy_job_id_list_.size());
   assert(compute_job_id_map_.size() == compute_job_id_list_.size());
   assert(compute_job_id_map_.size() == template_entry_->compute_jobs_num());
+  assert(compute_job_id_map_.size() == compute_job_ids.size());
 
   assert(end_pattern_map_.size() == end_pattern_list_.size());
   assert(entry_pattern_map_.size() == entry_pattern_list_.size());
   assert(entry_pattern_map_.size() == end_pattern_map_.size());
 
-  PatternList::iterator iter = end_pattern_list_.begin();
-  for (; iter != end_pattern_list_.end(); ++iter) {
-    assert((*iter)->version_type_ == REGULAR);
+  {
+    PatternList::iterator iter = end_pattern_list_.begin();
+    for (; iter != end_pattern_list_.end(); ++iter) {
+      assert((*iter)->version_type_ == REGULAR);
+    }
   }
+
+  compute_job_id_list_.clear();
+  {
+    std::vector<job_id_t>::const_iterator iter = compute_job_ids.begin();
+    for (; iter != compute_job_ids.end(); ++iter) {
+      JobIdPtrMap::iterator it = compute_job_id_map_.find(*iter);
+      assert(it != compute_job_id_map_.end());
+      compute_job_id_list_.push_back(it->second);
+    }
+  }
+
 
   finalized_ = true;
   return true;
@@ -99,6 +113,40 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
   assert(compute_job_ids.size() == compute_job_id_list_.size());
   assert(copy_job_ids.size() == copy_job_id_list_.size());
   assert(physical_ids.size() == phy_id_list_.size());
+  assert(finalized_);
+
+  {
+    size_t idx = 0;
+    JobIdPtrList::iterator iter = compute_job_id_list_.begin();
+    for (; iter != compute_job_id_list_.end(); ++iter) {
+      *(*iter) = compute_job_ids[idx];
+      ++idx;
+    }
+  }
+
+  {
+    size_t idx = 0;
+    JobIdPtrList::iterator iter = copy_job_id_list_.begin();
+    for (; iter != copy_job_id_list_.end(); ++iter) {
+      *(*iter) = copy_job_ids[idx];
+      ++idx;
+    }
+  }
+
+  {
+    size_t idx = 0;
+    PhyIdPtrList::iterator iter = phy_id_list_.begin();
+    for (; iter != compute_job_id_list_.end(); ++iter) {
+      *(*iter) = compute_job_ids[idx];
+      ++idx;
+    }
+  }
+
+
+
+
+
+
 
   assert(false);
   return true;
