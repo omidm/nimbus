@@ -68,7 +68,9 @@ class TemplateEntry;
 
 class BindingTemplate {
   public:
-    explicit BindingTemplate(TemplateEntry* template_entry);
+    BindingTemplate(const std::vector<job_id_t>& compute_job_ids,
+                    TemplateEntry* template_entry);
+
     ~BindingTemplate();
 
 
@@ -311,7 +313,8 @@ class BindingTemplate {
     JobIdPtr GetCopyJobIdPtr(job_id_t job_id);
     bool GetCopyJobIdPtrIfExisted(job_id_t job_id, JobIdPtr *job_id_ptr);
 
-    JobIdPtr GetComputeJobIdPtr(job_id_t job_id);
+    JobIdPtr GetExistingComputeJobIdPtr(job_id_t job_id);
+    bool GetComputeJobIdPtrIfExisted(job_id_t job_id, JobIdPtr *job_id_ptr);
 
     PhyIdPtr GetExistingPhyIdPtr(physical_data_id_t pdid);
 };

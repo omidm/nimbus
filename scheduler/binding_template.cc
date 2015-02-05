@@ -46,10 +46,17 @@
 
 using namespace nimbus; // NOLINT
 
-BindingTemplate::BindingTemplate(TemplateEntry *template_entry) {
+BindingTemplate::BindingTemplate(const std::vector<job_id_t>& compute_job_ids,
+                                 TemplateEntry *template_entry) {
   finalized_ = false;
   template_entry_ = template_entry;
   future_job_id_ptr_ = JobIdPtr(new job_id_t(0));
+
+  std::vector<job_id_t>::const_iterator iter = compute_job_ids.begin();
+  for (; iter != compute_job_ids.end(); ++iter) {
+    JobIdPtr job_id_ptr = JobIdPtr(new job_id_t(*iter));
+    compute_job_id_map_[*iter] = job_id_ptr;
+  }
 }
 
 BindingTemplate::~BindingTemplate() {
@@ -292,7 +299,7 @@ bool BindingTemplate::UpdateDataObject(const physical_data_id_t& pdid,
 
 bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
                                            worker_id_t w_id) {
-  JobIdPtr job_id_ptr = GetComputeJobIdPtr(command->job_id().elem());
+  JobIdPtr job_id_ptr = GetExistingComputeJobIdPtr(command->job_id().elem());
 
   PhyIdPtrSet read_set;
   {
@@ -322,7 +329,9 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
           continue;
         }
       } else {
-        job_id_ptr = GetComputeJobIdPtr(*iter);
+        if (!GetComputeJobIdPtrIfExisted(*iter, &job_id_ptr)) {
+          continue;
+        }
       }
       before_set.insert(job_id_ptr);
     }
@@ -338,7 +347,9 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
           continue;
         }
       } else {
-        job_id_ptr = GetComputeJobIdPtr(*iter);
+        if (!GetComputeJobIdPtrIfExisted(*iter, &job_id_ptr)) {
+          continue;
+        }
       }
       before_set.insert(job_id_ptr);
     }
@@ -381,7 +392,9 @@ bool BindingTemplate::AddLocalCopyCommand(LocalCopyCommand* command,
           continue;
         }
       } else {
-        job_id_ptr = GetComputeJobIdPtr(*iter);
+        if (!GetComputeJobIdPtrIfExisted(*iter, &job_id_ptr)) {
+          continue;
+        }
       }
       before_set.insert(job_id_ptr);
     }
@@ -418,7 +431,9 @@ bool BindingTemplate::AddRemoteCopySendCommand(RemoteCopySendCommand* command,
           continue;
         }
       } else {
-        job_id_ptr = GetComputeJobIdPtr(*iter);
+        if (!GetComputeJobIdPtrIfExisted(*iter, &job_id_ptr)) {
+          continue;
+        }
       }
       before_set.insert(job_id_ptr);
     }
@@ -456,7 +471,9 @@ bool BindingTemplate::AddRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* comm
           continue;
         }
       } else {
-        job_id_ptr = GetComputeJobIdPtr(*iter);
+        if (!GetComputeJobIdPtrIfExisted(*iter, &job_id_ptr)) {
+          continue;
+        }
       }
       before_set.insert(job_id_ptr);
     }
@@ -497,19 +514,29 @@ bool BindingTemplate::GetCopyJobIdPtrIfExisted(job_id_t job_id, JobIdPtr *job_id
   return false;
 }
 
-BindingTemplate::JobIdPtr BindingTemplate::GetComputeJobIdPtr(job_id_t job_id) {
+BindingTemplate::JobIdPtr BindingTemplate::GetExistingComputeJobIdPtr(job_id_t job_id) {
   JobIdPtr job_id_ptr;
 
   JobIdPtrMap::iterator iter = compute_job_id_map_.find(job_id);
   if (iter != compute_job_id_map_.end()) {
     job_id_ptr = iter->second;
   } else {
-    job_id_ptr = JobIdPtr(new job_id_t(job_id));
-    compute_job_id_map_[job_id] = job_id_ptr;
+    assert(false);
   }
 
   return job_id_ptr;
 }
+
+bool BindingTemplate::GetComputeJobIdPtrIfExisted(job_id_t job_id, JobIdPtr *job_id_ptr) {
+  JobIdPtrMap::iterator iter = compute_job_id_map_.find(job_id);
+  if (iter != compute_job_id_map_.end()) {
+    *job_id_ptr = iter->second;
+    return true;
+  }
+
+  return false;
+}
+
 
 BindingTemplate::PhyIdPtr BindingTemplate::GetExistingPhyIdPtr(physical_data_id_t pdid) {
   PhyIdPtr phy_id_ptr;

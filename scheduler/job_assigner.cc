@@ -254,6 +254,34 @@ bool JobAssigner::AssignJob(JobEntry *job) {
   if (prepared_data) {
     PrintLog(job);
 
+    // BINDING MEMOIZE - omidm
+    if (job->memoize_binding()) {
+      assert(job->job_type() == JOB_SHDW);
+      ShadowJobEntry *sj = reinterpret_cast<ShadowJobEntry*>(job);
+      BindingTemplate *bt = sj->binding_template();
+
+      ID<job_id_t> job_id(job->job_id());
+      ID<job_id_t> future_job_id(job->future_job_id());
+      IDSet<physical_data_id_t> read_set, write_set;
+      // TODO(omidm): check the return value of the following methods.
+      job->GetPhysicalReadSet(&read_set);
+      job->GetPhysicalWriteSet(&write_set);
+      ComputeJobCommand cm(job->job_name(),
+                           job_id,
+                           read_set,
+                           write_set,
+                           job->before_set(),
+                           job->after_set(),
+                           future_job_id,
+                           job->sterile(),
+                           job->region(),
+                           job->params());
+
+      bt->AddComputeJobCommand(&cm, worker->worker_id());
+    }
+    // BINDING MEMOIZE - omidm
+
+
     log_job_manager_.log_ResumeTimer();
     job_manager_->UpdateJobBeforeSet(job);
     log_job_manager_.log_StopTimer();
@@ -968,6 +996,16 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   before.clear();
   before.insert(to_data->list_job_read());
   before.insert(to_data->last_job_write());
+
+  // BINDING MEMOIZE - omidm
+  if (bt) {
+    RemoteCopyReceiveCommand cm_r(ID<job_id_t>(receive_id),
+                                  ID<physical_data_id_t>(to_data->id()),
+                                  before);
+    bt->AddRemoteCopyReceiveCommand(&cm_r, to_worker->worker_id());
+  }
+  // BINDING MEMOIZE - omidm
+
   log_job_manager_.log_ResumeTimer();
   job_manager_->UpdateBeforeSet(&before);
   log_job_manager_.log_StopTimer();
@@ -975,12 +1013,6 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
                                 ID<physical_data_id_t>(to_data->id()),
                                 before);
   server_->SendCommand(to_worker, &cm_r);
-
-  // BINDING MEMOIZE - omidm
-  if (bt) {
-    bt->AddRemoteCopyReceiveCommand(&cm_r, to_worker->worker_id());
-  }
-  // BINDING MEMOIZE - omidm
 
   // Notify assignment to job manager.
   // job->set_assigned_worker(to_worker);
@@ -1003,6 +1035,20 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   // send remote copy send command to worker.
   before.clear();
   before.insert(from_data->last_job_write());
+
+  // BINDING MEMOIZE - omidm
+  if (bt) {
+    RemoteCopySendCommand cm_s(ID<job_id_t>(send_id),
+                               ID<job_id_t>(receive_id),
+                               ID<physical_data_id_t>(from_data->id()),
+                               ID<worker_id_t>(to_worker->worker_id()),
+                               to_worker->ip(),
+                               ID<port_t>(to_worker->port()),
+                               before);
+    bt->AddRemoteCopySendCommand(&cm_s, from_worker->worker_id());
+  }
+  // BINDING MEMOIZE - omidm
+
   log_job_manager_.log_ResumeTimer();
   job_manager_->UpdateBeforeSet(&before);
   log_job_manager_.log_StopTimer();
@@ -1014,12 +1060,6 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
                              ID<port_t>(to_worker->port()),
                              before);
   server_->SendCommand(from_worker, &cm_s);
-
-  // BINDING MEMOIZE - omidm
-  if (bt) {
-    bt->AddRemoteCopySendCommand(&cm_s, from_worker->worker_id());
-  }
-  // BINDING MEMOIZE - omidm
 
   // Notify assignment to job manager.
   // job->set_assigned_worker(from_worker);
@@ -1067,6 +1107,17 @@ bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
   before.insert(to_data->list_job_read());
   before.insert(to_data->last_job_write());
   before.insert(from_data->last_job_write());
+
+  // BINDING MEMOIZE - omidm
+  if (bt) {
+    LocalCopyCommand cm_c(ID<job_id_t>(j[0]),
+                          ID<physical_data_id_t>(from_data->id()),
+                          ID<physical_data_id_t>(to_data->id()),
+                          before);
+    bt->AddLocalCopyCommand(&cm_c, worker->worker_id());
+  }
+  // BINDING MEMOIZE - omidm
+
   log_job_manager_.log_ResumeTimer();
   job_manager_->UpdateBeforeSet(&before);
   log_job_manager_.log_StopTimer();
@@ -1075,12 +1126,6 @@ bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
                         ID<physical_data_id_t>(to_data->id()),
                         before);
   server_->SendCommand(worker, &cm_c);
-
-  // BINDING MEMOIZE - omidm
-  if (bt) {
-    bt->AddLocalCopyCommand(&cm_c, worker->worker_id());
-  }
-  // BINDING MEMOIZE - omidm
 
   // Notify assignment to job manager.
   // job->set_assigned_worker(worker);
@@ -1126,15 +1171,6 @@ bool JobAssigner::SendComputeJobToWorker(SchedulerWorker* worker,
                          job->params());
     dbg(DBG_SCHED, "Sending compute job %lu to worker %lu.\n", job->job_id(), worker->worker_id());
     server_->SendCommand(worker, &cm);
-
-    // BINDING MEMOIZE - omidm
-    if (job->memoize_binding()) {
-      assert(job->job_type() == JOB_SHDW);
-      ShadowJobEntry *sj = reinterpret_cast<ShadowJobEntry*>(job);
-      BindingTemplate *bt = sj->binding_template();
-      bt->AddComputeJobCommand(&cm, worker->worker_id());
-    }
-    // BINDING MEMOIZE - omidm
 
     return true;
   } else {
