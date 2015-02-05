@@ -56,6 +56,7 @@
 #include "scheduler/complex_job_entry.h"
 #include "scheduler/template_job_entry.h"
 #include "scheduler/template_entry.h"
+#include "scheduler/binding_template.h"
 #include "scheduler/version_entry.h"
 #include "shared/logical_data_object.h"
 
@@ -91,6 +92,9 @@ class VersionManager {
     bool ResolveJobDataVersions(JobEntry *job);
 
     bool ResolveEntireContextForJob(JobEntry *job);
+
+    bool ResolveJobDataVersionsForPattern(JobEntry *job,
+                  const BindingTemplate::PatternList* patterns);
 
     bool MemoizeVersionsForTemplate(JobEntry *job);
 

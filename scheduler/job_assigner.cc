@@ -169,8 +169,58 @@ bool JobAssigner::QueryDataManagerForPatterns(
                       const BindingTemplate::PatternList* patterns,
                       const BindingTemplate::PatternMetaData* patterns_meta_data,
                       std::vector<physical_data_id_t>* physical_ids) {
-  // TODO(omidm): Implement this
-  assert(false);
+  physical_ids->clear();
+
+  if (!job_manager_->ResolveJobDataVersionsForPattern(job, patterns)) {
+    assert(false);
+  }
+
+  BindingTemplate::PatternMetaData::const_iterator it =
+    patterns_meta_data->begin();
+  BindingTemplate::PatternList::const_iterator iter;
+  for (iter = patterns->begin(); iter != patterns->end();) {
+    size_t ldid_count = it->first + it->second;
+
+    logical_data_id_t ldid = (*iter)->ldid_;
+    LogicalDataObject* ldo =
+      const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(ldid));
+
+    PhysicalDataList instances;
+    data_manager_->AllInstances(ldo, &instances);
+
+    // For now we assume that binding for template does not require creating
+    // new instances -omidm
+    assert(instances.size() >= ldid_count);
+
+    data_version_t base_version;
+    if (!job->vmap_read()->query_entry(ldid, &base_version)) {
+      assert(false);
+    }
+
+    for (size_t i = 0; i < ldid_count; ++i) {
+      BindingTemplate::PatternEntry *pattern = (*iter);
+      bool found = false;
+
+      data_version_t version = pattern->version_diff_from_base_ + base_version;
+
+      PhysicalDataList::iterator pi = instances.begin();
+      for (; pi != instances.end(); ++pi) {
+        if ((pi->worker() == pattern->worker_id_) &&
+            ((pi->version() == version) ||
+             (pattern->version_type_ == BindingTemplate::WILD_CARD))) {
+          found = true;
+          physical_ids->push_back(pi->id());
+          instances.erase(pi);
+          break;
+        }
+      }
+
+      assert(found);
+      ++iter;
+    }
+    ++it;
+  }
+
   return true;
 }
 

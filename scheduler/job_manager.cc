@@ -540,6 +540,23 @@ bool JobManager::ResolveEntireContextForJob(JobEntry *job) {
   }
 }
 
+bool JobManager::ResolveJobDataVersionsForPattern(JobEntry *job,
+                        const BindingTemplate::PatternList* patterns) {
+  if (!job->IsReadyForCompleteVersioning()) {
+    dbg(DBG_ERROR, "ERROR: job %lu is not reaqdy for complete versioing.\n", job->job_id());
+    assert(false);
+    return false;
+  }
+
+  if (version_manager_.ResolveJobDataVersionsForPattern(job, patterns)) {
+    return true;
+  } else {
+    dbg(DBG_ERROR, "ERROR: could not version job %lu for given pattern.\n", job->job_id());
+    assert(false);
+    return false;
+  }
+}
+
 bool JobManager::MemoizeVersionsForTemplate(JobEntry *job) {
   if (!job->IsReadyForCompleteVersioning()) {
     dbg(DBG_ERROR, "ERROR: job %lu is not reaqdy for complete versioing.\n", job->job_id());

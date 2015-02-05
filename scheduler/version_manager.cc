@@ -193,6 +193,24 @@ bool VersionManager::ResolveEntireContextForJob(JobEntry *job) {
   return true;
 }
 
+bool VersionManager::ResolveJobDataVersionsForPattern(JobEntry *job,
+                          const BindingTemplate::PatternList* patterns) {
+  BindingTemplate::PatternList::const_iterator it;
+  for (it = patterns->begin(); it != patterns->end(); ++it) {
+    logical_data_id_t ldid = (*it)->ldid_;
+    data_version_t version;
+    if (job->vmap_read()->query_entry(ldid, &version)) {
+      continue;
+    }
+    if (LookUpVersion(job, ldid, &version)) {
+      job->vmap_read()->set_entry(ldid, version);
+    } else {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool VersionManager::MemoizeVersionsForTemplate(JobEntry *job) {
   TemplateJobEntry* tj = job->template_job();
   assert(job->memoize());

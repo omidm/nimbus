@@ -137,6 +137,9 @@ class JobManager {
 
     bool ResolveEntireContextForJob(JobEntry *job);
 
+    bool ResolveJobDataVersionsForPattern(JobEntry *job,
+                  const BindingTemplate::PatternList* patterns);
+
     bool MemoizeVersionsForTemplate(JobEntry *job);
 
     size_t GetJobsNeedDataVersion(JobEntryList* list,
