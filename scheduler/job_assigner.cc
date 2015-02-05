@@ -165,7 +165,27 @@ void JobAssigner::AssignJobs(const JobEntryList& list) {
 }
 
 bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
-  assert(false);
+  BindingTemplate *bt = job->binding_template();
+  size_t copy_job_num = bt->copy_job_num();
+  size_t compute_job_num = bt->compute_job_num();
+
+  assert(compute_job_num == job->inner_job_ids_p()->size());
+
+  std::vector<job_id_t> copy_job_ids;
+  id_maker_->GetNewJobID(&copy_job_ids, copy_job_num);
+
+  std::vector<physical_data_id_t> physical_ids;
+
+  // TODO(omidm): Get physical objects;
+
+  bt->Instantiate(job->inner_job_ids(),
+                  copy_job_ids,
+                  physical_ids,
+                  server_);
+
+  // TODO(omidm): Update physical objects
+
+  return true;
 }
 
 bool JobAssigner::AssignJob(JobEntry *job) {

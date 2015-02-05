@@ -72,6 +72,8 @@ size_t BindingTemplate::compute_job_num() {
 bool BindingTemplate::Finalize() {
   assert(!finalized_);
 
+  assert(phy_id_map_.size() == phy_id_list_.size());
+
   assert(copy_job_id_map_.size() == copy_job_id_list_.size());
   assert(compute_job_id_map_.size() == compute_job_id_list_.size());
   assert(compute_job_id_map_.size() == template_entry_->compute_jobs_num());
@@ -90,6 +92,17 @@ bool BindingTemplate::Finalize() {
 }
 
 
+bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
+                                  const std::vector<job_id_t>& copy_job_ids,
+                                  const std::vector<physical_data_id_t> physical_ids,
+                                  SchedulerServer *server) {
+  assert(compute_job_ids.size() == compute_job_id_list_.size());
+  assert(copy_job_ids.size() == copy_job_id_list_.size());
+  assert(physical_ids.size() == phy_id_list_.size());
+
+  assert(false);
+  return true;
+}
 
 bool BindingTemplate::TrackDataObject(const worker_id_t& worker_id,
                                       const logical_data_id_t& ldid,

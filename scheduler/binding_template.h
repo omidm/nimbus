@@ -57,6 +57,7 @@
 #include <algorithm>
 #include <map>
 #include "shared/nimbus_types.h"
+#include "shared/scheduler_server.h"
 #include "shared/scheduler_command_include.h"
 #include "shared/dbg.h"
 #include "shared/log.h"
@@ -77,9 +78,10 @@ class BindingTemplate {
 
     bool Finalize();
 
-    bool Instantiate() {
-      return false;
-    }
+    bool Instantiate(const std::vector<job_id_t>& compute_job_ids,
+                     const std::vector<job_id_t>& copy_job_ids,
+                     const std::vector<physical_data_id_t> physical_ids,
+                     SchedulerServer *server);
 
     enum VERSION_TYPE {
       REGULAR,
