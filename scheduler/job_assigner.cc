@@ -251,6 +251,7 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
                               &physical_ids);
 
   bt->Instantiate(job->inner_job_ids(),
+                  job->parameters(),
                   copy_job_ids,
                   physical_ids,
                   server_);

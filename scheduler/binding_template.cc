@@ -92,6 +92,20 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
   assert(!finalized_);
   assert(compute_job_id_map_.size() == template_entry_->compute_jobs_num());
   assert(compute_job_id_map_.size() == compute_job_ids.size());
+  assert(job_to_command_map_.size() == compute_job_ids.size());
+
+  // Set param index for the compute commands.
+  {
+    size_t idx = 0;
+    std::vector<job_id_t>::const_iterator iter = compute_job_ids.begin();
+    for (; iter != compute_job_ids.end(); ++iter) {
+      std::map<job_id_t, ComputeJobCommandTemplate*>::iterator it =
+        job_to_command_map_.find(*iter);
+      assert(it != job_to_command_map_.end());
+      it->second->param_index_ = idx;
+      ++idx;
+    }
+  }
 
   compute_job_id_list_.clear();
   {
@@ -191,6 +205,7 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
 }
 
 bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
+                                  const std::vector<Parameter>& parameters,
                                   const std::vector<job_id_t>& copy_job_ids,
                                   const std::vector<physical_data_id_t> physical_ids,
                                   SchedulerServer *server) {
@@ -226,15 +241,83 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
     }
   }
 
-
-
-
+  ComputeJobCommandTemplate *cc;
+  CommandTemplateVector::iterator iter = command_templates_.begin();
+  for (; iter != command_templates_.end(); ++iter) {
+    CommandTemplate *ct = *iter;
+    switch (ct->type_) {
+      case COMPUTE:
+        cc = reinterpret_cast<ComputeJobCommandTemplate*>(ct);
+        SendComputeJobCommand(cc,
+                              parameters[cc->param_index_],
+                              server);
+        break;
+      case LC:
+        SendLocalCopyCommand(reinterpret_cast<LocalCopyCommandTemplate*>(ct),
+                             server);
+        break;
+      case RCS:
+        SendRemoteCopySendCommand(reinterpret_cast<RemoteCopySendCommandTemplate*>(ct),
+                                  server);
+        break;
+      case RCR:
+        SendRemoteCopyReceiveCommand(reinterpret_cast<RemoteCopyReceiveCommandTemplate*>(ct),
+                                     server);
+        break;
+      default:
+        assert(false);
+    }
+  }
 
 
 
   assert(false);
   return true;
 }
+
+
+void BindingTemplate::SendComputeJobCommand(ComputeJobCommandTemplate* command,
+                                            const Parameter& parameter,
+                                            SchedulerServer *server) {
+    std::string job_name = command->job_name_;
+    ID<job_id_t> job_id(*(command->job_id_ptr_));
+    ID<job_id_t> future_job_id(*(command->future_job_id_ptr_));
+
+    IDSet<physical_data_id_t> read_set, write_set;
+    IDSet<job_id_t> before_set, after_set;
+
+    // TODO(omidm): Get read, write, before, after.
+
+    ComputeJobCommand cm(job_name,
+                         job_id,
+                         read_set,
+                         write_set,
+                         before_set,
+                         after_set,
+                         future_job_id,
+                         command->sterile_,
+                         command->region_,
+                         parameter);
+
+    SchedulerWorker *worker;
+    if (!server->GetSchedulerWorkerById(worker, command->worker_id_)) {
+      assert(false);
+    }
+    server->SendCommand(worker, &cm);
+}
+
+void BindingTemplate::SendLocalCopyCommand(LocalCopyCommandTemplate* command,
+                                           SchedulerServer *server) {
+}
+
+void BindingTemplate::SendRemoteCopySendCommand(RemoteCopySendCommandTemplate* command,
+                                                SchedulerServer *server) {
+}
+
+void BindingTemplate::SendRemoteCopyReceiveCommand(RemoteCopyReceiveCommandTemplate* command,
+                                                   SchedulerServer *server) {
+}
+
 
 bool BindingTemplate::TrackDataObject(const worker_id_t& worker_id,
                                       const logical_data_id_t& ldid,
@@ -366,6 +449,9 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
                                   command->sterile(),
                                   command->region(),
                                   w_id);
+
+  // Keep this mapping to set the param_index in Finalize - omidm
+  job_to_command_map_[*job_id_ptr] = cm;
 
   command_templates_.push_back(cm);
 

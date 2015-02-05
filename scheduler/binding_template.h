@@ -82,6 +82,7 @@ class BindingTemplate {
     bool Finalize(const std::vector<job_id_t>& compute_job_ids);
 
     bool Instantiate(const std::vector<job_id_t>& compute_job_ids,
+                     const std::vector<Parameter>& parameters,
                      const std::vector<job_id_t>& copy_job_ids,
                      const std::vector<physical_data_id_t> physical_ids,
                      SchedulerServer *server);
@@ -208,6 +209,7 @@ class BindingTemplate {
         bool sterile_;
         GeometricRegion region_;
         worker_id_t worker_id_;
+        size_t param_index_;
     };
 
     class LocalCopyCommandTemplate : public CommandTemplate {
@@ -310,6 +312,8 @@ class BindingTemplate {
 
     CommandTemplateVector command_templates_;
 
+    std::map<job_id_t, ComputeJobCommandTemplate*> job_to_command_map_;
+
     JobIdPtr GetCopyJobIdPtr(job_id_t job_id);
     bool GetCopyJobIdPtrIfExisted(job_id_t job_id, JobIdPtr *job_id_ptr);
 
@@ -317,7 +321,20 @@ class BindingTemplate {
     bool GetComputeJobIdPtrIfExisted(job_id_t job_id, JobIdPtr *job_id_ptr);
 
     PhyIdPtr GetExistingPhyIdPtr(physical_data_id_t pdid);
-};
 
+
+    void SendComputeJobCommand(ComputeJobCommandTemplate* command,
+                               const Parameter& parameter,
+                               SchedulerServer *server);
+
+    void SendLocalCopyCommand(LocalCopyCommandTemplate* command,
+                              SchedulerServer *server);
+
+    void SendRemoteCopySendCommand(RemoteCopySendCommandTemplate* command,
+                                   SchedulerServer *server);
+
+    void SendRemoteCopyReceiveCommand(RemoteCopyReceiveCommandTemplate* command,
+                                      SchedulerServer *server);
+};
 }  // namespace nimbus
 #endif  // NIMBUS_SCHEDULER_BINDING_TEMPLATE_H_
