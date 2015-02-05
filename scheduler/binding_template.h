@@ -92,10 +92,12 @@ class BindingTemplate {
       public:
         PatternEntry(const worker_id_t& worker_id,
                      const logical_data_id_t& ldid,
+                     const physical_data_id_t& pdid,
                      VERSION_TYPE version_type,
                      data_version_t version_diff_from_base)
           : worker_id_(worker_id),
             ldid_(ldid),
+            pdid_(pdid),
             version_type_(version_type),
             version_diff_from_base_(version_diff_from_base) {}
 
@@ -103,12 +105,16 @@ class BindingTemplate {
 
         worker_id_t worker_id_;
         logical_data_id_t ldid_;
+        physical_data_id_t pdid_;
         VERSION_TYPE version_type_;
         data_version_t version_diff_from_base_;
     };
 
     typedef std::vector<PatternEntry*> PatternList;
     typedef boost::unordered_map<physical_data_id_t, PatternEntry*> PatternMap;
+    typedef std::pair<PatternList*, PatternList*> PatternBucket;
+    typedef boost::unordered_map<logical_data_id_t, PatternBucket> PatternSorted;
+    typedef std::vector<std::pair<size_t, size_t> > PatternMetaData;
 
 
     bool TrackDataObject(const worker_id_t& worker_id,
@@ -276,6 +282,10 @@ class BindingTemplate {
     TemplateEntry *template_entry_;
     // Currently we do not support future job - omidm
     JobIdPtr future_job_id_ptr_;
+
+    PatternSorted ordered_entry_patterns_;
+
+    PatternMetaData patterns_meta_data_;
 
     PatternMap entry_pattern_map_;
     PatternList entry_pattern_list_;

@@ -71,24 +71,8 @@ size_t BindingTemplate::compute_job_num() {
 
 bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
   assert(!finalized_);
-
-  assert(phy_id_map_.size() == phy_id_list_.size());
-
-  assert(copy_job_id_map_.size() == copy_job_id_list_.size());
-  assert(compute_job_id_map_.size() == compute_job_id_list_.size());
   assert(compute_job_id_map_.size() == template_entry_->compute_jobs_num());
   assert(compute_job_id_map_.size() == compute_job_ids.size());
-
-  assert(end_pattern_map_.size() == end_pattern_list_.size());
-  assert(entry_pattern_map_.size() == entry_pattern_list_.size());
-  assert(entry_pattern_map_.size() == end_pattern_map_.size());
-
-  {
-    PatternList::iterator iter = end_pattern_list_.begin();
-    for (; iter != end_pattern_list_.end(); ++iter) {
-      assert((*iter)->version_type_ == REGULAR);
-    }
-  }
 
   compute_job_id_list_.clear();
   {
@@ -100,20 +84,101 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
     }
   }
 
+  copy_job_id_list_.clear();
+  {
+    JobIdPtrMap::iterator iter = copy_job_id_map_.begin();
+    for (; iter != copy_job_id_map_.end(); ++iter) {
+      copy_job_id_list_.push_back(iter->second);
+    }
+  }
+
+  phy_id_list_.clear();
+  end_pattern_list_.clear();
+  entry_pattern_list_.clear();
+  {
+    PatternSorted::iterator iter = ordered_entry_patterns_.begin();
+    for (; iter != ordered_entry_patterns_.end(); ++iter) {
+      size_t regular_num = 0;
+      size_t wild_card_num = 0;
+      {
+        PatternList::iterator it = iter->second.first->begin();
+        for (; it != iter->second.first->end(); ++it) {
+          ++regular_num;
+          physical_data_id_t pdid = (*it)->pdid_;
+          {
+            PhyIdPtrMap::iterator i = phy_id_map_.find(pdid);
+            assert(i != phy_id_map_.end());
+            phy_id_list_.push_back(i->second);
+          }
+          {
+            PatternMap::iterator i = end_pattern_map_.find(pdid);
+            assert(i != end_pattern_map_.end());
+            end_pattern_list_.push_back(i->second);
+          }
+          {
+            PatternMap::iterator i = entry_pattern_map_.find(pdid);
+            assert(i != entry_pattern_map_.end());
+            entry_pattern_list_.push_back(i->second);
+            assert(i->second == (*it));
+          }
+        }
+      }
+      {
+        PatternList::iterator it = iter->second.second->begin();
+        for (; it != iter->second.second->end(); ++it) {
+          ++wild_card_num;
+          physical_data_id_t pdid = (*it)->pdid_;
+          {
+            PhyIdPtrMap::iterator i = phy_id_map_.find(pdid);
+            assert(i != phy_id_map_.end());
+            phy_id_list_.push_back(i->second);
+          }
+          {
+            PatternMap::iterator i = end_pattern_map_.find(pdid);
+            assert(i != end_pattern_map_.end());
+            end_pattern_list_.push_back(i->second);
+          }
+          {
+            PatternMap::iterator i = entry_pattern_map_.find(pdid);
+            assert(i != entry_pattern_map_.end());
+            entry_pattern_list_.push_back(i->second);
+            assert(i->second == (*it));
+          }
+        }
+      }
+
+      patterns_meta_data_.push_back(std::make_pair(regular_num, wild_card_num));
+    }
+  }
+
+  {
+    PatternList::iterator iter = end_pattern_list_.begin();
+    for (; iter != end_pattern_list_.end(); ++iter) {
+      assert((*iter)->version_type_ == REGULAR);
+    }
+  }
+
+  assert(copy_job_id_map_.size() == copy_job_id_list_.size());
+  assert(compute_job_id_map_.size() == compute_job_id_list_.size());
+  assert(phy_id_map_.size() == phy_id_list_.size());
+  assert(phy_id_map_.size() == end_pattern_map_.size());
+  assert(phy_id_map_.size() == entry_pattern_map_.size());
+  assert(phy_id_map_.size() == (patterns_meta_data_.size() * 2));
+  assert(end_pattern_map_.size() == end_pattern_list_.size());
+  assert(entry_pattern_map_.size() == entry_pattern_list_.size());
 
   finalized_ = true;
   return true;
 }
 
-
 bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
                                   const std::vector<job_id_t>& copy_job_ids,
                                   const std::vector<physical_data_id_t> physical_ids,
                                   SchedulerServer *server) {
+  assert(finalized_);
   assert(compute_job_ids.size() == compute_job_id_list_.size());
   assert(copy_job_ids.size() == copy_job_id_list_.size());
   assert(physical_ids.size() == phy_id_list_.size());
-  assert(finalized_);
 
   {
     size_t idx = 0;
@@ -164,20 +229,35 @@ bool BindingTemplate::TrackDataObject(const worker_id_t& worker_id,
 
   PhyIdPtr pdid_ptr = PhyIdPtr(new physical_data_id_t(pdid));
   phy_id_map_[pdid] = pdid_ptr;
-  phy_id_list_.push_back(pdid_ptr);
 
   {
     PatternEntry *pattern =
-      new PatternEntry(worker_id, ldid, version_type, version_diff_from_base);
+      new PatternEntry(worker_id, ldid, pdid, version_type, version_diff_from_base);
     entry_pattern_map_[pdid] = pattern;
-    entry_pattern_list_.push_back(pattern);
+
+    PatternSorted::iterator iter = ordered_entry_patterns_.find(ldid);
+    if (iter != ordered_entry_patterns_.end()) {
+      if (version_type == REGULAR) {
+        iter->second.first->push_back(pattern);
+      } else {
+        iter->second.second->push_back(pattern);
+      }
+    } else {
+      PatternList *regular = new PatternList();
+      PatternList *wild_card = new PatternList();
+      if (version_type == REGULAR) {
+        regular->push_back(pattern);
+      } else {
+        wild_card->push_back(pattern);
+      }
+      ordered_entry_patterns_[ldid] = std::make_pair(regular, wild_card);
+    }
   }
 
   {
     PatternEntry *pattern =
-      new PatternEntry(worker_id, ldid, version_type, version_diff_from_base);
+      new PatternEntry(worker_id, ldid, pdid, version_type, version_diff_from_base);
     end_pattern_map_[pdid] = pattern;
-    end_pattern_list_.push_back(pattern);
   }
 
   return true;
@@ -390,7 +470,6 @@ BindingTemplate::JobIdPtr BindingTemplate::GetCopyJobIdPtr(job_id_t job_id) {
   } else {
     job_id_ptr = JobIdPtr(new job_id_t(job_id));
     copy_job_id_map_[job_id] = job_id_ptr;
-    copy_job_id_list_.push_back(job_id_ptr);
   }
 
   return job_id_ptr;
@@ -415,7 +494,6 @@ BindingTemplate::JobIdPtr BindingTemplate::GetComputeJobIdPtr(job_id_t job_id) {
   } else {
     job_id_ptr = JobIdPtr(new job_id_t(job_id));
     compute_job_id_map_[job_id] = job_id_ptr;
-    compute_job_id_list_.push_back(job_id_ptr);
   }
 
   return job_id_ptr;
