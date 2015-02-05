@@ -136,8 +136,8 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
   {
     size_t idx = 0;
     PhyIdPtrList::iterator iter = phy_id_list_.begin();
-    for (; iter != compute_job_id_list_.end(); ++iter) {
-      *(*iter) = compute_job_ids[idx];
+    for (; iter != phy_id_list_.end(); ++iter) {
+      *(*iter) = physical_ids[idx];
       ++idx;
     }
   }
