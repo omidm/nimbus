@@ -286,7 +286,30 @@ void BindingTemplate::SendComputeJobCommand(ComputeJobCommandTemplate* command,
     IDSet<physical_data_id_t> read_set, write_set;
     IDSet<job_id_t> before_set, after_set;
 
-    // TODO(omidm): Get read, write, before, after.
+    {
+      JobIdPtrSet::iterator it = command->before_set_ptr_.begin();
+      for (; it != command->before_set_ptr_.end(); ++it) {
+        before_set.insert(*(*it));
+      }
+    }
+    {
+      JobIdPtrSet::iterator it = command->after_set_ptr_.begin();
+      for (; it != command->after_set_ptr_.end(); ++it) {
+        after_set.insert(*(*it));
+      }
+    }
+    {
+      PhyIdPtrSet::iterator it = command->read_set_ptr_.begin();
+      for (; it != command->read_set_ptr_.end(); ++it) {
+        read_set.insert(*(*it));
+      }
+    }
+    {
+      PhyIdPtrSet::iterator it = command->write_set_ptr_.begin();
+      for (; it != command->write_set_ptr_.end(); ++it) {
+        write_set.insert(*(*it));
+      }
+    }
 
     ComputeJobCommand cm(job_name,
                          job_id,
