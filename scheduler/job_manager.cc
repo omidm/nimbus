@@ -699,24 +699,26 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
     if (job->job_type() == JOB_CMPX) {
       ComplexJobEntry* complex_job = reinterpret_cast<ComplexJobEntry*>(job);
       TemplateEntry *te = complex_job->template_entry();
-      BindingTemplate *bt;
-      bool create_bt = true;
-      if (te->QueryBindingRecord(STATIC_BINDING_RECORD, bt)) {
-        create_bt = false;
-        if (bt->finalized()) {
-          list->push_back(complex_job);
-          complex_job->set_binding_template(bt);
-          jobs_pending_to_assign_[complex_job->job_id()] = complex_job;
-          jobs_ready_to_assign_.erase(iter++);
-          num += bt->compute_job_num();
-          continue;
+      BindingTemplate *bt = NULL;
+      if (NIMBUS_BINDING_MEMOIZATION_ACTIVE) {
+        bool create_bt = true;
+        if (te->QueryBindingRecord(STATIC_BINDING_RECORD, bt)) {
+          create_bt = false;
+          if (bt->finalized()) {
+            list->push_back(complex_job);
+            complex_job->set_binding_template(bt);
+            jobs_pending_to_assign_[complex_job->job_id()] = complex_job;
+            jobs_ready_to_assign_.erase(iter++);
+            num += bt->compute_job_num();
+            continue;
+          }
         }
-      }
 
-      if (create_bt) {
-        bt = new BindingTemplate(complex_job->inner_job_ids(), te);
-        if (!te->AddBindingRecord(STATIC_BINDING_RECORD, bt)) {
-          assert(false);
+        if (create_bt) {
+          bt = new BindingTemplate(complex_job->inner_job_ids(), te);
+          if (!te->AddBindingRecord(STATIC_BINDING_RECORD, bt)) {
+            assert(false);
+          }
         }
       }
 
@@ -726,7 +728,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
       num += c_num;
       JobEntryList::iterator it = l.begin();
       for (; it != l.end(); ++it) {
-        (*it)->set_memoize_binding(true);
+        (*it)->set_memoize_binding(NIMBUS_BINDING_MEMOIZATION_ACTIVE);
         (*it)->set_binding_template(bt);
         list->push_back(*it);
         jobs_pending_to_assign_[(*it)->job_id()] = *it;
