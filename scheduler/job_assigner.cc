@@ -229,7 +229,7 @@ bool JobAssigner::UpdateDataManagerByPatterns(
                       const BindingTemplate::PatternList* patterns,
                       const std::vector<physical_data_id_t>* physical_ids) {
   // TODO(omidm): Implement this
-  assert(false);
+  // assert(false);
   return true;
 }
 

@@ -269,9 +269,6 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
     }
   }
 
-
-
-  assert(false);
   return true;
 }
 
@@ -279,68 +276,140 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
 void BindingTemplate::SendComputeJobCommand(ComputeJobCommandTemplate* command,
                                             const Parameter& parameter,
                                             SchedulerServer *server) {
-    std::string job_name = command->job_name_;
-    ID<job_id_t> job_id(*(command->job_id_ptr_));
-    ID<job_id_t> future_job_id(*(command->future_job_id_ptr_));
+  std::string job_name = command->job_name_;
+  ID<job_id_t> job_id(*(command->job_id_ptr_));
+  ID<job_id_t> future_job_id(*(command->future_job_id_ptr_));
 
-    IDSet<physical_data_id_t> read_set, write_set;
-    IDSet<job_id_t> before_set, after_set;
+  IDSet<physical_data_id_t> read_set, write_set;
+  IDSet<job_id_t> before_set, after_set;
 
-    {
-      JobIdPtrSet::iterator it = command->before_set_ptr_.begin();
-      for (; it != command->before_set_ptr_.end(); ++it) {
-        before_set.insert(*(*it));
-      }
+  {
+    JobIdPtrSet::iterator it = command->before_set_ptr_.begin();
+    for (; it != command->before_set_ptr_.end(); ++it) {
+      before_set.insert(*(*it));
     }
-    {
-      JobIdPtrSet::iterator it = command->after_set_ptr_.begin();
-      for (; it != command->after_set_ptr_.end(); ++it) {
-        after_set.insert(*(*it));
-      }
+  }
+  {
+    JobIdPtrSet::iterator it = command->after_set_ptr_.begin();
+    for (; it != command->after_set_ptr_.end(); ++it) {
+      after_set.insert(*(*it));
     }
-    {
-      PhyIdPtrSet::iterator it = command->read_set_ptr_.begin();
-      for (; it != command->read_set_ptr_.end(); ++it) {
-        read_set.insert(*(*it));
-      }
+  }
+  {
+    PhyIdPtrSet::iterator it = command->read_set_ptr_.begin();
+    for (; it != command->read_set_ptr_.end(); ++it) {
+      read_set.insert(*(*it));
     }
-    {
-      PhyIdPtrSet::iterator it = command->write_set_ptr_.begin();
-      for (; it != command->write_set_ptr_.end(); ++it) {
-        write_set.insert(*(*it));
-      }
+  }
+  {
+    PhyIdPtrSet::iterator it = command->write_set_ptr_.begin();
+    for (; it != command->write_set_ptr_.end(); ++it) {
+      write_set.insert(*(*it));
     }
+  }
 
-    ComputeJobCommand cm(job_name,
-                         job_id,
-                         read_set,
-                         write_set,
-                         before_set,
-                         after_set,
-                         future_job_id,
-                         command->sterile_,
-                         command->region_,
-                         parameter);
+  ComputeJobCommand cm(job_name,
+                       job_id,
+                       read_set,
+                       write_set,
+                       before_set,
+                       after_set,
+                       future_job_id,
+                       command->sterile_,
+                       command->region_,
+                       parameter);
 
-    SchedulerWorker *worker;
-    if (!server->GetSchedulerWorkerById(worker, command->worker_id_)) {
-      assert(false);
-    }
-    server->SendCommand(worker, &cm);
+  SchedulerWorker *worker;
+  if (!server->GetSchedulerWorkerById(worker, command->worker_id_)) {
+    assert(false);
+  }
+  server->SendCommand(worker, &cm);
 }
 
 void BindingTemplate::SendLocalCopyCommand(LocalCopyCommandTemplate* command,
                                            SchedulerServer *server) {
+  ID<job_id_t> job_id(*(command->job_id_ptr_));
+  ID<physical_data_id_t> from_data_id(*(command->from_physical_data_id_ptr_));
+  ID<physical_data_id_t> to_data_id(*(command->to_physical_data_id_ptr_));
+
+  IDSet<job_id_t> before_set;
+
+  {
+    JobIdPtrSet::iterator it = command->before_set_ptr_.begin();
+    for (; it != command->before_set_ptr_.end(); ++it) {
+      before_set.insert(*(*it));
+    }
+  }
+
+  LocalCopyCommand cm_c(job_id,
+                        from_data_id,
+                        to_data_id,
+                        before_set);
+
+  SchedulerWorker *worker;
+  if (!server->GetSchedulerWorkerById(worker, command->worker_id_)) {
+    assert(false);
+  }
+  server->SendCommand(worker, &cm_c);
 }
 
 void BindingTemplate::SendRemoteCopySendCommand(RemoteCopySendCommandTemplate* command,
                                                 SchedulerServer *server) {
+  ID<job_id_t> job_id(*(command->job_id_ptr_));
+  ID<job_id_t> receive_job_id(*(command->receive_job_id_ptr_));
+  ID<physical_data_id_t> from_data_id(*(command->from_physical_data_id_ptr_));
+  ID<worker_id_t> to_worker_id(command->to_worker_id_);
+  std::string to_ip = command->to_ip_;
+  ID<port_t> to_port(command->to_port_);
+
+  IDSet<job_id_t> before_set;
+
+  {
+    JobIdPtrSet::iterator it = command->before_set_ptr_.begin();
+    for (; it != command->before_set_ptr_.end(); ++it) {
+      before_set.insert(*(*it));
+    }
+  }
+
+  RemoteCopySendCommand cm_s(job_id,
+                             receive_job_id,
+                             from_data_id,
+                             to_worker_id,
+                             to_ip,
+                             to_port,
+                             before_set);
+
+  SchedulerWorker *worker;
+  if (!server->GetSchedulerWorkerById(worker, command->worker_id_)) {
+    assert(false);
+  }
+  server->SendCommand(worker, &cm_s);
 }
 
 void BindingTemplate::SendRemoteCopyReceiveCommand(RemoteCopyReceiveCommandTemplate* command,
                                                    SchedulerServer *server) {
-}
+  ID<job_id_t> job_id(*(command->job_id_ptr_));
+  ID<physical_data_id_t> to_data_id(*(command->to_physical_data_id_ptr_));
 
+  IDSet<job_id_t> before_set;
+
+  {
+    JobIdPtrSet::iterator it = command->before_set_ptr_.begin();
+    for (; it != command->before_set_ptr_.end(); ++it) {
+      before_set.insert(*(*it));
+    }
+  }
+
+  RemoteCopyReceiveCommand cm_r(job_id,
+                                to_data_id,
+                                before_set);
+
+  SchedulerWorker *worker;
+  if (!server->GetSchedulerWorkerById(worker, command->worker_id_)) {
+    assert(false);
+  }
+  server->SendCommand(worker, &cm_r);
+}
 
 bool BindingTemplate::TrackDataObject(const worker_id_t& worker_id,
                                       const logical_data_id_t& ldid,
