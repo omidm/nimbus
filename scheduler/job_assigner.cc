@@ -228,8 +228,33 @@ bool JobAssigner::UpdateDataManagerByPatterns(
                       ComplexJobEntry* job,
                       const BindingTemplate::PatternList* patterns,
                       const std::vector<physical_data_id_t>* physical_ids) {
-  // TODO(omidm): Implement this
-  assert(false);
+  assert(patterns->size() == physical_ids->size());
+
+  IDSet<job_id_t> list_job_read;
+  list_job_read.insert(job->job_id());
+  job_id_t last_job_write = job->job_id();
+
+  size_t physical_ids_idx = 0;
+  BindingTemplate::PatternList::const_iterator iter = patterns->begin();
+  for (; iter != patterns->end(); ++iter) {
+    BindingTemplate::PatternEntry *pe = *iter;
+    data_version_t base_version;
+    if (!job->vmap_read()->query_entry(pe->ldid_, &base_version)) {
+      assert(false);
+    }
+    data_version_t version = base_version + pe->version_diff_from_base_;
+
+    if (!data_manager_->UpdateVersionAndAccessRecord(pe->ldid_,
+                                                     physical_ids->operator[](physical_ids_idx),
+                                                     version,
+                                                     list_job_read,
+                                                     last_job_write)) {
+      assert(false);
+    }
+
+    ++physical_ids_idx;
+  }
+
   return true;
 }
 
