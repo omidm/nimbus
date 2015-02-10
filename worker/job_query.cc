@@ -368,6 +368,7 @@ void JobQuery::Eliminate(IDSet<job_id_t>* before) {
 */
 
 void JobQuery::GenerateDotFigure(const std::string& file_name) {
+  return;
   std::ofstream fout(file_name.c_str(), std::ofstream::out);
   fout << "digraph Workflow {" << std::endl;
   for (std::vector<ShortJobEntry>::iterator index = query_log_.begin();
@@ -388,6 +389,7 @@ void JobQuery::GenerateDotFigure(const std::string& file_name) {
 }
 
 void JobQuery::PrintTimeProfile() {
+  return;
   printf("\nquery time:%f\ncommit_time:%f\ncopy_time:%f\nelimination_time:%f\n"
          "spawn_time:%f\ne1_time:%f\ne2_time:%f\ne3_time:%f\ne4_time:%f\n",
          query_time_, commit_time_, copy_time_, elimination_time_, spawn_time_,

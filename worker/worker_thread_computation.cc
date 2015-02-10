@@ -75,11 +75,6 @@ void WorkerThreadComputation::Run() {
 }
 
 void WorkerThreadComputation::ExecuteJob(Job* job) {
-#ifndef MUTE_LOG
-  log_->StartTimer();
-  timer_->Start(job->id().elem());
-#endif  // MUTE_LOG
-
   ProfilerMalloc::ResetBaseAlloc();
   dbg(DBG_WORKER, "[WORKER_THREAD] Execute job, name=%s, id=%lld. \n",
       job->name().c_str(), job->id().elem());
@@ -88,35 +83,5 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
       job->name().c_str(), job->id().elem());
   // size_t max_alloc = ProfilerMalloc::AllocMaxTid(pthread_self());
   // job->set_max_alloc(max_alloc);
-
-#ifndef MUTE_LOG
-  double run_time = timer_->Stop(job->id().elem());
-  log_->StopTimer();
-
-  job->set_run_time(run_time);
-
-  char buff[LOG_MAX_BUFF_SIZE];
-  snprintf(buff, sizeof(buff),
-      "Execute Job, name: %35s  id: %6llu  length(s): %2.3lf  time(s): %6.3lf",
-           job->name().c_str(), job->id().elem(),
-           log_->timer(), log_->GetTime());
-  log_->WriteToOutputStream(std::string(buff), LOG_INFO);
-
-  char time_buff[LOG_MAX_BUFF_SIZE];
-  snprintf(time_buff, sizeof(time_buff),
-      "Queue Time: %2.9lf, Run Time: %2.9lf",
-      job->wait_time(), job->run_time());
-  log_->WriteToOutputStream(std::string(time_buff), LOG_INFO);
-#endif  // MUTE_LOG
 }
-
-uint64_t WorkerThreadComputation::ParseLine(std::string line) {
-  char *str = const_cast<char *>(line.c_str());
-  int i = strlen(str);
-  while (*str < '0' || *str > '9') str++;
-  str[i-3] = '\0';
-  i = atoi(str);
-  return i;
-}
-
 }  // namespace nimbus

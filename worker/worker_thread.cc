@@ -51,15 +51,6 @@ WorkerThread::WorkerThread(WorkerManager* worker_manager) {
 WorkerThread::~WorkerThread() {
 }
 
-void WorkerThread::SetLoggingInterface(
-    Log* log, Log* version_log, Log* data_hash_log,
-    HighResolutionTimer* timer) {
-  log_ = log;
-  version_log_ = version_log;
-  data_hash_log_ = data_hash_log;
-  timer_ = timer;
-}
-
 void WorkerThread::SetThreadAffinity(const cpu_set_t* cpuset) {
   if (used_cpu_set_ == NULL) {
     used_cpu_set_ = new cpu_set_t;

@@ -321,8 +321,6 @@ template <>
 void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<float, 3> > >::
 Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities)
 {
-    std::cout << "#### CHINMAYEE: In specialized implementation for "
-              << "modify levelset for 3d water simulation\n";
     if(use_particle_levelset) {
         particle_levelset.Modify_Levelset_Using_Escaped_Particles(face_velocities);
     }

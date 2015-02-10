@@ -438,9 +438,10 @@ namespace application {
     }
 
     void ScopeTimer::Initialize(bool activated) {
-      activated_ = activated;
-      if (!activated_) return;
-      log_file_ = fopen("app_internal.txt", "w");
+      activated_ = false;
+      // activated_ = activated;
+      // if (!activated_) return;
+      // log_file_ = fopen("app_internal.txt", "w");
     }
 
     FILE* ScopeTimer::log_file_ = NULL;

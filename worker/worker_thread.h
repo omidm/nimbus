@@ -49,7 +49,6 @@
 
 #include "shared/nimbus.h"
 #include "shared/high_resolution_timer.h"
-#include "shared/log.h"
 #include "worker/task_thread_pool.h"
 
 namespace nimbus {
@@ -58,9 +57,6 @@ class WorkerThread {
  public:
   explicit WorkerThread(WorkerManager* worker_manager);
   virtual ~WorkerThread();
-  void SetLoggingInterface(
-      Log* log, Log* version_log, Log* data_hash_log,
-      HighResolutionTimer* timer);
   virtual void Run() = 0;
 
   pthread_t thread_id;
@@ -70,11 +66,6 @@ class WorkerThread {
  protected:
   cpu_set_t* used_cpu_set_;
   WorkerManager* worker_manager_;
-  // Logging data structures.
-  Log* log_;
-  Log* version_log_;
-  Log* data_hash_log_;
-  HighResolutionTimer* timer_;
 };
 }  // namespace nimbus
 

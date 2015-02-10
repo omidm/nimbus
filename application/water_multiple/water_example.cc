@@ -486,7 +486,6 @@ Save_To_Nimbus_No_AppData(const nimbus::Job *job, const nimbus::DataArray &da, c
           array_shift,
           &pdv,
           &particle_levelset.levelset.phi);
-      std::cout << "OMID: write 3.\n";
     }
     application::DestroyTranslatorObjects(&pdv);
     if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
@@ -496,7 +495,6 @@ Save_To_Nimbus_No_AppData(const nimbus::Job *job, const nimbus::DataArray &da, c
           array_shift,
           &pdv,
           &particle_levelset.levelset.phi);
-      std::cout << "OMID: write 3.\n";
     }
     application::DestroyTranslatorObjects(&pdv);
     if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
@@ -506,7 +504,6 @@ Save_To_Nimbus_No_AppData(const nimbus::Job *job, const nimbus::DataArray &da, c
           array_shift,
           &pdv,
           &phi_ghost_bandwidth_seven);
-      std::cout << "OMID: write 7.\n";
     }
     application::DestroyTranslatorObjects(&pdv);
     if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
@@ -516,7 +513,6 @@ Save_To_Nimbus_No_AppData(const nimbus::Job *job, const nimbus::DataArray &da, c
           array_shift,
           &pdv,
           &phi_ghost_bandwidth_eight);
-      std::cout << "OMID: write 8.\n";
     }
     application::DestroyTranslatorObjects(&pdv);
 

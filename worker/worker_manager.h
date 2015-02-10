@@ -45,7 +45,6 @@
 #include <list>
 #include <string>
 #include "shared/high_resolution_timer.h"
-#include "shared/log.h"
 #include "shared/nimbus.h"
 #include "worker/task_thread_pool.h"
 
@@ -131,23 +130,7 @@ class WorkerManager {
   pthread_mutex_t local_job_done_list_lock_;
   JobList local_job_done_list_;
 
- public:
-  // Logging: set up logging interface.
-  void SetLoggingInterface(
-      Log* log, Log* version_log, Log* data_hash_log,
-      HighResolutionTimer* timer);
-
-  void SetEventLog(std::string wid_str);
-
  private:
-  // Internal logging facility.
-  void PrintTimeStamp(const char* event, const char* s, const uint64_t d);
-  FILE* event_log;
-  bool log_ready_;
-  Log* log_;
-  Log* version_log_;
-  Log* data_hash_log_;
-  HighResolutionTimer* timer_;
   // Performance measurement.
   int64_t dispatched_computation_job_count_;
   int64_t ready_jobs_count_;

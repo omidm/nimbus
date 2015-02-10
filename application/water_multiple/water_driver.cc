@@ -256,7 +256,6 @@ ExtrapolatePhiImpl(const nimbus::Job *job,
         example.particle_levelset_evolution.phi,
         example.phi_ghost_bandwidth_eight,
         0, time+dt, 8);
-    std::cout << "OMID: called extrapolate phi.\n";
   }
   return true;
 }

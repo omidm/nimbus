@@ -166,12 +166,6 @@ class AppDataManager {
          */
         virtual void InvalidateMappings(Data *d) = 0;
 
-        /**
-         * \brief Sets log file names for application data manager
-         * \param Worker id, to be used in file names
-         */
-        virtual void SetLogNames(std::string wid_str) = 0;
-
     protected:
         /**
          * \brief Requests an AppVar instance of type prototype, from the
@@ -223,10 +217,6 @@ class AppDataManager {
                                          const AppStruct &prototype,
                                          const GeometricRegion &region,
                                          app_data::Access access) = 0;
-
-        FILE* time_log;
-        FILE* block_log;
-        FILE* alloc_log;
 };  // class AppDataManager
 }  // namespace nimbus
 

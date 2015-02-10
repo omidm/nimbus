@@ -58,7 +58,6 @@ class WorkerThreadComputation : public WorkerThread {
 
  private:
   void ExecuteJob(Job* job);
-  uint64_t ParseLine(std::string line);
 };
 }  // namespace nimbus
 

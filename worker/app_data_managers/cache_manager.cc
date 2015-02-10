@@ -58,20 +58,6 @@
 
 #define FIRST_UNIQUE_ID 1000
 
-#define RecordTs() timestamps[order++] = GetSizeStamp()
-#define OutputTs(x, y) fprintf(time_log, "%d ; %s ; %s ; %f\n", \
-                           tid, x, y, timestamps[i++])
-
-FILE* debug_log = NULL;
-
-namespace {
-double GetSizeStamp() {
-  struct timespec t;
-  clock_gettime(CLOCK_REALTIME, &t);
-  return t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
-}
-}  // namespace
-
 namespace nimbus {
 
 /**
@@ -99,18 +85,12 @@ CacheManager::~CacheManager() {}
  */
 void CacheManager::WriteImmediately(AppVar *app_var,
                                     const DataArray &write_set) {
-    double timestamps[6];
-    int order = 0;
-    RecordTs();  // start WIV stage
     DataArray flush_set;
     DataSet &write_back = app_var->write_back_;
-    // size_t write_bytes = 0;
-    RecordTs();  // start WIV mapping
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set[i];
         if (write_back.find(d) != write_back.end()) {
             flush_set.push_back(d);
-            // write_bytes += d->memory_size();
         }
     }
     for (size_t i = 0; i < flush_set.size(); ++i) {
@@ -118,27 +98,8 @@ void CacheManager::WriteImmediately(AppVar *app_var,
         d->UnsetDirtyAppObject(app_var);
         write_back.erase(d);
     }
-    RecordTs();  // end WIV mapping
 
-    // std::string size_str = "WIV wfcsize " + app_var->name();
-    // PrintSizeStamp(size_str.c_str(), write_bytes);
-
-    RecordTs();  // start WIV wfc
     app_var->WriteAppData(flush_set, app_var->write_region_);
-    RecordTs();  // end WIV wfc
-    RecordTs();  // end WIV stage
-    {
-      int i = 0;
-      pid_t tid = syscall(SYS_gettid);
-      OutputTs("start", "WIV stage");
-      OutputTs("start", "WIV mapping");
-      OutputTs("end", "WIV mapping");
-      OutputTs("start", "WIV wfc");
-      OutputTs("end", "WIV wfc");
-      OutputTs("end", "WIV stage");
-      assert(i == order);
-      assert(order <= 6);
-    }
 }
 
 /**
@@ -155,9 +116,6 @@ void CacheManager::WriteImmediately(AppVar *app_var,
 void CacheManager::WriteImmediately(AppStruct *app_struct,
                                     const std::vector<app_data::type_id_t> &var_type,
                                     const std::vector<DataArray> &write_sets) {
-    double timestamps[6];
-    int order = 0;
-    RecordTs();  // start WIS stage
     size_t num_vars = var_type.size();
     if (write_sets.size() != num_vars) {
         dbg(DBG_ERROR, "Mismatch in number of variable types passed to FlushCache\n");
@@ -165,8 +123,6 @@ void CacheManager::WriteImmediately(AppStruct *app_struct,
     }
     std::vector<DataArray> flush_sets(num_vars);
     std::vector<DataSet> &write_backs = app_struct->write_backs_;
-    // size_t write_bytes = 0;
-    RecordTs();  // start WIS mapping
     for (size_t t = 0; t < num_vars; ++t) {
         DataArray &flush_t = flush_sets[t];
         const DataArray &write_set_t = write_sets[t];
@@ -176,7 +132,6 @@ void CacheManager::WriteImmediately(AppStruct *app_struct,
             Data *d = write_set_t[i];
             if (write_back_t.find(d) != write_back_t.end()) {
                 flush_t.push_back(d);
-                // write_bytes += d->memory_size();
             }
         }
     }
@@ -190,28 +145,10 @@ void CacheManager::WriteImmediately(AppStruct *app_struct,
             write_back_t.erase(d);
         }
     }
-    RecordTs();  // end WIS mapping
 
-    // std::string size_str = "WIS wfcsize " + app_struct->name();
-    // PrintSizeStamp(size_str.c_str(), write_bytes);
 
-    RecordTs();  // start WIS wfc
     app_struct->WriteAppData(var_type, flush_sets,
                              app_struct->write_region_);
-    RecordTs();  // end WIS wfc
-    RecordTs();  // end WIS stage
-    {
-      int i = 0;
-      pid_t tid = syscall(SYS_gettid);
-      OutputTs("start", "WIS stage");
-      OutputTs("start", "WIS mapping");
-      OutputTs("end", "WIS mapping");
-      OutputTs("start", "WIS wfc");
-      OutputTs("end", "WIS wfc");
-      OutputTs("end", "WIS stage");
-      assert(i == order);
-      assert(order <= 6);
-    }
 }
 
 /**
@@ -235,12 +172,7 @@ AppVar *CacheManager::GetAppVarV(const DataArray &read_set,
                                  void* aux_data) {
     // TODO(chinmayee): Remove this when application objects can be shared by compute jobs
     access = app_data::EXCLUSIVE;
-    double timestamps[14];
-    int order = 0;
-    RecordTs();  // start GAV stage
-    RecordTs();  // start GAV lock
     pthread_mutex_lock(&cache_lock);
-    RecordTs();  // end GAV lock
     AppVar *cv = NULL;
     // Get a cache object form the cache table.
     if (pool_->find(prototype.id()) == pool_->end()) {
@@ -263,16 +195,11 @@ AppVar *CacheManager::GetAppVarV(const DataArray &read_set,
     cv->AcquireAccess(access);
     DataArray flush, sync, diff;
     AppObjects sync_co;
-    RecordTs();  // start GAV block
     while (!cv->CheckPendingFlag(read_set, write_set)) {
       pthread_cond_wait(&cache_cond, &cache_lock);
     }
-    RecordTs();  // end GAV block
-    // Move here.
-    RecordTs();  // start GAV mapping
     cv->SetUpReadWrite(read_set, write_set,
                        &flush, &diff, &sync, &sync_co);
-    RecordTs();  // end GAV mapping
     pthread_mutex_unlock(&cache_lock);
     if (aux != NULL) {
       aux(cv, aux_data);
@@ -281,82 +208,17 @@ AppVar *CacheManager::GetAppVarV(const DataArray &read_set,
     GeometricRegion write_region_old = cv->write_region_;
     cv->write_region_ = write_region;
 
-    // std::string size_str;
-    // size_t write_bytes = 0;
-    // for (size_t i = 0; i < flush.size(); ++i) {
-    //   Data *d = flush[i];
-    //   write_bytes += d->memory_size();
-    // }
-    // for (size_t i = 0; i < sync.size(); ++i) {
-    //   Data *d = sync[i];
-    //   write_bytes += d->memory_size();
-    // }
-    // std::string size_str = "GAV wfcsize " + cv->name();
-    // PrintSizeStamp(size_str.c_str(), write_bytes);
-
-    RecordTs();  // start GAV wfc
     cv->WriteAppData(flush, write_region_old);
     for (size_t i = 0; i < sync.size(); ++i) {
         sync_co[i]->PullData(sync[i]);
     }
-    RecordTs();  // end GAV wfc
 
-    // size_t read_bytes = 0;
-    // for (size_t i = 0; i < diff.size(); ++i) {
-    //   Data *d = diff[i];
-    //   read_bytes += d->memory_size();
-    // }
-    // size_str = "GAV rtcsize " + cv->name();
-    // PrintSizeStamp(size_str.c_str(), read_bytes);
-
-    RecordTs();  // start GAV lock
     pthread_mutex_lock(&cache_lock);
-    RecordTs();  // end GAV lock
     cv->ReleasePendingFlag(&flush, &diff, &sync);
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
 
-    RecordTs();  // start GAV rtc
     cv->ReadAppData(diff, read_region);
-    RecordTs();  // end GAV rtc
-
-    RecordTs();  // end GAV stage
-    {
-      int i = 0;
-      pid_t tid = syscall(SYS_gettid);
-      OutputTs("start", "GAV stage");
-      OutputTs("start", "GAV lock");
-      OutputTs("end", "GAV lock");
-      OutputTs("start", "GAV block");
-      OutputTs("end", "GAV block");
-      OutputTs("start", "GAV mapping");
-      OutputTs("end", "GAV mapping");
-      OutputTs("start", "GAV wfc");
-      OutputTs("end", "GAV wfc");
-      OutputTs("start", "GAV lock");
-      OutputTs("end", "GAV lock");
-      OutputTs("start", "GAV rtc");
-      OutputTs("end", "GAV rtc");
-      OutputTs("end", "GAV stage");
-      assert(i == order);
-      assert(order <= 14);
-    }
-    if (diff.size() != 0) {
-      size_t max_i = 0;
-      for (size_t i = 1; i < diff.size(); ++i)
-        if (diff.at(max_i)->region().GetSurfaceArea()
-            < diff.at(i)->region().GetSurfaceArea()) {
-          max_i = i;
-        }
-      std::string cv_name = cv->name();
-      Data* data = diff.at(max_i);
-      std::string region_name = data->region().ToNetworkData();
-      fprintf(debug_log,
-              "%s %s %f\n",
-              cv_name.c_str(),
-              region_name.c_str(),
-              timestamps[12] - timestamps[11]);
-    }
     return cv;
 }
 
@@ -379,12 +241,7 @@ AppStruct *CacheManager::GetAppStructV(const std::vector<app_data::type_id_t> &v
                                        app_data::Access access) {
     // TODO(chinmayee): Remove this when application objects can be shared by compute jobs
     access = app_data::EXCLUSIVE;
-    double timestamps[14];
-    int order = 0;
-    RecordTs();  // start GAS stage
-    RecordTs();  // start GAS lock
     pthread_mutex_lock(&cache_lock);
-    RecordTs();  // end GAS lock
     AppStruct *cs = NULL;
     if (pool_->find(prototype.id()) == pool_->end()) {
         CacheTable *ct = new CacheTable(app_data::STRUCT);
@@ -408,42 +265,18 @@ AppStruct *CacheManager::GetAppStructV(const std::vector<app_data::type_id_t> &v
                            sync_sets(num_var),
                            diff_sets(num_var);
     std::vector<AppObjects> sync_co_sets(num_var);
-    RecordTs();  // start GAS block
     // Move here.
     cs->AcquireAccess(access);
     while (!cs->CheckPendingFlag(var_type, read_sets, write_sets)) {
       pthread_cond_wait(&cache_cond, &cache_lock);
     }
-    RecordTs();  // end GAS block
-    RecordTs();  // start GAS mapping
     cs->SetUpReadWrite(var_type, read_sets, write_sets,
                        &flush_sets, &diff_sets, &sync_sets, &sync_co_sets);
-    RecordTs();  // end GAS mapping
     pthread_mutex_unlock(&cache_lock);
 
     GeometricRegion write_region_old = cs->write_region_;
     cs->write_region_ = write_region;
 
-    // std::string size_str = "GAS wfcsize " + cs->name();
-    // size_t write_bytes = 0;
-    // for (size_t i = 0; i < num_var; ++i) {
-    //   DataArray &flush_t = flush_sets[i];
-    //   for (size_t j = 0; j < flush_t.size(); ++j) {
-    //     Data *d = flush_t[j];
-    //     write_bytes += d->memory_size();
-    //   }
-    // }
-    // for (size_t i = 0; i < num_var; ++i) {
-    //   DataArray &sync_t = sync_sets[i];
-    //   for (size_t j = 0; j < sync_t.size(); ++j) {
-    //     Data *d = sync_t[j];
-    //     write_bytes += d->memory_size();
-    //   }
-    // }
-    // size_str = "GAS wfcsize " + cs->name();
-    // PrintSizeStamp(size_str.c_str(), write_bytes);
-
-    RecordTs();  // start GAS wfc
     cs->WriteAppData(var_type, flush_sets, write_region_old);
     for (size_t t = 0; t < num_var; ++t) {
         DataArray &sync_t = sync_sets[t];
@@ -452,52 +285,14 @@ AppStruct *CacheManager::GetAppStructV(const std::vector<app_data::type_id_t> &v
             sync_co_t[i]->PullData(sync_t[i]);
         }
     }
-    RecordTs();  // end GAS wfc
 
-    // size_t read_bytes = 0;
-    // for (size_t i = 0; i < num_var; ++i) {
-    //   DataArray &diff_t = diff_sets[i];
-    //   for (size_t j = 0; j < diff_t.size(); ++j) {
-    //     Data *d = diff_t[j];
-    //     read_bytes += d->memory_size();
-    //   }
-    // }
-    // size_str = "GAS rtcsize " + cs->name();
-    // PrintSizeStamp(size_str.c_str(), read_bytes);
-
-    RecordTs();  // start GAS lock
     pthread_mutex_lock(&cache_lock);
-    RecordTs();  // end GAS lock
     cs->ReleasePendingFlag(var_type,
                            &flush_sets, &diff_sets, &sync_sets);
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
 
-    RecordTs();  // start GAS rtc
     cs->ReadAppData(var_type, diff_sets, read_region);
-    RecordTs();  // end GAS rtc
-
-    RecordTs();  // end GAS stage
-    {
-      int i = 0;
-      pid_t tid = syscall(SYS_gettid);
-      OutputTs("start", "GAS stage");
-      OutputTs("start", "GAS lock");
-      OutputTs("end", "GAS lock");
-      OutputTs("start", "GAS block");
-      OutputTs("end", "GAS block");
-      OutputTs("start", "GAS mapping");
-      OutputTs("end", "GAS mapping");
-      OutputTs("start", "GAS wfc");
-      OutputTs("end", "GAS wfc");
-      OutputTs("start", "GAS lock");
-      OutputTs("end", "GAS lock");
-      OutputTs("start", "GAS rtc");
-      OutputTs("end", "GAS rtc");
-      OutputTs("end", "GAS stage");
-      assert(i == order);
-      assert(order <= 14);
-    }
     return cs;
 }
 
@@ -506,79 +301,26 @@ AppStruct *CacheManager::GetAppStructV(const std::vector<app_data::type_id_t> &v
  * mappings and returns.
  */
 void CacheManager::SyncData(Data *d) {
-    double timestamps[14];
-    int order = 0;
-    RecordTs();  // start SD stage
     AppObject *co = NULL;
-    RecordTs();  // start SD lock
     pthread_mutex_lock(&cache_lock);
-    RecordTs();  // end SD lock
-    RecordTs();  // start SD block
     while (d->pending_flag() != 0) {
        pthread_cond_wait(&cache_cond, &cache_lock);
     }
-    RecordTs();  // end SD block
     co = d->dirty_app_object();
     if (!co) {
         pthread_mutex_unlock(&cache_lock);
-        RecordTs();  // end SD stage
-        {
-          int i = 0;
-          pid_t tid = syscall(SYS_gettid);
-          OutputTs("start", "SD stage");
-          OutputTs("start", "SD lock");
-          OutputTs("end", "SD lock");
-          OutputTs("start", "SD block");
-          OutputTs("end", "SD block");
-          OutputTs("end", "SD stage");
-          assert(i == order);
-          assert(order <= 6);
-        }
         return;
     }
     // assert(co->IsAvailable(app_data::EXCLUSIVE));
-    RecordTs();  // start SD mapping
     d->set_pending_flag(Data::WRITE);
-    RecordTs();  // end SD mapping
     pthread_mutex_unlock(&cache_lock);
 
-    // size_t write_bytes = d->memory_size();
-    // std::string size_str = "SD wfcsize " + co->name();
-    // PrintSizeStamp(size_str.c_str(), write_bytes);
-
-    RecordTs();  // start SD wfc
     co->PullData(d);
-    RecordTs();  // end SD wfc
-    RecordTs();  // start SD lock
     pthread_mutex_lock(&cache_lock);
-    RecordTs();  // end SD lock
-    RecordTs();  // start SD mapping
     d->ClearDirtyMappings();
     d->unset_pending_flag(Data::WRITE);
-    RecordTs();  // end SD mapping
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
-    RecordTs();  // end SD stage
-    {
-      int i = 0;
-      pid_t tid = syscall(SYS_gettid);
-      OutputTs("start", "SD stage");
-      OutputTs("start", "SD lock");
-      OutputTs("end", "SD lock");
-      OutputTs("start", "SD block");
-      OutputTs("end", "SD block");
-      OutputTs("start", "SD mapping");
-      OutputTs("end", "SD mapping");
-      OutputTs("start", "SD wfc");
-      OutputTs("end", "SD wfc");
-      OutputTs("start", "SD lock");
-      OutputTs("end", "SD lock");
-      OutputTs("start", "SD mapping");
-      OutputTs("end", "SD mapping");
-      OutputTs("end", "SD stage");
-      assert(i == order);
-      assert(order <= 14);
-    }
 }
 
 /**
@@ -586,36 +328,12 @@ void CacheManager::SyncData(Data *d) {
  * cached application objects.
  */
 void CacheManager::InvalidateMappings(Data *d) {
-    double timestamps[8];
-    int order = 0;
-    RecordTs();  // start IM stage
-    RecordTs();  // start IM lock
     pthread_mutex_lock(&cache_lock);
-    RecordTs();  // end IM lock
-    RecordTs();  // start IM block
     while (d->pending_flag() != 0) {
         pthread_cond_wait(&cache_cond, &cache_lock);
     }
-    RecordTs();  // end IM block
-    RecordTs();  // start IM mapping
     d->InvalidateMappings();
-    RecordTs();  // end IM mapping
     pthread_mutex_unlock(&cache_lock);
-    RecordTs();  // end IM stage
-    {
-      int i = 0;
-      pid_t tid = syscall(SYS_gettid);
-      OutputTs("start", "IM stage");
-      OutputTs("start", "IM lock");
-      OutputTs("end", "IM lock");
-      OutputTs("start", "IM block");
-      OutputTs("end", "IM block");
-      OutputTs("start", "IM mapping");
-      OutputTs("end", "IM mapping");
-      OutputTs("end", "IM stage");
-      assert(i == order);
-      assert(order <= 8);
-    }
 }
 
 void CacheManager::ReleaseAccess(AppObject* app_object) {
@@ -624,13 +342,5 @@ void CacheManager::ReleaseAccess(AppObject* app_object) {
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
 }
-
-void CacheManager::SetLogNames(std::string wid_str) {
-    alloc_log = fopen((wid_str + "_cache_objects.txt").c_str(), "w");
-    block_log = fopen((wid_str + "_cache_behavior.txt").c_str(), "w");
-    time_log = fopen((wid_str + "_cache_time.txt").c_str(), "w");
-    debug_log = fopen((wid_str + "_cache_debug.txt").c_str(), "w");
-}
-
 
 }  // namespace nimbus

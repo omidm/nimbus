@@ -42,27 +42,14 @@
 #include "worker/data.h"
 #include "worker/physical_data_map.h"
 
-namespace nimbus {
+namespace {
+bool print_stat_ = false;
+}  // namespace
 
-bool PhysicalDataMap::print_stat_ = false;
+namespace nimbus {
 
 PhysicalDataMap::PhysicalDataMap() {
   sum_ = 0;
-  if (print_stat_) {
-    physical_data_log = fopen("physical_data.txt", "w");
-  }
-}
-
-void PhysicalDataMap::PrintTimeStamp(const char* format, ...) {
-  va_list args;
-  va_start(args, format);
-  struct timespec t;
-  clock_gettime(CLOCK_REALTIME, &t);
-  double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
-  fprintf(physical_data_log, "%f ", time_sum);
-  vfprintf(physical_data_log, format, args);
-  fflush(physical_data_log);
-  va_end(args);
 }
 
 Data* PhysicalDataMap::AcquireAccess(
@@ -86,15 +73,9 @@ bool PhysicalDataMap::ReleaseAccess(
       if (temp_size != internal_map_[physical_data_id].second) {
         sum_ = sum_ + temp_size - internal_map_[physical_data_id].second;
         internal_map_[physical_data_id].second = temp_size;
-        PrintTimeStamp("%s %"PRIu64" %zu\n",
-                       internal_map_[physical_data_id].first->name().c_str(),
-                       physical_data_id,
-                       temp_size);
-        PrintTimeStamp("%zu\n", sum_);
       }
     }
   }
-  // outstanding_used_data_.erase(job_id);
   return true;
 }
 
@@ -106,10 +87,6 @@ bool PhysicalDataMap::AddMapping(
   internal_map_[physical_data_id].first = data;
   if (print_stat_) {
     internal_map_[physical_data_id].second = data->memory_size();
-    PrintTimeStamp("%s %"PRIu64" %zu\n",
-                   data->name().c_str(),
-                   physical_data_id,
-                   data->memory_size());
   }
   return true;
 }
