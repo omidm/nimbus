@@ -93,6 +93,10 @@ void ComplexJobEntry::Initialize() {
 
 
 ComplexJobEntry::~ComplexJobEntry() {
+  ShadowJobEntryMap::iterator iter = shadow_jobs_.begin();
+  for (; iter != shadow_jobs_.end(); ++iter) {
+    delete iter->second;
+  }
 }
 
 TemplateEntry* ComplexJobEntry::template_entry() const {
