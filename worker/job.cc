@@ -39,7 +39,6 @@
   */
 
 #include <time.h>
-#include "shared/fast_log.hh"
 #include "worker/job.h"
 #include "worker/application.h"
 #include "worker/app_data_manager.h"

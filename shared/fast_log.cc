@@ -45,6 +45,9 @@
 #include <cstdlib>
 #include <string>
 
+namespace {
+pthread_mutex_t map_lock;
+}  // namespace
 namespace nimbus {
 
 namespace timer {
@@ -64,6 +67,7 @@ std::string TimerName(TimerType timer_type) {
 }
 
 void InitializeKeys() {
+  pthread_mutex_init(&map_lock, NULL);
   for (int i = 0; i < kMaxCounter; ++i) {
     pthread_key_create(&(keys[i]), NULL);
   }
@@ -74,11 +78,14 @@ void InitializeTimers() {
   for (int i = 0; i < kMaxCounter; ++i) {
     TimerRecord* record = new(malloc(4096)) TimerRecord;
     pthread_setspecific(keys[i], record);
+    pthread_mutex_lock(&map_lock);
     timers_map[std::make_pair(pid, static_cast<TimerType>(i))] = record;
+    pthread_mutex_unlock(&map_lock);
   }
 }
 
 void PrintTimerSummary(FILE* output) {
+  pthread_mutex_lock(&map_lock);
   struct timespec now;
   clock_gettime(CLOCK_REALTIME, &now);
   for (TimersMap::iterator iter = timers_map.begin();
@@ -96,6 +103,7 @@ void PrintTimerSummary(FILE* output) {
            iter->first.first, TimerName(iter->first.second).c_str(),
            static_cast<double>(result) / 1e9);
   }
+  pthread_mutex_unlock(&map_lock);
 }
 
 }  // namespace timer
