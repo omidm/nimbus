@@ -81,7 +81,7 @@ inline void StartTimer(TimerType timer_type) {
   TimerRecord* record = static_cast<TimerRecord*>(ptr);
   assert(record);
   clock_gettime(CLOCK_REALTIME, &(record->new_timestamp));
-  if (record->depth) {
+  if (record->depth != 0) {
     record->sum +=
         record->depth * (
              (record->new_timestamp.tv_sec - record->old_timestamp.tv_sec) * 1e9
