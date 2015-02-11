@@ -55,6 +55,7 @@ class AppDataRawGridArray : public nimbus::AppVar {
   explicit AppDataRawGridArray(const nimbus::GeometricRegion& global_reg,
                              bool make_proto,
                              const std::string& name);
+  ~AppDataRawGridArray();
 
   DATA_TYPE* data() {
     return data_;
@@ -77,6 +78,8 @@ class AppDataRawGridArray : public nimbus::AppVar {
                            const nimbus::GeometricRegion& read_reg);
   virtual void WriteAppData(const nimbus::DataArray& write_set,
                               const nimbus::GeometricRegion& write_reg) const;
+
+  virtual void Destroy();
 
  private:
   nimbus::GeometricRegion global_region_;

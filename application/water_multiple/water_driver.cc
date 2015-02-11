@@ -340,7 +340,6 @@ ReseedParticlesImpl(const nimbus::Job *job,
   // NOT THREAD SAFE!!! LOG::Time("Reseed");
   example.particle_levelset_evolution.Reseed_Particles(time+dt);
   example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
-  example.Save_To_Nimbus(job, da, current_frame+1);
   return true;
 }
 

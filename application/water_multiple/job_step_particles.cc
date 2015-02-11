@@ -125,8 +125,6 @@ void JobStepParticles::Execute(nimbus::Parameter params,
     driver->StepParticlesImpl(this, da, dt);
   }
 
-  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
-
   if (app->translator_log) {
     std::stringstream msg;
     msg << "Step Particles: Number of particles at end = " << NumParticles(*example);

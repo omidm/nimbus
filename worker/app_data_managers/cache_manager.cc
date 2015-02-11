@@ -33,7 +33,7 @@
  */
 
 /*
- * CacheManager implements application data manager with simple caching of
+ * CacheManager implements application data manager with simple_app_data caching of
  * application data across jobs.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>

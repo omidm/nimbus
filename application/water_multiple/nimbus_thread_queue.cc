@@ -46,6 +46,7 @@ namespace nimbus {
 
 NimbusThreadQueue::NimbusThreadQueue(
     TaskThreadPool::TaskThreadList* allocated_threads) : THREAD_QUEUE(-1) {
+  printf("Create nimbus thread queue\n");
   pthread_attr_init(&attr);
   pthread_cond_init(&done_condition, 0);
   pthread_cond_init(&todo_condition, 0);
@@ -70,6 +71,7 @@ NimbusThreadQueue::NimbusThreadQueue(
   }
 }
 NimbusThreadQueue::~NimbusThreadQueue() {
+  printf("Delete nimbus thread queue");
   EXITER* exiter = new EXITER[task_threads.size()];
   --active_threads;
   ++blocked_threads;

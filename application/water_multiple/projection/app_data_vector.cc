@@ -65,6 +65,15 @@ AppDataVector::AppDataVector(const nimbus::GeometricRegion &global_reg,
   data_ = new DATA_TYPE;
 }
 
+AppDataVector::~AppDataVector() {
+  Destroy();
+}
+
+void AppDataVector::Destroy() {
+  if (data_)
+    delete data_;
+}
+
 nimbus::AppVar* AppDataVector::CreateNew(
     const nimbus::GeometricRegion &ob_reg) const {
   nimbus::AppVar* temp = new AppDataVector(global_region_, ob_reg);

@@ -82,6 +82,23 @@ AppDataCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
   shift_.z = local_region_.z() - global_reg.z();
 }
 
+template<class T> AppDataCompressedScalarArray<T>::
+~AppDataCompressedScalarArray() {
+  Destroy();
+}
+
+template<class T> void AppDataCompressedScalarArray<T>::
+Destroy() {
+  if (data_) {
+    delete data_;
+    data_ = NULL;
+  }
+  if (index_data_) {
+    delete index_data_;
+    index_data_ = NULL;
+  }
+}
+
 template<class T> nimbus::AppVar *AppDataCompressedScalarArray<T>::
 CreateNew(const nimbus::GeometricRegion &ob_reg) const {
   nimbus::AppVar* temp = new AppDataCompressedScalarArray<T>(global_region_,

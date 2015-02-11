@@ -64,6 +64,15 @@ AppDataSparseMatrix::AppDataSparseMatrix(const nimbus::GeometricRegion &global_r
   data_ = new DATA_TYPE;
 }
 
+AppDataSparseMatrix::~AppDataSparseMatrix() {
+  Destroy();
+}
+
+void AppDataSparseMatrix::Destroy() {
+  if (data_)
+    delete data_;
+}
+
 nimbus::AppVar* AppDataSparseMatrix::CreateNew(
     const nimbus::GeometricRegion &ob_reg) const {
   nimbus::AppVar* temp = new AppDataSparseMatrix(global_region_, ob_reg);

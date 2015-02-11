@@ -484,8 +484,11 @@ void DestroyExampleAndDriver(
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver) {
   application::ScopeTimer scope_timer("delete_example_and_driver");
-  if (example->create_destroy_ple)
+  if (example->create_destroy_ple) {
+    example->particle_levelset_evolution.particle_levelset.Set_Thread_Queue(NULL);
+    example->particle_levelset_evolution.particle_levelset.levelset.thread_queue=NULL;
     delete &example->particle_levelset_evolution;
+  }
   delete example;
   example = NULL;
   delete driver;

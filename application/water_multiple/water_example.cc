@@ -192,8 +192,6 @@ template<class TV> WATER_EXAMPLE<TV>::
     assert(static_config_valid_mask == NULL);
     assert(static_config_force == NULL);
     delete &projection;
-    particle_levelset_evolution.particle_levelset.Set_Thread_Queue(NULL);
-    particle_levelset_evolution.particle_levelset.levelset.thread_queue=NULL;
     if (nimbus_thread_queue) {
       delete nimbus_thread_queue;
     }
@@ -775,8 +773,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     {
       // particle leveset quantities
       T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
-        nimbus::DataArray write;
-        application::GetWriteData(*job, APP_PHI, da, &write);
       // levelset
       if (app_data_phi3) {
           T_SCALAR_ARRAY *phi3 = app_data_phi3->data();
@@ -814,44 +810,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         data_real->set_scalar(dt_buffer);
         dbg(APP_LOG, "[Data Saving]%s: %0.9f\n", APP_DT, dt_buffer);
       }
-
-      // ** there should not be any accesses to particle levelset after this **
-      if (app_data_ple) {
-          if (data_config.GetFlag(DataConfig::SHARED_PARTICLES_FLUSH)) {
-              nimbus::app_data::type_id_t vars[] = { application::POS,
-                                                  application::NEG,
-                                                  application::POS_REM,
-                                                  application::NEG_REM };
-              std::vector<nimbus::app_data::type_id_t> var_type(
-                  vars, vars + sizeof(vars)/sizeof(nimbus::app_data::type_id_t));
-              std::vector<nimbus::DataArray> write(4), shared(4);
-              std::string dtype[] = { APP_POS_PARTICLES,
-                                      APP_NEG_PARTICLES,
-                                      APP_POS_REM_PARTICLES,
-                                      APP_NEG_REM_PARTICLES
-                                    };
-              for (size_t t = 0; t < application::NUM_PARTICLE_TYPES; ++t)
-                  application::GetWriteData(*job, dtype[t], da, &write[t], false);
-              nimbus::GeometricRegion inner_reg(
-                  array_reg_central.NewEnlarged(-application::kGhostNum));
-              for (size_t t = 0; t < application::NUM_PARTICLE_TYPES; ++t) {
-                  nimbus::DataArray &write_t = write[t];
-                  nimbus::DataArray &shared_t = shared[t];
-                  for (size_t i = 0; i < write_t.size(); ++i) {
-                      nimbus::Data *d = write_t[i];
-                      nimbus::GeometricRegion dr = d->region();
-                      if (!inner_reg.Covers(&dr)) {
-                          shared_t.push_back(d);
-                      }
-                  }
-              }
-              cm->WriteImmediately(app_data_ple, var_type, shared);
-          }
-          particle_levelset_evolution.particle_levelset.Set_Thread_Queue(NULL);
-          particle_levelset_evolution.particle_levelset.levelset.thread_queue=NULL;
-          cm->ReleaseAccess(app_data_ple);
-          app_data_ple = NULL;
-      }
     }
 
     // psi_d.
@@ -859,7 +817,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         BOOL_SCALAR_ARRAY *psi_d = app_data_psi_d->data();
 	BOOL_SCALAR_ARRAY::Nimbus_Copy_Arrays(*psi_d, projection.laplace->psi_D);
         BOOL_SCALAR_ARRAY::Nimbus_Copy_Arrays(projection.laplace->psi_D, b_scalar_dummy);
-        nimbus::DataArray write;
         cm->ReleaseAccess(app_data_psi_d);
         app_data_psi_d = NULL;
     }
@@ -869,7 +826,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         BOOL_FACE_ARRAY *psi_n = app_data_psi_n->data();
         BOOL_FACE_ARRAY::Nimbus_Copy_Arrays(*psi_n, projection.laplace->psi_N);
         BOOL_FACE_ARRAY::Nimbus_Copy_Arrays(projection.laplace->psi_N, b_face_dummy);
-        nimbus::DataArray write;
         cm->ReleaseAccess(app_data_psi_n);
         app_data_psi_n = NULL;
     }
@@ -974,6 +930,44 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         dbg(APP_LOG, "Finish writing PROJECTION_INTERIOR_N.\n");
       }
     }
+
+      // ** there should not be any accesses to particle levelset after this **
+      if (app_data_ple) {
+          if (data_config.GetFlag(DataConfig::SHARED_PARTICLES_FLUSH)) {
+              nimbus::app_data::type_id_t vars[] = { application::POS,
+                                                  application::NEG,
+                                                  application::POS_REM,
+                                                  application::NEG_REM };
+              std::vector<nimbus::app_data::type_id_t> var_type(
+                  vars, vars + sizeof(vars)/sizeof(nimbus::app_data::type_id_t));
+              std::vector<nimbus::DataArray> write(4), shared(4);
+              std::string dtype[] = { APP_POS_PARTICLES,
+                                      APP_NEG_PARTICLES,
+                                      APP_POS_REM_PARTICLES,
+                                      APP_NEG_REM_PARTICLES
+                                    };
+              for (size_t t = 0; t < application::NUM_PARTICLE_TYPES; ++t)
+                  application::GetWriteData(*job, dtype[t], da, &write[t], false);
+              nimbus::GeometricRegion inner_reg(
+                  array_reg_central.NewEnlarged(-application::kGhostNum));
+              for (size_t t = 0; t < application::NUM_PARTICLE_TYPES; ++t) {
+                  nimbus::DataArray &write_t = write[t];
+                  nimbus::DataArray &shared_t = shared[t];
+                  for (size_t i = 0; i < write_t.size(); ++i) {
+                      nimbus::Data *d = write_t[i];
+                      nimbus::GeometricRegion dr = d->region();
+                      if (!inner_reg.Covers(&dr)) {
+                          shared_t.push_back(d);
+                      }
+                  }
+              }
+              cm->WriteImmediately(app_data_ple, var_type, shared);
+          }
+          particle_levelset_evolution.particle_levelset.Set_Thread_Queue(NULL);
+          particle_levelset_evolution.particle_levelset.levelset.thread_queue=NULL;
+          cm->ReleaseAccess(app_data_ple);
+          app_data_ple = NULL;
+      }
 }
 //#####################################################################
 // Load from Nimbus
@@ -1021,7 +1015,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (app_data_phi3)
     {
         T_SCALAR_ARRAY *phi3 = app_data_phi3->data();
-	particle_levelset.levelset.phi.Nimbus_Delete_Base_Pointer_Scalar();
+        particle_levelset.levelset.phi.Nimbus_Delete_Base_Pointer_Scalar();
 	T_SCALAR_ARRAY::Nimbus_Copy_Arrays(particle_levelset.levelset.phi, *phi3);
     }
     if (app_data_phi7)

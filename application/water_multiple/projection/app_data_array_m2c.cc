@@ -64,6 +64,15 @@ AppDataArrayM2C::AppDataArrayM2C(const nimbus::GeometricRegion &global_reg,
   data_ = new DATA_TYPE;
 }
 
+AppDataArrayM2C::~AppDataArrayM2C() {
+  Destroy();
+}
+
+void AppDataArrayM2C::Destroy() {
+  if (data_)
+    delete data_;
+}
+
 nimbus::AppVar* AppDataArrayM2C::CreateNew(
     const nimbus::GeometricRegion &ob_reg) const {
   nimbus::AppVar* temp = new AppDataArrayM2C(global_region_, ob_reg);

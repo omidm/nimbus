@@ -33,20 +33,17 @@
  */
 
 /*
- * CacheManager implements application data manager with simple_app_data caching of
+ * SimpleAppDataManager implements application data manager with simple_app_data caching of
  * application data across jobs.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_WORKER_APP_DATA_MANAGERS_CACHE_MANAGER_H_
-#define NIMBUS_WORKER_APP_DATA_MANAGERS_CACHE_MANAGER_H_
+#ifndef NIMBUS_WORKER_APP_DATA_MANAGERS_SIMPLE_APP_DATA_MANAGER_H_
+#define NIMBUS_WORKER_APP_DATA_MANAGERS_SIMPLE_APP_DATA_MANAGER_H_
 
-#include <boost/unordered_map.hpp>
-#include <pthread.h>
 #include <cstdio>
 #include <sstream>  // NOLINT
-#include <map>
 #include <vector>
 #include <string>
 
@@ -54,7 +51,6 @@
 #include "data/app_data/app_struct.h"
 #include "data/app_data/app_var.h"
 #include "worker/app_data_manager.h"
-#include "worker/app_data_managers/cache_table.h"
 
 namespace nimbus {
 
@@ -63,43 +59,43 @@ typedef std::vector<Data *> DataArray;
 class GeometricRegion;
 
 /**
- * \class CacheManager
- * \details CacheManager implements application data manager with simple_app_data
+ * \class SimpleAppDataManager
+ * \details SimpleAppDataManager implements application data manager with simple_app_data
  * caching of application data across jobs.
- * Internally, CacheManager contains a two level map - the
+ * Internally, SimpleAppDataManager contains a two level map - the
  * first level key is a prototype id, and the second level key is an
  * application object geometric region. Together, these keys map to a list of
  * AppVars or AppStructs.
  */
-class CacheManager : public AppDataManager {
+class SimpleAppDataManager : public AppDataManager {
     public:
         /**
-         * \brief Creates a CacheManager instance
-         * \return Constructed CacheManager instance
+         * \brief Creates a SimpleAppDataManager instance
+         * \return Constructed SimpleAppDataManager instance
          */
-        CacheManager();
+        SimpleAppDataManager();
 
         /**
          * Destructor
          */
-        ~CacheManager();
+        ~SimpleAppDataManager();
 
         /**
          * \brief Informs application data manager that access to app_object is
          * no longer needed
          * \param app_object specified the application object to release
          */
-        virtual void ReleaseAccess(AppObject* cache_object);
+        virtual void ReleaseAccess(AppObject* simple_app_data_object);
 
         /**
-         * \brief Writes data to write_set back nimbus objects synchronously
+         * \brief Does not do anything
          * \param app_var is the application variable to write from
          * \param write_set is the set of nimbus objects to write to
          */
         virtual void WriteImmediately(AppVar *app_var, const DataArray &write_set);
 
         /**
-         * \brief Writes data to write_set back nimbus objects synchronously
+         * \brief Does not do anything
          * \param app_struct is the application struct to write from
          * \param var_type specifies the type of variables in the struct that
          * are to be written, corresponding to write_sets
@@ -110,19 +106,22 @@ class CacheManager : public AppDataManager {
                               const std::vector<DataArray> &write_sets);
 
         /**
-         * \brief If data is dirty, syncs with corresponding dirty application
-         * object, and clears the dirty mapping, no-op in case there is no
-         * caching
+         * \brief Does not do anything
          * \param Data d to 
          */
         virtual void SyncData(Data *d);
 
         /**
-         * \brief Invalidates mapping between d and all application objects ,
-         * dirty or not dirty, no-op in case there is no caching
+         * \brief Does not do anything
          * \param Data d
          */
         virtual void InvalidateMappings(Data *d);
+
+        /**
+         * \brief Sets log file names for application data manager
+         * \param Worker id, to be used in file names
+         */
+        virtual void SetLogNames(std::string wid_str);
 
     protected:
         /**
@@ -175,14 +174,7 @@ class CacheManager : public AppDataManager {
                                          app_data::Access access);
 
     private:
-        pthread_mutex_t cache_lock;
-        pthread_cond_t cache_cond;
-
-        uint64_t unique_id_allocator_;
-        typedef std::map<app_data::ob_id_t,
-                         CacheTable *> Pool;
-        Pool *pool_;
-};  // class CacheManager
+};  // class SimpleAppDataManager
 }  // namespace nimbus
 
-#endif  // NIMBUS_WORKER_APP_DATA_MANAGERS_CACHE_MANAGER_H_
+#endif  // NIMBUS_WORKER_APP_DATA_MANAGERS_SIMPLE_APP_DATA_MANAGER_H_

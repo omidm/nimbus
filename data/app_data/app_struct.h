@@ -71,6 +71,7 @@ class AppStruct : public AppObject {
     friend class AppDataManager;
     friend class CacheManager;
     friend class CacheTable;
+    friend class SimpleAppDataManager;
     public:
         /**
          * \brief Creates an AppStruct
@@ -164,6 +165,12 @@ class AppStruct : public AppObject {
          * prototype passed in the request.
          */
         virtual AppStruct *CreateNew(const GeometricRegion &struct_region) const = 0;
+
+        /**
+         * \brief Frees allocated memory. Application writer must implement
+         * this.
+         */
+        virtual void Destroy() = 0;
 
     protected:
         /**

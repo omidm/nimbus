@@ -92,6 +92,7 @@ public:
     T_FACE_ARRAY_BOOL valid_mask_dummy;
     T_FACE_ARRAY t_face_dummy;
     T_SCALAR_ARRAY t_scalar_dummy;
+    T_SCALAR_ARRAY *t_phi_dummy;
     BOOL_FACE_ARRAY b_face_dummy;
     BOOL_SCALAR_ARRAY b_scalar_dummy;
     INT_SCALAR_ARRAY i_scalar_dummy;

@@ -80,6 +80,19 @@ AppDataFaceArray(const nimbus::GeometricRegion &global_reg,
     }
 }
 
+template<class T, class TS> AppDataFaceArray<T, TS>::
+~AppDataFaceArray() {
+    Destroy();
+}
+
+template<class T, class TS> void AppDataFaceArray<T, TS>::
+Destroy() {
+    if (data_) {
+        delete data_;
+        data_ = NULL;
+    }
+}
+
 template<class T, class TS> nimbus::AppVar *AppDataFaceArray<T, TS>::
 CreateNew(const nimbus::GeometricRegion &ob_reg) const {
     nimbus::AppVar* temp = new AppDataFaceArray(global_region_,
