@@ -62,7 +62,7 @@ JobManager::JobManager() {
 JobManager::~JobManager() {
   // TODO(omidm): do you need to call remove obsolete?
   JobEntry* job;
-  if (JobManager::GetJobEntry(NIMBUS_KERNEL_JOB_ID, job)) {
+  if (JobManager::GetJobEntryFromJobGraph(NIMBUS_KERNEL_JOB_ID, job)) {
     delete job;
   }
 }
@@ -135,9 +135,12 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
                         params);
 
   if (!AddJobEntryToJobGraph(job_id, job)) {
+    // TODO(omidm): for now there are no future jobs!
+    assert(false);
+
     dbg(DBG_SCHED, "Filling possible future job (id: %lu) in job manager.\n", job_id);
     delete job;
-    GetJobEntry(job_id, job);
+    GetJobEntryFromJobGraph(job_id, job);
     if (job->future()) {
       job->set_job_type(JOB_COMP);
       job->set_job_name(job_name);
@@ -339,9 +342,7 @@ bool JobManager::GetComplexJobContainer(const job_id_t& job_id,
                                         ComplexJobEntry*& complex_job) {
   ComplexJobEntryMap::iterator iter = complex_jobs_.begin();
   for (; iter != complex_jobs_.end(); ++iter) {
-    ShadowJobEntry* shadow_job;
-    if (iter->second->GetShadowJobEntry(job_id, shadow_job)) {
-      assert(job_id == shadow_job->job_id());
+    if (iter->second->ShadowJobContained(job_id)) {
       complex_job = iter->second;
       return true;
     }
@@ -460,25 +461,16 @@ void JobManager::PassMetaBeforeSetDepthVersioningDependency(JobEntry* job) {
   }
 }
 
-bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
-  Vertex<JobEntry, job_id_t>* vertex;
+bool JobManager::GetJobEntryFromJobGraph(job_id_t job_id, JobEntry*& job) {
   boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
+  Vertex<JobEntry, job_id_t>* vertex;
   if (job_graph_.GetVertex(job_id, &vertex)) {
     job = vertex->entry();
     return true;
-  } else {
-    ComplexJobEntryMap::iterator iter = complex_jobs_.begin();
-    for (; iter != complex_jobs_.end(); ++iter) {
-      ShadowJobEntry* shadow_job;
-      if (iter->second->GetShadowJobEntry(job_id, shadow_job)) {
-        job = shadow_job;
-        return true;
-      }
-    }
-
-    job = NULL;
-    return false;
   }
+
+  job = NULL;
+  return false;
 }
 
 bool JobManager::RemoveJobEntry(JobEntry* job) {
@@ -900,17 +892,30 @@ void JobManager::NotifyJobDone(JobEntry *job) {
 }
 
 void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
-  JobEntry* job;
-  if (GetJobEntry(job_id, job)) {
-    if (job->sterile()) {
-      dbg(DBG_ERROR, "ERROR: sterile job cannot define data.\n");
+  JobEntry* job = NULL;
+  ComplexJobEntry* complex_job = NULL;
+  job_depth_t job_depth;
+  bool found_parent = false;
+  if (GetJobEntryFromJobGraph(job_id, job)) {
+    if (!job->sterile()) {
+      found_parent = true;
+      job_depth = job->job_depth();
     }
-    if (!version_manager_.DefineData(ldid, job_id, job->job_depth())) {
+  } else if (GetComplexJobContainer(job_id, complex_job)) {
+    if (!complex_job->ShadowJobSterile(job_id)) {
+      found_parent = true;
+      job_depth = job->job_depth();
+    }
+  }
+
+  if (found_parent) {
+    if (!version_manager_.DefineData(ldid, job_id, job_depth)) {
       dbg(DBG_ERROR, "ERROR: could not define data in ldl_map for ldid %lu.\n", ldid);
+      assert(false);
     }
   } else {
     dbg(DBG_ERROR, "ERROR: parent of define data with job id %lu is not in the graph.\n", job_id);
-    exit(-1);
+    assert(false);
   }
 }
 
@@ -941,10 +946,17 @@ void JobManager::UpdateJobBeforeSet(JobEntry* job) {
 void JobManager::UpdateBeforeSet(IDSet<job_id_t>* before_set) {
   IDSet<job_id_t>::IDSetIter it;
   for (it = before_set->begin(); it != before_set->end();) {
-    JobEntry* j;
+    JobEntry *j = NULL;
+    ComplexJobEntry *xj = NULL;
     job_id_t id = *it;
-    if (GetJobEntry(id, j)) {
+    if (GetJobEntryFromJobGraph(id, j)) {
       if ((j->done()) || (id == NIMBUS_KERNEL_JOB_ID)) {
+        before_set->remove(it++);
+      } else {
+        ++it;
+      }
+    } else if (GetComplexJobContainer(id, xj)) {
+      if ((xj->ShadowJobDone(id))) {
         before_set->remove(it++);
       } else {
         ++it;
@@ -968,14 +980,27 @@ bool JobManager::CausingUnwantedSerialization(JobEntry* job,
 
   IDSet<job_id_t>::IDSetIter iter;
   for (iter = pd.list_job_read_p()->begin(); iter != pd.list_job_read_p()->end(); iter++) {
-    JobEntry *j;
-    if (GetJobEntry(*iter, j)) {
+    JobEntry *j = NULL;
+    ComplexJobEntry *xj = NULL;
+    if (GetJobEntryFromJobGraph(*iter, j)) {
       if ((!j->done()) &&
-          (j->job_type() == JOB_COMP || j->job_type() == JOB_SHDW) &&
+          (j->job_type() == JOB_COMP || job->job_type() == JOB_CMPX) &&
           // (!job->before_set_p()->contains(*iter))) {
           // the job may not be in the immediate before set but still there is
           // indirect dependency. so we need to look through meta before set.
           (!job->LookUpMetaBeforeSet(j))) {
+        result = true;
+        break;
+      }
+    } else if (GetComplexJobContainer(*iter, xj)) {
+      assert(job->job_type() == JOB_SHDW);
+      ShadowJobEntry *sj;
+      xj->OMIDGetShadowJobEntryById(*iter, sj)
+      if ((!xj->ShadowJobDone(*iter)) &&
+          // (!job->before_set_p()->contains(*iter))) {
+          // the job may not be in the immediate before set but still there is
+          // indirect dependency. so we need to look through meta before set.
+          (!job->LookUpMetaBeforeSet(sj))) {
         result = true;
         break;
       }

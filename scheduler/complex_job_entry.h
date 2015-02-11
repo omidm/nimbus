@@ -98,7 +98,13 @@ class ComplexJobEntry : public JobEntry {
 
     size_t GetShadowJobsForAssignment(JobEntryList* list, size_t max_num, bool append = false);
 
+    bool OMIDGetShadowJobEntryById(job_id_t job_id, ShadowJobEntry*& shadow_job);
+
     bool DrainedAllShadowJobsForAssignment();
+
+    bool ShadowJobContained(job_id_t job_id);
+
+    bool ShadowJobSterile(job_id_t job_id);
 
     void MarkShadowJobAssigned(job_id_t job_id);
 
@@ -138,6 +144,7 @@ class ComplexJobEntry : public JobEntry {
     };
 
   private:
+    typedef boost::unordered_map<job_id_t, size_t> IdMap;
     typedef boost::unordered_set<job_id_t> IdPool;
 
     TemplateEntry* template_entry_;
@@ -145,7 +152,7 @@ class ComplexJobEntry : public JobEntry {
     std::vector<job_id_t> outer_job_ids_;
     std::vector<Parameter> parameters_;
 
-    IdPool shadow_job_ids_;
+    IdMap shadow_job_ids_;
     IdPool assigned_shadow_job_ids_;
     IdPool done_shadow_job_ids_;
 
