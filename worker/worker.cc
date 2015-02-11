@@ -46,6 +46,7 @@
 #include <ctime>
 #include <list>
 #include <limits>
+#include "shared/fast_log.hh"
 #include "shared/profiler_malloc.h"
 #include "worker/worker.h"
 #include "worker/worker_ldo_map.h"
@@ -108,6 +109,7 @@ void Worker::Run() {
 }
 
 void Worker::WorkerCoreProcessor() {
+  timer::InitializeKeys();
   std::cout << "Base Worker Core Processor" << std::endl;
   worker_manager_->worker_ = this;
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Launching worker threads.\n");

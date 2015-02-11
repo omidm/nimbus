@@ -39,6 +39,7 @@
   */
 
 #include <time.h>
+#include "shared/fast_log.hh"
 #include "worker/job.h"
 #include "worker/application.h"
 #include "worker/app_data_manager.h"
@@ -193,6 +194,7 @@ bool Job::DefineJobGraph(const std::string& job_graph_name) {
 }
 
 bool Job::TerminateApplication(const exit_status_t& exit_status) {
+    timer::PrintTimerSummary();
     if (app_is_set_) {
         application_->TerminateApplication(exit_status);
         return true;

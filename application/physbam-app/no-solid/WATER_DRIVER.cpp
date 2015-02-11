@@ -127,15 +127,19 @@ template<class TV> void WATER_DRIVER<TV>::Initialize() {
 // Advect levelset.
 template<class TV> void WATER_DRIVER<TV>::Scalar_Advance(const T dt,
     const T time) {
+  // Add water source. Not threaded.
   example.Get_Scalar_Field_Sources(time);
+  // Fill phi ghost. MPI.
   ARRAY<T, TV_INT> phi_ghost(example.mac_grid.Domain_Indices(3));
   example.boundary->Set_Fixed_Boundary(true, 0);
   example.boundary->Fill_Ghost_Cells(example.mac_grid, example.levelset.phi,
-      phi_ghost, dt, time, 3);
+      phi_ghost, dt, time, 3);  // Communication.
+  // Advect V. Not threaded.
   example.advection_scalar.Update_Advection_Equation_Cell(example.mac_grid,
       example.levelset.phi, phi_ghost, example.face_velocities,
       *example.boundary, dt, time);
   example.boundary->Set_Fixed_Boundary(false);
+  // Threaded. Communication inside.
   example.levelset.Fast_Marching_Method();
 }
 
@@ -207,6 +211,7 @@ template<class TV> void WATER_DRIVER<TV>::Advance_To_Target_Time(
     const T target_time) {
   bool done = false;
   for (int substep = 1; !done; substep++) {
+    // Cacluate dt. Threaded/MPI.
     T dt = example.cfl * example.CFL(example.face_velocities);
     if (example.mpi_grid)
       example.mpi_grid->Synchronize_Dt(dt);

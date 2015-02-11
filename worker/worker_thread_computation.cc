@@ -41,6 +41,7 @@
 #include <string>
 
 #include "shared/profiler_malloc.h"
+#include "shared/fast_log.hh"
 #include "worker/worker.h"
 #include "worker/worker_manager.h"
 #include "worker/worker_thread.h"
@@ -61,6 +62,8 @@ WorkerThreadComputation::~WorkerThreadComputation() {
 }
 
 void WorkerThreadComputation::Run() {
+  timer::InitializeTimers();
+  timer::StartTimer(timer::kTotal);
   Job* job;
   while (true) {
     job = worker_manager_->NextComputationJobToRun(this);
@@ -78,7 +81,18 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
   ProfilerMalloc::ResetBaseAlloc();
   dbg(DBG_WORKER, "[WORKER_THREAD] Execute job, name=%s, id=%lld. \n",
       job->name().c_str(), job->id().elem());
-  job->Execute(job->parameters(), job->data_array);
+  if (dynamic_cast<RemoteCopySendJob*>(job) ||  // NOLINT
+      dynamic_cast<RemoteCopyReceiveJob*>(job) ||  // NOLINT
+      dynamic_cast<LocalCopyJob*>(job) ||  // NOLINT
+      dynamic_cast<CreateDataJob*>(job)) {  // NOLINT
+    timer::StartTimer(timer::kExecuteCopyJob);
+    job->Execute(job->parameters(), job->data_array);
+    timer::StopTimer(timer::kExecuteCopyJob);
+  } else {
+    timer::StartTimer(timer::kExecuteComputationJob);
+    job->Execute(job->parameters(), job->data_array);
+    timer::StopTimer(timer::kExecuteComputationJob);
+  }
   dbg(DBG_WORKER, "[WORKER_THREAD] Finish executing job, name=%s, id=%lld. \n",
       job->name().c_str(), job->id().elem());
   // size_t max_alloc = ProfilerMalloc::AllocMaxTid(pthread_self());

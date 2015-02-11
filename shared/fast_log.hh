@@ -56,6 +56,7 @@ enum TimerType {
   kTotal = 0,
   kExecuteComputationJob,
   kExecuteCopyJob,
+  kAssemblingCache,
   kMaxCounter
 };
 struct TimerRecord {
