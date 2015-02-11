@@ -42,6 +42,7 @@
 
 #include <sys/syscall.h>
 
+#include <cstdlib>
 #include <string>
 
 namespace nimbus {
@@ -71,7 +72,7 @@ void InitializeKeys() {
 void InitializeTimers() {
   pid_t pid = syscall(SYS_gettid);
   for (int i = 0; i < kMaxCounter; ++i) {
-    TimerRecord* record = new TimerRecord;
+    TimerRecord* record = new(malloc(4096)) TimerRecord;
     pthread_setspecific(keys[i], record);
     timers_map[std::make_pair(pid, static_cast<TimerType>(i))] = record;
   }

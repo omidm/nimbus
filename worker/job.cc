@@ -194,7 +194,6 @@ bool Job::DefineJobGraph(const std::string& job_graph_name) {
 }
 
 bool Job::TerminateApplication(const exit_status_t& exit_status) {
-    timer::PrintTimerSummary();
     if (app_is_set_) {
         application_->TerminateApplication(exit_status);
         return true;

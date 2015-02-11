@@ -437,6 +437,9 @@ void Worker::ProcessPartitionRemoveCommand(PartitionRemoveCommand* cm) {
 void Worker::ProcessTerminateCommand(TerminateCommand* cm) {
   // profiler_thread_->interrupt();
   // profiler_thread_->join();
+  FILE* temp = fopen("time_per_thread.txt", "w");
+  timer::PrintTimerSummary(temp);
+  fclose(temp);
   exit(cm->exit_status().elem());
 }
 
