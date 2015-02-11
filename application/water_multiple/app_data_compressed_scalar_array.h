@@ -62,6 +62,7 @@ class AppDataCompressedScalarArray : public nimbus::AppVar {
                                       const int ghost_width,
                                       bool make_proto,
                                       const std::string& name);
+  ~AppDataCompressedScalarArray();
 
   DataType* data() { return data_; }
   void set_data(DataType* d) { data_ = d; }
@@ -94,6 +95,8 @@ class AppDataCompressedScalarArray : public nimbus::AppVar {
                            const nimbus::GeometricRegion &read_reg);
   virtual void WriteAppData(const nimbus::DataArray &write_set,
                               const nimbus::GeometricRegion &write_reg) const;
+
+  virtual void Destroy();
 
  private:
   nimbus::GeometricRegion global_region_;

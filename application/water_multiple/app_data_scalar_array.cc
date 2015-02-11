@@ -82,6 +82,19 @@ AppDataScalarArray(const nimbus::GeometricRegion &global_reg,
       }
 }
 
+template<class T, class TS> AppDataScalarArray<T, TS>::
+~AppDataScalarArray() {
+  Destroy();
+}
+
+template<class T, class TS> void AppDataScalarArray<T, TS>::
+Destroy() {
+  if (data_) {
+    delete data_;
+    data_ = NULL;
+  }
+}
+
 template<class T, class TS> nimbus::AppVar *AppDataScalarArray<T, TS>::
 CreateNew(const nimbus::GeometricRegion &ob_reg) const {
   nimbus::AppVar* temp = new AppDataScalarArray(global_region_,

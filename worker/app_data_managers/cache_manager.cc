@@ -33,7 +33,7 @@
  */
 
 /*
- * CacheManager implements application data manager with simple caching of
+ * CacheManager implements application data manager with simple_app_data caching of
  * application data across jobs.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>
@@ -62,6 +62,8 @@
 #define OutputTs(x, y) fprintf(time_log, "%d ; %s ; %s ; %f\n", \
                            tid, x, y, timestamps[i++])
 
+namespace nimbus {
+
 FILE* debug_log = NULL;
 
 namespace {
@@ -71,8 +73,6 @@ double GetSizeStamp() {
   return t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
 }
 }  // namespace
-
-namespace nimbus {
 
 /**
  * \details
@@ -626,8 +626,6 @@ void CacheManager::ReleaseAccess(AppObject* app_object) {
 }
 
 void CacheManager::SetLogNames(std::string wid_str) {
-    alloc_log = fopen((wid_str + "_cache_objects.txt").c_str(), "w");
-    block_log = fopen((wid_str + "_cache_behavior.txt").c_str(), "w");
     time_log = fopen((wid_str + "_cache_time.txt").c_str(), "w");
     debug_log = fopen((wid_str + "_cache_debug.txt").c_str(), "w");
 }

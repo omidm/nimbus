@@ -172,6 +172,20 @@ AppDataParticleLevelsetEvolution(
     }
 }
 
+template<class TS> AppDataParticleLevelsetEvolution<TS>::
+~AppDataParticleLevelsetEvolution() {
+    Destroy();
+}
+
+template<class TS> void AppDataParticleLevelsetEvolution<TS>::
+Destroy() {
+    printf("Destroy APP PLE *****\n");
+    if (data_) {
+        delete data_;
+        data_ = NULL;
+    }
+}
+
 template<class TS> nimbus::AppStruct *AppDataParticleLevelsetEvolution<TS>::
 CreateNew(const nimbus::GeometricRegion &ob_reg) const {
     nimbus::AppStruct* temp = new AppDataParticleLevelsetEvolution(

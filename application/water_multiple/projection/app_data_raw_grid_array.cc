@@ -69,6 +69,15 @@ AppDataRawGridArray::AppDataRawGridArray(const nimbus::GeometricRegion &global_r
                                     local_region_.dz()+1)));
 }
 
+AppDataRawGridArray::~AppDataRawGridArray() {
+  Destroy();
+}
+
+void AppDataRawGridArray::Destroy() {
+  if (data_)
+    delete data_;
+}
+
 nimbus::AppVar* AppDataRawGridArray::CreateNew(
     const nimbus::GeometricRegion &ob_reg) const {
   nimbus::AppVar* temp = new AppDataRawGridArray(global_region_, ob_reg);

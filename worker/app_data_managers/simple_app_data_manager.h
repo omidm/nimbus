@@ -33,25 +33,24 @@
  */
 
 /*
- * Application data manager is the interface for application and copy jobs to
- * application objects and nimbus data objects. The methods in this class are
- * mostly virtual. There are two implementations for this interface at present,
- * one that caches application objects, and one that does not (writes back data
- * from application object to nimbus objects immediately, and deletes the
- * application object).
+ * SimpleAppDataManager implements application data manager with simple_app_data caching of
+ * application data across jobs.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_WORKER_APP_DATA_MANAGER_H_
-#define NIMBUS_WORKER_APP_DATA_MANAGER_H_
+#ifndef NIMBUS_WORKER_APP_DATA_MANAGERS_SIMPLE_APP_DATA_MANAGER_H_
+#define NIMBUS_WORKER_APP_DATA_MANAGERS_SIMPLE_APP_DATA_MANAGER_H_
 
+#include <cstdio>
+#include <sstream>  // NOLINT
 #include <vector>
 #include <string>
 
 #include "data/app_data/app_data_defs.h"
 #include "data/app_data/app_struct.h"
 #include "data/app_data/app_var.h"
+#include "worker/app_data_manager.h"
 
 namespace nimbus {
 
@@ -60,122 +59,73 @@ typedef std::vector<Data *> DataArray;
 class GeometricRegion;
 
 /**
- * \class AppDataManager
- * \details AppDataManager is the interface through which application and copy
- * jobs access data in application data objects and nimbus data objects.
+ * \class SimpleAppDataManager
+ * \details SimpleAppDataManager implements application data manager with simple_app_data
+ * caching of application data across jobs.
+ * Internally, SimpleAppDataManager contains a two level map - the
+ * first level key is a prototype id, and the second level key is an
+ * application object geometric region. Together, these keys map to a list of
+ * AppVars or AppStructs.
  */
-class AppDataManager {
+class SimpleAppDataManager : public AppDataManager {
     public:
         /**
-         * \brief Requests an AppVar instance of type prototype, from the
-         * AppDataManager
-         * \param read_set specifies the data that should be read in the
-         * AppVar instance
-         * \param read_region indicates read region
-         * \param write_set specifies the data that should be marked as being
-         * written
-         * \param write_region indicates write region
-         * \param prototype represents the application object type
-         * \param region is the application object region
-         * \access indicates whether application object access should be
-         * EXCLUSIVE or SHARED, and is ignored when there is no caching
-         * \return A pointer to AppVar instance that application can use
+         * \brief Creates a SimpleAppDataManager instance
+         * \return Constructed SimpleAppDataManager instance
          */
-        AppVar *GetAppVar(const DataArray &read_set,
-                          const GeometricRegion &read_region,
-                          const DataArray &write_set,
-                          const GeometricRegion &write_region,
-                          const AppVar &prototype,
-                          const GeometricRegion &region,
-                          app_data::Access access = app_data::EXCLUSIVE,
-                          void (*aux)(AppVar*, void*) = NULL,
-                          void* aux_data = NULL) {
-            return (GetAppVarV(
-                        read_set, read_region, write_set, write_region,
-                        prototype, region, access, aux, aux_data));
-        }
+        SimpleAppDataManager();
 
         /**
-         * \brief Requests an AppStruct instance of type prototype, from the
-         * AppDataManager
-         * \param var_type specifies the application variable types for the
-         * lists in read_sets/ write_sets
-         * \param read_sets specifies the data that should be read in the
-         * AppVar instance
-         * \param read_region indicates read region
-         * \param write_sets specifies the data that should be marked as being
-         * written
-         * \param write_region indicates write region
-         * \param prototype represents the application object type
-         * \param region is the application object region
-         * \access indicates whether application object access should be
-         * EXCLUSIVE or SHARED
-         * \return A pointer to AppStruct instance that application can use
+         * Destructor
          */
-        AppStruct *GetAppStruct(const std::vector<app_data::type_id_t> &var_type,
-                                const std::vector<DataArray> &read_sets,
-                                const GeometricRegion &read_region,
-                                const std::vector<DataArray> &write_sets,
-                                const GeometricRegion &write_region,
-                                const AppStruct &prototype,
-                                const GeometricRegion &region,
-                                app_data::Access access = app_data::EXCLUSIVE) {
-            return(GetAppStructV(
-                        var_type, read_sets, read_region,
-                        write_sets, write_region,
-                          prototype, region, access));
-        }
+        ~SimpleAppDataManager();
 
         /**
          * \brief Informs application data manager that access to app_object is
          * no longer needed
          * \param app_object specified the application object to release
          */
-        virtual void ReleaseAccess(AppObject* app_object) = 0;
+        virtual void ReleaseAccess(AppObject* simple_app_data_object);
 
         /**
-         * \brief Writes data to write_set back nimbus objects synchronously
+         * \brief Does not do anything
          * \param app_var is the application variable to write from
          * \param write_set is the set of nimbus objects to write to
          */
-        virtual void WriteImmediately(AppVar *app_var, const DataArray &write_set) = 0;
+        virtual void WriteImmediately(AppVar *app_var, const DataArray &write_set);
 
         /**
-         * \brief Writes data to write_set back nimbus objects synchronously
+         * \brief Does not do anything
          * \param app_struct is the application struct to write from
          * \param var_type specifies the type of variables in the struct that
          * are to be written, corresponding to write_sets
          * \param write_sets is the set of nimbus objects to write to
          */
         virtual void WriteImmediately(AppStruct *app_struct,
-                                      const std::vector<app_data::type_id_t> &var_type,
-                                      const std::vector<DataArray> &write_sets) = 0;
+                              const std::vector<app_data::type_id_t> &var_type,
+                              const std::vector<DataArray> &write_sets);
 
         /**
-         * \brief If data is dirty, syncs with corresponding dirty application
-         * object, and clears the dirty mapping, no-op in case there is no
-         * caching
+         * \brief Does not do anything
          * \param Data d to 
          */
-        virtual void SyncData(Data *d) = 0;
+        virtual void SyncData(Data *d);
 
         /**
-         * \brief Invalidates mapping between d and all application objects ,
-         * dirty or not dirty, no-op in case there is no caching
+         * \brief Does not do anything
          * \param Data d
          */
-        virtual void InvalidateMappings(Data *d) = 0;
+        virtual void InvalidateMappings(Data *d);
 
         /**
          * \brief Sets log file names for application data manager
          * \param Worker id, to be used in file names
          */
-        virtual void SetLogNames(std::string wid_str) = 0;
+        virtual void SetLogNames(std::string wid_str);
 
     protected:
         /**
-         * \brief Requests an AppVar instance of type prototype, from the
-         * AppDataManager
+         * \brief Requests an AppVar instance of type prototype
          * \param read_set specifies the data that should be read in the
          * AppVar instance
          * \param read_region indicates read region
@@ -196,11 +146,10 @@ class AppDataManager {
                                    const GeometricRegion &region,
                                    app_data::Access access,
                                    void (*aux)(AppVar*, void*),
-                                   void* aux_data) = 0;
+                                   void* aux_data);
 
         /**
-         * \brief Requests an AppStruct instance of type prototype, from the
-         * AppDataManager
+         * \brief Requests an AppStruct instance of type prototype
          * \param var_type specifies the application variable types for the
          * lists in read_sets/ write_sets
          * \param read_sets specifies the data that should be read in the
@@ -222,10 +171,10 @@ class AppDataManager {
                                          const GeometricRegion &write_region,
                                          const AppStruct &prototype,
                                          const GeometricRegion &region,
-                                         app_data::Access access) = 0;
+                                         app_data::Access access);
 
-        FILE* time_log;
-};  // class AppDataManager
+    private:
+};  // class SimpleAppDataManager
 }  // namespace nimbus
 
-#endif  // NIMBUS_WORKER_APP_DATA_MANAGER_H_
+#endif  // NIMBUS_WORKER_APP_DATA_MANAGERS_SIMPLE_APP_DATA_MANAGER_H_

@@ -42,7 +42,11 @@
 #include "worker/application.h"
 #include "worker/app_data_manager.h"
 // NOTE: include application data manager implementation here
+#ifdef N_APP_CACHE
+#include "worker/app_data_managers/simple_app_data_manager.h"
+#else
 #include "worker/app_data_managers/cache_manager.h"
+#endif
 #include "worker/static_config_manager.h"
 
 using namespace nimbus; // NOLINT
@@ -87,7 +91,11 @@ void Application::Start(SchedulerClient* client,
   ldo_map_ = ldo_map;
   // NOTE: define which application data manager to use here
   // TODO(chinmayee): should we move this to an interface for application?
+#ifdef N_APP_CACHE
+  app_data_manager_ = new SimpleAppDataManager();
+#else
   app_data_manager_ = new CacheManager();
+#endif
   Load();
 }
 

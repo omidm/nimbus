@@ -76,6 +76,8 @@ class AppDataParticleLevelsetEvolution : public nimbus::AppStruct {
                 bool make_proto,
                 const std::string& name);
 
+        ~AppDataParticleLevelsetEvolution();
+
         PhysBAMPLE *data() {
             return data_;
         }
@@ -99,6 +101,8 @@ class AppDataParticleLevelsetEvolution : public nimbus::AppStruct {
                 const std::vector<nimbus::app_data::type_id_t> &var_type,
                 const std::vector<nimbus::DataArray> &write_sets,
                 const nimbus::GeometricRegion &write_reg) const;
+
+        virtual void Destroy();
 
     private:
         explicit AppDataParticleLevelsetEvolution(

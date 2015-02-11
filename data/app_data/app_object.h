@@ -68,6 +68,7 @@ class  AppObject {
     friend class AppDataManager;
     friend class CacheManager;
     friend class CacheTable;
+    friend class SimpleAppDataManager;
     friend class Data;
 
     public:
@@ -146,6 +147,13 @@ class  AppObject {
         void AcquireAccess(app_data::Access access);
         void ReleaseAccessInternal();
         bool IsAvailable(app_data::Access access) const;
+
+    protected:
+        /**
+         * \brief Frees allocated memory. Application writer must implement
+         * this.
+         */
+        virtual void Destroy() = 0;
 
     protected:
         // read/ write/ object region information

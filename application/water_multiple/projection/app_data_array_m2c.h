@@ -56,6 +56,7 @@ class AppDataArrayM2C : public nimbus::AppVar {
   explicit AppDataArrayM2C(const nimbus::GeometricRegion& global_reg,
                          bool make_proto,
                          const std::string& name);
+  ~AppDataArrayM2C();
 
   DATA_TYPE* data() {
     return data_;
@@ -78,6 +79,8 @@ class AppDataArrayM2C : public nimbus::AppVar {
                            const nimbus::GeometricRegion& read_reg);
   virtual void WriteAppData(const nimbus::DataArray& write_set,
                               const nimbus::GeometricRegion& write_reg) const;
+
+  virtual void Destroy();
 
  private:
   nimbus::GeometricRegion global_region_;
