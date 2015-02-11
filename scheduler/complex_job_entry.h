@@ -91,30 +91,26 @@ class ComplexJobEntry : public JobEntry {
     const std::vector<job_id_t>* outer_job_ids_p() const;
     const std::vector<Parameter>* parameters_p() const;
 
-    ShadowJobEntryMap jobs();
-    const ShadowJobEntryMap* jobs_p();
+    ShadowJobEntryMap shadow_jobs();
+    const ShadowJobEntryMap* shadow_jobs_p();
 
     size_t GetParentJobIds(std::list<job_id_t>* list);
 
-    bool DrainedAllJobsForAssignment();
+    size_t GetShadowJobsForAssignment(JobEntryList* list, size_t max_num, bool append = false);
 
-    size_t GetJobsForAssignment(JobEntryList* list, size_t max_num, bool append = false);
+    bool DrainedAllShadowJobsForAssignment();
 
-    size_t GetParentJobs(ShadowJobEntryList* list, bool append = false);
+    void MarkShadowJobAssigned(job_id_t job_id);
 
-    bool GetShadowJobEntry(job_id_t job_id, ShadowJobEntry*& shadow_job, size_t safe_idx = 0);
+    void MarkShadowJobDone(job_id_t job_id);
 
-    bool GetShadowJobEntryByIndex(size_t index, ShadowJobEntry*& shadow_job);
+    bool ShadowJobAssigned(job_id_t job_id);
 
-    void MarkJobAssigned(job_id_t job_id);
+    bool ShadowJobDone(job_id_t job_id);
 
-    void MarkJobDone(job_id_t job_id);
+    bool AllShadowJobsAssigned();
 
-    void MarkJobRemoved(job_id_t job_id);
-
-    bool AllJobsRemoved();
-
-    bool AllJobsDone();
+    bool AllShadowJobsDone();
 
     class Cursor {
       public:
@@ -148,23 +144,36 @@ class ComplexJobEntry : public JobEntry {
     std::vector<job_id_t> inner_job_ids_;
     std::vector<job_id_t> outer_job_ids_;
     std::vector<Parameter> parameters_;
-    IdPool done_job_ids_;
-    IdPool removed_job_ids_;
-    ShadowJobEntryMap jobs_;
-    std::list<size_t> parent_job_ids_;
+
+    IdPool shadow_job_ids_;
+    IdPool assigned_shadow_job_ids_;
+    IdPool done_shadow_job_ids_;
+
+    ShadowJobEntryMap shadow_jobs_;
+    bool shadow_jobs_complete_;
+
+    std::list<job_id_t> parent_job_ids_;
+    std::list<size_t> parent_job_indices_;
     bool parent_job_ids_set_;
-    bool job_map_complete_;
+    bool parent_job_indices_set_;
+
     Cursor cursor_;
     bool drained_all_;
     bool initialized_cursor_;
 
     boost::recursive_mutex mutex_;
 
+    void Initialize();
+
     void SetParentJobIds();
 
-    void CompleteJobMap();
+    void SetParentJobIndices();
 
-    bool GetJobIndex(job_id_t job_id, size_t *index);
+    void CompleteShadowJobs();
+
+    bool GetShadowJobEntryByIndex(size_t index, ShadowJobEntry*& shadow_job);
+
+    size_t GetParentShadowJobs(ShadowJobEntryList* list, bool append = false);
 };
 
 typedef boost::unordered_map<job_id_t, ComplexJobEntry*> ComplexJobEntryMap;
