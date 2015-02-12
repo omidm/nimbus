@@ -196,7 +196,7 @@ size_t ComplexJobEntry::GetShadowJobsForAssignment(JobEntryList* list,
     assert(index < inner_job_ids_.size());
     ShadowJobEntry* shadow_job;
 
-    GetShadowJobEntryByIndex(index, shadow_job);
+    OMIDGetShadowJobEntryByIndex(index, shadow_job);
 
     list->push_back(shadow_job);
     // temp_list.push_back(shadow_job);
@@ -235,7 +235,7 @@ size_t ComplexJobEntry::GetShadowJobsForAssignment(JobEntryList* list,
 }
 
 
-size_t ComplexJobEntry::GetParentShadowJobs(ShadowJobEntryList* list, bool append) {
+size_t ComplexJobEntry::OMIDGetParentShadowJobs(ShadowJobEntryList* list, bool append) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
 
   SetParentJobIndices();
@@ -249,7 +249,7 @@ size_t ComplexJobEntry::GetParentShadowJobs(ShadowJobEntryList* list, bool appen
   for (; iter != parent_job_indices_.end(); ++iter) {
     ShadowJobEntry* shadow_job;
 
-    GetShadowJobEntryByIndex(*iter, shadow_job);
+    OMIDGetShadowJobEntryByIndex(*iter, shadow_job);
 
     assert(!shadow_job->sterile());
     list->push_back(shadow_job);
@@ -268,13 +268,13 @@ bool ComplexJobEntry::OMIDGetShadowJobEntryById(job_id_t job_id, ShadowJobEntry*
     return false;
   }
 
-  return GetShadowJobEntryByIndex(iter->second, shadow_job);
+  return OMIDGetShadowJobEntryByIndex(iter->second, shadow_job);
 }
 
 
 
 
-bool ComplexJobEntry::GetShadowJobEntryByIndex(size_t index, ShadowJobEntry*& shadow_job) {
+bool ComplexJobEntry::OMIDGetShadowJobEntryByIndex(size_t index, ShadowJobEntry*& shadow_job) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
 
   assert(index >= 0);
@@ -343,7 +343,7 @@ void ComplexJobEntry::CompleteShadowJobs() {
   size_t index = 0;
   for (; index < inner_job_ids_.size(); ++index) {
     ShadowJobEntry* shadow_job;
-    GetShadowJobEntryByIndex(index, shadow_job);
+    OMIDGetShadowJobEntryByIndex(index, shadow_job);
   }
 
   shadow_jobs_complete_ = true;

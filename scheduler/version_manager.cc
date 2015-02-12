@@ -295,7 +295,7 @@ bool VersionManager::MemoizeVersionsForTemplate(JobEntry *job) {
 
 bool VersionManager::InsertComplexJobInLdl(ComplexJobEntry *job) {
   ShadowJobEntryList list;
-  job->GetParentJobs(&list);
+  job->OMIDGetParentShadowJobs(&list);
   // For now only one parent job per complex job is allowd!
   assert(list.size() == 1);
   ShadowJobEntry* sj = *(list.begin());
@@ -371,7 +371,7 @@ bool VersionManager::DetectNewComplexJob(ComplexJobEntry *xj) {
   }
 
   ShadowJobEntryList list;
-  xj->GetParentJobs(&list);
+  xj->OMIDGetParentShadowJobs(&list);
   // For now complex job can have only one parent job - omidm
   assert(list.size() == 1);
   JobEntry *j = *(list.begin());
@@ -514,7 +514,7 @@ size_t VersionManager::GetJobsNeedDataVersion(
       std::list<size_t>::iterator it = indices.begin();
       for (; it != indices.end(); ++it) {
         ShadowJobEntry *sj;
-        if (xj->GetShadowJobEntryByIndex(*it, sj)) {
+        if (xj->OMIDGetShadowJobEntryByIndex(*it, sj)) {
           if ((!sj->assigned()) ||
               ((!sj->sterile()) && (!sj->done()))) {
             list->push_back(sj);

@@ -98,7 +98,11 @@ class ComplexJobEntry : public JobEntry {
 
     size_t GetShadowJobsForAssignment(JobEntryList* list, size_t max_num, bool append = false);
 
+    bool OMIDGetShadowJobEntryByIndex(size_t index, ShadowJobEntry*& shadow_job);
+
     bool OMIDGetShadowJobEntryById(job_id_t job_id, ShadowJobEntry*& shadow_job);
+
+    size_t OMIDGetParentShadowJobs(ShadowJobEntryList* list, bool append = false);
 
     bool DrainedAllShadowJobsForAssignment();
 
@@ -177,10 +181,6 @@ class ComplexJobEntry : public JobEntry {
     void SetParentJobIndices();
 
     void CompleteShadowJobs();
-
-    bool GetShadowJobEntryByIndex(size_t index, ShadowJobEntry*& shadow_job);
-
-    size_t GetParentShadowJobs(ShadowJobEntryList* list, bool append = false);
 };
 
 typedef boost::unordered_map<job_id_t, ComplexJobEntry*> ComplexJobEntryMap;
