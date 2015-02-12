@@ -116,7 +116,7 @@ class JobManager {
 
     size_t RemoveObsoleteJobEntries(size_t max_to_remove);
 
-    void NotifyJobDone(JobEntry *job);
+    void NotifyJobDone(job_id_t job_id);
 
     void NotifyJobAssignment(JobEntry *job);
 

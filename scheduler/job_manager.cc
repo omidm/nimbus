@@ -480,19 +480,10 @@ bool JobManager::RemoveJobEntry(JobEntry* job) {
         !job->sterile()) {
       version_manager_.RemoveJobEntry(job);
     }
-    if (job->job_type() == JOB_CMPX) {
-      ComplexJobEntry* xj = reinterpret_cast<ComplexJobEntry*>(job);
-      assert(xj->AllJobsRemoved());
-    }
-    delete job;
-    return true;
-  } else if (job->job_type() == JOB_SHDW) {
-    ShadowJobEntry* sj = reinterpret_cast<ShadowJobEntry*>(job);
-    version_manager_.RemoveJobEntry(job);
-    sj->complex_job()->MarkJobRemoved(job->job_id());
     delete job;
     return true;
   } else {
+    assert(false);
     return false;
   }
 }
@@ -715,7 +706,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
       }
 
       JobEntryList l;
-      size_t c_num = complex_job->GetJobsForAssignment(&l, max_num - num);
+      size_t c_num = complex_job->GetShadowJobsForAssignment(&l, max_num - num);
       assert(c_num > 0);
       num += c_num;
       JobEntryList::iterator it = l.begin();
@@ -725,7 +716,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
         list->push_back(*it);
         jobs_pending_to_assign_[(*it)->job_id()] = *it;
       }
-      if (complex_job->DrainedAllJobsForAssignment()) {
+      if (complex_job->DrainedAllShadowJobsForAssignment()) {
         jobs_ready_to_assign_.erase(iter++);
       } else {
         ++iter;
@@ -818,22 +809,32 @@ void JobManager::NotifyJobAssignment(JobEntry *job) {
   }
 }
 
-void JobManager::NotifyJobDone(JobEntry *job) {
-  job->set_done(true);
-  job_id_t job_id = job->job_id();
+void JobManager::NotifyJobDone(job_id_t job_id) {
+  bool sterile = false;
+  bool shadow_job = false;
+  job_id_t  vertex_job_id = 0;
+  JobEntry *job = NULL;
+  ComplexJobEntry *complex_job = NULL;
 
-  // Initialy let the version manager know that the job is done.
-  version_manager_.NotifyJobDone(job);
+  if (GetJobEntryFromJobGraph(job_id, job)) {
+    job->set_done(true);
+    sterile = job->sterile();
+    shadow_job = false;
+    vertex_job_id = job_id;
+  } else if (GetComplexJobContainer(job_id, complex_job)) {
+    complex_job->MarkShadowJobDone(job_id);
+    sterile = complex_job->ShadowJobSterile(job_id);
+    shadow_job = true;
+    vertex_job_id = complex_job->job_id();
+  } else {
+    dbg(DBG_ERROR, "ERROR: could locate the done job %lu in job manager!\n", job_id);
+    assert(false);
+  }
 
-  if (!job->sterile()) {
-    ComplexJobEntry* complex_job;
+  if (!sterile) {
     Vertex<JobEntry, job_id_t>* vertex;
-    if (!GetJobGraphVertex(job_id, &vertex)) {
-      if (!GetComplexJobContainer(job_id, complex_job)) {
-        assert(false);
-      }
-      bool got_vertex = GetJobGraphVertex(complex_job->job_id(), &vertex);
-      assert(got_vertex);
+    if (!GetJobGraphVertex(vertex_job_id, &vertex)) {
+      assert(false);
     }
     typename Edge<JobEntry, job_id_t>::Iter it;
     for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
@@ -846,8 +847,10 @@ void JobManager::NotifyJobDone(JobEntry *job) {
   }
 
 
+  // TODO(omidm): check if the code works with complex jobs!
   if (NIMBUS_FAULT_TOLERANCE_ACTIVE) {
-    if (!job->sterile()) {
+    if (!sterile) {
+      assert(non_sterile_jobs_.count(job_id) != 0);
       non_sterile_jobs_.erase(job_id);
       if ((++non_sterile_counter_) == checkpoint_creation_rate_) {
         // Initiate checkpoint creation.
@@ -867,25 +870,23 @@ void JobManager::NotifyJobDone(JobEntry *job) {
     }
   }
 
-  // After traversing the out going endges then put in the dueue for removal.
   {
     boost::unique_lock<boost::mutex> lock(jobs_done_mutex_);
-    jobs_done_.push_back(job);
+    if (!shadow_job) {
+      assert(job);
 
-    // TODO(omidm): right now because the jobs_done is treated as a FIFO, the
-    // coplex jobs will be removed after all shadow jobs are removed such that
-    // the complex job pointer in shadow jobs is always valid. But you are
-    // gonna need a cleaner logic for that (using AllJobsRemoved method). - omidm
-    if (job->job_type() == JOB_SHDW) {
-      ShadowJobEntry* sj = reinterpret_cast<ShadowJobEntry*>(job);
-      ComplexJobEntry* xj = sj->complex_job();
-      xj->MarkJobDone(job_id);
-      if (xj->AllJobsDone()) {
-        xj->set_done(true);
-        complex_jobs_.erase(xj->job_id());
-        // Let the version manager clean the complex job from its track.
-        version_manager_.NotifyJobDone(xj);
-        jobs_done_.push_back(xj);
+      version_manager_.NotifyJobDone(job);
+
+      jobs_done_.push_back(job);
+    } else {
+      assert(complex_job);
+      if (complex_job->AllShadowJobsDone()) {
+        complex_job->set_done(true);
+        complex_jobs_.erase(complex_job->job_id());
+
+        version_manager_.NotifyJobDone(complex_job);
+
+        jobs_done_.push_back(complex_job);
       }
     }
   }
@@ -995,7 +996,7 @@ bool JobManager::CausingUnwantedSerialization(JobEntry* job,
     } else if (GetComplexJobContainer(*iter, xj)) {
       assert(job->job_type() == JOB_SHDW);
       ShadowJobEntry *sj;
-      xj->OMIDGetShadowJobEntryById(*iter, sj)
+      xj->OMIDGetShadowJobEntryById(*iter, sj);
       if ((!xj->ShadowJobDone(*iter)) &&
           // (!job->before_set_p()->contains(*iter))) {
           // the job may not be in the immediate before set but still there is
