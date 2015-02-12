@@ -440,13 +440,22 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   log_receive_stamp_.log_WriteToFile(std::string(buff));
 
   if (!id_maker_->SchedulerProducedJobID(job_id)) {
-    std::list<SchedulerWorker*> waiting_list;
-    after_map_->GetWorkersWaitingOnJob(job_id, &waiting_list);
+    // TODO(omidm): currently after map does not work with binding template so need flooding!
+    if (NIMBUS_BINDING_MEMOIZATION_ACTIVE) {
+      cm->set_final(true);
+      SchedulerWorkerList::iterator iter = server_->workers()->begin();
+      for (; iter != server_->workers()->end(); ++iter) {
+        server_->SendCommand(*iter, cm);
+      }
+    } else {
+      std::list<SchedulerWorker*> waiting_list;
+      after_map_->GetWorkersWaitingOnJob(job_id, &waiting_list);
 
-    cm->set_final(true);
-    std::list<SchedulerWorker*>::iterator iter = waiting_list.begin();
-    for (; iter != waiting_list.end(); ++iter) {
-      server_->SendCommand(*iter, cm);
+      cm->set_final(true);
+      std::list<SchedulerWorker*>::iterator iter = waiting_list.begin();
+      for (; iter != waiting_list.end(); ++iter) {
+        server_->SendCommand(*iter, cm);
+      }
     }
   }
 
