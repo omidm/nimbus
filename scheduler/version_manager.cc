@@ -562,8 +562,43 @@ bool VersionManager::RemoveJobEntry(JobEntry* job) {
   // TODO(omidm): may need better clean up for complex and """*SHADOW*""" jobs.
   if (job->job_type() == JOB_CMPX) {
     assert(complex_jobs_.find(job->job_id()) == complex_jobs_.end());
+
+    ComplexJobEntry *xj = reinterpret_cast<ComplexJobEntry*>(job);
+    ShadowJobEntryList list;
+    xj->OMIDGetParentShadowJobs(&list);
+    // For now complex job can have only one parent job - omidm
+    assert(list.size() == 1);
+    JobEntry *j = *(list.begin());
+    assert(!j->sterile());
+
+    {
+      boost::unique_lock<boost::recursive_mutex> lock(snap_shot_mutex_);
+      if (snap_shot_.contains(j->job_id())) {
+        CleanUp();
+      }
+
+      assert(parent_map_.find(j->job_id()) != parent_map_.end());
+      parent_map_.erase(j->job_id());
+    }
+
+    LdoMap::const_iterator it;
+    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+      Index::iterator iter = index_.find(it->first);
+      if (iter != index_.end()) {
+        iter->second->RemoveJobEntry(j);
+        // Even empty you cannot remove, otherwise the ldl would show as undefined!
+        // if (iter->second->is_empty()) {
+        //   delete iter->second;
+        //   index_.erase(iter);
+        //   std::cout << "version entry got empty!!\n";
+        // }
+      }
+    }
+
     return true;
   }
+
+
 
   assert(job->versioned());
 

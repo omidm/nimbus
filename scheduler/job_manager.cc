@@ -535,12 +535,13 @@ bool JobManager::GetBaseVersionMapFromJob(job_id_t job_id,
     xj->OMIDGetShadowJobEntryById(job_id, sj);
     job = sj;
   } else {
+    dbg(DBG_ERROR, "ERROR: could not find the the job with id %lu to get the base.\n", job_id); // NOLINT
     return false;
   }
 
   if (ResolveEntireContextForJob(job)) {
     vmap_base = job->vmap_read();
-    return false;
+    return true;
   }
 
   return false;
