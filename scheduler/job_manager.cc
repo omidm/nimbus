@@ -530,7 +530,6 @@ bool JobManager::GetBaseVersionMapFromJob(job_id_t job_id,
   ComplexJobEntry *xj = NULL;
   if (GetJobEntryFromJobGraph(job_id, job)) {
   } else if (GetComplexJobContainer(job_id, xj)) {
-    assert(job->job_type() == JOB_SHDW);
     ShadowJobEntry *sj = NULL;
     xj->OMIDGetShadowJobEntryById(job_id, sj);
     job = sj;
