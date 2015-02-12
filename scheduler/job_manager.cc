@@ -57,6 +57,11 @@ JobManager::JobManager() {
   log_.set_file_name("log_job_manager");
   checkpoint_creation_rate_ = DEFAULT_CHECKPOINT_CREATION_RATE;
   non_sterile_counter_ = 0;
+
+  // HACK
+  HACK_last_template_ = "";
+  HACK_middle_projection_loop_ = false;
+  // HACK
 }
 
 JobManager::~JobManager() {
@@ -212,6 +217,19 @@ bool JobManager::AddComplexJobEntry(ComplexJobEntry* complex_job) {
   if (!complex_job->sterile()) {
     non_sterile_jobs_[job_id] = complex_job;
   }
+
+
+  // HACK
+  TemplateEntry *te = complex_job->template_entry();
+  if ((HACK_last_template_ == "projection_loop_iteration") &&
+      (te->template_name() == "projection_loop_iteration")) {
+    HACK_middle_projection_loop_ = true;
+  } else {
+    HACK_middle_projection_loop_ = false;
+  }
+  HACK_last_template_ = te->template_name();
+  // HACK
+
 
   return true;
 }
@@ -707,17 +725,29 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
       ComplexJobEntry* complex_job = reinterpret_cast<ComplexJobEntry*>(job);
       TemplateEntry *te = complex_job->template_entry();
       BindingTemplate *bt = NULL;
+
+      // HACK
+      bool HACK_memoize_binding = NIMBUS_BINDING_MEMOIZATION_ACTIVE;
+      // HACK
+
       if (NIMBUS_BINDING_MEMOIZATION_ACTIVE) {
         bool create_bt = true;
         if (te->QueryBindingRecord(STATIC_BINDING_RECORD, bt)) {
           create_bt = false;
           if (bt->finalized()) {
-            list->push_back(complex_job);
-            complex_job->set_binding_template(bt);
-            jobs_pending_to_assign_[complex_job->job_id()] = complex_job;
-            jobs_ready_to_assign_.erase(iter++);
-            num += bt->compute_job_num();
-            continue;
+            // HACK
+            if (HACK_middle_projection_loop_ ||
+                (te->template_name() != "projection_loop_iteration")) {
+              list->push_back(complex_job);
+              complex_job->set_binding_template(bt);
+              jobs_pending_to_assign_[complex_job->job_id()] = complex_job;
+              jobs_ready_to_assign_.erase(iter++);
+              num += bt->compute_job_num();
+              continue;
+            } else {
+              HACK_memoize_binding = false;
+            }
+            // HACK
           }
         }
 
@@ -735,7 +765,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
       num += c_num;
       JobEntryList::iterator it = l.begin();
       for (; it != l.end(); ++it) {
-        (*it)->set_memoize_binding(NIMBUS_BINDING_MEMOIZATION_ACTIVE);
+        (*it)->set_memoize_binding(HACK_memoize_binding);
         (*it)->set_binding_template(bt);
         list->push_back(*it);
         jobs_pending_to_assign_[(*it)->job_id()] = *it;

@@ -189,6 +189,11 @@ class JobManager {
     JobEntryMap jobs_pending_to_assign_;
     boost::recursive_mutex job_queue_mutex_;
 
+    // HACK
+    std::string HACK_last_template_;
+    bool HACK_middle_projection_loop_;
+    // HACK
+
     bool AddJobEntryToJobGraph(job_id_t job_id, JobEntry *job);
 
     bool GetJobEntryFromJobGraph(job_id_t job_id, JobEntry*& job);
