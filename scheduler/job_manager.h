@@ -126,6 +126,9 @@ class JobManager {
 
     bool ResolveEntireContextForJob(JobEntry *job);
 
+    bool GetBaseVersionMapFromJob(job_id_t job_id,
+                                  boost::shared_ptr<VersionMap>& vmap_base);
+
     bool ResolveJobDataVersionsForPattern(JobEntry *job,
                   const BindingTemplate::PatternList* patterns);
 

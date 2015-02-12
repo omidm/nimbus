@@ -453,12 +453,14 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   // AfterMap has internal locking.
   after_map_->RemoveJobRecords(job_id);
 
-  JobEntry *job;
-  if (job_manager_->GetJobEntry(job_id, job)) {
-    job->set_done(true);
-    load_balancer_->NotifyJobDone(job);
-    job_manager_->NotifyJobDone(job);
-  }
+  // TODO(omidm): load balancer does not get notified for now!
+  job_manager_->NotifyJobDone(job_id);
+//  JobEntry *job;
+//  if (job_manager_->GetJobEntry(job_id, job)) {
+//    job->set_done(true);
+//    load_balancer_->NotifyJobDone(job);
+//    job_manager_->NotifyJobDone(job);
+//  }
 
   snprintf(buff, sizeof(buff), "%10.9f DE id: %lu.",
       Log::GetRawTime(), job_id);
@@ -517,18 +519,13 @@ void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
     template_spawner_map_[job_id] = template_name;
 
     // Memoize the parent version map as the base version map of the template.
-    JobEntry *job;
-    if (job_manager_->GetJobEntry(job_id, job)) {
-      if (!job_manager_->ResolveEntireContextForJob(job)) {
-        dbg(DBG_ERROR, "ERROR: could not resolve entire context of parent of template with job id %lu.\n", job_id); // NOLINT
-        assert(false);
-      }
-      template_manager_->SetBaseVersionMapForTemplate(template_name,
-                                                      job->vmap_read());
-    } else {
-      dbg(DBG_ERROR, "ERROR: parent of template with job id %lu is not in the graph.\n", job_id);
+    boost::shared_ptr<VersionMap> vmap_base;
+    if (!job_manager_->GetBaseVersionMapFromJob(job_id, vmap_base)) {
+      dbg(DBG_ERROR, "ERROR: could not get base version map from parent of template with job id %lu.\n", job_id); // NOLINT
       assert(false);
     }
+    template_manager_->SetBaseVersionMapForTemplate(template_name,
+                                                    vmap_base);
     std::cout << "OMID START TEMPLATE " << template_name << std::endl;
   }
 }
