@@ -62,6 +62,9 @@ std::string TimerName(TimerType timer_type) {
     case kExecuteCopyJob: return "kExecuteCopyJob";
     case kMaxCounter: return "kMaxCounter";
     case kAssemblingCache: return "kAssemblingCache";
+    case kSumCyclesTotal: return "kSumCyclesTotal";
+    case kSumCyclesBlock: return "kSumCyclesBlock";
+    case kSumCyclesRun: return "kSumCyclesRun";
     default: return "Unknown";
   };
 }

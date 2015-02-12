@@ -40,6 +40,7 @@
 
 #include <unistd.h>
 #include <boost/functional/hash.hpp>
+#include <algorithm>
 #include <cstdio>
 #include <sstream>
 #include <string>
@@ -110,6 +111,14 @@ void Worker::Run() {
 
 void Worker::WorkerCoreProcessor() {
   timer::InitializeKeys();
+  timer::InitializeTimers();
+  timer::StartTimer(timer::kSumCyclesTotal,
+                    WorkerManager::across_job_parallism);
+  stat_blocked_job_num_ = 0;
+  stat_ready_job_num_ = 0;
+  stat_busy_cores_ = 0;
+  stat_blocked_cores_ = 0;
+  stat_idle_cores_ = WorkerManager::across_job_parallism;
   std::cout << "Base Worker Core Processor" << std::endl;
   worker_manager_->worker_ = this;
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Launching worker threads.\n");
@@ -503,6 +512,8 @@ PhysicalDataMap* Worker::data_map() {
 }
 
 void Worker::AddJobToGraph(Job* job) {
+  // TODO(quhang): when a job is received.
+  StatAddJob();
   assert(job != NULL);
   job_id_t job_id = job->id().elem();
   dbg(DBG_WORKER_FD,
@@ -794,5 +805,64 @@ bool Worker::IsEmptyGraph(WorkerJobGraph* job_graph) {
   return true;
 }
 
+void Worker::StatAddJob() {
+  // printf("add %d %d %d %d %d\n",
+  //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
+  //        stat_blocked_job_num_, stat_ready_job_num_);
+  ++stat_blocked_job_num_;
+  if (stat_idle_cores_ != 0) {
+    --stat_idle_cores_;
+    ++stat_blocked_cores_;
+    timer::StartTimer(timer::kSumCyclesBlock);
+  }
+  // printf("#add %d %d %d %d %d\n",
+  //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
+  //        stat_blocked_job_num_, stat_ready_job_num_);
+}
+void Worker::StatDispatchJob(int len) {
+  // printf("%d dis %d %d %d %d %d\n", len,
+  //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
+  //        stat_blocked_job_num_, stat_ready_job_num_);
+  stat_blocked_job_num_ -= len;
+  stat_ready_job_num_ += len;
+  if (stat_blocked_cores_ > 0) {
+    int release_cores = std::min(stat_blocked_cores_, len);
+    if (release_cores > 0) {
+      stat_blocked_cores_ -= release_cores;
+      timer::StopTimer(timer::kSumCyclesBlock, release_cores);
+      stat_busy_cores_ += release_cores;
+      timer::StartTimer(timer::kSumCyclesRun, release_cores);
+    }
+  }
+  // printf("#dis %d %d %d %d %d\n",
+  //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
+  //        stat_blocked_job_num_, stat_ready_job_num_);
+}
+void Worker::StatEndJob(int len) {
+  // printf("%d end %d %d %d %d %d\n", len,
+  //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
+  //        stat_blocked_job_num_, stat_ready_job_num_);
+  using std::min;
+  stat_ready_job_num_ -= len;
+  int busy_cores = min(stat_ready_job_num_,
+                       WorkerManager::across_job_parallism);
+  int blocked_cores = min(stat_blocked_job_num_,
+                          WorkerManager::across_job_parallism - busy_cores);
+  int idle_cores =
+      WorkerManager::across_job_parallism - busy_cores - blocked_cores;
+  if (busy_cores != stat_busy_cores_) {
+    timer::StopTimer(timer::kSumCyclesRun, stat_busy_cores_ - busy_cores);
+  }
+  if (blocked_cores != stat_blocked_cores_) {
+    timer::StartTimer(timer::kSumCyclesBlock,
+                      blocked_cores - stat_blocked_cores_);
+  }
+  stat_busy_cores_ = busy_cores;
+  stat_blocked_cores_ = blocked_cores;
+  stat_idle_cores_ = idle_cores;
+  // printf("#end %d %d %d %d %d\n",
+  //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
+  //        stat_blocked_job_num_, stat_ready_job_num_);
+}
 
 }  // namespace nimbus

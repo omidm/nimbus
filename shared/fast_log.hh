@@ -57,6 +57,9 @@ enum TimerType {
   kExecuteComputationJob,
   kExecuteCopyJob,
   kAssemblingCache,
+  kSumCyclesTotal,
+  kSumCyclesBlock,
+  kSumCyclesRun,
   kMaxCounter
 };
 struct TimerRecord {
@@ -76,7 +79,8 @@ void InitializeKeys();
 void InitializeTimers();
 void PrintTimerSummary(FILE* output = stdout);
 
-inline void StartTimer(TimerType timer_type) {
+inline void StartTimer(TimerType timer_type, int depth = 1) {
+  assert(depth > 0);
   void* ptr = pthread_getspecific(keys[timer_type]);
   TimerRecord* record = static_cast<TimerRecord*>(ptr);
   assert(record);
@@ -88,10 +92,11 @@ inline void StartTimer(TimerType timer_type) {
              + record->new_timestamp.tv_nsec - record->old_timestamp.tv_nsec);
   }
   record->old_timestamp = record->new_timestamp;
-  ++record->depth;
+  record->depth += depth;
 }
 
-inline void StopTimer(TimerType timer_type) {
+inline void StopTimer(TimerType timer_type, int depth = 1) {
+  assert(depth > 0);
   void* ptr = pthread_getspecific(keys[timer_type]);
   TimerRecord* record = static_cast<TimerRecord*>(ptr);
   assert(record);
@@ -101,7 +106,7 @@ inline void StopTimer(TimerType timer_type) {
            (record->new_timestamp.tv_sec - record->old_timestamp.tv_sec) * 1e9
            + record->new_timestamp.tv_nsec - record->old_timestamp.tv_nsec);
   record->old_timestamp = record->new_timestamp;
-  --record->depth;
+  record->depth -= depth;
   assert(record->depth >= 0);
 }
 
