@@ -585,6 +585,9 @@ bool VersionManager::RemoveJobEntry(JobEntry* job) {
     for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
       Index::iterator iter = index_.find(it->first);
       if (iter != index_.end()) {
+        // Set versioned to comply with version entry assumption.
+        // Note that with active binding template job is never versioned -omidm
+        j->set_versioned(true);
         iter->second->RemoveJobEntry(j);
         // Even empty you cannot remove, otherwise the ldl would show as undefined!
         // if (iter->second->is_empty()) {
