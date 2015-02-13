@@ -289,7 +289,11 @@ bool ComplexJobEntry::OMIDGetShadowJobEntryByIndex(size_t index, ShadowJobEntry*
 
   TemplateJobEntry* tj = template_entry_->GetJobAtIndex(index);
   IDSet<job_id_t> before_set;
-  template_entry_->LoadBeforeSet(&before_set, index, inner_job_ids_, outer_job_ids_);
+
+  // HACK
+  if (!tj->sterile())
+    template_entry_->LoadBeforeSet(&before_set, index, inner_job_ids_, outer_job_ids_);
+  // HACK
 
   ShadowJobEntry* sj =
     new ShadowJobEntry(tj->job_name(),
