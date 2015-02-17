@@ -256,32 +256,36 @@ void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
       Log::GetRawTime(), cm->job_id().elem(), cm->job_name().c_str());
   log_receive_stamp_.log_WriteToFile(std::string(buff));
 
-  job_manager_->AddComputeJobEntry(cm->job_name(),
-                                   cm->job_id().elem(),
-                                   cm->read_set(),
-                                   cm->write_set(),
-                                   cm->before_set(),
-                                   cm->after_set(),
-                                   cm->parent_job_id().elem(),
-                                   cm->future_job_id().elem(),
-                                   cm->sterile(),
-                                   cm->region(),
-                                   cm->params());
+  JobEntry * job =
+    job_manager_->AddComputeJobEntry(cm->job_name(),
+                                     cm->job_id().elem(),
+                                     cm->read_set(),
+                                     cm->write_set(),
+                                     cm->before_set(),
+                                     cm->after_set(),
+                                     cm->parent_job_id().elem(),
+                                     cm->future_job_id().elem(),
+                                     cm->sterile(),
+                                     cm->region(),
+                                     cm->params());
 
   std::map<job_id_t, std::string>::iterator iter =
     template_spawner_map_.find(cm->parent_job_id().elem());
   if (iter != template_spawner_map_.end()) {
-    template_manager_->AddComputeJobToTemplate(iter->second,
-                                               cm->job_name(),
-                                               cm->job_id().elem(),
-                                               cm->read_set(),
-                                               cm->write_set(),
-                                               cm->before_set(),
-                                               cm->after_set(),
-                                               cm->parent_job_id().elem(),
-                                               cm->future_job_id().elem(),
-                                               cm->sterile(),
-                                               cm->region());
+    TemplateJobEntry* template_job =
+      template_manager_->AddComputeJobToTemplate(iter->second,
+                                                 cm->job_name(),
+                                                 cm->job_id().elem(),
+                                                 cm->read_set(),
+                                                 cm->write_set(),
+                                                 cm->before_set(),
+                                                 cm->after_set(),
+                                                 cm->parent_job_id().elem(),
+                                                 cm->future_job_id().elem(),
+                                                 cm->sterile(),
+                                                 cm->region());
+    job->set_memoize(true);
+    job->set_template_job(template_job);
   }
 
   snprintf(buff, sizeof(buff), "%10.9f JE id: %lu n: %s.",
@@ -436,25 +440,36 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   log_receive_stamp_.log_WriteToFile(std::string(buff));
 
   if (!id_maker_->SchedulerProducedJobID(job_id)) {
-    std::list<SchedulerWorker*> waiting_list;
-    after_map_->GetWorkersWaitingOnJob(job_id, &waiting_list);
+    // TODO(omidm): currently after map does not work with binding template so need flooding!
+    if (NIMBUS_BINDING_MEMOIZATION_ACTIVE) {
+      cm->set_final(true);
+      SchedulerWorkerList::iterator iter = server_->workers()->begin();
+      for (; iter != server_->workers()->end(); ++iter) {
+        server_->SendCommand(*iter, cm);
+      }
+    } else {
+      std::list<SchedulerWorker*> waiting_list;
+      after_map_->GetWorkersWaitingOnJob(job_id, &waiting_list);
 
-    cm->set_final(true);
-    std::list<SchedulerWorker*>::iterator iter = waiting_list.begin();
-    for (; iter != waiting_list.end(); ++iter) {
-      server_->SendCommand(*iter, cm);
+      cm->set_final(true);
+      std::list<SchedulerWorker*>::iterator iter = waiting_list.begin();
+      for (; iter != waiting_list.end(); ++iter) {
+        server_->SendCommand(*iter, cm);
+      }
     }
   }
 
   // AfterMap has internal locking.
   after_map_->RemoveJobRecords(job_id);
 
-  JobEntry *job;
-  if (job_manager_->GetJobEntry(job_id, job)) {
-    job->set_done(true);
-    load_balancer_->NotifyJobDone(job);
-    job_manager_->NotifyJobDone(job);
-  }
+  // TODO(omidm): load balancer does not get notified for now!
+  job_manager_->NotifyJobDone(job_id);
+//  JobEntry *job;
+//  if (job_manager_->GetJobEntry(job_id, job)) {
+//    job->set_done(true);
+//    load_balancer_->NotifyJobDone(job);
+//    job_manager_->NotifyJobDone(job);
+//  }
 
   snprintf(buff, sizeof(buff), "%10.9f DE id: %lu.",
       Log::GetRawTime(), job_id);
@@ -477,26 +492,60 @@ void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
         cm->parameters(),
         cm->parent_job_id().elem());
     log.StopTimer();
-    std::cout << "OMID SPAWN TEMPLATE. " << log.timer() << std::endl;
+    std::cout << "OMID SPAWN TEMPLATE. " << cm->job_graph_name() << log.timer() << std::endl;
+  } else if (NIMBUS_NEW_TEMPLATES_ACTIVE) {
+    Log log(Log::NO_FILE);
+    log.StartTimer();
+    ComplexJobEntry* complex_job;
+    if (!template_manager_->GetComplexJobEntryForTemplate(complex_job,
+                                                          cm->job_graph_name(),
+                                                          cm->parent_job_id().elem(),
+                                                          cm->inner_job_ids(),
+                                                          cm->outer_job_ids(),
+                                                          cm->parameters())) {
+      assert(false);
+    }
+    if (!job_manager_->AddComplexJobEntry(complex_job)) {
+      assert(false);
+    }
+    log.StopTimer();
+    std::cout << "OMID SPAWN NEW TEMPLATE. " << cm->job_graph_name() << log.timer() << std::endl;
   }
 }
 
 void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
   // TODO(omidm): Implement!
-  if (NIMBUS_TEMPLATES_ACTIVE) {
-    template_manager_->DetectNewTemplate(cm->job_graph_name());
-    template_spawner_map_[cm->parent_job_id().elem()] = cm->job_graph_name();
-    std::cout << "OMID START TEMPLATE\n.";
+  if (NIMBUS_TEMPLATES_ACTIVE || NIMBUS_NEW_TEMPLATES_ACTIVE) {
+    std::string template_name = cm->job_graph_name();
+    job_id_t job_id = cm->parent_job_id().elem();
+
+    if (!template_manager_->DetectNewTemplate(template_name)) {
+      dbg(DBG_ERROR, "ERROR: could not detect new template %s.\n", template_name.c_str());
+      assert(false);
+      return;
+    }
+
+    template_spawner_map_[job_id] = template_name;
+
+    // Memoize the parent version map as the base version map of the template.
+    boost::shared_ptr<VersionMap> vmap_base;
+    if (!job_manager_->GetBaseVersionMapFromJob(job_id, vmap_base)) {
+      dbg(DBG_ERROR, "ERROR: could not get base version map from parent of template with job id %lu.\n", job_id); // NOLINT
+      assert(false);
+    }
+    template_manager_->SetBaseVersionMapForTemplate(template_name,
+                                                    vmap_base);
+    std::cout << "OMID START TEMPLATE " << template_name << std::endl;
   }
 }
 
 void Scheduler::ProcessEndTemplateCommand(EndTemplateCommand* cm) {
   // TODO(omidm): Implement!
-  if (NIMBUS_TEMPLATES_ACTIVE) {
+  if (NIMBUS_TEMPLATES_ACTIVE || NIMBUS_NEW_TEMPLATES_ACTIVE) {
     template_manager_->FinalizeNewTemplate(cm->job_graph_name());
     DefinedTemplateCommand command(cm->job_graph_name());
     server_->BroadcastCommand(&command);
-    std::cout << "OMID END TEMPLATE\n.";
+    std::cout << "OMID END TEMPLATE " << cm->job_graph_name() << std::endl;
   }
 }
 
@@ -620,6 +669,7 @@ void Scheduler::SetupJobManager() {
 
 void Scheduler::SetupTemplateManager() {
   template_manager_->set_job_manager(job_manager_);
+  template_manager_->set_id_maker(id_maker_);
 }
 
 void Scheduler::SetupLoadBalancer() {

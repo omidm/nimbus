@@ -54,6 +54,8 @@
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "scheduler/job_entry.h"
+#include "scheduler/shadow_job_entry.h"
+#include "scheduler/complex_job_entry.h"
 #include "scheduler/logical_data_lineage.h"
 
 namespace nimbus {
@@ -82,7 +84,7 @@ class VersionEntry {
     bool RemoveJobEntry(JobEntry *job);
 
     size_t GetJobsNeedVersion(
-        JobEntryList* list, data_version_t version);
+        JobEntryList* list, data_version_t version, bool append = false);
 
     bool LookUpVersion(JobEntry *job,
                        data_version_t *version);
@@ -117,4 +119,6 @@ class VersionEntry {
 typedef std::list<VersionEntry> VersionEntryList;
 
 }  // namespace nimbus
+
 #endif  // NIMBUS_SCHEDULER_VERSION_ENTRY_H_
+

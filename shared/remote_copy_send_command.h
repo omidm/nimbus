@@ -73,6 +73,7 @@ class RemoteCopySendCommand : public SchedulerCommand {
     std::string to_ip();
     ID<port_t> to_port();
     IDSet<job_id_t> before_set();
+    IDSet<job_id_t>* before_set_p();
 
   private:
     ID<job_id_t> job_id_;

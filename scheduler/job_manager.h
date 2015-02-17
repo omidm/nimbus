@@ -43,6 +43,7 @@
 #define NIMBUS_SCHEDULER_JOB_MANAGER_H_
 
 #include <boost/thread.hpp>
+#include <boost/unordered_map.hpp>
 #include <iostream> // NOLINT
 #include <fstream> // NOLINT
 #include <sstream>
@@ -58,6 +59,7 @@
 #include "shared/graph.h"
 #include "shared/id_maker.h"
 #include "scheduler/job_entry.h"
+#include "scheduler/complex_job_entry.h"
 #include "scheduler/after_map.h"
 #include "shared/logical_data_object.h"
 #include "scheduler/version_manager.h"
@@ -88,6 +90,8 @@ class JobManager {
                                  const GeometricRegion& region,
                                  const Parameter& params);
 
+    bool AddComplexJobEntry(ComplexJobEntry* complex_job);
+
     JobEntry* AddExplicitCopyJobEntry();
 
     JobEntry* AddKernelJobEntry();
@@ -104,14 +108,6 @@ class JobManager {
 
     JobEntry* AddFutureJobEntry(const job_id_t& job_id);
 
-    bool AddJobEntryIncomingEdges(JobEntry *job);
-
-    void ReceiveMetaBeforeSetDepthVersioningDependency(JobEntry* job);
-
-    void PassMetaBeforeSetDepthVersioningDependency(JobEntry* job);
-
-    bool GetJobEntry(job_id_t job_id, JobEntry*& job);
-
     bool RemoveJobEntry(JobEntry* job);
 
     size_t NumJobsReadyToAssign();
@@ -120,7 +116,7 @@ class JobManager {
 
     size_t RemoveObsoleteJobEntries(size_t max_to_remove);
 
-    void NotifyJobDone(JobEntry *job);
+    void NotifyJobDone(job_id_t job_id);
 
     void NotifyJobAssignment(JobEntry *job);
 
@@ -129,6 +125,14 @@ class JobManager {
     bool ResolveJobDataVersions(JobEntry *job);
 
     bool ResolveEntireContextForJob(JobEntry *job);
+
+    bool GetBaseVersionMapFromJob(job_id_t job_id,
+                                  boost::shared_ptr<VersionMap>& vmap_base);
+
+    bool ResolveJobDataVersionsForPattern(JobEntry *job,
+                  const BindingTemplate::PatternList* patterns);
+
+    bool MemoizeVersionsForTemplate(JobEntry *job);
 
     size_t GetJobsNeedDataVersion(JobEntryList* list,
                                   VersionedLogicalData vld);
@@ -163,8 +167,6 @@ class JobManager {
                                       const logical_data_id_t& l_id,
                                       const PhysicalData& pd);
 
-    bool GetJobGraphVertex(job_id_t job_id, Vertex<JobEntry, job_id_t> **vertex);
-
   private:
     Log log_;
     AfterMap *after_map_;
@@ -173,6 +175,7 @@ class JobManager {
     CheckpointManager checkpoint_manager_;
 
     Graph<JobEntry, job_id_t> job_graph_;
+    ComplexJobEntryMap complex_jobs_;
     boost::mutex job_graph_mutex_;
 
     JobEntryList jobs_done_;
@@ -186,13 +189,32 @@ class JobManager {
     JobEntryMap jobs_pending_to_assign_;
     boost::recursive_mutex job_queue_mutex_;
 
+    // HACK
+    std::string HACK_last_template_;
+    bool HACK_middle_projection_loop_;
+    // HACK
+
     bool AddJobEntryToJobGraph(job_id_t job_id, JobEntry *job);
+
+    bool GetJobEntryFromJobGraph(job_id_t job_id, JobEntry*& job);
+
+
+    bool GetComplexJobContainer(const job_id_t& job_id,
+                                ComplexJobEntry*& complex_job);
 
     bool RemoveJobEntryFromJobGraph(job_id_t job_id);
 
     bool ClearJobGraph();
 
     Edge<JobEntry, job_id_t>* AddEdgeToJobGraph(job_id_t from, job_id_t to);
+
+    bool GetJobGraphVertex(job_id_t job_id, Vertex<JobEntry, job_id_t> **vertex);
+
+    bool AddJobEntryIncomingEdges(JobEntry *job);
+
+    void ReceiveMetaBeforeSetDepthVersioningDependency(JobEntry* job);
+
+    void PassMetaBeforeSetDepthVersioningDependency(JobEntry* job);
 };
 
 }  // namespace nimbus

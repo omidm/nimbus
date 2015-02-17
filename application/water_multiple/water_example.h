@@ -157,6 +157,9 @@ public:
     void Initialize_Grid(TV_INT counts,RANGE<TV> range);
     void Set_Boundary_Conditions(const T time);
     void Adjust_Phi_With_Sources(const T time);
+
+    void Sum_Phi_3();
+
     void Initialize_Phi();
 
     void Write_Output_Files(const int frame, int rank = -1);

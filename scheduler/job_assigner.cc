@@ -164,7 +164,136 @@ void JobAssigner::AssignJobs(const JobEntryList& list) {
   }
 }
 
+bool JobAssigner::QueryDataManagerForPatterns(
+                      ComplexJobEntry* job,
+                      const BindingTemplate::PatternList* patterns,
+                      const BindingTemplate::PatternMetaData* patterns_meta_data,
+                      std::vector<physical_data_id_t>* physical_ids) {
+  physical_ids->clear();
+
+  if (!job_manager_->ResolveJobDataVersionsForPattern(job, patterns)) {
+    assert(false);
+  }
+
+  BindingTemplate::PatternMetaData::const_iterator it =
+    patterns_meta_data->begin();
+  BindingTemplate::PatternList::const_iterator iter;
+  for (iter = patterns->begin(); iter != patterns->end();) {
+    size_t ldid_count = it->first + it->second;
+
+    logical_data_id_t ldid = (*iter)->ldid_;
+    LogicalDataObject* ldo =
+      const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(ldid));
+
+    PhysicalDataList instances;
+    data_manager_->AllInstances(ldo, &instances);
+
+    // For now we assume that binding for template does not require creating
+    // new instances -omidm
+    assert(instances.size() >= ldid_count);
+
+    data_version_t base_version;
+    if (!job->vmap_read()->query_entry(ldid, &base_version)) {
+      assert(false);
+    }
+
+    for (size_t i = 0; i < ldid_count; ++i) {
+      BindingTemplate::PatternEntry *pattern = (*iter);
+      bool found = false;
+
+      data_version_t version = pattern->version_diff_from_base_ + base_version;
+
+      PhysicalDataList::iterator pi = instances.begin();
+      for (; pi != instances.end(); ++pi) {
+        if ((pi->worker() == pattern->worker_id_) &&
+            ((pi->version() == version) ||
+             (pattern->version_type_ == BindingTemplate::WILD_CARD))) {
+          found = true;
+          physical_ids->push_back(pi->id());
+          instances.erase(pi);
+          break;
+        }
+      }
+
+      assert(found);
+      ++iter;
+    }
+    ++it;
+  }
+
+  return true;
+}
+
+bool JobAssigner::UpdateDataManagerByPatterns(
+                      ComplexJobEntry* job,
+                      const BindingTemplate::PatternList* patterns,
+                      const std::vector<physical_data_id_t>* physical_ids) {
+  assert(patterns->size() == physical_ids->size());
+
+  IDSet<job_id_t> list_job_read;
+  list_job_read.insert(job->job_id());
+  job_id_t last_job_write = job->job_id();
+
+  size_t physical_ids_idx = 0;
+  BindingTemplate::PatternList::const_iterator iter = patterns->begin();
+  for (; iter != patterns->end(); ++iter) {
+    BindingTemplate::PatternEntry *pe = *iter;
+    data_version_t base_version;
+    if (!job->vmap_read()->query_entry(pe->ldid_, &base_version)) {
+      assert(false);
+    }
+    data_version_t version = base_version + pe->version_diff_from_base_;
+
+    if (!data_manager_->UpdateVersionAndAccessRecord(pe->ldid_,
+                                                     physical_ids->operator[](physical_ids_idx),
+                                                     version,
+                                                     list_job_read,
+                                                     last_job_write)) {
+      assert(false);
+    }
+
+    ++physical_ids_idx;
+  }
+
+  return true;
+}
+
+bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
+  BindingTemplate *bt = job->binding_template();
+  size_t copy_job_num = bt->copy_job_num();
+  size_t compute_job_num = bt->compute_job_num();
+
+  assert(compute_job_num == job->inner_job_ids_p()->size());
+
+  std::vector<job_id_t> copy_job_ids;
+  id_maker_->GetNewJobID(&copy_job_ids, copy_job_num);
+
+  std::vector<physical_data_id_t> physical_ids;
+
+  QueryDataManagerForPatterns(job,
+                              bt->entry_pattern_list_p(),
+                              bt->patterns_meta_data_p(),
+                              &physical_ids);
+
+  bt->Instantiate(job->inner_job_ids(),
+                  job->parameters(),
+                  copy_job_ids,
+                  physical_ids,
+                  server_);
+
+  UpdateDataManagerByPatterns(job,
+                              bt->end_pattern_list_p(),
+                              &physical_ids);
+
+  return true;
+}
+
 bool JobAssigner::AssignJob(JobEntry *job) {
+  if (job->job_type() == JOB_CMPX) {
+    ComplexJobEntry *xj = reinterpret_cast<ComplexJobEntry*>(job);
+    return AssignComplexJob(xj);
+  }
+
   SchedulerWorker* worker = job->assigned_worker();
   log_assign_.log_StartTimer();
   log_prepare_.log_ResetTimer();
@@ -174,6 +303,10 @@ bool JobAssigner::AssignJob(JobEntry *job) {
 
   log_version_manager_.log_ResumeTimer();
   job_manager_->ResolveJobDataVersions(job);
+  assert(job->versioned());
+  if (job->memoize()) {
+    job_manager_->MemoizeVersionsForTemplate(job);
+  }
   log_version_manager_.log_StopTimer();
 
 
@@ -197,10 +330,50 @@ bool JobAssigner::AssignJob(JobEntry *job) {
   if (prepared_data) {
     PrintLog(job);
 
+    // BINDING MEMOIZE - omidm
+    if (job->memoize_binding()) {
+      assert(job->job_type() == JOB_SHDW);
+      ShadowJobEntry *sj = reinterpret_cast<ShadowJobEntry*>(job);
+      BindingTemplate *bt = sj->binding_template();
+
+      ID<job_id_t> job_id(job->job_id());
+      ID<job_id_t> future_job_id(job->future_job_id());
+      IDSet<physical_data_id_t> read_set, write_set;
+      // TODO(omidm): check the return value of the following methods.
+      job->GetPhysicalReadSet(&read_set);
+      job->GetPhysicalWriteSet(&write_set);
+      ComputeJobCommand cm(job->job_name(),
+                           job_id,
+                           read_set,
+                           write_set,
+                           job->before_set(),
+                           job->after_set(),
+                           future_job_id,
+                           job->sterile(),
+                           job->region(),
+                           job->params());
+
+      bt->AddComputeJobCommand(&cm, worker->worker_id());
+    }
+    // BINDING MEMOIZE - omidm
+
+
     log_job_manager_.log_ResumeTimer();
     job_manager_->UpdateJobBeforeSet(job);
     log_job_manager_.log_StopTimer();
     SendComputeJobToWorker(worker, job);
+
+    // BINDING MEMOIZE - omidm
+    if (job->memoize_binding()) {
+      assert(job->job_type() == JOB_SHDW);
+      ShadowJobEntry *sj = reinterpret_cast<ShadowJobEntry*>(job);
+      ComplexJobEntry *xj = sj->complex_job();
+
+      if (job->to_finalize_binding_template()) {
+        job->binding_template()->Finalize(xj->inner_job_ids());
+      }
+    }
+    // BINDING MEMOIZE - omidm
 
     log_job_manager_.log_ResumeTimer();
     job_manager_->NotifyJobAssignment(job);
@@ -253,9 +426,26 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     if (!job->vmap_read()->query_entry(l_id, &version)) {
       dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the read context of %s.\n",
           l_id, job->job_name().c_str());
-      exit(-1);
+      assert(false);
     }
   }
+
+  // BINDING MEMOIZE - omidm
+  BindingTemplate *bt = NULL;
+  data_version_t version_diff;
+  bool memoize_binding = false;
+  if (job->memoize_binding()) {
+    assert(job->job_type() == JOB_SHDW);
+    ShadowJobEntry *sj = reinterpret_cast<ShadowJobEntry*>(job);
+    bt = sj->binding_template();
+
+    if (!sj->vmap_read_diff()->query_entry(l_id, &version_diff)) {
+      assert(false);
+    }
+
+    memoize_binding = true;
+  }
+  // BINDING MEMOIZE - omidm
 
   // Just for checking
   data_version_t unused_version;
@@ -263,7 +453,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     if (!job->vmap_write()->query_entry(l_id, &unused_version)) {
       dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the write context of %s.\n",
           l_id, job->job_name().c_str());
-      exit(-1);
+      assert(false);
     }
   }
 
@@ -271,15 +461,34 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     PhysicalData target_instance;
     GetFreeDataAtWorker(worker, ldo, &target_instance);
 
+    // BINDING MEMOIZE - omidm
+    if (memoize_binding) {
+      bt->TrackDataObject(worker->worker_id(),
+                          l_id,
+                          target_instance.id(),
+                          BindingTemplate::WILD_CARD,
+                          0);
+    }
+    // BINDING MEMOIZE - omidm
+
     log_job_manager_.log_ResumeTimer();
     if (job_manager_->CausingUnwantedSerialization(job, l_id, target_instance)) {
-      std::cout << "Why serializing!!\n";
-      exit(-1);
+      dbg(DBG_ERROR, "Why serializing!!\n");
       dbg(DBG_SCHED, "Causing unwanted serialization for data %lu.\n", l_id);
+      assert(false);
     }
     log_job_manager_.log_StopTimer();
 
     AllocateLdoInstanceToJob(job, ldo, target_instance);
+
+    // BINDING MEMOIZE - omidm
+    if (memoize_binding) {
+      assert(writing);
+      bt->UpdateDataObject(target_instance.id(),
+                           version_diff + 1);
+    }
+    // BINDING MEMOIZE - omidm
+
     return true;
   }
 
@@ -314,13 +523,54 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
       log_job_manager_.log_StopTimer();
     }
 
+    // BINDING MEMOIZE - omidm
+    if (memoize_binding) {
+      if (found) {
+        bt->TrackDataObject(worker->worker_id(),
+                            l_id,
+                            target_instance.id(),
+                            BindingTemplate::REGULAR,
+                            version_diff);
+      }
+    }
+    // BINDING MEMOIZE - omidm
+
     if (!found) {
       dbg(DBG_SCHED, "Avoiding unwanted serialization for data %lu (1).\n", l_id);
       GetFreeDataAtWorker(worker, ldo, &target_instance);
-      LocalCopyData(worker, ldo, &(*instances_at_worker.begin()), &target_instance);
+
+      // BINDING MEMOIZE - omidm
+      if (memoize_binding) {
+        bt->TrackDataObject(worker->worker_id(),
+                            l_id,
+                            target_instance.id(),
+                            BindingTemplate::WILD_CARD,
+                            0);
+        bt->TrackDataObject(worker->worker_id(),
+                            l_id,
+                            (*instances_at_worker.begin()).id(),
+                            BindingTemplate::REGULAR,
+                            version_diff);
+        bt->UpdateDataObject(target_instance.id(),
+                             version_diff);
+      }
+      // BINDING MEMOIZE - omidm
+
+      // BINDING MEMOIZE - omidm
+      LocalCopyData(worker, ldo, &(*instances_at_worker.begin()), &target_instance, bt);
     }
 
     AllocateLdoInstanceToJob(job, ldo, target_instance);
+
+    // BINDING MEMOIZE - omidm
+    if (memoize_binding) {
+      if (writing) {
+        bt->UpdateDataObject(target_instance.id(),
+                             version_diff + 1);
+      }
+    }
+    // BINDING MEMOIZE - omidm
+
     return true;
   }
 
@@ -332,14 +582,53 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     if (!job_manager_->CausingUnwantedSerialization(job, l_id, *instances_at_worker.begin())) {
       log_job_manager_.log_StopTimer();
       target_instance = *instances_at_worker.begin();
+
+      // BINDING MEMOIZE - omidm
+      if (memoize_binding) {
+        bt->TrackDataObject(worker->worker_id(),
+                            l_id,
+                            target_instance.id(),
+                            BindingTemplate::REGULAR,
+                            version_diff);
+      }
+      // BINDING MEMOIZE - omidm
     } else {
       log_job_manager_.log_StopTimer();
       dbg(DBG_SCHED, "Avoiding unwanted serialization for data %lu (2).\n", l_id);
       GetFreeDataAtWorker(worker, ldo, &target_instance);
-      LocalCopyData(worker, ldo, &(*instances_at_worker.begin()), &target_instance);
+
+      // BINDING MEMOIZE - omidm
+      if (memoize_binding) {
+        bt->TrackDataObject(worker->worker_id(),
+                            l_id,
+                            target_instance.id(),
+                            BindingTemplate::WILD_CARD,
+                            0);
+        bt->TrackDataObject(worker->worker_id(),
+                            l_id,
+                            (*instances_at_worker.begin()).id(),
+                            BindingTemplate::REGULAR,
+                            version_diff);
+        bt->UpdateDataObject(target_instance.id(),
+                             version_diff);
+      }
+      // BINDING MEMOIZE - omidm
+
+      // BINDING MEMOIZE - omidm
+      LocalCopyData(worker, ldo, &(*instances_at_worker.begin()), &target_instance, bt);
     }
 
     AllocateLdoInstanceToJob(job, ldo, target_instance);
+
+    // BINDING MEMOIZE - omidm
+    if (memoize_binding) {
+      if (writing) {
+        bt->UpdateDataObject(target_instance.id(),
+                             version_diff + 1);
+      }
+    }
+    // BINDING MEMOIZE - omidm
+
     return true;
   }
 
@@ -353,20 +642,72 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
       target_instance = *instances_at_worker.begin();
       PhysicalData copy_data;
       GetFreeDataAtWorker(worker, ldo, &copy_data);
-      LocalCopyData(worker, ldo, &target_instance, &copy_data);
+
+      // BINDING MEMOIZE - omidm
+      if (memoize_binding) {
+        bt->TrackDataObject(worker->worker_id(),
+                            l_id,
+                            target_instance.id(),
+                            BindingTemplate::REGULAR,
+                            version_diff);
+        bt->TrackDataObject(worker->worker_id(),
+                            l_id,
+                            copy_data.id(),
+                            BindingTemplate::WILD_CARD,
+                            0);
+        bt->UpdateDataObject(copy_data.id(),
+                             version_diff);
+      }
+      // BINDING MEMOIZE - omidm
+
+      // BINDING MEMOIZE - omidm
+      LocalCopyData(worker, ldo, &target_instance, &copy_data, bt);
     } else {
       log_job_manager_.log_StopTimer();
       dbg(DBG_SCHED, "Avoiding unwanted serialization for data %lu (3).\n", l_id);
       GetFreeDataAtWorker(worker, ldo, &target_instance);
-      LocalCopyData(worker, ldo, &(*instances_at_worker.begin()), &target_instance);
+
+      // BINDING MEMOIZE - omidm
+      if (memoize_binding) {
+        bt->TrackDataObject(worker->worker_id(),
+                            l_id,
+                            target_instance.id(),
+                            BindingTemplate::WILD_CARD,
+                            0);
+        bt->TrackDataObject(worker->worker_id(),
+                            l_id,
+                            (*instances_at_worker.begin()).id(),
+                            BindingTemplate::REGULAR,
+                            version_diff);
+        bt->UpdateDataObject(target_instance.id(),
+                             version_diff);
+      }
+      // BINDING MEMOIZE - omidm
+
+      // BINDING MEMOIZE - omidm
+      LocalCopyData(worker, ldo, &(*instances_at_worker.begin()), &target_instance, bt);
     }
 
     AllocateLdoInstanceToJob(job, ldo, target_instance);
+
+    // BINDING MEMOIZE - omidm
+    if (memoize_binding) {
+      if (writing) {
+        bt->UpdateDataObject(target_instance.id(),
+                             version_diff + 1);
+      }
+    }
+    // BINDING MEMOIZE - omidm
+
     return true;
   }
 
 
   if ((instances_at_worker.size() == 0) && (version == NIMBUS_INIT_DATA_VERSION)) {
+    // BINDING MEMOIZE - omidm
+    assert(!memoize_binding);
+    // BINDING MEMOIZE - omidm
+
     PhysicalData created_data;
     CreateDataAtWorker(worker, ldo, &created_data);
 
@@ -390,11 +731,42 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
 
     PhysicalData target_instance;
     GetFreeDataAtWorker(worker, ldo, &target_instance);
-    RemoteCopyData(worker_sender, worker, ldo, &from_instance, &target_instance);
+
+    // BINDING MEMOIZE - omidm
+    if (memoize_binding) {
+      bt->TrackDataObject(worker->worker_id(),
+                          l_id,
+                          target_instance.id(),
+                          BindingTemplate::WILD_CARD,
+                          0);
+      bt->TrackDataObject(sender_id,
+                          l_id,
+                          from_instance.id(),
+                          BindingTemplate::REGULAR,
+                          version_diff);
+      bt->UpdateDataObject(target_instance.id(),
+                           version_diff);
+    }
+    // BINDING MEMOIZE - omidm
+
+    // BINDING MEMOIZE - omidm
+    RemoteCopyData(worker_sender, worker, ldo, &from_instance, &target_instance, bt);
 
     AllocateLdoInstanceToJob(job, ldo, target_instance);
+
+    // BINDING MEMOIZE - omidm
+    if (memoize_binding) {
+      if (writing) {
+        bt->UpdateDataObject(target_instance.id(),
+                             version_diff + 1);
+      }
+    }
+    // BINDING MEMOIZE - omidm
+
     return true;
   }
+
+  assert(NIMBUS_FAULT_TOLERANCE_ACTIVE);
 
   // If you are here, you may find the version in checkpoint.
   dbg(DBG_WARN, "WARNING: looking in to checkpoint to load the data.\n");
@@ -670,7 +1042,8 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
                                  SchedulerWorker* to_worker,
                                  LogicalDataObject* ldo,
                                  PhysicalData* from_data,
-                                 PhysicalData* to_data) {
+                                 PhysicalData* to_data,
+                                 BindingTemplate *bt) {
   assert(from_worker->worker_id() == from_data->worker());
   assert(to_worker->worker_id() == to_data->worker());
 
@@ -699,6 +1072,16 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   before.clear();
   before.insert(to_data->list_job_read());
   before.insert(to_data->last_job_write());
+
+  // BINDING MEMOIZE - omidm
+  if (bt) {
+    RemoteCopyReceiveCommand cm_r(ID<job_id_t>(receive_id),
+                                  ID<physical_data_id_t>(to_data->id()),
+                                  before);
+    bt->AddRemoteCopyReceiveCommand(&cm_r, to_worker->worker_id());
+  }
+  // BINDING MEMOIZE - omidm
+
   log_job_manager_.log_ResumeTimer();
   job_manager_->UpdateBeforeSet(&before);
   log_job_manager_.log_StopTimer();
@@ -728,6 +1111,20 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   // send remote copy send command to worker.
   before.clear();
   before.insert(from_data->last_job_write());
+
+  // BINDING MEMOIZE - omidm
+  if (bt) {
+    RemoteCopySendCommand cm_s(ID<job_id_t>(send_id),
+                               ID<job_id_t>(receive_id),
+                               ID<physical_data_id_t>(from_data->id()),
+                               ID<worker_id_t>(to_worker->worker_id()),
+                               to_worker->ip(),
+                               ID<port_t>(to_worker->port()),
+                               before);
+    bt->AddRemoteCopySendCommand(&cm_s, from_worker->worker_id());
+  }
+  // BINDING MEMOIZE - omidm
+
   log_job_manager_.log_ResumeTimer();
   job_manager_->UpdateBeforeSet(&before);
   log_job_manager_.log_StopTimer();
@@ -755,7 +1152,8 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
 bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
                                 LogicalDataObject* ldo,
                                 PhysicalData* from_data,
-                                PhysicalData* to_data) {
+                                PhysicalData* to_data,
+                                BindingTemplate *bt) {
   assert(worker->worker_id() == from_data->worker());
   assert(worker->worker_id() == to_data->worker());
 
@@ -785,6 +1183,17 @@ bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
   before.insert(to_data->list_job_read());
   before.insert(to_data->last_job_write());
   before.insert(from_data->last_job_write());
+
+  // BINDING MEMOIZE - omidm
+  if (bt) {
+    LocalCopyCommand cm_c(ID<job_id_t>(j[0]),
+                          ID<physical_data_id_t>(from_data->id()),
+                          ID<physical_data_id_t>(to_data->id()),
+                          before);
+    bt->AddLocalCopyCommand(&cm_c, worker->worker_id());
+  }
+  // BINDING MEMOIZE - omidm
+
   log_job_manager_.log_ResumeTimer();
   job_manager_->UpdateBeforeSet(&before);
   log_job_manager_.log_StopTimer();
@@ -819,7 +1228,7 @@ bool JobAssigner::GetFreeDataAtWorker(SchedulerWorker* worker,
 
 bool JobAssigner::SendComputeJobToWorker(SchedulerWorker* worker,
                                          JobEntry* job) {
-  if (job->job_type() == JOB_COMP) {
+  if ((job->job_type() == JOB_COMP) || (job->job_type() == JOB_SHDW)) {
     ID<job_id_t> job_id(job->job_id());
     ID<job_id_t> future_job_id(job->future_job_id());
     IDSet<physical_data_id_t> read_set, write_set;
@@ -838,9 +1247,10 @@ bool JobAssigner::SendComputeJobToWorker(SchedulerWorker* worker,
                          job->params());
     dbg(DBG_SCHED, "Sending compute job %lu to worker %lu.\n", job->job_id(), worker->worker_id());
     server_->SendCommand(worker, &cm);
+
     return true;
   } else {
-    dbg(DBG_ERROR, "Job with id %lu is not a compute job.\n", job->job_id());
+    dbg(DBG_ERROR, "ERROR: Job with id %lu is not a compute job.\n", job->job_id());
     return false;
   }
 }

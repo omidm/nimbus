@@ -64,6 +64,7 @@ class RemoteCopyReceiveCommand : public SchedulerCommand {
     ID<job_id_t> job_id();
     ID<physical_data_id_t> to_physical_data_id();
     IDSet<job_id_t> before_set();
+    IDSet<job_id_t>* before_set_p();
 
   private:
     ID<job_id_t> job_id_;
