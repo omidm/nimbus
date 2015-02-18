@@ -47,6 +47,7 @@
 #include "application/water_multiple/reg_def.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
+#include "shared/fast_log.hh"
 #include "worker/job_query.h"
 #include <sstream>
 #include <string>
@@ -64,6 +65,7 @@ nimbus::Job* JobCalculateDt::Clone() {
 void JobCalculateDt::Execute(
     nimbus::Parameter params,
     const nimbus::DataArray& da) {
+  nimbus::timer::AddCounter(nimbus::timer::kCalculateDt);
   dbg(APP_LOG, "Executing CALCULATE_DT job\n");
   InitConfig init_config;
   init_config.set_boundary_condition = false;

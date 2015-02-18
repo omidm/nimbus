@@ -60,7 +60,7 @@ enum TimerType {
   kSumCyclesTotal,
   kSumCyclesBlock,
   kSumCyclesRun,
-  kMaxCounter
+  kMaxTimer
 };
 struct TimerRecord {
   TimerRecord() : depth(0), sum(0) {
@@ -70,10 +70,23 @@ struct TimerRecord {
   int64_t depth;
   int64_t sum;
 };
-
 typedef std::map<std::pair<pid_t, TimerType>, TimerRecord*> TimersMap;
 extern TimersMap timers_map;
-extern pthread_key_t keys[kMaxCounter];
+extern pthread_key_t timer_keys[kMaxTimer];
+
+enum CounterType {
+  kNumIteration = 0,
+  kCalculateDt,
+  kMaxCounter
+};
+struct CounterRecord {
+  CounterRecord() : sum(0) {
+  }
+  int64_t sum;
+};
+typedef std::map<std::pair<pid_t, CounterType>, CounterRecord*> CountersMap;
+extern CountersMap counters_map;
+extern pthread_key_t counter_keys[kMaxCounter];
 
 void InitializeKeys();
 void InitializeTimers();
@@ -81,7 +94,7 @@ void PrintTimerSummary(FILE* output = stdout);
 
 inline void StartTimer(TimerType timer_type, int depth = 1) {
   assert(depth > 0);
-  void* ptr = pthread_getspecific(keys[timer_type]);
+  void* ptr = pthread_getspecific(timer_keys[timer_type]);
   TimerRecord* record = static_cast<TimerRecord*>(ptr);
   assert(record);
   clock_gettime(CLOCK_REALTIME, &(record->new_timestamp));
@@ -97,7 +110,7 @@ inline void StartTimer(TimerType timer_type, int depth = 1) {
 
 inline void StopTimer(TimerType timer_type, int depth = 1) {
   assert(depth > 0);
-  void* ptr = pthread_getspecific(keys[timer_type]);
+  void* ptr = pthread_getspecific(timer_keys[timer_type]);
   TimerRecord* record = static_cast<TimerRecord*>(ptr);
   assert(record);
   clock_gettime(CLOCK_REALTIME, &(record->new_timestamp));
@@ -108,6 +121,13 @@ inline void StopTimer(TimerType timer_type, int depth = 1) {
   record->old_timestamp = record->new_timestamp;
   record->depth -= depth;
   assert(record->depth >= 0);
+}
+
+inline void AddCounter(CounterType counter_type, int count = 1) {
+  void* ptr = pthread_getspecific(counter_keys[counter_type]);
+  CounterRecord* record = static_cast<CounterRecord*>(ptr);
+  assert(record);
+  record->sum += count;
 }
 
 }  // namespace timer
