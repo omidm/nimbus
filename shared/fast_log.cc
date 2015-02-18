@@ -78,6 +78,7 @@ std::string TimerName(TimerType timer_type) {
 std::string CounterName(CounterType counter_type) {
   switch (counter_type) {
     case kNumIteration: return "kNumIteration";
+    case kCalculateDt: return "kCalculateDt";
     default: return "Unknown";
   }
 }
