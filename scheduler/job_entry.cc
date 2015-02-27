@@ -64,6 +64,9 @@ JobEntry::JobEntry() {
   write_region_valid_ = false;
   union_region_valid_ = false;
   assigned_worker_ = NULL;
+  // Only non-sterile jobs will have parent and grand parent name set.
+  parent_job_name_ = NIMBUS_KERNEL_JOB_NAME;
+  grand_parent_job_name_ = NIMBUS_KERNEL_JOB_NAME;
 }
 
 void JobEntry::Initialize() {
@@ -93,6 +96,14 @@ JobType JobEntry::job_type() const {
 
 std::string JobEntry::job_name() const {
   return job_name_;
+}
+
+std::string JobEntry::parent_job_name() const {
+  return parent_job_name_;
+}
+
+std::string JobEntry::grand_parent_job_name() const {
+  return grand_parent_job_name_;
 }
 
 job_id_t JobEntry::job_id() const {
@@ -258,6 +269,14 @@ void JobEntry::set_job_type(JobType job_type) {
 
 void JobEntry::set_job_name(std::string job_name) {
   job_name_ = job_name;
+}
+
+void JobEntry::set_parent_job_name(std::string parent_job_name) {
+  parent_job_name_ = parent_job_name;
+}
+
+void JobEntry::set_grand_parent_job_name(std::string grand_parent_job_name) {
+  grand_parent_job_name_ = grand_parent_job_name;
 }
 
 void JobEntry::set_job_id(job_id_t job_id) {
