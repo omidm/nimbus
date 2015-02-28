@@ -64,9 +64,8 @@ JobEntry::JobEntry() {
   write_region_valid_ = false;
   union_region_valid_ = false;
   assigned_worker_ = NULL;
-  // Only non-sterile jobs will have parent and grand parent name set.
-  parent_job_name_ = NIMBUS_KERNEL_JOB_NAME;
-  grand_parent_job_name_ = NIMBUS_KERNEL_JOB_NAME;
+  parent_job_name_ = "";  // will be set for non-sterile and complex jobs.
+  grand_parent_job_name_ = "";  // will be set for complex jobs.
 }
 
 void JobEntry::Initialize() {
