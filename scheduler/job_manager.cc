@@ -746,11 +746,13 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
     if (job->job_type() == JOB_CMPX) {
       ComplexJobEntry* complex_job = reinterpret_cast<ComplexJobEntry*>(job);
       TemplateEntry *te = complex_job->template_entry();
+      std::string grand_parent_name = complex_job->grand_parent_job_name();
+      assert(grand_parent_name != "");
       BindingTemplate *bt = NULL;
 
       if (NIMBUS_BINDING_MEMOIZATION_ACTIVE) {
         bool create_bt = true;
-        if (te->QueryBindingRecord(STATIC_BINDING_RECORD, bt)) {
+        if (te->QueryBindingRecord(STATIC_BINDING_RECORD, grand_parent_name, bt)) {
           create_bt = false;
           if (bt->finalized()) {
             list->push_back(complex_job);
@@ -764,7 +766,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
 
         if (create_bt) {
           bt = new BindingTemplate(complex_job->inner_job_ids(), te);
-          if (!te->AddBindingRecord(STATIC_BINDING_RECORD, bt)) {
+          if (!te->AddBindingRecord(STATIC_BINDING_RECORD, grand_parent_name, bt)) {
             assert(false);
           }
         }

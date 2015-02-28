@@ -40,6 +40,7 @@
 
 #include "scheduler/template_entry.h"
 #include "scheduler/job_manager.h"
+#include "shared/helpers.h"
 
 using namespace nimbus; // NOLINT
 
@@ -547,19 +548,23 @@ size_t TemplateEntry::QueryAccessPattern(const logical_data_id_t& ldid,
 
 
 bool TemplateEntry::AddBindingRecord(size_t binding_tag,
+                                     std::string grand_parent_name,
                                      BindingTemplate* binding_template) {
-  BindingMap::iterator iter = binding_records_.find(binding_tag);
+  std::string key = int2string(binding_tag) + "-" + grand_parent_name;
+  BindingMap::iterator iter = binding_records_.find(key);
   if (iter != binding_records_.end()) {
     return false;
   }
 
-  binding_records_[binding_tag] = binding_template;
+  binding_records_[key] = binding_template;
   return true;
 }
 
 bool TemplateEntry::QueryBindingRecord(size_t binding_tag,
+                                       std::string grand_parent_name,
                                        BindingTemplate*& binding_template) {
-  BindingMap::iterator iter = binding_records_.find(binding_tag);
+  std::string key = int2string(binding_tag) + "-" + grand_parent_name;
+  BindingMap::iterator iter = binding_records_.find(key);
   if (iter == binding_records_.end()) {
     binding_template = NULL;
     return false;
