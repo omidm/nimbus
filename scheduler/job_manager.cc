@@ -1039,7 +1039,9 @@ void JobManager::UpdateBeforeSet(IDSet<job_id_t>* before_set) {
 }
 
 bool JobManager::CausingUnwantedSerialization(JobEntry* job,
-    const logical_data_id_t& l_id, const PhysicalData& pd) {
+                                              const logical_data_id_t& l_id,
+                                              const PhysicalData& pd,
+                                              bool memoizing_mode) {
   bool result = false;
 
   if (!job->write_set_p()->contains(l_id)) {
@@ -1051,7 +1053,9 @@ bool JobManager::CausingUnwantedSerialization(JobEntry* job,
     JobEntry *j = NULL;
     ComplexJobEntry *xj = NULL;
     if (GetJobEntryFromJobGraph(*iter, j)) {
-      if ((!j->done()) &&
+      // if in memoizing_mode job done should NOT considered, cause it depdends
+      // on runtime variations and lead to damaging parallelism -omidm
+      if (((!j->done()) || memoizing_mode) &&
           (j->job_type() == JOB_COMP || job->job_type() == JOB_CMPX) &&
           // (!job->before_set_p()->contains(*iter))) {
           // the job may not be in the immediate before set but still there is
@@ -1064,7 +1068,9 @@ bool JobManager::CausingUnwantedSerialization(JobEntry* job,
       assert(job->job_type() == JOB_SHDW);
       ShadowJobEntry *sj;
       xj->OMIDGetShadowJobEntryById(*iter, sj);
-      if ((!xj->ShadowJobDone(*iter)) &&
+      // if in memoizing_mode job done should NOT considered, cause it depdends
+      // on runtime variations and lead to damaging parallelism -omidm
+      if (((!xj->ShadowJobDone(*iter)) || memoizing_mode) &&
           // (!job->before_set_p()->contains(*iter))) {
           // the job may not be in the immediate before set but still there is
           // indirect dependency. so we need to look through meta before set.

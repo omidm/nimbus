@@ -165,7 +165,8 @@ class JobManager {
 
     bool CausingUnwantedSerialization(JobEntry* job,
                                       const logical_data_id_t& l_id,
-                                      const PhysicalData& pd);
+                                      const PhysicalData& pd,
+                                      bool memoizing_mode = false);
 
   private:
     Log log_;
