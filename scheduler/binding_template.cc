@@ -63,32 +63,39 @@ BindingTemplate::~BindingTemplate() {
 }
 
 bool BindingTemplate::finalized() {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   return finalized_;
 }
 
 size_t BindingTemplate::copy_job_num() {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   assert(finalized_);
   return copy_job_id_list_.size();
 }
 
 size_t BindingTemplate::compute_job_num() {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   assert(finalized_);
   return compute_job_id_list_.size();
 }
 
 const BindingTemplate::PatternMetaData* BindingTemplate::patterns_meta_data_p() const {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   return &patterns_meta_data_;
 }
 
 const BindingTemplate::PatternList* BindingTemplate::entry_pattern_list_p() const {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   return &entry_pattern_list_;
 }
 
 const BindingTemplate::PatternList* BindingTemplate::end_pattern_list_p() const {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   return &end_pattern_list_;
 }
 
 bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   assert(!finalized_);
   assert(compute_job_id_map_.size() == template_entry_->compute_jobs_num());
   assert(compute_job_id_map_.size() == compute_job_ids.size());
@@ -209,6 +216,7 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
                                   const std::vector<job_id_t>& copy_job_ids,
                                   const std::vector<physical_data_id_t> physical_ids,
                                   SchedulerServer *server) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   assert(finalized_);
   assert(compute_job_ids.size() == compute_job_id_list_.size());
   assert(copy_job_ids.size() == copy_job_id_list_.size());
@@ -416,6 +424,7 @@ bool BindingTemplate::TrackDataObject(const worker_id_t& worker_id,
                                       const physical_data_id_t& pdid,
                                       VERSION_TYPE version_type,
                                       data_version_t version_diff_from_base) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   PhyIdPtrMap::iterator iter =  phy_id_map_.find(pdid);
   if (iter != phy_id_map_.end()) {
     return true;
@@ -459,6 +468,7 @@ bool BindingTemplate::TrackDataObject(const worker_id_t& worker_id,
 
 bool BindingTemplate::UpdateDataObject(const physical_data_id_t& pdid,
                                        data_version_t version_diff_from_base) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   PatternMap::iterator iter =  end_pattern_map_.find(pdid);
   if (iter == end_pattern_map_.end()) {
     assert(false);
@@ -474,6 +484,7 @@ bool BindingTemplate::UpdateDataObject(const physical_data_id_t& pdid,
 
 bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
                                            worker_id_t w_id) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   JobIdPtr job_id_ptr = GetExistingComputeJobIdPtr(command->job_id().elem());
 
   PhyIdPtrSet read_set;
@@ -552,6 +563,7 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
 
 bool BindingTemplate::AddLocalCopyCommand(LocalCopyCommand* command,
                                           worker_id_t w_id) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   JobIdPtr job_id_ptr = GetCopyJobIdPtr(command->job_id().elem());
 
   PhyIdPtr from_physical_data_id_ptr =
@@ -592,6 +604,7 @@ bool BindingTemplate::AddLocalCopyCommand(LocalCopyCommand* command,
 
 bool BindingTemplate::AddRemoteCopySendCommand(RemoteCopySendCommand* command,
                                                worker_id_t w_id) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   JobIdPtr job_id_ptr = GetCopyJobIdPtr(command->job_id().elem());
 
   JobIdPtr receive_job_id_ptr = GetCopyJobIdPtr(command->receive_job_id().elem());
@@ -634,6 +647,7 @@ bool BindingTemplate::AddRemoteCopySendCommand(RemoteCopySendCommand* command,
 
 bool BindingTemplate::AddRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* command,
                                                   worker_id_t w_id) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   JobIdPtr job_id_ptr = GetCopyJobIdPtr(command->job_id().elem());
 
   PhyIdPtr to_physical_data_id_ptr =

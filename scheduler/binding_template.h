@@ -314,6 +314,8 @@ class BindingTemplate {
 
     std::map<job_id_t, ComputeJobCommandTemplate*> job_to_command_map_;
 
+    mutable boost::mutex mutex_;
+
     JobIdPtr GetCopyJobIdPtr(job_id_t job_id);
     bool GetCopyJobIdPtrIfExisted(job_id_t job_id, JobIdPtr *job_id_ptr);
 
