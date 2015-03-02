@@ -124,6 +124,22 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
     }
   }
 
+  if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+    std::vector<job_id_t>::const_iterator iter = compute_job_ids.begin();
+    for (; iter != compute_job_ids.end(); ++iter) {
+      JobIdPtrMap::iterator it_p = compute_job_id_map_.find(*iter);
+      assert(it_p != compute_job_id_map_.end());
+
+      JobWorkerMap::iterator it = job_worker_map_.find(*iter);
+      assert(it != job_worker_map_.end());
+      std::set<worker_id_t>::iterator i = it->second.begin();
+      for (; i != it->second.end(); ++i) {
+        worker_job_ids_[*i].push_back(it_p->second);
+      }
+    }
+  }
+
+
   copy_job_id_list_.clear();
   {
     JobIdPtrMap::iterator iter = copy_job_id_map_.begin();
@@ -131,6 +147,19 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
       copy_job_id_list_.push_back(iter->second);
     }
   }
+
+  if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+    JobIdPtrMap::iterator iter = copy_job_id_map_.begin();
+    for (; iter != copy_job_id_map_.end(); ++iter) {
+      JobWorkerMap::iterator it = job_worker_map_.find(iter->first);
+      assert(it != job_worker_map_.end());
+      std::set<worker_id_t>::iterator i = it->second.begin();
+      for (; i != it->second.end(); ++i) {
+        worker_job_ids_[*i].push_back(iter->second);
+      }
+    }
+  }
+
 
   phy_id_list_.clear();
   end_pattern_list_.clear();
@@ -189,6 +218,38 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
 
       patterns_meta_data_.push_back(std::make_pair(regular_num, wild_card_num));
     }
+  }
+
+  if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+    JobIdPtrMap::iterator iter = phy_id_map_.begin();
+    for (; iter != phy_id_map_.end(); ++iter) {
+      PhyWorkerMap::iterator it = phy_worker_map_.find(iter->first);
+      assert(it != phy_worker_map_.end());
+      std::set<worker_id_t>::iterator i = it->second.begin();
+      for (; i != it->second.end(); ++i) {
+        worker_phy_ids_[*i].push_back(iter->second);
+      }
+    }
+  }
+
+  if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+    ComputeJobCommandTemplate *cc;
+    CommandTemplateVector::iterator iter = command_templates_.begin();
+    for (; iter != command_templates_.end(); ++iter) {
+      CommandTemplate *ct = *iter;
+      if (ct->type_ == COMPUTE) {
+        cc = reinterpret_cast<ComputeJobCommandTemplate*>(ct);
+        worker_parameter_indices_[cc->worker_id_].push_back(cc->param_index_);
+      }
+    }
+  }
+
+
+  // Testing the integrity of computations!
+
+  if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+    assert(worker_job_ids_.size() == worker_phy_ids_.size());
+    assert(worker_job_ids_.size() == worker_parameter_indices_.size());
   }
 
   {
@@ -485,7 +546,11 @@ bool BindingTemplate::UpdateDataObject(const physical_data_id_t& pdid,
 bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
                                            worker_id_t w_id) {
   boost::unique_lock<boost::mutex> lock(mutex_);
-  JobIdPtr job_id_ptr = GetExistingComputeJobIdPtr(command->job_id().elem());
+  JobIdPtr compute_job_id_ptr = GetExistingComputeJobIdPtr(command->job_id().elem());
+
+  if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+    job_worker_map_[*compute_job_id_ptr].insert(w_id);
+  }
 
   PhyIdPtrSet read_set;
   {
@@ -493,6 +558,10 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
     for (; iter != command->read_set_p()->end(); ++iter) {
       PhyIdPtr phy_id_ptr = GetExistingPhyIdPtr(*iter);
       read_set.insert(phy_id_ptr);
+
+      if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+        phy_worker_map_[*phy_id_ptr].insert(w_id);
+      }
     }
   }
 
@@ -502,6 +571,10 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
     for (; iter != command->write_set_p()->end(); ++iter) {
       PhyIdPtr phy_id_ptr = GetExistingPhyIdPtr(*iter);
       write_set.insert(phy_id_ptr);
+
+      if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+        phy_worker_map_[*phy_id_ptr].insert(w_id);
+      }
     }
   }
 
@@ -520,6 +593,10 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
         }
       }
       before_set.insert(job_id_ptr);
+
+      if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+        job_worker_map_[*job_id_ptr].insert(w_id);
+      }
     }
   }
 
@@ -537,13 +614,17 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
           continue;
         }
       }
-      before_set.insert(job_id_ptr);
+      after_set.insert(job_id_ptr);
+
+      if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+        job_worker_map_[*job_id_ptr].insert(w_id);
+      }
     }
   }
 
   ComputeJobCommandTemplate *cm =
     new ComputeJobCommandTemplate(command->job_name(),
-                                  job_id_ptr,
+                                  compute_job_id_ptr,
                                   read_set,
                                   write_set,
                                   before_set,
@@ -554,7 +635,7 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
                                   w_id);
 
   // Keep this mapping to set the param_index in Finalize - omidm
-  job_to_command_map_[*job_id_ptr] = cm;
+  job_to_command_map_[*compute_job_id_ptr] = cm;
 
   command_templates_.push_back(cm);
 
@@ -564,13 +645,25 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
 bool BindingTemplate::AddLocalCopyCommand(LocalCopyCommand* command,
                                           worker_id_t w_id) {
   boost::unique_lock<boost::mutex> lock(mutex_);
-  JobIdPtr job_id_ptr = GetCopyJobIdPtr(command->job_id().elem());
+  JobIdPtr copy_job_id_ptr = GetCopyJobIdPtr(command->job_id().elem());
+
+  if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+    job_worker_map_[*copy_job_id_ptr].insert(w_id);
+  }
 
   PhyIdPtr from_physical_data_id_ptr =
     GetExistingPhyIdPtr(command->from_physical_data_id().elem());
 
+  if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+    phy_worker_map_[*from_physical_data_id_ptr].insert(w_id);
+  }
+
   PhyIdPtr to_physical_data_id_ptr =
     GetExistingPhyIdPtr(command->to_physical_data_id().elem());
+
+  if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+    phy_worker_map_[*to_physical_data_id_ptr].insert(w_id);
+  }
 
   JobIdPtrSet before_set;
   {
@@ -587,11 +680,15 @@ bool BindingTemplate::AddLocalCopyCommand(LocalCopyCommand* command,
         }
       }
       before_set.insert(job_id_ptr);
+
+      if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+        job_worker_map_[*job_id_ptr].insert(w_id);
+      }
     }
   }
 
   LocalCopyCommandTemplate *cm =
-    new LocalCopyCommandTemplate(job_id_ptr,
+    new LocalCopyCommandTemplate(copy_job_id_ptr,
                                  from_physical_data_id_ptr,
                                  to_physical_data_id_ptr,
                                  before_set,
@@ -605,12 +702,24 @@ bool BindingTemplate::AddLocalCopyCommand(LocalCopyCommand* command,
 bool BindingTemplate::AddRemoteCopySendCommand(RemoteCopySendCommand* command,
                                                worker_id_t w_id) {
   boost::unique_lock<boost::mutex> lock(mutex_);
-  JobIdPtr job_id_ptr = GetCopyJobIdPtr(command->job_id().elem());
+  JobIdPtr copy_job_id_ptr = GetCopyJobIdPtr(command->job_id().elem());
+
+  if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+    job_worker_map_[*copy_job_id_ptr].insert(w_id);
+  }
 
   JobIdPtr receive_job_id_ptr = GetCopyJobIdPtr(command->receive_job_id().elem());
 
+  if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+    job_worker_map_[*receive_job_id_ptr].insert(w_id);
+  }
+
   PhyIdPtr from_physical_data_id_ptr =
     GetExistingPhyIdPtr(command->from_physical_data_id().elem());
+
+  if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+    phy_worker_map_[*from_physical_data_id_ptr].insert(w_id);
+  }
 
   JobIdPtrSet before_set;
   {
@@ -627,11 +736,15 @@ bool BindingTemplate::AddRemoteCopySendCommand(RemoteCopySendCommand* command,
         }
       }
       before_set.insert(job_id_ptr);
+
+      if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+        job_worker_map_[*job_id_ptr].insert(w_id);
+      }
     }
   }
 
   RemoteCopySendCommandTemplate *cm =
-    new RemoteCopySendCommandTemplate(job_id_ptr,
+    new RemoteCopySendCommandTemplate(copy_job_id_ptr,
                                       receive_job_id_ptr,
                                       from_physical_data_id_ptr,
                                       command->to_worker_id(),
@@ -648,10 +761,18 @@ bool BindingTemplate::AddRemoteCopySendCommand(RemoteCopySendCommand* command,
 bool BindingTemplate::AddRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* command,
                                                   worker_id_t w_id) {
   boost::unique_lock<boost::mutex> lock(mutex_);
-  JobIdPtr job_id_ptr = GetCopyJobIdPtr(command->job_id().elem());
+  JobIdPtr copy_job_id_ptr = GetCopyJobIdPtr(command->job_id().elem());
+
+  if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+    job_worker_map_[*copy_job_id_ptr].insert(w_id);
+  }
 
   PhyIdPtr to_physical_data_id_ptr =
     GetExistingPhyIdPtr(command->to_physical_data_id().elem());
+
+  if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+    phy_worker_map_[*to_physical_data_id_ptr].insert(w_id);
+  }
 
   JobIdPtrSet before_set;
   {
@@ -668,11 +789,15 @@ bool BindingTemplate::AddRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* comm
         }
       }
       before_set.insert(job_id_ptr);
+
+      if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
+        job_worker_map_[*job_id_ptr].insert(w_id);
+      }
     }
   }
 
   RemoteCopyReceiveCommandTemplate *cm =
-    new RemoteCopyReceiveCommandTemplate(job_id_ptr,
+    new RemoteCopyReceiveCommandTemplate(copy_job_id_ptr,
                                          to_physical_data_id_ptr,
                                          before_set,
                                          w_id);

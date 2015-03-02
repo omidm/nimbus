@@ -56,6 +56,7 @@
 #include <utility>
 #include <algorithm>
 #include <map>
+#include <set>
 #include "shared/nimbus_types.h"
 #include "shared/scheduler_server.h"
 #include "shared/scheduler_command_include.h"
@@ -313,6 +314,16 @@ class BindingTemplate {
     CommandTemplateVector command_templates_;
 
     std::map<job_id_t, ComputeJobCommandTemplate*> job_to_command_map_;
+
+
+    typedef boost::unordered_map<job_id_t, std::set<worker_id_t> > JobWorkerMap;
+    typedef boost::unordered_map<physical_data_id_t, std::set<worker_id_t> > PhyWorkerMap;
+    JobWorkerMap job_worker_map_;
+    PhyWorkerMap phy_worker_map_;
+
+    std::map<worker_id_t, JobIdPtrList> worker_job_ids_;
+    std::map<worker_id_t, PhyIdPtrList> worker_phy_ids_;
+    std::map<worker_id_t, std::vector<size_t> > worker_parameter_indices_;
 
     mutable boost::mutex mutex_;
 
