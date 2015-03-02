@@ -70,6 +70,9 @@
 #include "shared/save_data_job_done_command.h"
 #include "shared/prepare_rewind_command.h"
 #include "shared/worker_down_command.h"
+#include "shared/start_command_template_command.h"
+#include "shared/end_command_template_command.h"
+#include "shared/spawn_command_template_command.h"
 
 
 #endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
