@@ -884,4 +884,18 @@ void Worker::StatEndJob(int len) {
   //        stat_blocked_job_num_, stat_ready_job_num_);
 }
 
+// The unit is in nano-second.
+void GetTimerStat(int64_t* idle, int64_t* block, int64_t* run) {
+  static int64_t l_idle = 0, l_block = 0, l_run = 0;
+  int64_t c_block = timer::ReadTimer(timer::kSumCyclesBlock);
+  int64_t c_run = timer::ReadTimer(timer::kSumCyclesRun);
+  int64_t c_idle = timer::ReadTimer(timer::kSumCyclesTotal) - c_block - c_run;
+  *idle = c_idle - l_idle;
+  *block = c_block - l_block;
+  *run = c_run - l_run;
+  l_idle = c_idle;
+  l_block = c_block;
+  l_run = c_run;
+}
+
 }  // namespace nimbus

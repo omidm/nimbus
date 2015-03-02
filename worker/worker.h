@@ -182,6 +182,7 @@ class Worker {
   void StatEndJob(int len);
   void StatDispatchJob(int len = 1);
   void ResolveDataArray(Job* job);
+  void GetTimerStat(int64_t* idle, int64_t* block, int64_t* run);
 
  private:
   int stat_blocked_job_num_, stat_ready_job_num_;

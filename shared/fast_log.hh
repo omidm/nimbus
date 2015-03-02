@@ -123,6 +123,17 @@ inline void StopTimer(TimerType timer_type, int depth = 1) {
   assert(record->depth >= 0);
 }
 
+inline int64_t ReadTimer(TimerType timer_type) {
+  void* ptr = pthread_getspecific(timer_keys[timer_type]);
+  TimerRecord* record = static_cast<TimerRecord*>(ptr);
+  assert(record);
+  clock_gettime(CLOCK_REALTIME, &(record->new_timestamp));
+  return record->sum +
+      record->depth * (
+           (record->new_timestamp.tv_sec - record->old_timestamp.tv_sec) * 1e9
+           + record->new_timestamp.tv_nsec - record->old_timestamp.tv_nsec);
+}
+
 inline void AddCounter(CounterType counter_type, int count = 1) {
   void* ptr = pthread_getspecific(counter_keys[counter_type]);
   CounterRecord* record = static_cast<CounterRecord*>(ptr);
