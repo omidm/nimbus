@@ -65,7 +65,6 @@ void JobAssigner::Initialize() {
   data_manager_ = NULL;
   load_balancer_ = NULL;
   log_.set_file_name("log_job_assigner");
-  log_before_set_.set_file_name("log_before_set");
   log_assign_stamp_.set_file_name("log_assign_stamp");
 }
 
@@ -397,11 +396,6 @@ bool JobAssigner::AssignJob(JobEntry *job) {
 
 void JobAssigner::PrintLog(JobEntry *job) {
   char buff[LOG_MAX_BUFF_SIZE];
-
-  snprintf(buff, sizeof(buff), "id: %lu bs: %s.",
-      job->job_id(), job->before_set_p()->ToString().c_str());
-  log_before_set_.log_WriteToFile(std::string(buff), LOG_INFO);
-
   snprintf(buff, sizeof(buff), "%10.9f id: %lu n: %s.",
       Log::GetRawTime(), job->job_id(), job->job_name().c_str());
   log_assign_stamp_.log_WriteToFile(std::string(buff), LOG_INFO);
