@@ -53,7 +53,6 @@ StaticLoadBalancer::StaticLoadBalancer() {
   worker_num_ = 0;
   stamp_state_ = -1;
   initialized_domains_ = false;
-  log_.set_file_name("log_load_balancer");
 }
 
 StaticLoadBalancer::~StaticLoadBalancer() {
