@@ -557,6 +557,7 @@ bool TemplateEntry::AddBindingRecord(size_t binding_tag,
   }
 
   binding_records_[key] = binding_template;
+  binding_template->set_command_template_name(key);
   return true;
 }
 

@@ -79,6 +79,7 @@ class BindingTemplate {
     size_t copy_job_num();
     size_t compute_job_num();
 
+    void set_command_template_name(std::string name);
 
     bool Finalize(const std::vector<job_id_t>& compute_job_ids);
 
@@ -288,7 +289,9 @@ class BindingTemplate {
 
 
     bool finalized_;
+    bool established_command_template_;
     TemplateEntry *template_entry_;
+    std::string command_template_name_;
     // Currently we do not support future job - omidm
     JobIdPtr future_job_id_ptr_;
 
@@ -320,6 +323,7 @@ class BindingTemplate {
     typedef boost::unordered_map<physical_data_id_t, std::set<worker_id_t> > PhyWorkerMap;
     JobWorkerMap job_worker_map_;
     PhyWorkerMap phy_worker_map_;
+    std::set<worker_id_t> worker_ids_;
 
     std::map<worker_id_t, JobIdPtrList> worker_job_ids_;
     std::map<worker_id_t, PhyIdPtrList> worker_phy_ids_;
@@ -335,6 +339,12 @@ class BindingTemplate {
 
     PhyIdPtr GetExistingPhyIdPtr(physical_data_id_t pdid);
 
+
+    void SendCommandTemplateHeaderToWorkers(SchedulerServer *server);
+
+    void SendCommandTemplateFinalizeToWorkers(SchedulerServer *server);
+
+    void SpawnCommandTemplateAtWorkers(SchedulerServer *server);
 
     void SendComputeJobCommand(ComputeJobCommandTemplate* command,
                                const Parameter& parameter,

@@ -49,6 +49,8 @@ using namespace nimbus; // NOLINT
 BindingTemplate::BindingTemplate(const std::vector<job_id_t>& compute_job_ids,
                                  TemplateEntry *template_entry) {
   finalized_ = false;
+  established_command_template_ = false;
+  command_template_name_ = "";  // has to be set before finalize.
   template_entry_ = template_entry;
   future_job_id_ptr_ = JobIdPtr(new job_id_t(0));
 
@@ -93,6 +95,11 @@ const BindingTemplate::PatternList* BindingTemplate::end_pattern_list_p() const 
   boost::unique_lock<boost::mutex> lock(mutex_);
   return &end_pattern_list_;
 }
+
+void BindingTemplate::set_command_template_name(std::string name) {
+  command_template_name_ = name;
+}
+
 
 bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
   boost::unique_lock<boost::mutex> lock(mutex_);
@@ -259,6 +266,7 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
     }
   }
 
+  assert(command_template_name_ != "");
   assert(copy_job_id_map_.size() == copy_job_id_list_.size());
   assert(compute_job_id_map_.size() == compute_job_id_list_.size());
   assert(phy_id_map_.size() == phy_id_list_.size());
@@ -310,6 +318,16 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
     }
   }
 
+  if (established_command_template_) {
+    SpawnCommandTemplateAtWorkers(server);
+    return true;
+  }
+
+
+  if (NIMBUS_COMMAND_TEMPLATE_ACTIVE && !established_command_template_) {
+    SendCommandTemplateHeaderToWorkers(server);
+  }
+
   ComputeJobCommandTemplate *cc;
   CommandTemplateVector::iterator iter = command_templates_.begin();
   for (; iter != command_templates_.end(); ++iter) {
@@ -338,9 +356,60 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
     }
   }
 
+
+  if (NIMBUS_COMMAND_TEMPLATE_ACTIVE && !established_command_template_) {
+    SendCommandTemplateFinalizeToWorkers(server);
+    established_command_template_ = true;
+  }
+
+
   return true;
 }
 
+void BindingTemplate::SendCommandTemplateHeaderToWorkers(SchedulerServer *server) {
+  std::set<worker_id_t>::iterator iter = worker_ids_.begin();
+  for (; iter != worker_ids_.end(); ++iter) {
+    worker_id_t w_id = *iter;
+
+    std::vector<job_id_t> outer_job_ids;
+    std::vector<job_id_t> inner_job_ids;
+    {
+      std::map<worker_id_t, JobIdPtrList>::iterator it = worker_job_ids_.find(w_id);
+      assert(it != worker_job_ids_.end());
+      JobIdPtrList::iterator i = it->second.begin();
+      for (; i != it->second.end(); ++i) {
+        inner_job_ids.push_back(*(*i));
+      }
+    }
+
+    std::vector<physical_data_id_t> phy_ids;
+    {
+      std::map<worker_id_t, PhyIdPtrList>::iterator it = worker_phy_ids_.find(w_id);
+      assert(it != worker_phy_ids_.end());
+      PhyIdPtrList::iterator i = it->second.begin();
+      for (; i != it->second.end(); ++i) {
+        phy_ids.push_back(*(*i));
+      }
+    }
+
+    StartCommandTemplateCommand cm(command_template_name_,
+                                   inner_job_ids,
+                                   outer_job_ids,
+                                   phy_ids);
+
+    SchedulerWorker *worker;
+    if (!server->GetSchedulerWorkerById(worker, w_id)) {
+      assert(false);
+    }
+    server->SendCommand(worker, &cm);
+  }
+}
+
+void BindingTemplate::SendCommandTemplateFinalizeToWorkers(SchedulerServer *server) {
+}
+
+void BindingTemplate::SpawnCommandTemplateAtWorkers(SchedulerServer *server) {
+}
 
 void BindingTemplate::SendComputeJobCommand(ComputeJobCommandTemplate* command,
                                             const Parameter& parameter,
@@ -546,6 +615,7 @@ bool BindingTemplate::UpdateDataObject(const physical_data_id_t& pdid,
 bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
                                            worker_id_t w_id) {
   boost::unique_lock<boost::mutex> lock(mutex_);
+  worker_ids_.insert(w_id);
   JobIdPtr compute_job_id_ptr = GetExistingComputeJobIdPtr(command->job_id().elem());
 
   if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
@@ -645,6 +715,7 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
 bool BindingTemplate::AddLocalCopyCommand(LocalCopyCommand* command,
                                           worker_id_t w_id) {
   boost::unique_lock<boost::mutex> lock(mutex_);
+  worker_ids_.insert(w_id);
   JobIdPtr copy_job_id_ptr = GetCopyJobIdPtr(command->job_id().elem());
 
   if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
@@ -702,6 +773,7 @@ bool BindingTemplate::AddLocalCopyCommand(LocalCopyCommand* command,
 bool BindingTemplate::AddRemoteCopySendCommand(RemoteCopySendCommand* command,
                                                worker_id_t w_id) {
   boost::unique_lock<boost::mutex> lock(mutex_);
+  worker_ids_.insert(w_id);
   JobIdPtr copy_job_id_ptr = GetCopyJobIdPtr(command->job_id().elem());
 
   if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
@@ -761,6 +833,7 @@ bool BindingTemplate::AddRemoteCopySendCommand(RemoteCopySendCommand* command,
 bool BindingTemplate::AddRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* command,
                                                   worker_id_t w_id) {
   boost::unique_lock<boost::mutex> lock(mutex_);
+  worker_ids_.insert(w_id);
   JobIdPtr copy_job_id_ptr = GetCopyJobIdPtr(command->job_id().elem());
 
   if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {

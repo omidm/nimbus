@@ -161,10 +161,21 @@ size_t SchedulerClient::EnqueueCommands(char* buffer, size_t size) {
       if (SchedulerCommand::GenerateSchedulerCommandChild(input,
                                                           scheduler_command_table_,
                                                           command)) {
-        dbg(DBG_NET, "Enqueueing command %s.\n", command->ToString().c_str());
-
-        boost::mutex::scoped_lock lock(command_queue_mutex_);
-        received_commands_.push_back(command);
+        switch (command->type()) {
+          case SchedulerCommand::START_COMMAND_TEMPLATE:
+            //
+            break;
+          case SchedulerCommand::END_COMMAND_TEMPLATE:
+            //
+            break;
+          case SchedulerCommand::SPAWN_COMMAND_TEMPLATE:
+            //
+            break;
+          default:
+            dbg(DBG_NET, "Enqueueing command %s.\n", command->ToString().c_str());
+            boost::mutex::scoped_lock lock(command_queue_mutex_);
+            received_commands_.push_back(command);
+        }
       } else {
         dbg(DBG_NET, "Ignored unknown command: %s.\n", input.c_str());
         exit(-1);
