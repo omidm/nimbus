@@ -63,6 +63,7 @@ using boost::asio::ip::tcp;
 #define CLIENT_TCP_SEND_BUF_SIZE 134217728  // 128MB
 #define CLIENT_TCP_RECEIVE_BUF_SIZE 134217728  // 128MB
 #define CLIENT_BUF_SIZE 40960000
+#define SEPARATE_COMMAND_TEMPLATE_THREAD true
 
 namespace nimbus {
 
@@ -71,6 +72,7 @@ SchedulerClient::SchedulerClient(std::string scheduler_ip,
                                  port_t scheduler_port)
   : scheduler_ip_(scheduler_ip),
     scheduler_port_(scheduler_port) {
+      filling_template_ = false;
 }
 
 SchedulerClient::~SchedulerClient() {
@@ -161,10 +163,46 @@ size_t SchedulerClient::EnqueueCommands(char* buffer, size_t size) {
       if (SchedulerCommand::GenerateSchedulerCommandChild(input,
                                                           scheduler_command_table_,
                                                           command)) {
-        dbg(DBG_NET, "Enqueueing command %s.\n", command->ToString().c_str());
-
-        boost::mutex::scoped_lock lock(command_queue_mutex_);
-        received_commands_.push_back(command);
+        switch (command->type()) {
+          case SchedulerCommand::START_COMMAND_TEMPLATE:
+            HandleStartCommandTemplateCommand(
+                reinterpret_cast<StartCommandTemplateCommand*>(command));
+            break;
+          case SchedulerCommand::END_COMMAND_TEMPLATE:
+            HandleEndCommandTemplateCommand(
+                reinterpret_cast<EndCommandTemplateCommand*>(command));
+            break;
+          case SchedulerCommand::SPAWN_COMMAND_TEMPLATE:
+            HandleSpawnCommandTemplateCommand(
+                reinterpret_cast<SpawnCommandTemplateCommand*>(command));
+            break;
+          default:
+            if (filling_template_) {
+              TemplateMap::iterator iter = template_map_.find(template_name_in_progress_);
+              assert(iter != template_map_.end());
+              CommandTemplate *ct = iter->second;
+              switch (command->type()) {
+                case SchedulerCommand::EXECUTE_COMPUTE:
+                  ct->AddComputeJobCommand(reinterpret_cast<ComputeJobCommand*>(command));
+                  break;
+                case SchedulerCommand::LOCAL_COPY:
+                  ct->AddLocalCopyCommand(reinterpret_cast<LocalCopyCommand*>(command));
+                  break;
+                case SchedulerCommand::REMOTE_SEND:
+                  ct->AddRemoteCopySendCommand(reinterpret_cast<RemoteCopySendCommand*>(command));
+                  break;
+                case SchedulerCommand::REMOTE_RECEIVE:
+                  ct->AddRemoteCopyReceiveCommand(reinterpret_cast<RemoteCopyReceiveCommand*>(command)); // NOLINT
+                  break;
+                default:
+                  break;
+              }
+            }
+            dbg(DBG_NET, "Enqueueing command %s.\n", command->ToString().c_str());
+            boost::mutex::scoped_lock lock(command_queue_mutex_);
+            received_commands_.push_back(command);
+            break;
+        }
       } else {
         dbg(DBG_NET, "Ignored unknown command: %s.\n", input.c_str());
         exit(-1);
@@ -177,6 +215,53 @@ size_t SchedulerClient::EnqueueCommands(char* buffer, size_t size) {
   }
 
   return total_read;
+}
+
+void SchedulerClient::HandleStartCommandTemplateCommand(StartCommandTemplateCommand *cm) {
+  std::string key = cm->command_template_name();
+  assert(template_map_.find(key) == template_map_.end());
+  CommandTemplate *ct = new CommandTemplate(key,
+                                            cm->inner_job_ids(),
+                                            cm->outer_job_ids(),
+                                            cm->phy_ids());
+  template_map_[key] = ct;
+  filling_template_ = true;
+  template_name_in_progress_ = key;
+}
+
+void SchedulerClient::HandleEndCommandTemplateCommand(EndCommandTemplateCommand *cm) {
+  assert(filling_template_);
+  std::string key = cm->command_template_name();
+  assert(template_name_in_progress_ == key);
+  TemplateMap::iterator iter = template_map_.find(key);
+  assert(iter != template_map_.end());
+  iter->second->Finalize();
+  filling_template_ = false;
+}
+
+void SchedulerClient::HandleSpawnCommandTemplateCommand(SpawnCommandTemplateCommand *cm) {
+  std::string key = cm->command_template_name();
+  TemplateMap::iterator iter = template_map_.find(key);
+  assert(iter != template_map_.end());
+  if (SEPARATE_COMMAND_TEMPLATE_THREAD) {
+    CommandTemplateSeed *cts =
+      new CommandTemplateSeed(iter->second,
+                              cm->inner_job_ids(),
+                              cm->outer_job_ids(),
+                              cm->parameters(),
+                              cm->phy_ids());
+    {
+      boost::unique_lock<boost::mutex> command_template_seeds_lock(command_template_seeds_mutex_);
+      command_template_seeds_.push_back(cts);
+      command_template_seeds_cond_.notify_all();
+    }
+  } else {
+  iter->second->Instantiate(cm->inner_job_ids(),
+                            cm->outer_job_ids(),
+                            cm->parameters(),
+                            cm->phy_ids(),
+                            this);
+  }
 }
 
 void SchedulerClient::HandleRead(const boost::system::error_code& error,
@@ -275,13 +360,45 @@ void SchedulerClient::CreateNewConnections() {
 void SchedulerClient::Run() {
   dbg(DBG_NET, "Running the scheduler client.\n");
   Initialize();
+  if (SEPARATE_COMMAND_TEMPLATE_THREAD) {
+    command_template_thread_ =
+      new boost::thread(boost::bind(&SchedulerClient::CommandTemplateThread, this));
+  }
   CreateNewConnections();
   io_service_->run();
+}
+
+void SchedulerClient::CommandTemplateThread() {
+  while (true) {
+    CommandTemplateSeed *cts;
+    {
+      boost::unique_lock<boost::mutex> command_template_seeds_lock(command_template_seeds_mutex_);
+
+      while (command_template_seeds_.size() == 0) {
+        command_template_seeds_cond_.wait(command_template_seeds_lock);
+      }
+
+      CommandTemplateSeedList::iterator iter = command_template_seeds_.begin();
+      cts = *iter;
+      command_template_seeds_.erase(iter);
+    }
+
+    cts->command_template_->Instantiate(cts->inner_job_ids_,
+                                        cts->outer_job_ids_,
+                                        cts->parameters_,
+                                        cts->physical_ids_,
+                                        this);
+  }
 }
 
 void
 SchedulerClient::set_scheduler_command_table(SchedulerCommand::PrototypeTable* cmt) {
   scheduler_command_table_ = cmt;
+}
+
+void SchedulerClient::PushCommandToTheQueue(SchedulerCommand *command) {
+  boost::mutex::scoped_lock lock(command_queue_mutex_);
+  received_commands_.push_back(command);
 }
 
 }  // namespace nimbus

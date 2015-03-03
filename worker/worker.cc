@@ -512,6 +512,9 @@ void Worker::LoadSchedulerCommands() {
   scheduler_command_table_[SchedulerCommand::SAVE_DATA] = new SaveDataCommand();
   scheduler_command_table_[SchedulerCommand::LOAD_DATA] = new LoadDataCommand();
   scheduler_command_table_[SchedulerCommand::PREPARE_REWIND] = new PrepareRewindCommand();
+  scheduler_command_table_[SchedulerCommand::START_COMMAND_TEMPLATE] = new StartCommandTemplateCommand(); // NOLINT
+  scheduler_command_table_[SchedulerCommand::END_COMMAND_TEMPLATE] = new EndCommandTemplateCommand(); //NOLINT
+  scheduler_command_table_[SchedulerCommand::SPAWN_COMMAND_TEMPLATE] = new SpawnCommandTemplateCommand(); // NOLINT
 }
 
 worker_id_t Worker::id() {

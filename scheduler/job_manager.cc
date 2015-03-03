@@ -57,11 +57,6 @@ JobManager::JobManager() {
   log_.set_file_name("log_job_manager");
   checkpoint_creation_rate_ = DEFAULT_CHECKPOINT_CREATION_RATE;
   non_sterile_counter_ = 0;
-
-  // HACK
-  HACK_last_template_ = "";
-  HACK_middle_projection_loop_ = false;
-  // HACK
 }
 
 JobManager::~JobManager() {
@@ -183,6 +178,23 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
     non_sterile_jobs_[job_id] = job;
   }
 
+  // set parent_job_name for non-sterile jobs.
+  if (!job->sterile()) {
+    JobEntry *parent_job = NULL;
+    ComplexJobEntry *xj = NULL;
+    if (GetJobEntryFromJobGraph(job->parent_job_id(), parent_job)) {
+      assert(!parent_job->sterile());
+      job->set_parent_job_name(parent_job->job_name());
+    } else if (GetComplexJobContainer(job->parent_job_id(), xj)) {
+      ShadowJobEntry *sj = NULL;
+      if (!xj->OMIDGetShadowJobEntryById(job->parent_job_id(), sj)) {
+        assert(false);
+      }
+      assert(!sj->sterile());
+      job->set_parent_job_name(sj->job_name());
+    }
+  }
+
   return job;
 }
 
@@ -219,16 +231,24 @@ bool JobManager::AddComplexJobEntry(ComplexJobEntry* complex_job) {
   }
 
 
-  // HACK
-  TemplateEntry *te = complex_job->template_entry();
-  if ((HACK_last_template_ == "projection_loop_iteration") &&
-      (te->template_name() == "projection_loop_iteration")) {
-    HACK_middle_projection_loop_ = true;
-  } else {
-    HACK_middle_projection_loop_ = false;
+  // set parent and grand parent job names for complex jobs.
+  {
+    JobEntry *parent_job = NULL;
+    ComplexJobEntry *xj = NULL;
+    if (GetJobEntryFromJobGraph(complex_job->parent_job_id(), parent_job)) {
+      assert(!parent_job->sterile());
+      complex_job->set_parent_job_name(parent_job->job_name());
+      complex_job->set_grand_parent_job_name(parent_job->parent_job_name());
+    } else if (GetComplexJobContainer(complex_job->parent_job_id(), xj)) {
+      ShadowJobEntry *sj = NULL;
+      if (!xj->OMIDGetShadowJobEntryById(complex_job->parent_job_id(), sj)) {
+        assert(false);
+      }
+      assert(!sj->sterile());
+      complex_job->set_parent_job_name(sj->job_name());
+      complex_job->set_grand_parent_job_name(xj->parent_job_name());
+    }
   }
-  HACK_last_template_ = te->template_name();
-  // HACK
 
 
   return true;
@@ -277,6 +297,8 @@ JobEntry* JobManager::AddMainJobEntry(const job_id_t& job_id) {
   version_manager_.AddJobEntry(job);
 
   jobs_ready_to_assign_[job_id] = job;
+
+  job->set_parent_job_name(NIMBUS_KERNEL_JOB_NAME);
 
   return job;
 }
@@ -724,36 +746,27 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
     if (job->job_type() == JOB_CMPX) {
       ComplexJobEntry* complex_job = reinterpret_cast<ComplexJobEntry*>(job);
       TemplateEntry *te = complex_job->template_entry();
+      std::string grand_parent_name = complex_job->grand_parent_job_name();
+      assert(grand_parent_name != "");
       BindingTemplate *bt = NULL;
-
-      // HACK
-      bool HACK_memoize_binding = NIMBUS_BINDING_MEMOIZATION_ACTIVE;
-      // HACK
 
       if (NIMBUS_BINDING_MEMOIZATION_ACTIVE) {
         bool create_bt = true;
-        if (te->QueryBindingRecord(STATIC_BINDING_RECORD, bt)) {
+        if (te->QueryBindingRecord(STATIC_BINDING_RECORD, grand_parent_name, bt)) {
           create_bt = false;
           if (bt->finalized()) {
-            // HACK
-            if (HACK_middle_projection_loop_ ||
-                (te->template_name() != "projection_loop_iteration")) {
-              list->push_back(complex_job);
-              complex_job->set_binding_template(bt);
-              jobs_pending_to_assign_[complex_job->job_id()] = complex_job;
-              jobs_ready_to_assign_.erase(iter++);
-              num += bt->compute_job_num();
-              continue;
-            } else {
-              HACK_memoize_binding = false;
-            }
-            // HACK
+            list->push_back(complex_job);
+            complex_job->set_binding_template(bt);
+            jobs_pending_to_assign_[complex_job->job_id()] = complex_job;
+            jobs_ready_to_assign_.erase(iter++);
+            num += bt->compute_job_num();
+            continue;
           }
         }
 
         if (create_bt) {
           bt = new BindingTemplate(complex_job->inner_job_ids(), te);
-          if (!te->AddBindingRecord(STATIC_BINDING_RECORD, bt)) {
+          if (!te->AddBindingRecord(STATIC_BINDING_RECORD, grand_parent_name, bt)) {
             assert(false);
           }
         }
@@ -765,7 +778,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
       num += c_num;
       JobEntryList::iterator it = l.begin();
       for (; it != l.end(); ++it) {
-        (*it)->set_memoize_binding(HACK_memoize_binding);
+        (*it)->set_memoize_binding(NIMBUS_BINDING_MEMOIZATION_ACTIVE);
         (*it)->set_binding_template(bt);
         list->push_back(*it);
         jobs_pending_to_assign_[(*it)->job_id()] = *it;
@@ -1026,7 +1039,9 @@ void JobManager::UpdateBeforeSet(IDSet<job_id_t>* before_set) {
 }
 
 bool JobManager::CausingUnwantedSerialization(JobEntry* job,
-    const logical_data_id_t& l_id, const PhysicalData& pd) {
+                                              const logical_data_id_t& l_id,
+                                              const PhysicalData& pd,
+                                              bool memoizing_mode) {
   bool result = false;
 
   if (!job->write_set_p()->contains(l_id)) {
@@ -1038,7 +1053,9 @@ bool JobManager::CausingUnwantedSerialization(JobEntry* job,
     JobEntry *j = NULL;
     ComplexJobEntry *xj = NULL;
     if (GetJobEntryFromJobGraph(*iter, j)) {
-      if ((!j->done()) &&
+      // if in memoizing_mode job done should NOT considered, cause it depdends
+      // on runtime variations and lead to damaging parallelism -omidm
+      if (((!j->done()) || memoizing_mode) &&
           (j->job_type() == JOB_COMP || job->job_type() == JOB_CMPX) &&
           // (!job->before_set_p()->contains(*iter))) {
           // the job may not be in the immediate before set but still there is
@@ -1051,7 +1068,9 @@ bool JobManager::CausingUnwantedSerialization(JobEntry* job,
       assert(job->job_type() == JOB_SHDW);
       ShadowJobEntry *sj;
       xj->OMIDGetShadowJobEntryById(*iter, sj);
-      if ((!xj->ShadowJobDone(*iter)) &&
+      // if in memoizing_mode job done should NOT considered, cause it depdends
+      // on runtime variations and lead to damaging parallelism -omidm
+      if (((!xj->ShadowJobDone(*iter)) || memoizing_mode) &&
           // (!job->before_set_p()->contains(*iter))) {
           // the job may not be in the immediate before set but still there is
           // indirect dependency. so we need to look through meta before set.

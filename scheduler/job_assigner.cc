@@ -472,7 +472,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     // BINDING MEMOIZE - omidm
 
     log_job_manager_.log_ResumeTimer();
-    if (job_manager_->CausingUnwantedSerialization(job, l_id, target_instance)) {
+    if (job_manager_->CausingUnwantedSerialization(job, l_id, target_instance, memoize_binding)) {
       dbg(DBG_ERROR, "Why serializing!!\n");
       dbg(DBG_SCHED, "Causing unwanted serialization for data %lu.\n", l_id);
       assert(false);
@@ -514,7 +514,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     PhysicalDataList::iterator iter;
     for (iter = instances_at_worker.begin(); iter != instances_at_worker.end(); iter++) {
       log_job_manager_.log_ResumeTimer();
-      if (!job_manager_->CausingUnwantedSerialization(job, l_id, *iter)) {
+      if (!job_manager_->CausingUnwantedSerialization(job, l_id, *iter, memoize_binding)) {
         log_job_manager_.log_StopTimer();
         target_instance = *iter;
         found = true;
@@ -579,7 +579,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     PhysicalData target_instance;
 
     log_job_manager_.log_ResumeTimer();
-    if (!job_manager_->CausingUnwantedSerialization(job, l_id, *instances_at_worker.begin())) {
+    if (!job_manager_->CausingUnwantedSerialization(job, l_id, *instances_at_worker.begin(), memoize_binding)) { //NOLINT
       log_job_manager_.log_StopTimer();
       target_instance = *instances_at_worker.begin();
 
@@ -637,7 +637,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     PhysicalData target_instance;
 
     log_job_manager_.log_ResumeTimer();
-    if (!job_manager_->CausingUnwantedSerialization(job, l_id, *instances_at_worker.begin())) {
+    if (!job_manager_->CausingUnwantedSerialization(job, l_id, *instances_at_worker.begin(), memoize_binding)) { // NOLINT
       log_job_manager_.log_StopTimer();
       target_instance = *instances_at_worker.begin();
       PhysicalData copy_data;

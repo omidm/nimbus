@@ -33,51 +33,51 @@
  */
 
  /*
-  * A SpawnTemplateCommand is a message sent from a worker to the
-  * controller to spawn an instance of the job graph template.
+  * A SpawnCommandTemplateCommand is a message sent from a controller to the
+  * worker to instantiate a command template at worker.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "shared/spawn_template_command.h"
+#include "shared/spawn_command_template_command.h"
 
 using namespace nimbus;  // NOLINT
 using boost::tokenizer;
 using boost::char_separator;
 
-SpawnTemplateCommand::SpawnTemplateCommand() {
-  name_ = SPAWN_TEMPLATE_NAME;
-  type_ = SPAWN_TEMPLATE;
+SpawnCommandTemplateCommand::SpawnCommandTemplateCommand() {
+  name_ = SPAWN_COMMAND_TEMPLATE_NAME;
+  type_ = SPAWN_COMMAND_TEMPLATE;
 }
 
-SpawnTemplateCommand::SpawnTemplateCommand(const std::string& job_graph_name,
-                                           const std::vector<job_id_t>& inner_job_ids,
-                                           const std::vector<job_id_t>& outer_job_ids,
-                                           const std::vector<Parameter>& parameters,
-                                           const ID<job_id_t>& parent_job_id)
-  : job_graph_name_(job_graph_name),
+SpawnCommandTemplateCommand::SpawnCommandTemplateCommand(const std::string& command_template_name,
+                                                   const std::vector<job_id_t>& inner_job_ids,
+                                                   const std::vector<job_id_t>& outer_job_ids,
+                                                   const std::vector<Parameter>& parameters,
+                                                   const std::vector<physical_data_id_t>& phy_ids)
+  : command_template_name_(command_template_name),
     inner_job_ids_(inner_job_ids),
     outer_job_ids_(outer_job_ids),
     parameters_(parameters),
-    parent_job_id_(parent_job_id) {
-  name_ = SPAWN_TEMPLATE_NAME;
-  type_ = SPAWN_TEMPLATE;
+    phy_ids_(phy_ids) {
+  name_ = SPAWN_COMMAND_TEMPLATE_NAME;
+  type_ = SPAWN_COMMAND_TEMPLATE;
 }
 
-SpawnTemplateCommand::~SpawnTemplateCommand() {
+SpawnCommandTemplateCommand::~SpawnCommandTemplateCommand() {
 }
 
-SchedulerCommand* SpawnTemplateCommand::Clone() {
-  return new SpawnTemplateCommand();
+SchedulerCommand* SpawnCommandTemplateCommand::Clone() {
+  return new SpawnCommandTemplateCommand();
 }
 
 
-bool SpawnTemplateCommand::Parse(const std::string& data) {
-  SpawnTemplatePBuf buf;
+bool SpawnCommandTemplateCommand::Parse(const std::string& data) {
+  SpawnCommandTemplatePBuf buf;
   bool result = buf.ParseFromString(data);
 
   if (!result) {
-    dbg(DBG_ERROR, "ERROR: Failed to parse SpawnTemplateCommand from string.\n");
+    dbg(DBG_ERROR, "ERROR: Failed to parse SpawnCommandTemplateCommand from string.\n");
     return false;
   } else {
     ReadFromProtobuf(buf);
@@ -85,23 +85,23 @@ bool SpawnTemplateCommand::Parse(const std::string& data) {
   }
 }
 
-bool SpawnTemplateCommand::Parse(const SchedulerPBuf& buf) {
-  if (!buf.has_spawn_template()) {
-    dbg(DBG_ERROR, "ERROR: Failed to parse SpawnTemplateCommand from SchedulerPBuf.\n");
+bool SpawnCommandTemplateCommand::Parse(const SchedulerPBuf& buf) {
+  if (!buf.has_spawn_command_template()) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse SpawnCommandTemplateCommand from SchedulerPBuf.\n");
     return false;
   } else {
-    return ReadFromProtobuf(buf.spawn_template());
+    return ReadFromProtobuf(buf.spawn_command_template());
   }
 }
 
-std::string SpawnTemplateCommand::ToNetworkData() {
+std::string SpawnCommandTemplateCommand::ToNetworkData() {
   std::string result;
 
   // First we construct a general scheduler buffer, then
-  // add the spawn template field to it, then serialize.
+  // add the spawn job_graph field to it, then serialize.
   SchedulerPBuf buf;
-  buf.set_type(SchedulerPBuf_Type_SPAWN_TEMPLATE);
-  SpawnTemplatePBuf* cmd = buf.mutable_spawn_template();
+  buf.set_type(SchedulerPBuf_Type_SPAWN_COMMAND_TEMPLATE);
+  SpawnCommandTemplatePBuf* cmd = buf.mutable_spawn_command_template();
   WriteToProtobuf(cmd);
 
   buf.SerializeToString(&result);
@@ -109,38 +109,36 @@ std::string SpawnTemplateCommand::ToNetworkData() {
   return result;
 }
 
-std::string SpawnTemplateCommand::ToString() {
+std::string SpawnCommandTemplateCommand::ToString() {
   // TODO(omidm) complete the implementation!
   std::string str;
   str += (name_ + " ");
-  str += ("name:" + job_graph_name_ + ",");
-  str += ("parent-id:" + parent_job_id_.ToNetworkData() + ",");
+  str += ("name:" + command_template_name_ + ", ...");
   return str;
 }
 
-std::string SpawnTemplateCommand::job_graph_name() {
-  return job_graph_name_;
+std::string SpawnCommandTemplateCommand::command_template_name() {
+  return command_template_name_;
 }
 
-std::vector<job_id_t> SpawnTemplateCommand::inner_job_ids() {
+std::vector<job_id_t> SpawnCommandTemplateCommand::inner_job_ids() {
   return inner_job_ids_;
 }
 
-std::vector<job_id_t> SpawnTemplateCommand::outer_job_ids() {
+std::vector<job_id_t> SpawnCommandTemplateCommand::outer_job_ids() {
   return outer_job_ids_;
 }
 
-std::vector<Parameter> SpawnTemplateCommand::parameters() {
+std::vector<Parameter> SpawnCommandTemplateCommand::parameters() {
   return parameters_;
 }
 
-ID<job_id_t> SpawnTemplateCommand::parent_job_id() {
-  return parent_job_id_;
+std::vector<job_id_t> SpawnCommandTemplateCommand::phy_ids() {
+  return phy_ids_;
 }
 
-
-bool SpawnTemplateCommand::ReadFromProtobuf(const SpawnTemplatePBuf& buf) {
-  job_graph_name_ = buf.job_graph_name();
+bool SpawnCommandTemplateCommand::ReadFromProtobuf(const SpawnCommandTemplatePBuf& buf) {
+  command_template_name_ = buf.command_template_name();
 
   {
     inner_job_ids_.clear();
@@ -169,14 +167,20 @@ bool SpawnTemplateCommand::ReadFromProtobuf(const SpawnTemplatePBuf& buf) {
       parameters_.push_back(p);
     }
   }
-
-  parent_job_id_.set_elem(buf.parent_job_id());
+  {
+    phy_ids_.clear();
+    typename google::protobuf::RepeatedField<physical_data_id_t>::const_iterator it =
+      buf.phy_ids().ids().begin();
+    for (; it != buf.phy_ids().ids().end(); ++it) {
+      phy_ids_.push_back(*it);
+    }
+  }
 
   return true;
 }
 
-bool SpawnTemplateCommand::WriteToProtobuf(SpawnTemplatePBuf* buf) {
-  buf->set_job_graph_name(job_graph_name());
+bool SpawnCommandTemplateCommand::WriteToProtobuf(SpawnCommandTemplatePBuf* buf) {
+  buf->set_command_template_name(command_template_name());
 
   {
     typename google::protobuf::RepeatedField<job_id_t> *b =
@@ -201,8 +205,14 @@ bool SpawnTemplateCommand::WriteToProtobuf(SpawnTemplatePBuf* buf) {
       b->add_params(it->ser_data().ToNetworkData());
     }
   }
-
-  buf->set_parent_job_id(parent_job_id().elem());
+  {
+    typename google::protobuf::RepeatedField<physical_data_id_t> *b =
+      buf->mutable_phy_ids()->mutable_ids();
+    std::vector<physical_data_id_t>::const_iterator it = phy_ids_.begin();
+    for (; it != phy_ids_.end(); ++it) {
+      b->Add(*it);
+    }
+  }
 
   return true;
 }

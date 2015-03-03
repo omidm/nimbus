@@ -131,9 +131,11 @@ class TemplateEntry {
                               std::list<size_t>* indices);
 
     bool AddBindingRecord(size_t binding_tag,
+                          std::string grand_parent_name,
                           BindingTemplate* binding_template);
 
     bool QueryBindingRecord(size_t binding_tag,
+                            std::string grand_parent_name,
                             BindingTemplate*& binding_template);
 
   private:
@@ -186,7 +188,7 @@ class TemplateEntry {
     typedef boost::unordered_map<data_version_t, Bucket*> VersionIndex;
     typedef boost::unordered_map<logical_data_id_t, VersionIndex*> AccessIndex;
 
-    typedef boost::unordered_map<size_t, BindingTemplate*> BindingMap;
+    typedef boost::unordered_map<std::string, BindingTemplate*> BindingMap;
 
     std::string template_name_;
 

@@ -83,6 +83,8 @@ class JobEntry {
 
     virtual JobType job_type() const;
     virtual std::string job_name() const;
+    virtual std::string parent_job_name() const;
+    virtual std::string grand_parent_job_name() const;
     virtual job_id_t job_id() const;
     virtual IDSet<logical_data_id_t> read_set() const;
     virtual IDSet<logical_data_id_t> write_set() const;
@@ -125,6 +127,8 @@ class JobEntry {
 
     virtual void set_job_type(JobType job_type);
     virtual void set_job_name(std::string job_name);
+    virtual void set_parent_job_name(std::string parent_job_name);
+    virtual void set_grand_parent_job_name(std::string grand_parent_job_name);
     virtual void set_job_id(job_id_t job_id);
     virtual void set_read_set(IDSet<logical_data_id_t> read_set);
     virtual void set_write_set(IDSet<logical_data_id_t> write_set);
@@ -181,6 +185,8 @@ class JobEntry {
   protected:
     JobType job_type_;
     std::string job_name_;
+    std::string parent_job_name_;
+    std::string grand_parent_job_name_;
     job_id_t job_id_;
     IDSet<logical_data_id_t> read_set_;
     IDSet<logical_data_id_t> write_set_;

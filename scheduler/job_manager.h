@@ -165,7 +165,8 @@ class JobManager {
 
     bool CausingUnwantedSerialization(JobEntry* job,
                                       const logical_data_id_t& l_id,
-                                      const PhysicalData& pd);
+                                      const PhysicalData& pd,
+                                      bool memoizing_mode = false);
 
   private:
     Log log_;
@@ -188,11 +189,6 @@ class JobManager {
     JobEntryMap jobs_ready_to_assign_;
     JobEntryMap jobs_pending_to_assign_;
     boost::recursive_mutex job_queue_mutex_;
-
-    // HACK
-    std::string HACK_last_template_;
-    bool HACK_middle_projection_loop_;
-    // HACK
 
     bool AddJobEntryToJobGraph(job_id_t job_id, JobEntry *job);
 

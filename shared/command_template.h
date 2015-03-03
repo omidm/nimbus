@@ -33,15 +33,14 @@
  */
 
  /*
-  * This is BindingTemplate module to hold and instantiate copy and compute
-  * commands sent to workers to bind physical data to a batch of jobs in a
-  * template complex job.
+  * This is CommandTemplate module to hold and instantiate a set of commands
+  * sent from controller to worker.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_BINDING_TEMPLATE_H_
-#define NIMBUS_SCHEDULER_BINDING_TEMPLATE_H_
+#ifndef NIMBUS_SHARED_COMMAND_TEMPLATE_H_
+#define NIMBUS_SHARED_COMMAND_TEMPLATE_H_
 
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
@@ -58,94 +57,45 @@
 #include <map>
 #include <set>
 #include "shared/nimbus_types.h"
-#include "shared/scheduler_server.h"
 #include "shared/scheduler_command_include.h"
 #include "shared/dbg.h"
 #include "shared/log.h"
 
 namespace nimbus {
 
-class TemplateEntry;
+class SchedulerClient;
 
-class BindingTemplate {
+class CommandTemplate {
   public:
-    BindingTemplate(const std::vector<job_id_t>& compute_job_ids,
-                    TemplateEntry* template_entry);
+    CommandTemplate(const std::string& command_template_name,
+                    const std::vector<job_id_t>& inner_job_ids,
+                    const std::vector<job_id_t>& outer_job_ids,
+                    const std::vector<physical_data_id_t>& phy_ids);
 
-    ~BindingTemplate();
+    ~CommandTemplate();
 
 
     bool finalized();
     size_t copy_job_num();
     size_t compute_job_num();
+    std::string command_template_name();
 
-    void set_command_template_name(std::string name);
 
-    bool Finalize(const std::vector<job_id_t>& compute_job_ids);
+    bool Finalize();
 
-    bool Instantiate(const std::vector<job_id_t>& compute_job_ids,
+    bool Instantiate(const std::vector<job_id_t>& inner_job_ids,
+                     const std::vector<job_id_t>& outer_job_ids,
                      const std::vector<Parameter>& parameters,
-                     const std::vector<job_id_t>& copy_job_ids,
-                     const std::vector<physical_data_id_t> physical_ids,
-                     SchedulerServer *server);
+                     const std::vector<physical_data_id_t>& physical_ids,
+                     SchedulerClient *client);
 
-    enum VERSION_TYPE {
-      REGULAR,
-      WILD_CARD
-    };
+    bool AddComputeJobCommand(ComputeJobCommand* command);
 
-    class PatternEntry {
-      public:
-        PatternEntry(const worker_id_t& worker_id,
-                     const logical_data_id_t& ldid,
-                     const physical_data_id_t& pdid,
-                     VERSION_TYPE version_type,
-                     data_version_t version_diff_from_base)
-          : worker_id_(worker_id),
-            ldid_(ldid),
-            pdid_(pdid),
-            version_type_(version_type),
-            version_diff_from_base_(version_diff_from_base) {}
+    bool AddLocalCopyCommand(LocalCopyCommand* command);
 
-        ~PatternEntry();
+    bool AddRemoteCopySendCommand(RemoteCopySendCommand* command);
 
-        worker_id_t worker_id_;
-        logical_data_id_t ldid_;
-        physical_data_id_t pdid_;
-        VERSION_TYPE version_type_;
-        data_version_t version_diff_from_base_;
-    };
-
-    typedef std::vector<PatternEntry*> PatternList;
-    typedef boost::unordered_map<physical_data_id_t, PatternEntry*> PatternMap;
-    typedef std::pair<PatternList*, PatternList*> PatternBucket;
-    typedef boost::unordered_map<logical_data_id_t, PatternBucket> PatternSorted;
-    typedef std::vector<std::pair<size_t, size_t> > PatternMetaData;
-
-    const PatternMetaData* patterns_meta_data_p() const;
-    const PatternList* entry_pattern_list_p() const;
-    const PatternList* end_pattern_list_p() const;
-
-    bool TrackDataObject(const worker_id_t& worker_id,
-                         const logical_data_id_t& ldid,
-                         const physical_data_id_t& pdid,
-                         VERSION_TYPE version_type,
-                         data_version_t version_diff_from_base);
-
-    bool UpdateDataObject(const physical_data_id_t& pdid,
-                          data_version_t version_diff_from_base);
-
-    bool AddComputeJobCommand(ComputeJobCommand* command,
-                              worker_id_t w_id);
-
-    bool AddLocalCopyCommand(LocalCopyCommand* command,
-                             worker_id_t w_id);
-
-    bool AddRemoteCopySendCommand(RemoteCopySendCommand* command,
-                                  worker_id_t w_id);
-
-    bool AddRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* command,
-                                     worker_id_t w_id);
+    bool AddRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* command);
 
   private:
     typedef boost::shared_ptr<job_id_t> JobIdPtr;
@@ -158,6 +108,7 @@ class BindingTemplate {
     typedef boost::unordered_set<PhyIdPtr> PhyIdPtrSet;
     typedef boost::unordered_map<job_id_t, PhyIdPtr> PhyIdPtrMap;
 
+
     enum CommandTemplateType {
       BASE,
       COMPUTE,
@@ -166,17 +117,17 @@ class BindingTemplate {
       RCR
     };
 
-    class CommandTemplate {
+    class BaseCommandTemplate {
       public:
-        CommandTemplate() {type_ = BASE;}
-        ~CommandTemplate() {}
+        BaseCommandTemplate() {type_ = BASE;}
+        ~BaseCommandTemplate() {}
 
         CommandTemplateType type_;
     };
 
-    typedef std::vector<CommandTemplate*> CommandTemplateVector;
+    typedef std::vector<BaseCommandTemplate*> CommandTemplateVector;
 
-    class ComputeJobCommandTemplate : public CommandTemplate {
+    class ComputeJobCommandTemplate : public BaseCommandTemplate {
       public:
         ComputeJobCommandTemplate(const std::string& job_name,
                                   JobIdPtr job_id_ptr,
@@ -214,7 +165,7 @@ class BindingTemplate {
         size_t param_index_;
     };
 
-    class LocalCopyCommandTemplate : public CommandTemplate {
+    class LocalCopyCommandTemplate : public BaseCommandTemplate {
       public:
         LocalCopyCommandTemplate(JobIdPtr job_id_ptr,
                                  PhyIdPtr from_physical_data_id_ptr,
@@ -237,7 +188,7 @@ class BindingTemplate {
     };
 
 
-    class RemoteCopySendCommandTemplate : public CommandTemplate {
+    class RemoteCopySendCommandTemplate : public BaseCommandTemplate {
       public:
         RemoteCopySendCommandTemplate(JobIdPtr job_id_ptr,
                                       JobIdPtr receive_job_id_ptr,
@@ -268,7 +219,7 @@ class BindingTemplate {
         worker_id_t worker_id_;
     };
 
-    class RemoteCopyReceiveCommandTemplate : public CommandTemplate {
+    class RemoteCopyReceiveCommandTemplate : public BaseCommandTemplate {
       public:
         RemoteCopyReceiveCommandTemplate(JobIdPtr job_id_ptr,
                                          PhyIdPtr to_physical_data_id_ptr,
@@ -289,76 +240,43 @@ class BindingTemplate {
 
 
     bool finalized_;
-    bool established_command_template_;
-    TemplateEntry *template_entry_;
+    size_t compute_job_num_;
+    size_t copy_job_num_;
     std::string command_template_name_;
     // Currently we do not support future job - omidm
     JobIdPtr future_job_id_ptr_;
 
-    PatternSorted ordered_entry_patterns_;
-
-    PatternMetaData patterns_meta_data_;
-
-    PatternMap entry_pattern_map_;
-    PatternList entry_pattern_list_;
-
-    PatternMap end_pattern_map_;
-    PatternList end_pattern_list_;
-
     PhyIdPtrMap phy_id_map_;
     PhyIdPtrList phy_id_list_;
 
-    JobIdPtrMap copy_job_id_map_;
-    JobIdPtrList copy_job_id_list_;
+    JobIdPtrMap inner_job_id_map_;
+    JobIdPtrList inner_job_id_list_;
 
-    JobIdPtrMap compute_job_id_map_;
-    JobIdPtrList compute_job_id_list_;
+    JobIdPtrMap outer_job_id_map_;
+    JobIdPtrList outer_job_id_list_;
 
     CommandTemplateVector command_templates_;
 
-    std::map<job_id_t, ComputeJobCommandTemplate*> job_to_command_map_;
-
-
-    typedef boost::unordered_map<job_id_t, std::set<worker_id_t> > JobWorkerMap;
-    typedef boost::unordered_map<physical_data_id_t, std::set<worker_id_t> > PhyWorkerMap;
-    JobWorkerMap job_worker_map_;
-    PhyWorkerMap phy_worker_map_;
-    std::set<worker_id_t> worker_ids_;
-
-    std::map<worker_id_t, JobIdPtrList> worker_job_ids_;
-    std::map<worker_id_t, PhyIdPtrList> worker_phy_ids_;
-    std::map<worker_id_t, std::vector<size_t> > worker_parameter_indices_;
-
     mutable boost::mutex mutex_;
 
-    JobIdPtr GetCopyJobIdPtr(job_id_t job_id);
-    bool GetCopyJobIdPtrIfExisted(job_id_t job_id, JobIdPtr *job_id_ptr);
 
-    JobIdPtr GetExistingComputeJobIdPtr(job_id_t job_id);
-    bool GetComputeJobIdPtrIfExisted(job_id_t job_id, JobIdPtr *job_id_ptr);
+    JobIdPtr GetExistingInnerJobIdPtr(job_id_t job_id);
 
     PhyIdPtr GetExistingPhyIdPtr(physical_data_id_t pdid);
 
 
-    void SendCommandTemplateHeaderToWorkers(SchedulerServer *server);
-
-    void SendCommandTemplateFinalizeToWorkers(SchedulerServer *server);
-
-    void SpawnCommandTemplateAtWorkers(const std::vector<Parameter>& parameters,
-                                       SchedulerServer *server);
-
-    void SendComputeJobCommand(ComputeJobCommandTemplate* command,
+    void PushComputeJobCommand(ComputeJobCommandTemplate* command,
                                const Parameter& parameter,
-                               SchedulerServer *server);
+                               SchedulerClient *client);
 
-    void SendLocalCopyCommand(LocalCopyCommandTemplate* command,
-                              SchedulerServer *server);
+    void PushLocalCopyCommand(LocalCopyCommandTemplate* command,
+                              SchedulerClient *client);
 
-    void SendRemoteCopySendCommand(RemoteCopySendCommandTemplate* command,
-                                   SchedulerServer *server);
+    void PushRemoteCopySendCommand(RemoteCopySendCommandTemplate* command,
+                                   SchedulerClient *client);
 
-    void SendRemoteCopyReceiveCommand(RemoteCopyReceiveCommandTemplate* command,
-                                      SchedulerServer *server);
+    void PushRemoteCopyReceiveCommand(RemoteCopyReceiveCommandTemplate* command,
+                                      SchedulerClient *client);
 };
 }  // namespace nimbus
-#endif  // NIMBUS_SCHEDULER_BINDING_TEMPLATE_H_
+#endif  // NIMBUS_SHARED_COMMAND_TEMPLATE_H_

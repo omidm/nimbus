@@ -211,6 +211,14 @@ size_t ComplexJobEntry::GetShadowJobsForAssignment(JobEntryList* list,
       break;
     } else {
       template_entry_->AdvanceCursorForAssignment(&cursor_);
+      // For multi-threaded assignment to work when we Finalize the binding
+      // template, the last job needs to be assigned in a batch by it's own and
+      // all other jobs needs to be assigned in previous batches. Otherwise,
+      // there could be a race - Finalize gets called before all jobs are
+      // assigned. -omidm
+      if (cursor_.state() == Cursor::END_ALL) {
+        break;
+      }
     }
   }
 
