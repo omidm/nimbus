@@ -33,32 +33,34 @@
  */
 
  /*
-  * A StartCommandTemplateCommand is a message sent from a controller to the
-  * worker to mark the definition of command template.
+  * A SpawnCommandTemplateCommand is a message sent from a controller to the
+  * worker to instantiate a command template at worker.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SHARED_START_COMMAND_TEMPLATE_COMMAND_H_
-#define NIMBUS_SHARED_START_COMMAND_TEMPLATE_COMMAND_H_
+#ifndef NIMBUS_SHARED_SPAWN_COMMAND_TEMPLATE_COMMAND_H_
+#define NIMBUS_SHARED_SPAWN_COMMAND_TEMPLATE_COMMAND_H_
 
 
 #include <string>
 #include <vector>
 #include "shared/scheduler_command.h"
+#include "shared/parameter.h"
 #include "shared/protobuf_compiled/commands.pb.h"
 
 namespace nimbus {
-class StartCommandTemplateCommand : public SchedulerCommand {
+class SpawnCommandTemplateCommand : public SchedulerCommand {
   public:
-    StartCommandTemplateCommand();
+    SpawnCommandTemplateCommand();
 
-    StartCommandTemplateCommand(const std::string& command_template_name,
+    SpawnCommandTemplateCommand(const std::string& command_template_name,
                                 const std::vector<job_id_t>& inner_job_ids,
                                 const std::vector<job_id_t>& outer_job_ids,
+                                const std::vector<Parameter>& parameters,
                                 const std::vector<physical_data_id_t>& phy_ids);
 
-    ~StartCommandTemplateCommand();
+    ~SpawnCommandTemplateCommand();
 
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);
@@ -68,18 +70,20 @@ class StartCommandTemplateCommand : public SchedulerCommand {
     std::string command_template_name();
     std::vector<job_id_t> inner_job_ids();
     std::vector<job_id_t> outer_job_ids();
+    std::vector<Parameter> parameters();
     std::vector<physical_data_id_t> phy_ids();
 
   private:
     std::string command_template_name_;
     std::vector<job_id_t> inner_job_ids_;
     std::vector<job_id_t> outer_job_ids_;
+    std::vector<Parameter> parameters_;
     std::vector<physical_data_id_t> phy_ids_;
 
-    bool ReadFromProtobuf(const StartCommandTemplatePBuf& buf);
-    bool WriteToProtobuf(StartCommandTemplatePBuf* buf);
+    bool ReadFromProtobuf(const SpawnCommandTemplatePBuf& buf);
+    bool WriteToProtobuf(SpawnCommandTemplatePBuf* buf);
 };
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_START_COMMAND_TEMPLATE_COMMAND_H_
+#endif  // NIMBUS_SHARED_SPAWN_COMMAND_TEMPLATE_COMMAND_H_

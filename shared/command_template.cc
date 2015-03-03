@@ -40,6 +40,7 @@
   */
 
 #include "shared/command_template.h"
+#include "shared/scheduler_client.h"
 
 using namespace nimbus; // NOLINT
 

@@ -57,14 +57,13 @@
 #include <map>
 #include <set>
 #include "shared/nimbus_types.h"
-#include "shared/scheduler_client.h"
 #include "shared/scheduler_command_include.h"
 #include "shared/dbg.h"
 #include "shared/log.h"
 
 namespace nimbus {
 
-class TemplateEntry;
+class SchedulerClient;
 
 class CommandTemplate {
   public:
