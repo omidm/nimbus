@@ -319,7 +319,7 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
   }
 
   if (established_command_template_) {
-    SpawnCommandTemplateAtWorkers(server);
+    SpawnCommandTemplateAtWorkers(parameters, server);
     return true;
   }
 
@@ -406,9 +406,75 @@ void BindingTemplate::SendCommandTemplateHeaderToWorkers(SchedulerServer *server
 }
 
 void BindingTemplate::SendCommandTemplateFinalizeToWorkers(SchedulerServer *server) {
+  std::set<worker_id_t>::iterator iter = worker_ids_.begin();
+  for (; iter != worker_ids_.end(); ++iter) {
+    worker_id_t w_id = *iter;
+
+    EndCommandTemplateCommand cm(command_template_name_);
+
+    SchedulerWorker *worker;
+    if (!server->GetSchedulerWorkerById(worker, w_id)) {
+      assert(false);
+    }
+    server->SendCommand(worker, &cm);
+  }
 }
 
-void BindingTemplate::SpawnCommandTemplateAtWorkers(SchedulerServer *server) {
+void BindingTemplate::SpawnCommandTemplateAtWorkers(const std::vector<Parameter>& parameters,
+                                                    SchedulerServer *server) {
+  std::set<worker_id_t>::iterator iter = worker_ids_.begin();
+  for (; iter != worker_ids_.end(); ++iter) {
+    worker_id_t w_id = *iter;
+
+    std::vector<job_id_t> outer_job_ids;
+    std::vector<job_id_t> inner_job_ids;
+    {
+      std::map<worker_id_t, JobIdPtrList>::iterator it = worker_job_ids_.find(w_id);
+      assert(it != worker_job_ids_.end());
+      JobIdPtrList::iterator i = it->second.begin();
+      for (; i != it->second.end(); ++i) {
+        inner_job_ids.push_back(*(*i));
+      }
+    }
+
+    std::vector<Parameter> params;
+    {
+      std::map<worker_id_t, std::vector<size_t> >::iterator it =
+        worker_parameter_indices_.find(w_id);
+      assert(it != worker_parameter_indices_.end());
+      std::vector<size_t>::iterator i = it->second.begin();
+      for (; i != it->second.end(); ++i) {
+        assert((*i) <parameters.size());
+        params.push_back(parameters[*i]);
+      }
+    }
+
+
+
+
+
+    std::vector<physical_data_id_t> phy_ids;
+    {
+      std::map<worker_id_t, PhyIdPtrList>::iterator it = worker_phy_ids_.find(w_id);
+      assert(it != worker_phy_ids_.end());
+      PhyIdPtrList::iterator i = it->second.begin();
+      for (; i != it->second.end(); ++i) {
+        phy_ids.push_back(*(*i));
+      }
+    }
+
+    SpawnCommandTemplateCommand cm(command_template_name_,
+                                   inner_job_ids,
+                                   outer_job_ids,
+                                   params,
+                                   phy_ids);
+
+    SchedulerWorker *worker;
+    if (!server->GetSchedulerWorkerById(worker, w_id)) {
+      assert(false);
+    }
+    server->SendCommand(worker, &cm);
+  }
 }
 
 void BindingTemplate::SendComputeJobCommand(ComputeJobCommandTemplate* command,

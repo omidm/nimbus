@@ -344,7 +344,8 @@ class BindingTemplate {
 
     void SendCommandTemplateFinalizeToWorkers(SchedulerServer *server);
 
-    void SpawnCommandTemplateAtWorkers(SchedulerServer *server);
+    void SpawnCommandTemplateAtWorkers(const std::vector<Parameter>& parameters,
+                                       SchedulerServer *server);
 
     void SendComputeJobCommand(ComputeJobCommandTemplate* command,
                                const Parameter& parameter,
