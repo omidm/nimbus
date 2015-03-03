@@ -71,6 +71,7 @@ SchedulerClient::SchedulerClient(std::string scheduler_ip,
                                  port_t scheduler_port)
   : scheduler_ip_(scheduler_ip),
     scheduler_port_(scheduler_port) {
+      filling_template_ = false;
 }
 
 SchedulerClient::~SchedulerClient() {
@@ -163,15 +164,39 @@ size_t SchedulerClient::EnqueueCommands(char* buffer, size_t size) {
                                                           command)) {
         switch (command->type()) {
           case SchedulerCommand::START_COMMAND_TEMPLATE:
-            //
+            HandleStartCommandTemplateCommand(
+                reinterpret_cast<StartCommandTemplateCommand*>(command));
             break;
           case SchedulerCommand::END_COMMAND_TEMPLATE:
-            //
+            HandleEndCommandTemplateCommand(
+                reinterpret_cast<EndCommandTemplateCommand*>(command));
             break;
           case SchedulerCommand::SPAWN_COMMAND_TEMPLATE:
-            //
+            HandleSpawnCommandTemplateCommand(
+                reinterpret_cast<SpawnCommandTemplateCommand*>(command));
             break;
           default:
+            if (filling_template_) {
+              TemplateMap::iterator iter = template_map_.find(template_name_in_progress_);
+              assert(iter != template_map_.end());
+              CommandTemplate *ct = iter->second;
+              switch (command->type()) {
+                case SchedulerCommand::EXECUTE_COMPUTE:
+                  ct->AddComputeJobCommand(reinterpret_cast<ComputeJobCommand*>(command));
+                  break;
+                case SchedulerCommand::LOCAL_COPY:
+                  ct->AddLocalCopyCommand(reinterpret_cast<LocalCopyCommand*>(command));
+                  break;
+                case SchedulerCommand::REMOTE_SEND:
+                  ct->AddRemoteCopySendCommand(reinterpret_cast<RemoteCopySendCommand*>(command));
+                  break;
+                case SchedulerCommand::REMOTE_RECEIVE:
+                  ct->AddRemoteCopyReceiveCommand(reinterpret_cast<RemoteCopyReceiveCommand*>(command)); // NOLINT
+                  break;
+                default:
+                  break;
+              }
+            }
             dbg(DBG_NET, "Enqueueing command %s.\n", command->ToString().c_str());
             boost::mutex::scoped_lock lock(command_queue_mutex_);
             received_commands_.push_back(command);
@@ -188,6 +213,39 @@ size_t SchedulerClient::EnqueueCommands(char* buffer, size_t size) {
   }
 
   return total_read;
+}
+
+void SchedulerClient::HandleStartCommandTemplateCommand(StartCommandTemplateCommand *cm) {
+  std::string key = cm->command_template_name();
+  assert(template_map_.find(key) == template_map_.end());
+  CommandTemplate *ct = new CommandTemplate(key,
+                                            cm->inner_job_ids(),
+                                            cm->outer_job_ids(),
+                                            cm->phy_ids());
+  template_map_[key] = ct;
+  filling_template_ = true;
+  template_name_in_progress_ = key;
+}
+
+void SchedulerClient::HandleEndCommandTemplateCommand(EndCommandTemplateCommand *cm) {
+  assert(filling_template_);
+  std::string key = cm->command_template_name();
+  assert(template_name_in_progress_ == key);
+  TemplateMap::iterator iter = template_map_.find(key);
+  assert(iter != template_map_.end());
+  iter->second->Finalize();
+  filling_template_ = false;
+}
+
+void SchedulerClient::HandleSpawnCommandTemplateCommand(SpawnCommandTemplateCommand *cm) {
+  std::string key = cm->command_template_name();
+  TemplateMap::iterator iter = template_map_.find(key);
+  assert(iter != template_map_.end());
+  iter->second->Instantiate(cm->inner_job_ids(),
+                            cm->outer_job_ids(),
+                            cm->parameters(),
+                            cm->phy_ids(),
+                            this);
 }
 
 void SchedulerClient::HandleRead(const boost::system::error_code& error,

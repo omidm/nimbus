@@ -47,6 +47,7 @@
 #include <map>
 #include "shared/nimbus_types.h"
 #include "shared/scheduler_command_include.h"
+#include "shared/command_template.h"
 
 namespace nimbus {
 
@@ -99,6 +100,10 @@ class SchedulerClient {
   boost::mutex command_queue_mutex_;
   boost::mutex send_command_mutex_;
 
+  typedef std::map<std::string, CommandTemplate*> TemplateMap;
+  TemplateMap template_map_;
+  bool filling_template_;
+  std::string template_name_in_progress_;
 
   /** Create client socket, set up networking and state. */
   virtual bool Initialize();
@@ -120,6 +125,12 @@ class SchedulerClient {
       be less than size (for example, if the buffer end has an
       incomplete command. */
   virtual size_t EnqueueCommands(char* buffer, size_t size);
+
+  virtual void HandleStartCommandTemplateCommand(StartCommandTemplateCommand *cm);
+
+  virtual void HandleEndCommandTemplateCommand(EndCommandTemplateCommand *cm);
+
+  virtual void HandleSpawnCommandTemplateCommand(SpawnCommandTemplateCommand *cm);
 };
 
 }  // namespace nimbus
