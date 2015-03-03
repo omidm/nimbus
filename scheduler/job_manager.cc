@@ -54,7 +54,6 @@ JobManager::JobManager() {
 
   ldo_map_p_ = NULL;
   after_map_ = NULL;
-  log_.set_file_name("log_job_manager");
   checkpoint_creation_rate_ = DEFAULT_CHECKPOINT_CREATION_RATE;
   non_sterile_counter_ = 0;
 }
