@@ -119,67 +119,68 @@ bool CommandTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
                                   const std::vector<Parameter>& parameters,
                                   const std::vector<physical_data_id_t> physical_ids,
                                   SchedulerClient *client) {
-//  boost::unique_lock<boost::mutex> lock(mutex_);
-//  assert(finalized_);
-//  assert(compute_job_ids.size() == compute_job_id_list_.size());
-//  assert(copy_job_ids.size() == copy_job_id_list_.size());
-//  assert(physical_ids.size() == phy_id_list_.size());
-//
-//  {
-//    size_t idx = 0;
-//    JobIdPtrList::iterator iter = compute_job_id_list_.begin();
-//    for (; iter != compute_job_id_list_.end(); ++iter) {
-//      *(*iter) = compute_job_ids[idx];
-//      ++idx;
-//    }
-//  }
-//
-//  {
-//    size_t idx = 0;
-//    JobIdPtrList::iterator iter = copy_job_id_list_.begin();
-//    for (; iter != copy_job_id_list_.end(); ++iter) {
-//      *(*iter) = copy_job_ids[idx];
-//      ++idx;
-//    }
-//  }
-//
-//  {
-//    size_t idx = 0;
-//    PhyIdPtrList::iterator iter = phy_id_list_.begin();
-//    for (; iter != phy_id_list_.end(); ++iter) {
-//      *(*iter) = physical_ids[idx];
-//      ++idx;
-//    }
-//  }
-//
-//  ComputeJobCommandTemplate *cc;
-//  CommandTemplateVector::iterator iter = command_templates_.begin();
-//  for (; iter != command_templates_.end(); ++iter) {
-//    CommandTemplate *ct = *iter;
-//    switch (ct->type_) {
-//      case COMPUTE:
-//        cc = reinterpret_cast<ComputeJobCommandTemplate*>(ct);
-//        SendComputeJobCommand(cc,
-//                              parameters[cc->param_index_],
-//                              server);
-//        break;
-//      case LC:
-//        SendLocalCopyCommand(reinterpret_cast<LocalCopyCommandTemplate*>(ct),
-//                             server);
-//        break;
-//      case RCS:
-//        SendRemoteCopySendCommand(reinterpret_cast<RemoteCopySendCommandTemplate*>(ct),
-//                                  server);
-//        break;
-//      case RCR:
-//        SendRemoteCopyReceiveCommand(reinterpret_cast<RemoteCopyReceiveCommandTemplate*>(ct),
-//                                     server);
-//        break;
-//      default:
-//        assert(false);
-//    }
-//  }
-//
+  boost::unique_lock<boost::mutex> lock(mutex_);
+  assert(finalized_);
+  assert(inner_job_ids.size() == inner_job_id_list_.size());
+  assert(outer_job_ids.size() == outer_job_id_list_.size());
+  assert(physical_ids.size() == phy_id_list_.size());
+
+  {
+    size_t idx = 0;
+    JobIdPtrList::iterator iter = inner_job_id_list_.begin();
+    for (; iter != inner_job_id_list_.end(); ++iter) {
+      *(*iter) = inner_job_ids[idx];
+      ++idx;
+    }
+  }
+
+  {
+    size_t idx = 0;
+    JobIdPtrList::iterator iter = outer_job_id_list_.begin();
+    for (; iter != outer_job_id_list_.end(); ++iter) {
+      *(*iter) = outer_job_ids[idx];
+      ++idx;
+    }
+  }
+
+  {
+    size_t idx = 0;
+    PhyIdPtrList::iterator iter = phy_id_list_.begin();
+    for (; iter != phy_id_list_.end(); ++iter) {
+      *(*iter) = physical_ids[idx];
+      ++idx;
+    }
+  }
+
+  ComputeJobCommandTemplate *cc;
+  CommandTemplateVector::iterator iter = command_templates_.begin();
+  for (; iter != command_templates_.end(); ++iter) {
+    BaseCommandTemplate *ct = *iter;
+    switch (ct->type_) {
+      case COMPUTE:
+        cc = reinterpret_cast<ComputeJobCommandTemplate*>(ct);
+        assert(cc->param_index_ < parameters.size());
+        PushComputeJobCommand(cc,
+                              parameters[cc->param_index_],
+                              client);
+        break;
+      case LC:
+        PushLocalCopyCommand(reinterpret_cast<LocalCopyCommandTemplate*>(ct),
+                             client);
+        break;
+      case RCS:
+        PushRemoteCopySendCommand(reinterpret_cast<RemoteCopySendCommandTemplate*>(ct),
+                                  client);
+        break;
+      case RCR:
+        PushRemoteCopyReceiveCommand(reinterpret_cast<RemoteCopyReceiveCommandTemplate*>(ct),
+                                     client);
+        break;
+      default:
+        assert(false);
+    }
+  }
+
   return true;
 }
 
@@ -187,139 +188,127 @@ bool CommandTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
 void CommandTemplate::PushComputeJobCommand(ComputeJobCommandTemplate* command,
                                             const Parameter& parameter,
                                             SchedulerClient *client) {
-//  std::string job_name = command->job_name_;
-//  ID<job_id_t> job_id(*(command->job_id_ptr_));
-//  ID<job_id_t> future_job_id(*(command->future_job_id_ptr_));
-//
-//  IDSet<physical_data_id_t> read_set, write_set;
-//  IDSet<job_id_t> before_set, after_set;
-//
-//  {
-//    JobIdPtrSet::iterator it = command->before_set_ptr_.begin();
-//    for (; it != command->before_set_ptr_.end(); ++it) {
-//      before_set.insert(*(*it));
-//    }
-//  }
-//  {
-//    JobIdPtrSet::iterator it = command->after_set_ptr_.begin();
-//    for (; it != command->after_set_ptr_.end(); ++it) {
-//      after_set.insert(*(*it));
-//    }
-//  }
-//  {
-//    PhyIdPtrSet::iterator it = command->read_set_ptr_.begin();
-//    for (; it != command->read_set_ptr_.end(); ++it) {
-//      read_set.insert(*(*it));
-//    }
-//  }
-//  {
-//    PhyIdPtrSet::iterator it = command->write_set_ptr_.begin();
-//    for (; it != command->write_set_ptr_.end(); ++it) {
-//      write_set.insert(*(*it));
-//    }
-//  }
-//
-//  ComputeJobCommand cm(job_name,
-//                       job_id,
-//                       read_set,
-//                       write_set,
-//                       before_set,
-//                       after_set,
-//                       future_job_id,
-//                       command->sterile_,
-//                       command->region_,
-//                       parameter);
-//
-//  SchedulerWorker *worker;
-//  if (!server->GetSchedulerWorkerById(worker, command->worker_id_)) {
-//    assert(false);
-//  }
-//  server->SendCommand(worker, &cm);
+  std::string job_name = command->job_name_;
+  ID<job_id_t> job_id(*(command->job_id_ptr_));
+  ID<job_id_t> future_job_id(*(command->future_job_id_ptr_));
+
+  IDSet<physical_data_id_t> read_set, write_set;
+  IDSet<job_id_t> before_set, after_set;
+
+  {
+    JobIdPtrSet::iterator it = command->before_set_ptr_.begin();
+    for (; it != command->before_set_ptr_.end(); ++it) {
+      before_set.insert(*(*it));
+    }
+  }
+  {
+    JobIdPtrSet::iterator it = command->after_set_ptr_.begin();
+    for (; it != command->after_set_ptr_.end(); ++it) {
+      after_set.insert(*(*it));
+    }
+  }
+  {
+    PhyIdPtrSet::iterator it = command->read_set_ptr_.begin();
+    for (; it != command->read_set_ptr_.end(); ++it) {
+      read_set.insert(*(*it));
+    }
+  }
+  {
+    PhyIdPtrSet::iterator it = command->write_set_ptr_.begin();
+    for (; it != command->write_set_ptr_.end(); ++it) {
+      write_set.insert(*(*it));
+    }
+  }
+
+  ComputeJobCommand *cm =
+    new ComputeJobCommand(job_name,
+                          job_id,
+                          read_set,
+                          write_set,
+                          before_set,
+                          after_set,
+                          future_job_id,
+                          command->sterile_,
+                          command->region_,
+                          parameter);
+
+  client->PushCommandToTheQueue(cm);
 }
 
 void CommandTemplate::PushLocalCopyCommand(LocalCopyCommandTemplate* command,
                                            SchedulerClient *client) {
-//  ID<job_id_t> job_id(*(command->job_id_ptr_));
-//  ID<physical_data_id_t> from_data_id(*(command->from_physical_data_id_ptr_));
-//  ID<physical_data_id_t> to_data_id(*(command->to_physical_data_id_ptr_));
-//
-//  IDSet<job_id_t> before_set;
-//
-//  {
-//    JobIdPtrSet::iterator it = command->before_set_ptr_.begin();
-//    for (; it != command->before_set_ptr_.end(); ++it) {
-//      before_set.insert(*(*it));
-//    }
-//  }
-//
-//  LocalCopyCommand cm_c(job_id,
-//                        from_data_id,
-//                        to_data_id,
-//                        before_set);
-//
-//  SchedulerWorker *worker;
-//  if (!server->GetSchedulerWorkerById(worker, command->worker_id_)) {
-//    assert(false);
-//  }
-//  server->SendCommand(worker, &cm_c);
+  ID<job_id_t> job_id(*(command->job_id_ptr_));
+  ID<physical_data_id_t> from_data_id(*(command->from_physical_data_id_ptr_));
+  ID<physical_data_id_t> to_data_id(*(command->to_physical_data_id_ptr_));
+
+  IDSet<job_id_t> before_set;
+
+  {
+    JobIdPtrSet::iterator it = command->before_set_ptr_.begin();
+    for (; it != command->before_set_ptr_.end(); ++it) {
+      before_set.insert(*(*it));
+    }
+  }
+
+  LocalCopyCommand *cm =
+    new LocalCopyCommand(job_id,
+                        from_data_id,
+                        to_data_id,
+                        before_set);
+
+  client->PushCommandToTheQueue(cm);
 }
 
 void CommandTemplate::PushRemoteCopySendCommand(RemoteCopySendCommandTemplate* command,
                                                 SchedulerClient *client) {
-//  ID<job_id_t> job_id(*(command->job_id_ptr_));
-//  ID<job_id_t> receive_job_id(*(command->receive_job_id_ptr_));
-//  ID<physical_data_id_t> from_data_id(*(command->from_physical_data_id_ptr_));
-//  ID<worker_id_t> to_worker_id(command->to_worker_id_);
-//  std::string to_ip = command->to_ip_;
-//  ID<port_t> to_port(command->to_port_);
-//
-//  IDSet<job_id_t> before_set;
-//
-//  {
-//    JobIdPtrSet::iterator it = command->before_set_ptr_.begin();
-//    for (; it != command->before_set_ptr_.end(); ++it) {
-//      before_set.insert(*(*it));
-//    }
-//  }
-//
-//  RemoteCopySendCommand cm_s(job_id,
-//                             receive_job_id,
-//                             from_data_id,
-//                             to_worker_id,
-//                             to_ip,
-//                             to_port,
-//                             before_set);
-//
-//  SchedulerWorker *worker;
-//  if (!server->GetSchedulerWorkerById(worker, command->worker_id_)) {
-//    assert(false);
-//  }
-//  server->SendCommand(worker, &cm_s);
+  ID<job_id_t> job_id(*(command->job_id_ptr_));
+  ID<job_id_t> receive_job_id(*(command->receive_job_id_ptr_));
+  ID<physical_data_id_t> from_data_id(*(command->from_physical_data_id_ptr_));
+  ID<worker_id_t> to_worker_id(command->to_worker_id_);
+  std::string to_ip = command->to_ip_;
+  ID<port_t> to_port(command->to_port_);
+
+  IDSet<job_id_t> before_set;
+
+  {
+    JobIdPtrSet::iterator it = command->before_set_ptr_.begin();
+    for (; it != command->before_set_ptr_.end(); ++it) {
+      before_set.insert(*(*it));
+    }
+  }
+
+  RemoteCopySendCommand *cm =
+    new RemoteCopySendCommand(job_id,
+                             receive_job_id,
+                             from_data_id,
+                             to_worker_id,
+                             to_ip,
+                             to_port,
+                             before_set);
+
+  client->PushCommandToTheQueue(cm);
 }
 
 void CommandTemplate::PushRemoteCopyReceiveCommand(RemoteCopyReceiveCommandTemplate* command,
                                                    SchedulerClient *client) {
-//  ID<job_id_t> job_id(*(command->job_id_ptr_));
-//  ID<physical_data_id_t> to_data_id(*(command->to_physical_data_id_ptr_));
-//
-//  IDSet<job_id_t> before_set;
-//
-//  {
-//    JobIdPtrSet::iterator it = command->before_set_ptr_.begin();
-//    for (; it != command->before_set_ptr_.end(); ++it) {
-//      before_set.insert(*(*it));
-//    }
-//  }
-//
-//  RemoteCopyReceiveCommand cm_r(job_id,
-//                                to_data_id,
-//                                before_set);
-//
-//  SchedulerWorker *worker;
-//  if (!server->GetSchedulerWorkerById(worker, command->worker_id_)) {
-//    assert(false);
-//  }
-//  server->SendCommand(worker, &cm_r);
+  ID<job_id_t> job_id(*(command->job_id_ptr_));
+  ID<physical_data_id_t> to_data_id(*(command->to_physical_data_id_ptr_));
+
+  IDSet<job_id_t> before_set;
+
+  {
+    JobIdPtrSet::iterator it = command->before_set_ptr_.begin();
+    for (; it != command->before_set_ptr_.end(); ++it) {
+      before_set.insert(*(*it));
+    }
+  }
+
+  RemoteCopyReceiveCommand *cm =
+    new RemoteCopyReceiveCommand(job_id,
+                                to_data_id,
+                                before_set);
+
+  client->PushCommandToTheQueue(cm);
 }
 
 bool CommandTemplate::AddComputeJobCommand(ComputeJobCommand* command) {

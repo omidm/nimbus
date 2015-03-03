@@ -200,6 +200,7 @@ size_t SchedulerClient::EnqueueCommands(char* buffer, size_t size) {
             dbg(DBG_NET, "Enqueueing command %s.\n", command->ToString().c_str());
             boost::mutex::scoped_lock lock(command_queue_mutex_);
             received_commands_.push_back(command);
+            break;
         }
       } else {
         dbg(DBG_NET, "Ignored unknown command: %s.\n", input.c_str());
@@ -351,6 +352,11 @@ void SchedulerClient::Run() {
 void
 SchedulerClient::set_scheduler_command_table(SchedulerCommand::PrototypeTable* cmt) {
   scheduler_command_table_ = cmt;
+}
+
+void SchedulerClient::PushCommandToTheQueue(SchedulerCommand *command) {
+  boost::mutex::scoped_lock lock(command_queue_mutex_);
+  received_commands_.push_back(command);
 }
 
 }  // namespace nimbus

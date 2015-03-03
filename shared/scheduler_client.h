@@ -87,6 +87,8 @@ class SchedulerClient {
 
   void set_scheduler_command_table(SchedulerCommand::PrototypeTable* cmt);
 
+  void PushCommandToTheQueue(SchedulerCommand *command);
+
  private:
   std::string scheduler_ip_;
   port_t scheduler_port_;
