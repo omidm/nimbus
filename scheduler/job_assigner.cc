@@ -64,8 +64,6 @@ void JobAssigner::Initialize() {
   job_manager_ = NULL;
   data_manager_ = NULL;
   load_balancer_ = NULL;
-  log_.set_file_name("log_job_assigner");
-  log_assign_stamp_.set_file_name("log_assign_stamp");
 }
 
 JobAssigner::~JobAssigner() {
@@ -294,27 +292,17 @@ bool JobAssigner::AssignJob(JobEntry *job) {
   }
 
   SchedulerWorker* worker = job->assigned_worker();
-  log_assign_.log_StartTimer();
-  log_prepare_.log_ResetTimer();
-  log_job_manager_.log_ResetTimer();
-  log_data_manager_.log_ResetTimer();
-  log_version_manager_.log_ResetTimer();
 
-  log_version_manager_.log_ResumeTimer();
   job_manager_->ResolveJobDataVersions(job);
   assert(job->versioned());
   if (job->memoize()) {
     job_manager_->MemoizeVersionsForTemplate(job);
   }
-  log_version_manager_.log_StopTimer();
-
 
   if (job->checkpoint_id() > NIMBUS_INIT_CHECKPOINT_ID) {
     SaveJobContextForCheckpoint(job);
   }
 
-
-  log_prepare_.log_ResumeTimer();
   bool prepared_data = true;
   IDSet<logical_data_id_t>::ConstIter it;
   for (it = job->union_set_p()->begin(); it != job->union_set_p()->end(); ++it) {
@@ -323,12 +311,8 @@ bool JobAssigner::AssignJob(JobEntry *job) {
       break;
     }
   }
-  log_prepare_.log_StopTimer();
-
 
   if (prepared_data) {
-    PrintLog(job);
-
     // BINDING MEMOIZE - omidm
     if (job->memoize_binding()) {
       assert(job->job_type() == JOB_SHDW);
@@ -357,9 +341,7 @@ bool JobAssigner::AssignJob(JobEntry *job) {
     // BINDING MEMOIZE - omidm
 
 
-    log_job_manager_.log_ResumeTimer();
     job_manager_->UpdateJobBeforeSet(job);
-    log_job_manager_.log_StopTimer();
     SendComputeJobToWorker(worker, job);
 
     // BINDING MEMOIZE - omidm
@@ -374,31 +356,13 @@ bool JobAssigner::AssignJob(JobEntry *job) {
     }
     // BINDING MEMOIZE - omidm
 
-    log_job_manager_.log_ResumeTimer();
     job_manager_->NotifyJobAssignment(job);
     load_balancer_->NotifyJobAssignment(job);
-    log_job_manager_.log_StopTimer();
-
-#ifndef _NIMBUS_NO_LOG
-    log_assign_.log_StopTimer();
-    std::cout << "jobmanager: " << log_job_manager_.timer() << " n: " << job->job_name() << std::endl; // NOLINT
-    std::cout << "datamanager: " << log_data_manager_.timer() << " n: " << job->job_name() << std::endl; // NOLINT
-    std::cout << "versionmanager: " << log_version_manager_.timer() << " n: " << job->job_name() << std::endl; // NOLINT
-    std::cout << "prepare: " << log_prepare_.timer() << " n: " << job->job_name() << std::endl; // NOLINT
-    std::cout << "assign: " << log_assign_.timer() << " n: " << job->job_name() << std::endl; // NOLINT
-#endif
 
     return true;
   }
 
   return false;
-}
-
-void JobAssigner::PrintLog(JobEntry *job) {
-  char buff[LOG_MAX_BUFF_SIZE];
-  snprintf(buff, sizeof(buff), "%10.9f id: %lu n: %s.",
-      Log::GetRawTime(), job->job_id(), job->job_name().c_str());
-  log_assign_stamp_.log_WriteToFile(std::string(buff), LOG_INFO);
 }
 
 bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
@@ -408,10 +372,8 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
   bool writing = job->write_set_p()->contains(l_id);
   assert(reading || writing);
 
-  log_data_manager_.log_ResumeTimer();
   LogicalDataObject* ldo =
     const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(l_id));
-  log_data_manager_.log_StopTimer();
 
   boost::unique_lock<boost::mutex> lock(ldo->mutex());
 
@@ -465,13 +427,11 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     }
     // BINDING MEMOIZE - omidm
 
-    log_job_manager_.log_ResumeTimer();
     if (job_manager_->CausingUnwantedSerialization(job, l_id, target_instance, memoize_binding)) {
       dbg(DBG_ERROR, "Why serializing!!\n");
       dbg(DBG_SCHED, "Causing unwanted serialization for data %lu.\n", l_id);
       assert(false);
     }
-    log_job_manager_.log_StopTimer();
 
     AllocateLdoInstanceToJob(job, ldo, target_instance);
 
@@ -487,16 +447,12 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
   }
 
   PhysicalDataList instances_at_worker;
-  log_data_manager_.log_ResumeTimer();
   data_manager_->InstancesByWorkerAndVersion(
       ldo, worker->worker_id(), version, &instances_at_worker);
-  log_data_manager_.log_StopTimer();
 
   JobEntryList list;
   VersionedLogicalData vld(l_id, version);
-  log_version_manager_.log_ResumeTimer();
   job_manager_->GetJobsNeedDataVersion(&list, vld);
-  log_version_manager_.log_StopTimer();
   assert(list.size() >= 1);
   bool writing_needed_version = (list.size() > 1) && writing;
 
@@ -507,14 +463,11 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     bool found = false;
     PhysicalDataList::iterator iter;
     for (iter = instances_at_worker.begin(); iter != instances_at_worker.end(); iter++) {
-      log_job_manager_.log_ResumeTimer();
       if (!job_manager_->CausingUnwantedSerialization(job, l_id, *iter, memoize_binding)) {
-        log_job_manager_.log_StopTimer();
         target_instance = *iter;
         found = true;
         break;
       }
-      log_job_manager_.log_StopTimer();
     }
 
     // BINDING MEMOIZE - omidm
@@ -572,9 +525,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
   if ((instances_at_worker.size() == 1) && !writing_needed_version) {
     PhysicalData target_instance;
 
-    log_job_manager_.log_ResumeTimer();
     if (!job_manager_->CausingUnwantedSerialization(job, l_id, *instances_at_worker.begin(), memoize_binding)) { //NOLINT
-      log_job_manager_.log_StopTimer();
       target_instance = *instances_at_worker.begin();
 
       // BINDING MEMOIZE - omidm
@@ -587,7 +538,6 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
       }
       // BINDING MEMOIZE - omidm
     } else {
-      log_job_manager_.log_StopTimer();
       dbg(DBG_SCHED, "Avoiding unwanted serialization for data %lu (2).\n", l_id);
       GetFreeDataAtWorker(worker, ldo, &target_instance);
 
@@ -630,9 +580,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
   if ((instances_at_worker.size() == 1) && writing_needed_version) {
     PhysicalData target_instance;
 
-    log_job_manager_.log_ResumeTimer();
     if (!job_manager_->CausingUnwantedSerialization(job, l_id, *instances_at_worker.begin(), memoize_binding)) { // NOLINT
-      log_job_manager_.log_StopTimer();
       target_instance = *instances_at_worker.begin();
       PhysicalData copy_data;
       GetFreeDataAtWorker(worker, ldo, &copy_data);
@@ -657,7 +605,6 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
       // BINDING MEMOIZE - omidm
       LocalCopyData(worker, ldo, &target_instance, &copy_data, bt);
     } else {
-      log_job_manager_.log_StopTimer();
       dbg(DBG_SCHED, "Avoiding unwanted serialization for data %lu (3).\n", l_id);
       GetFreeDataAtWorker(worker, ldo, &target_instance);
 
@@ -710,9 +657,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
   }
 
   PhysicalDataList instances_in_system;
-  log_data_manager_.log_ResumeTimer();
   data_manager_->InstancesByVersion(ldo, version, &instances_in_system);
-  log_data_manager_.log_StopTimer();
 
   if ((instances_at_worker.size() == 0) && (instances_in_system.size() >= 1)) {
     PhysicalData from_instance = *instances_in_system.begin();
@@ -820,9 +765,7 @@ bool JobAssigner::AllocateLdoInstanceToJob(JobEntry* job,
 
   job->set_physical_table_entry(ldo->id(), pd.id());
 
-  log_data_manager_.log_ResumeTimer();
   data_manager_->UpdatePhysicalInstance(ldo, pd, pd_new);
-  log_data_manager_.log_StopTimer();
 
   return true;
 }
@@ -974,19 +917,15 @@ size_t JobAssigner::GetObsoleteLdoInstancesAtWorker(SchedulerWorker* worker,
   size_t count = 0;
   dest->clear();
   PhysicalDataList pv;
-  log_data_manager_.log_ResumeTimer();
   data_manager_->InstancesByWorker(ldo, worker->worker_id(), &pv);
-  log_data_manager_.log_StopTimer();
   PhysicalDataList::iterator iter = pv.begin();
   for (; iter != pv.end(); ++iter) {
     JobEntryList list;
     VersionedLogicalData vld(ldo->id(), iter->version());
-    log_version_manager_.log_ResumeTimer();
     if (job_manager_->GetJobsNeedDataVersion(&list, vld) == 0) {
       dest->push_back(*iter);
       ++count;
     }
-    log_version_manager_.log_StopTimer();
   }
   return count;
 }
@@ -1007,14 +946,10 @@ bool JobAssigner::CreateDataAtWorker(SchedulerWorker* worker,
   IDSet<job_id_t> list_job_read;
   list_job_read.insert(j[0]);  // if other job wants to write, waits for creation.
   PhysicalData p(d[0], worker->worker_id(), NIMBUS_INIT_DATA_VERSION, list_job_read, j[0]);
-  log_data_manager_.log_ResumeTimer();
   data_manager_->AddPhysicalInstance(ldo, p);
-  log_data_manager_.log_StopTimer();
 
   // send the create command to worker.
-  log_job_manager_.log_ResumeTimer();
   job_manager_->UpdateBeforeSet(&before);
-  log_job_manager_.log_StopTimer();
   CreateDataCommand cm(ID<job_id_t>(j[0]),
                        ldo->variable(),
                        ID<logical_data_id_t>(ldo->id()),
@@ -1058,9 +993,7 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   to_data_new.set_version(from_data->version());
   to_data_new.set_last_job_write(receive_id);
   to_data_new.clear_list_job_read();
-  log_data_manager_.log_ResumeTimer();
   data_manager_->UpdatePhysicalInstance(ldo, *to_data, to_data_new);
-  log_data_manager_.log_StopTimer();
 
   // send remote copy receive job to worker.
   before.clear();
@@ -1076,9 +1009,7 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   }
   // BINDING MEMOIZE - omidm
 
-  log_job_manager_.log_ResumeTimer();
   job_manager_->UpdateBeforeSet(&before);
-  log_job_manager_.log_StopTimer();
   RemoteCopyReceiveCommand cm_r(ID<job_id_t>(receive_id),
                                 ID<physical_data_id_t>(to_data->id()),
                                 before);
@@ -1098,9 +1029,7 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   // Update data table.
   PhysicalData from_data_new = *from_data;
   from_data_new.add_to_list_job_read(send_id);
-  log_data_manager_.log_ResumeTimer();
   data_manager_->UpdatePhysicalInstance(ldo, *from_data, from_data_new);
-  log_data_manager_.log_StopTimer();
 
   // send remote copy send command to worker.
   before.clear();
@@ -1119,9 +1048,7 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   }
   // BINDING MEMOIZE - omidm
 
-  log_job_manager_.log_ResumeTimer();
   job_manager_->UpdateBeforeSet(&before);
-  log_job_manager_.log_StopTimer();
   RemoteCopySendCommand cm_s(ID<job_id_t>(send_id),
                              ID<job_id_t>(receive_id),
                              ID<physical_data_id_t>(from_data->id()),
@@ -1161,17 +1088,13 @@ bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
   // Update data table.
   PhysicalData from_data_new = *from_data;
   from_data_new.add_to_list_job_read(j[0]);
-  log_data_manager_.log_ResumeTimer();
   data_manager_->UpdatePhysicalInstance(ldo, *from_data, from_data_new);
-  log_data_manager_.log_StopTimer();
 
   PhysicalData to_data_new = *to_data;
   to_data_new.set_version(from_data->version());
   to_data_new.set_last_job_write(j[0]);
   to_data_new.clear_list_job_read();
-  log_data_manager_.log_ResumeTimer();
   data_manager_->UpdatePhysicalInstance(ldo, *to_data, to_data_new);
-  log_data_manager_.log_StopTimer();
 
   // send local copy command to worker.
   before.insert(to_data->list_job_read());
@@ -1188,9 +1111,7 @@ bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
   }
   // BINDING MEMOIZE - omidm
 
-  log_job_manager_.log_ResumeTimer();
   job_manager_->UpdateBeforeSet(&before);
-  log_job_manager_.log_StopTimer();
   LocalCopyCommand cm_c(ID<job_id_t>(j[0]),
                         ID<physical_data_id_t>(from_data->id()),
                         ID<physical_data_id_t>(to_data->id()),
