@@ -86,7 +86,7 @@ class CommandTemplate {
     bool Instantiate(const std::vector<job_id_t>& inner_job_ids,
                      const std::vector<job_id_t>& outer_job_ids,
                      const std::vector<Parameter>& parameters,
-                     const std::vector<physical_data_id_t> physical_ids,
+                     const std::vector<physical_data_id_t>& physical_ids,
                      SchedulerClient *client);
 
     bool AddComputeJobCommand(ComputeJobCommand* command);

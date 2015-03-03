@@ -63,6 +63,7 @@ using boost::asio::ip::tcp;
 #define CLIENT_TCP_SEND_BUF_SIZE 134217728  // 128MB
 #define CLIENT_TCP_RECEIVE_BUF_SIZE 134217728  // 128MB
 #define CLIENT_BUF_SIZE 40960000
+#define SEPARATE_COMMAND_TEMPLATE_THREAD true
 
 namespace nimbus {
 
@@ -242,11 +243,25 @@ void SchedulerClient::HandleSpawnCommandTemplateCommand(SpawnCommandTemplateComm
   std::string key = cm->command_template_name();
   TemplateMap::iterator iter = template_map_.find(key);
   assert(iter != template_map_.end());
+  if (SEPARATE_COMMAND_TEMPLATE_THREAD) {
+    CommandTemplateSeed *cts =
+      new CommandTemplateSeed(iter->second,
+                              cm->inner_job_ids(),
+                              cm->outer_job_ids(),
+                              cm->parameters(),
+                              cm->phy_ids());
+    {
+      boost::unique_lock<boost::mutex> command_template_seeds_lock(command_template_seeds_mutex_);
+      command_template_seeds_.push_back(cts);
+      command_template_seeds_cond_.notify_all();
+    }
+  } else {
   iter->second->Instantiate(cm->inner_job_ids(),
                             cm->outer_job_ids(),
                             cm->parameters(),
                             cm->phy_ids(),
                             this);
+  }
 }
 
 void SchedulerClient::HandleRead(const boost::system::error_code& error,
@@ -345,8 +360,35 @@ void SchedulerClient::CreateNewConnections() {
 void SchedulerClient::Run() {
   dbg(DBG_NET, "Running the scheduler client.\n");
   Initialize();
+  if (SEPARATE_COMMAND_TEMPLATE_THREAD) {
+    command_template_thread_ =
+      new boost::thread(boost::bind(&SchedulerClient::CommandTemplateThread, this));
+  }
   CreateNewConnections();
   io_service_->run();
+}
+
+void SchedulerClient::CommandTemplateThread() {
+  while (true) {
+    CommandTemplateSeed *cts;
+    {
+      boost::unique_lock<boost::mutex> command_template_seeds_lock(command_template_seeds_mutex_);
+
+      while (command_template_seeds_.size() == 0) {
+        command_template_seeds_cond_.wait(command_template_seeds_lock);
+      }
+
+      CommandTemplateSeedList::iterator iter = command_template_seeds_.begin();
+      cts = *iter;
+      command_template_seeds_.erase(iter);
+    }
+
+    cts->command_template_->Instantiate(cts->inner_job_ids_,
+                                        cts->outer_job_ids_,
+                                        cts->parameters_,
+                                        cts->physical_ids_,
+                                        this);
+  }
 }
 
 void

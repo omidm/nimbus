@@ -117,7 +117,7 @@ bool CommandTemplate::Finalize() {
 bool CommandTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
                                   const std::vector<job_id_t>& outer_job_ids,
                                   const std::vector<Parameter>& parameters,
-                                  const std::vector<physical_data_id_t> physical_ids,
+                                  const std::vector<physical_data_id_t>& physical_ids,
                                   SchedulerClient *client) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   assert(finalized_);
