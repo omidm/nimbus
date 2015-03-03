@@ -550,7 +550,7 @@ size_t TemplateEntry::QueryAccessPattern(const logical_data_id_t& ldid,
 bool TemplateEntry::AddBindingRecord(size_t binding_tag,
                                      std::string grand_parent_name,
                                      BindingTemplate* binding_template) {
-  std::string key = int2string(binding_tag) + "-" + grand_parent_name;
+  std::string key = int2string(binding_tag) + "-" + template_name_ + "-" + grand_parent_name;
   BindingMap::iterator iter = binding_records_.find(key);
   if (iter != binding_records_.end()) {
     return false;
@@ -564,7 +564,7 @@ bool TemplateEntry::AddBindingRecord(size_t binding_tag,
 bool TemplateEntry::QueryBindingRecord(size_t binding_tag,
                                        std::string grand_parent_name,
                                        BindingTemplate*& binding_template) {
-  std::string key = int2string(binding_tag) + "-" + grand_parent_name;
+  std::string key = int2string(binding_tag) + "-" + template_name_ + "-" + grand_parent_name;
   BindingMap::iterator iter = binding_records_.find(key);
   if (iter == binding_records_.end()) {
     binding_template = NULL;
