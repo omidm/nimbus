@@ -57,7 +57,8 @@ Nimbus Installation Dependencies - MacOSX
   
 
 
-How to Remove DBG in compile time:
+How to remove DBG in compile time:
+=========================================
 
 1. uncomment -D_NIMBUS_NO_DBG from Makeinclude
 
@@ -69,3 +70,25 @@ How to Remove DBG in compile time:
 
 4. make sure that you make clean-hard for ninmus library,
    and make clean for rest.
+
+   
+How to profile code using perf:
+=========================================
+
+1. Compile the code using "-fno-omit-frame-pointer -ggdb -pg" flags.
+   a. Uncomment the line in Makeinclude that is for profiling with perf.
+   b. make clean-hard and make.
+
+2. Run "perf record -g <executable> <args>". It dumps per.data file.
+
+3. Run "perf report -g fractal,0.5,caller -i <dumped-file>". It gives you the
+   call stacks based on the caller trace.
+
+4. To produce FlameGraph, download the repo from github. run the following
+   command in the directory that has perf.data:
+   "perf script | ./stackcollapse-perf.pl | ./flamegraph.pl > result.svg"
+
+
+
+
+

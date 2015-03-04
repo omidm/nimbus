@@ -299,6 +299,24 @@ Adjust_Phi_With_Sources(const T time)
   }
 }
 
+
+
+template<class TV> void WATER_EXAMPLE<TV>::
+Sum_Phi_3()
+{
+  T sum = 0;
+  for (typename GRID<TV>::CELL_ITERATOR iterator(mac_grid);
+       iterator.Valid();
+       iterator.Next()) {
+    TV_INT index = iterator.Cell_Index();
+      sum += particle_levelset_evolution.phi(index);
+  }
+
+  std::cout << "SUM_PHI_3: " << sum << std::endl;
+}
+
+
+
 // Enforces the boundary condition of particles.
 template<class TV> void WATER_EXAMPLE<TV>::
 Adjust_Particle_For_Domain_Boundaries(

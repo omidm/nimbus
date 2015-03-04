@@ -258,7 +258,6 @@ void GetAppAppObjects(
     if (l8w) write8 = write;
 
     int order[3] = {3, 7, 8};
-
     if (l || lw) {
       order[0] = 7;
       order[1] = 8;

@@ -40,6 +40,7 @@
   */
 
 #include "scheduler/job_manager.h"
+#include "scheduler/binding_template.h"
 
 using namespace nimbus; // NOLINT
 
@@ -53,7 +54,6 @@ JobManager::JobManager() {
 
   ldo_map_p_ = NULL;
   after_map_ = NULL;
-  log_.set_file_name("log_job_manager");
   checkpoint_creation_rate_ = DEFAULT_CHECKPOINT_CREATION_RATE;
   non_sterile_counter_ = 0;
 }
@@ -61,7 +61,7 @@ JobManager::JobManager() {
 JobManager::~JobManager() {
   // TODO(omidm): do you need to call remove obsolete?
   JobEntry* job;
-  if (JobManager::GetJobEntry(NIMBUS_KERNEL_JOB_ID, job)) {
+  if (JobManager::GetJobEntryFromJobGraph(NIMBUS_KERNEL_JOB_ID, job)) {
     delete job;
   }
 }
@@ -134,9 +134,12 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
                         params);
 
   if (!AddJobEntryToJobGraph(job_id, job)) {
+    // TODO(omidm): for now there are no future jobs!
+    assert(false);
+
     dbg(DBG_SCHED, "Filling possible future job (id: %lu) in job manager.\n", job_id);
     delete job;
-    GetJobEntry(job_id, job);
+    GetJobEntryFromJobGraph(job_id, job);
     if (job->future()) {
       job->set_job_type(JOB_COMP);
       job->set_job_name(job_name);
@@ -166,7 +169,6 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
   }
 
   ReceiveMetaBeforeSetDepthVersioningDependency(job);
-
   PassMetaBeforeSetDepthVersioningDependency(job);
 
   version_manager_.AddJobEntry(job);
@@ -175,7 +177,80 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
     non_sterile_jobs_[job_id] = job;
   }
 
+  // set parent_job_name for non-sterile jobs.
+  if (!job->sterile()) {
+    JobEntry *parent_job = NULL;
+    ComplexJobEntry *xj = NULL;
+    if (GetJobEntryFromJobGraph(job->parent_job_id(), parent_job)) {
+      assert(!parent_job->sterile());
+      job->set_parent_job_name(parent_job->job_name());
+    } else if (GetComplexJobContainer(job->parent_job_id(), xj)) {
+      ShadowJobEntry *sj = NULL;
+      if (!xj->OMIDGetShadowJobEntryById(job->parent_job_id(), sj)) {
+        assert(false);
+      }
+      assert(!sj->sterile());
+      job->set_parent_job_name(sj->job_name());
+    }
+  }
+
   return job;
+}
+
+bool JobManager::AddComplexJobEntry(ComplexJobEntry* complex_job) {
+  job_id_t job_id = complex_job->job_id();
+
+  if (!AddJobEntryToJobGraph(job_id, complex_job)) {
+    dbg(DBG_ERROR, "ERROR: could not add complex job (id: %lu) in job manager.\n", job_id);
+    delete complex_job;
+    return false;
+  }
+
+  if (!AddJobEntryIncomingEdges(complex_job)) {
+    RemoveJobEntryFromJobGraph(job_id);
+    delete complex_job;
+    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
+    return false;
+  }
+
+  ReceiveMetaBeforeSetDepthVersioningDependency(complex_job);
+  PassMetaBeforeSetDepthVersioningDependency(complex_job);
+
+  version_manager_.AddComplexJobEntry(complex_job);
+
+  std::list<job_id_t> list;
+  complex_job->GetParentJobIds(&list);
+  // For now complex job could have only one parent job, otherwise versioning goes wrong!
+  assert(list.size() == 1);
+  complex_jobs_[job_id] = complex_job;
+
+  // TODO(omidm): what does it mean for checkpointing logic?!!
+  if (!complex_job->sterile()) {
+    non_sterile_jobs_[job_id] = complex_job;
+  }
+
+
+  // set parent and grand parent job names for complex jobs.
+  {
+    JobEntry *parent_job = NULL;
+    ComplexJobEntry *xj = NULL;
+    if (GetJobEntryFromJobGraph(complex_job->parent_job_id(), parent_job)) {
+      assert(!parent_job->sterile());
+      complex_job->set_parent_job_name(parent_job->job_name());
+      complex_job->set_grand_parent_job_name(parent_job->parent_job_name());
+    } else if (GetComplexJobContainer(complex_job->parent_job_id(), xj)) {
+      ShadowJobEntry *sj = NULL;
+      if (!xj->OMIDGetShadowJobEntryById(complex_job->parent_job_id(), sj)) {
+        assert(false);
+      }
+      assert(!sj->sterile());
+      complex_job->set_parent_job_name(sj->job_name());
+      complex_job->set_grand_parent_job_name(xj->parent_job_name());
+    }
+  }
+
+
+  return true;
 }
 
 JobEntry* JobManager::AddExplicitCopyJobEntry() {
@@ -221,6 +296,8 @@ JobEntry* JobManager::AddMainJobEntry(const job_id_t& job_id) {
   version_manager_.AddJobEntry(job);
 
   jobs_ready_to_assign_[job_id] = job;
+
+  job->set_parent_job_name(NIMBUS_KERNEL_JOB_NAME);
 
   return job;
 }
@@ -300,14 +377,35 @@ Edge<JobEntry, job_id_t>* JobManager::AddEdgeToJobGraph(job_id_t from, job_id_t 
   }
 }
 
+bool JobManager::GetComplexJobContainer(const job_id_t& job_id,
+                                        ComplexJobEntry*& complex_job) {
+  ComplexJobEntryMap::iterator iter = complex_jobs_.begin();
+  for (; iter != complex_jobs_.end(); ++iter) {
+    if (iter->second->ShadowJobContained(job_id)) {
+      complex_job = iter->second;
+      return true;
+    }
+  }
+
+  complex_job = NULL;
+  return false;
+}
+
 bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
   JobEntry *j;
   Edge<JobEntry, job_id_t> *edge;
 
+  ComplexJobEntry* complex_job;
   edge = AddEdgeToJobGraph(job->parent_job_id(), job->job_id());
   if (edge != NULL) {
     j = edge->start_vertex()->entry();
     assert(j->versioned());
+  } else if (GetComplexJobContainer(job->parent_job_id(), complex_job)) {
+    edge = AddEdgeToJobGraph(complex_job->job_id(), job->job_id());
+    assert(edge);
+    j = edge->start_vertex()->entry();
+    // TODO(omidm): uncomment this check!
+    // assert(j->versioned());
   } else {
     dbg(DBG_ERROR, "ERROR: could not add edge from parent (id: %lu) for job (id: %lu) in job manager.\n", // NOLINT
         job->parent_job_id(), job->job_id());
@@ -323,6 +421,9 @@ bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
     edge = AddEdgeToJobGraph(*it, job->job_id());
     if (edge != NULL) {
       j = edge->start_vertex()->entry();
+    } else if (GetComplexJobContainer(*it, complex_job)) {
+      // cannot have before set in a complex job - omidm
+      assert(false);
     } else {
       dbg(DBG_SCHED, "Adding possible future job (id: %lu) in job manager.\n", *it);
       AddFutureJobEntry(*it);
@@ -345,7 +446,8 @@ void JobManager::ReceiveMetaBeforeSetDepthVersioningDependency(JobEntry* job) {
   job_depth_t depth = NIMBUS_INIT_JOB_DEPTH;
   job_id_t job_id = job->job_id();
   Vertex<JobEntry, job_id_t>* vertex;
-  GetJobGraphVertex(job_id, &vertex);
+  bool got_vertex = GetJobGraphVertex(job_id, &vertex);
+  assert(got_vertex);
   typename Edge<JobEntry, job_id_t>::Iter it;
   for (it = vertex->incoming_edges()->begin(); it != vertex->incoming_edges()->end(); ++it) {
     JobEntry *j = it->second->start_vertex()->entry();
@@ -357,7 +459,16 @@ void JobManager::ReceiveMetaBeforeSetDepthVersioningDependency(JobEntry* job) {
         depth = j->job_depth();
       }
 
-      job->remove_versioning_dependency(j->job_id());
+      if (j->job_type() == JOB_CMPX) {
+        ComplexJobEntry* complex_job = reinterpret_cast<ComplexJobEntry*>(j);
+        std::list<job_id_t> list;
+        complex_job->GetParentJobIds(&list);
+        // For now complex job could have only one parent job, otherwise versioning goes wrong!
+        assert(list.size() == 1);
+        job->remove_versioning_dependency(*(list.begin()));
+      } else {
+        job->remove_versioning_dependency(j->job_id());
+      }
     }
   }
   job->set_job_depth(depth + 1);
@@ -368,7 +479,8 @@ void JobManager::PassMetaBeforeSetDepthVersioningDependency(JobEntry* job) {
   if (job->IsReadyForCompleteVersioning()) {
     job_id_t job_id = job->job_id();
     Vertex<JobEntry, job_id_t>* vertex;
-    GetJobGraphVertex(job_id, &vertex);
+    bool got_vertex = GetJobGraphVertex(job_id, &vertex);
+    assert(got_vertex);
     typename Edge<JobEntry, job_id_t>::Iter it;
     for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
       JobEntry *j = it->second->end_vertex()->entry();
@@ -388,17 +500,16 @@ void JobManager::PassMetaBeforeSetDepthVersioningDependency(JobEntry* job) {
   }
 }
 
-
-bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
-  Vertex<JobEntry, job_id_t>* vertex;
+bool JobManager::GetJobEntryFromJobGraph(job_id_t job_id, JobEntry*& job) {
   boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
+  Vertex<JobEntry, job_id_t>* vertex;
   if (job_graph_.GetVertex(job_id, &vertex)) {
     job = vertex->entry();
     return true;
-  } else {
-    job = NULL;
-    return false;
   }
+
+  job = NULL;
+  return false;
 }
 
 bool JobManager::RemoveJobEntry(JobEntry* job) {
@@ -411,6 +522,7 @@ bool JobManager::RemoveJobEntry(JobEntry* job) {
     delete job;
     return true;
   } else {
+    assert(false);
     return false;
   }
 }
@@ -418,7 +530,7 @@ bool JobManager::RemoveJobEntry(JobEntry* job) {
 bool JobManager::ResolveJobDataVersions(JobEntry *job) {
   if (!job->IsReadyForCompleteVersioning()) {
     dbg(DBG_ERROR, "ERROR: job %lu is not reaqdy for complete versioing.\n", job->job_id());
-    exit(-1);
+    assert(false);
     return false;
   }
 
@@ -427,7 +539,7 @@ bool JobManager::ResolveJobDataVersions(JobEntry *job) {
     return true;
   } else {
     dbg(DBG_ERROR, "ERROR: could not version job %lu.\n", job->job_id());
-    exit(-1);
+    assert(false);
     return false;
   }
 }
@@ -449,6 +561,67 @@ bool JobManager::ResolveEntireContextForJob(JobEntry *job) {
     return false;
   }
 }
+
+
+bool JobManager::GetBaseVersionMapFromJob(job_id_t job_id,
+                              boost::shared_ptr<VersionMap>& vmap_base) {
+  JobEntry *job = NULL;
+  ComplexJobEntry *xj = NULL;
+  if (GetJobEntryFromJobGraph(job_id, job)) {
+  } else if (GetComplexJobContainer(job_id, xj)) {
+    ShadowJobEntry *sj = NULL;
+    xj->OMIDGetShadowJobEntryById(job_id, sj);
+    job = sj;
+  } else {
+    dbg(DBG_ERROR, "ERROR: could not find the the job with id %lu to get the base.\n", job_id); // NOLINT
+    return false;
+  }
+
+  if (ResolveEntireContextForJob(job)) {
+    vmap_base = job->vmap_read();
+    return true;
+  }
+
+  return false;
+}
+
+
+bool JobManager::ResolveJobDataVersionsForPattern(JobEntry *job,
+                        const BindingTemplate::PatternList* patterns) {
+  if (!job->IsReadyForCompleteVersioning()) {
+    dbg(DBG_ERROR, "ERROR: job %lu is not reaqdy for complete versioing.\n", job->job_id());
+    assert(false);
+    return false;
+  }
+
+  if (version_manager_.ResolveJobDataVersionsForPattern(job, patterns)) {
+    return true;
+  } else {
+    dbg(DBG_ERROR, "ERROR: could not version job %lu for given pattern.\n", job->job_id());
+    assert(false);
+    return false;
+  }
+}
+
+bool JobManager::MemoizeVersionsForTemplate(JobEntry *job) {
+  if (!job->IsReadyForCompleteVersioning()) {
+    dbg(DBG_ERROR, "ERROR: job %lu is not reaqdy for complete versioing.\n", job->job_id());
+    exit(-1);
+    return false;
+  }
+
+  if (version_manager_.MemoizeVersionsForTemplate(job)) {
+    return true;
+  } else {
+    dbg(DBG_ERROR, "ERROR: could not memoize versions for job %lu.\n", job->job_id());
+    exit(-1);
+    return false;
+  }
+}
+
+
+
+
 
 bool JobManager::CompleteJobForCheckpoint(checkpoint_id_t checkpoint_id,
                                           const JobEntry *job) {
@@ -563,17 +736,82 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
   size_t num = 0;
   list->clear();
 
+  // JobEntryList temp_list;
   JobEntryMap::iterator iter = jobs_ready_to_assign_.begin();
   for (; (iter != jobs_ready_to_assign_.end()) && (num < max_num);) {
-    JobEntry *job = iter->second;
+    JobEntry* job = iter->second;
     assert(!job->assigned());
 
-    jobs_pending_to_assign_[iter->first] = job;
-    jobs_ready_to_assign_.erase(iter++);
+    if (job->job_type() == JOB_CMPX) {
+      ComplexJobEntry* complex_job = reinterpret_cast<ComplexJobEntry*>(job);
+      TemplateEntry *te = complex_job->template_entry();
+      std::string grand_parent_name = complex_job->grand_parent_job_name();
+      assert(grand_parent_name != "");
+      BindingTemplate *bt = NULL;
 
-    list->push_back(job);
-    ++num;
+      if (NIMBUS_BINDING_MEMOIZATION_ACTIVE) {
+        bool create_bt = true;
+        if (te->QueryBindingRecord(STATIC_BINDING_RECORD, grand_parent_name, bt)) {
+          create_bt = false;
+          if (bt->finalized()) {
+            list->push_back(complex_job);
+            complex_job->set_binding_template(bt);
+            jobs_pending_to_assign_[complex_job->job_id()] = complex_job;
+            jobs_ready_to_assign_.erase(iter++);
+            num += bt->compute_job_num();
+            continue;
+          }
+        }
+
+        if (create_bt) {
+          bt = new BindingTemplate(complex_job->inner_job_ids(), te);
+          if (!te->AddBindingRecord(STATIC_BINDING_RECORD, grand_parent_name, bt)) {
+            assert(false);
+          }
+        }
+      }
+
+      JobEntryList l;
+      size_t c_num = complex_job->GetShadowJobsForAssignment(&l, max_num - num);
+      assert(c_num > 0);
+      num += c_num;
+      JobEntryList::iterator it = l.begin();
+      for (; it != l.end(); ++it) {
+        (*it)->set_memoize_binding(NIMBUS_BINDING_MEMOIZATION_ACTIVE);
+        (*it)->set_binding_template(bt);
+        list->push_back(*it);
+        jobs_pending_to_assign_[(*it)->job_id()] = *it;
+      }
+      if (complex_job->DrainedAllShadowJobsForAssignment()) {
+        jobs_ready_to_assign_.erase(iter++);
+      } else {
+        ++iter;
+      }
+
+    } else {
+      list->push_back(job);
+      // temp_list.push_back(job);
+      jobs_pending_to_assign_[iter->first] = job;
+      jobs_ready_to_assign_.erase(iter++);
+      ++num;
+    }
   }
+
+//  if (temp_list.size() > 0) {
+//    JobEntryList::reverse_iterator it = temp_list.rbegin();
+//    if ((*it)->job_name() == "--reincorporate_particles" ||
+//        (*it)->job_name() == "--delete_particles" ||
+//        (*it)->job_name() == "--adjust_phi") {
+//      for (; it != temp_list.rend(); ++it) {
+//        list->push_back(*it);
+//      }
+//    } else {
+//      JobEntryList::iterator i = temp_list.begin();
+//      for (; i != temp_list.end(); ++i) {
+//        list->push_back(*i);
+//      }
+//    }
+//  }
 
   return num;
 }
@@ -610,7 +848,8 @@ void JobManager::NotifyJobAssignment(JobEntry *job) {
   // AfterMap has internal locking.
   after_map_->AddEntries(job);
 
-  if (job->job_type() != JOB_COMP) {
+  if ((job->job_type() != JOB_COMP) &&
+      (job->job_type() != JOB_CMPX)) {
     return;
   }
 
@@ -622,7 +861,8 @@ void JobManager::NotifyJobAssignment(JobEntry *job) {
   if (job->sterile()) {
     job_id_t job_id = job->job_id();
     Vertex<JobEntry, job_id_t>* vertex;
-    GetJobGraphVertex(job_id, &vertex);
+    bool got_vertex = GetJobGraphVertex(job_id, &vertex);
+    assert(got_vertex);
     typename Edge<JobEntry, job_id_t>::Iter it;
     for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
       JobEntry *j = it->second->end_vertex()->entry();
@@ -635,16 +875,33 @@ void JobManager::NotifyJobAssignment(JobEntry *job) {
   }
 }
 
-void JobManager::NotifyJobDone(JobEntry *job) {
-  job->set_done(true);
-  job_id_t job_id = job->job_id();
+void JobManager::NotifyJobDone(job_id_t job_id) {
+  bool sterile = false;
+  bool shadow_job = false;
+  job_id_t  vertex_job_id = 0;
+  JobEntry *job = NULL;
+  ComplexJobEntry *complex_job = NULL;
 
-  // Initialy let the version manager know that the job is done.
-  version_manager_.NotifyJobDone(job);
+  if (GetJobEntryFromJobGraph(job_id, job)) {
+    job->set_done(true);
+    sterile = job->sterile();
+    shadow_job = false;
+    vertex_job_id = job_id;
+  } else if (GetComplexJobContainer(job_id, complex_job)) {
+    complex_job->MarkShadowJobDone(job_id);
+    sterile = complex_job->ShadowJobSterile(job_id);
+    shadow_job = true;
+    vertex_job_id = complex_job->job_id();
+  } else {
+    dbg(DBG_ERROR, "ERROR: could locate the done job %lu in job manager!\n", job_id);
+    assert(false);
+  }
 
-  if (!job->sterile()) {
+  if (!sterile) {
     Vertex<JobEntry, job_id_t>* vertex;
-    GetJobGraphVertex(job_id, &vertex);
+    if (!GetJobGraphVertex(vertex_job_id, &vertex)) {
+      assert(false);
+    }
     typename Edge<JobEntry, job_id_t>::Iter it;
     for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
       JobEntry *j = it->second->end_vertex()->entry();
@@ -656,8 +913,10 @@ void JobManager::NotifyJobDone(JobEntry *job) {
   }
 
 
+  // TODO(omidm): check if the code works with complex jobs!
   if (NIMBUS_FAULT_TOLERANCE_ACTIVE) {
-    if (!job->sterile()) {
+    if (!sterile) {
+      assert(non_sterile_jobs_.count(job_id) != 0);
       non_sterile_jobs_.erase(job_id);
       if ((++non_sterile_counter_) == checkpoint_creation_rate_) {
         // Initiate checkpoint creation.
@@ -677,25 +936,53 @@ void JobManager::NotifyJobDone(JobEntry *job) {
     }
   }
 
-  // After traversing the out going endges then put in the dueue for removal.
   {
     boost::unique_lock<boost::mutex> lock(jobs_done_mutex_);
-    jobs_done_.push_back(job);
+    if (!shadow_job) {
+      assert(job);
+
+      version_manager_.NotifyJobDone(job);
+
+      jobs_done_.push_back(job);
+    } else {
+      assert(complex_job);
+      if (complex_job->AllShadowJobsDone()) {
+        complex_job->set_done(true);
+        complex_jobs_.erase(complex_job->job_id());
+
+        version_manager_.NotifyJobDone(complex_job);
+
+        jobs_done_.push_back(complex_job);
+      }
+    }
   }
 }
 
 void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
-  JobEntry* job;
-  if (GetJobEntry(job_id, job)) {
-    if (job->sterile()) {
-      dbg(DBG_ERROR, "ERROR: sterile job cannot define data.\n");
+  JobEntry* job = NULL;
+  ComplexJobEntry* complex_job = NULL;
+  job_depth_t job_depth;
+  bool found_parent = false;
+  if (GetJobEntryFromJobGraph(job_id, job)) {
+    if (!job->sterile()) {
+      found_parent = true;
+      job_depth = job->job_depth();
     }
-    if (!version_manager_.DefineData(ldid, job_id, job->job_depth())) {
+  } else if (GetComplexJobContainer(job_id, complex_job)) {
+    if (!complex_job->ShadowJobSterile(job_id)) {
+      found_parent = true;
+      job_depth = job->job_depth();
+    }
+  }
+
+  if (found_parent) {
+    if (!version_manager_.DefineData(ldid, job_id, job_depth)) {
       dbg(DBG_ERROR, "ERROR: could not define data in ldl_map for ldid %lu.\n", ldid);
+      assert(false);
     }
   } else {
     dbg(DBG_ERROR, "ERROR: parent of define data with job id %lu is not in the graph.\n", job_id);
-    exit(-1);
+    assert(false);
   }
 }
 
@@ -726,10 +1013,17 @@ void JobManager::UpdateJobBeforeSet(JobEntry* job) {
 void JobManager::UpdateBeforeSet(IDSet<job_id_t>* before_set) {
   IDSet<job_id_t>::IDSetIter it;
   for (it = before_set->begin(); it != before_set->end();) {
-    JobEntry* j;
+    JobEntry *j = NULL;
+    ComplexJobEntry *xj = NULL;
     job_id_t id = *it;
-    if (GetJobEntry(id, j)) {
+    if (GetJobEntryFromJobGraph(id, j)) {
       if ((j->done()) || (id == NIMBUS_KERNEL_JOB_ID)) {
+        before_set->remove(it++);
+      } else {
+        ++it;
+      }
+    } else if (GetComplexJobContainer(id, xj)) {
+      if ((xj->ShadowJobDone(id))) {
         before_set->remove(it++);
       } else {
         ++it;
@@ -744,25 +1038,42 @@ void JobManager::UpdateBeforeSet(IDSet<job_id_t>* before_set) {
 }
 
 bool JobManager::CausingUnwantedSerialization(JobEntry* job,
-    const logical_data_id_t& l_id, const PhysicalData& pd) {
+                                              const logical_data_id_t& l_id,
+                                              const PhysicalData& pd,
+                                              bool memoizing_mode) {
   bool result = false;
 
   if (!job->write_set_p()->contains(l_id)) {
     return result;
   }
 
-  boost::shared_ptr<MetaBeforeSet> mbs = job->meta_before_set();
-
   IDSet<job_id_t>::IDSetIter iter;
   for (iter = pd.list_job_read_p()->begin(); iter != pd.list_job_read_p()->end(); iter++) {
-    JobEntry *j;
-    if (GetJobEntry(*iter, j)) {
-      if ((!j->done()) &&
-          (j->job_type() == JOB_COMP) &&
+    JobEntry *j = NULL;
+    ComplexJobEntry *xj = NULL;
+    if (GetJobEntryFromJobGraph(*iter, j)) {
+      // if in memoizing_mode job done should NOT considered, cause it depdends
+      // on runtime variations and lead to damaging parallelism -omidm
+      if (((!j->done()) || memoizing_mode) &&
+          (j->job_type() == JOB_COMP || job->job_type() == JOB_CMPX) &&
           // (!job->before_set_p()->contains(*iter))) {
           // the job may not be in the immediate before set but still there is
           // indirect dependency. so we need to look through meta before set.
-          (!mbs->LookUpBeforeSetChain(j->job_id(), j->job_depth()))) {
+          (!job->LookUpMetaBeforeSet(j))) {
+        result = true;
+        break;
+      }
+    } else if (GetComplexJobContainer(*iter, xj)) {
+      assert(job->job_type() == JOB_SHDW);
+      ShadowJobEntry *sj;
+      xj->OMIDGetShadowJobEntryById(*iter, sj);
+      // if in memoizing_mode job done should NOT considered, cause it depdends
+      // on runtime variations and lead to damaging parallelism -omidm
+      if (((!xj->ShadowJobDone(*iter)) || memoizing_mode) &&
+          // (!job->before_set_p()->contains(*iter))) {
+          // the job may not be in the immediate before set but still there is
+          // indirect dependency. so we need to look through meta before set.
+          (!job->LookUpMetaBeforeSet(sj))) {
         result = true;
         break;
       }

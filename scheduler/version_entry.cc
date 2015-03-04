@@ -105,7 +105,7 @@ bool VersionEntry::AddJobEntryWriter(JobEntry *job) {
 }
 
 size_t VersionEntry::GetJobsNeedVersion(
-    JobEntryList* list, data_version_t version) {
+    JobEntryList* list, data_version_t version, bool append) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
 
   if (!UpdateLdl()) {
@@ -113,7 +113,9 @@ size_t VersionEntry::GetJobsNeedVersion(
   }
 
   size_t count = 0;
-  list->clear();
+  if (!append) {
+    list->clear();
+  }
 
   BucketIter iter = pending_reader_jobs_.begin();
   for (; iter != pending_reader_jobs_.end();) {
@@ -225,6 +227,29 @@ bool VersionEntry::LookUpVersion(
 
   if (!UpdateLdl()) {
     dbg(DBG_ERROR, "Could not update the ldl for ldid %lu.\n", ldid_);
+  }
+
+  if (job->job_type() == JOB_SHDW) {
+    ShadowJobEntry* sj = reinterpret_cast<ShadowJobEntry*>(job);
+    ComplexJobEntry* xj = sj->complex_job();
+
+    data_version_t base_version;
+    if (xj->vmap_read()->query_entry(ldid_, &base_version)) {
+    } else if (LookUpVersion(xj, &base_version)) {
+      xj->vmap_read()->set_entry(ldid_, base_version);
+    } else {
+      dbg(DBG_ERROR, "ERROR: could not version the base complex job %lu.\n", xj->job_id());
+      return false;
+    }
+
+    data_version_t diff_version;
+    if (!sj->vmap_read_diff()->query_entry(ldid_, &diff_version)) {
+      dbg(DBG_ERROR, "ERROR: could not get diff version for shadow job %lu.\n", sj->job_id());
+      return false;
+    }
+
+    *version = base_version + diff_version;
+    return true;
   }
 
   return ldl_.LookUpVersion(job->meta_before_set(), version);

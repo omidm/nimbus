@@ -53,6 +53,10 @@
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "scheduler/job_entry.h"
+#include "scheduler/complex_job_entry.h"
+#include "scheduler/template_job_entry.h"
+#include "scheduler/template_entry.h"
+#include "scheduler/binding_template.h"
 #include "scheduler/version_entry.h"
 #include "shared/logical_data_object.h"
 
@@ -66,6 +70,7 @@ class VersionManager {
     typedef std::pair<logical_data_id_t, data_version_t> VLD;
     typedef boost::unordered_map<logical_data_id_t, VersionEntry*> Index;
     typedef std::map<job_id_t, JobEntry*> ParentMap;
+    typedef std::map<job_id_t, ComplexJobEntry*> ComplexJobMap;
     typedef std::map<job_id_t, counter_t> ChildCounter;
 
     VersionManager();
@@ -74,6 +79,8 @@ class VersionManager {
     void set_snap_shot_rate(size_t rate);
 
     bool AddJobEntry(JobEntry *job);
+
+    bool AddComplexJobEntry(ComplexJobEntry *complex_job);
 
     size_t GetJobsNeedDataVersion(
         JobEntryList* list, VLD vld);
@@ -85,6 +92,11 @@ class VersionManager {
     bool ResolveJobDataVersions(JobEntry *job);
 
     bool ResolveEntireContextForJob(JobEntry *job);
+
+    bool ResolveJobDataVersionsForPattern(JobEntry *job,
+                  const BindingTemplate::PatternList* patterns);
+
+    bool MemoizeVersionsForTemplate(JobEntry *job);
 
     bool DefineData(
         const logical_data_id_t ldid,
@@ -105,6 +117,7 @@ class VersionManager {
     size_t non_sterile_counter_;
     IDSet<job_id_t> snap_shot_;
     ParentMap parent_map_;
+    ComplexJobMap complex_jobs_;
     ChildCounter child_counter_;
     boost::recursive_mutex snap_shot_mutex_;
     const LdoMap* ldo_map_p_;
@@ -113,9 +126,13 @@ class VersionManager {
                        logical_data_id_t ldid,
                        data_version_t *version);
 
+    bool InsertComplexJobInLdl(ComplexJobEntry *job);
+
     bool CreateCheckPoint(JobEntry *job);
 
     bool DetectNewJob(JobEntry *job);
+
+    bool DetectNewComplexJob(ComplexJobEntry *xj);
 
     bool DetectVersionedJob(JobEntry *job);
 

@@ -56,6 +56,7 @@
 #include "scheduler/job_manager.h"
 #include "scheduler/region_map.h"
 #include "scheduler/straggler_map.h"
+#include "scheduler/binding_template.h"
 #include "shared/cluster.h"
 #include "shared/id_maker.h"
 #include "shared/scheduler_server.h"
@@ -84,14 +85,6 @@ namespace nimbus {
     virtual void AssignJobs(const JobEntryList& list);
 
   protected:
-    Log log_;
-    Log log_assign_;
-    Log log_prepare_;
-    Log log_job_manager_;
-    Log log_data_manager_;
-    Log log_version_manager_;
-    Log log_before_set_;
-    Log log_assign_stamp_;
     IDMaker *id_maker_;
     SchedulerServer* server_;
     JobManager *job_manager_;
@@ -113,6 +106,8 @@ namespace nimbus {
 
     virtual bool AssignJob(JobEntry* job);
 
+    virtual bool AssignComplexJob(ComplexJobEntry* job);
+
     virtual bool PrepareDataForJobAtWorker(JobEntry* job,
                                            SchedulerWorker* worker,
                                            logical_data_id_t l_id);
@@ -131,12 +126,14 @@ namespace nimbus {
                                 SchedulerWorker* to_worker,
                                 LogicalDataObject* ldo,
                                 PhysicalData* from_data,
-                                PhysicalData* to_data);
+                                PhysicalData* to_data,
+                                BindingTemplate *bt = NULL);
 
     virtual bool LocalCopyData(SchedulerWorker* worker,
                                LogicalDataObject* ldo,
                                PhysicalData* created_data,
-                               PhysicalData* to_data);
+                               PhysicalData* to_data,
+                               BindingTemplate *bt = NULL);
 
     virtual bool SaveData(SchedulerWorker* worker,
                           LogicalDataObject* ldo,
@@ -163,7 +160,16 @@ namespace nimbus {
     virtual bool SendComputeJobToWorker(SchedulerWorker* worker,
                                         JobEntry* job);
 
-    virtual void PrintLog(JobEntry *job);
+    virtual bool UpdateDataManagerByPatterns(
+                    ComplexJobEntry* job,
+                    const BindingTemplate::PatternList* patterns,
+                    const std::vector<physical_data_id_t>* physical_ids);
+
+    virtual bool QueryDataManagerForPatterns(
+                    ComplexJobEntry* job,
+                    const BindingTemplate::PatternList* patterns,
+                    const BindingTemplate::PatternMetaData* patterns_meta_data,
+                    std::vector<physical_data_id_t>* physical_ids);
 
   private:
     JobAssigner(const JobAssigner& other) {}

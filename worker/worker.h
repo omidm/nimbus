@@ -178,7 +178,15 @@ class Worker {
   virtual bool IsEmptyGraph(WorkerJobGraph* job_graph);
 
  public:
+  void StatAddJob();
+  void StatEndJob(int len);
+  void StatDispatchJob(int len = 1);
   void ResolveDataArray(Job* job);
+  void GetTimerStat(int64_t* idle, int64_t* block, int64_t* run);
+
+ private:
+  int stat_blocked_job_num_, stat_ready_job_num_;
+  int stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_;
 };
 }  // namespace nimbus
 

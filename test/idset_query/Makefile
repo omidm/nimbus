@@ -11,7 +11,7 @@ H_FILES = $(wildcard *.h)
 CPP_FILES = $(wildcard *.cc)
 OBJECT_FILES = $(subst .cc,.o,$(CPP_FILES))
 
-LFLAGS += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread -lprotobuf
+LFLAGS += -lnimbus -lboost_thread -lboost_system -lpthread -lprotobuf
 
 # Add the dependencies here
 %.o: %.cc

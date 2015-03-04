@@ -72,9 +72,13 @@ class ComputeJobCommand : public SchedulerCommand {
     std::string job_name();
     ID<job_id_t> job_id();
     IDSet<physical_data_id_t> read_set();
+    IDSet<physical_data_id_t>* read_set_p();
     IDSet<physical_data_id_t> write_set();
+    IDSet<physical_data_id_t>* write_set_p();
     IDSet<job_id_t> before_set();
+    IDSet<job_id_t>* before_set_p();
     IDSet<job_id_t> after_set();
+    IDSet<job_id_t>* after_set_p();
     ID<job_id_t> future_job_id();
     bool sterile();
     GeometricRegion region();

@@ -45,8 +45,11 @@
 #include <boost/asio.hpp>
 #include <string>
 #include <map>
+#include <list>
+#include <vector>
 #include "shared/nimbus_types.h"
 #include "shared/scheduler_command_include.h"
+#include "shared/command_template.h"
 
 namespace nimbus {
 
@@ -86,6 +89,8 @@ class SchedulerClient {
 
   void set_scheduler_command_table(SchedulerCommand::PrototypeTable* cmt);
 
+  void PushCommandToTheQueue(SchedulerCommand *command);
+
  private:
   std::string scheduler_ip_;
   port_t scheduler_port_;
@@ -99,6 +104,39 @@ class SchedulerClient {
   boost::mutex command_queue_mutex_;
   boost::mutex send_command_mutex_;
 
+  boost::thread* command_template_thread_;
+  typedef std::map<std::string, CommandTemplate*> TemplateMap;
+  TemplateMap template_map_;
+  bool filling_template_;
+  std::string template_name_in_progress_;
+
+  class CommandTemplateSeed {
+    public:
+      CommandTemplateSeed(CommandTemplate *command_template,
+                          const std::vector<job_id_t>& inner_job_ids,
+                          const std::vector<job_id_t>& outer_job_ids,
+                          const std::vector<Parameter>& parameters,
+                          const std::vector<physical_data_id_t>& physical_ids)
+        : command_template_(command_template),
+          inner_job_ids_(inner_job_ids),
+          outer_job_ids_(outer_job_ids),
+          parameters_(parameters),
+          physical_ids_(physical_ids) {}
+      ~CommandTemplateSeed() {}
+
+      CommandTemplate *command_template_;
+      std::vector<job_id_t> inner_job_ids_;
+      std::vector<job_id_t> outer_job_ids_;
+      std::vector<Parameter> parameters_;
+      std::vector<physical_data_id_t> physical_ids_;
+  };
+
+  typedef std::list<CommandTemplateSeed*> CommandTemplateSeedList;
+  CommandTemplateSeedList command_template_seeds_;
+  boost::mutex command_template_seeds_mutex_;
+  boost::condition_variable_any command_template_seeds_cond_;
+
+  virtual void CommandTemplateThread();
 
   /** Create client socket, set up networking and state. */
   virtual bool Initialize();
@@ -120,6 +158,12 @@ class SchedulerClient {
       be less than size (for example, if the buffer end has an
       incomplete command. */
   virtual size_t EnqueueCommands(char* buffer, size_t size);
+
+  virtual void HandleStartCommandTemplateCommand(StartCommandTemplateCommand *cm);
+
+  virtual void HandleEndCommandTemplateCommand(EndCommandTemplateCommand *cm);
+
+  virtual void HandleSpawnCommandTemplateCommand(SpawnCommandTemplateCommand *cm);
 };
 
 }  // namespace nimbus

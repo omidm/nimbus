@@ -96,6 +96,42 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
   return true;
 }
 
+bool VersionManager::AddComplexJobEntry(ComplexJobEntry *complex_job) {
+  InsertComplexJobInLdl(complex_job);
+
+  complex_jobs_[complex_job->job_id()] = complex_job;
+  DetectNewComplexJob(complex_job);
+
+//  Log log(Log::NO_FILE);
+//  log.StartTimer();
+//
+//  const ShadowJobEntryMap* jobs =  complex_job->jobs_p();
+//
+//  ShadowJobEntryMap::const_iterator iter = jobs->begin();
+//  for (; iter != jobs->end(); ++iter) {
+//    ShadowJobEntry* job = iter->second;
+//    {
+//      IDSet<logical_data_id_t>::ConstIter it;
+//      for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
+//        Index::iterator iter = index_.find(*it);
+//        if (iter == index_.end()) {
+//          dbg(DBG_ERROR, "ERROR: ldid %lu appeared in read set of %lu is not defined yet.\n",
+//              *it, job->job_id());
+//        } else {
+//          iter->second->AddJobEntryReader(job);
+//        }
+//      }
+//    }
+//
+//    DetectNewJob(job);
+//  }
+//
+//  log.StopTimer();
+//  std::cout << "SPAWN ADD COMPLEX JOB: " << log.timer() << std::endl;
+
+  return true;
+}
+
 bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
   assert(job->IsReadyForCompleteVersioning());
 
@@ -157,6 +193,143 @@ bool VersionManager::ResolveEntireContextForJob(JobEntry *job) {
   return true;
 }
 
+bool VersionManager::ResolveJobDataVersionsForPattern(JobEntry *job,
+                          const BindingTemplate::PatternList* patterns) {
+  BindingTemplate::PatternList::const_iterator it;
+  for (it = patterns->begin(); it != patterns->end(); ++it) {
+    logical_data_id_t ldid = (*it)->ldid_;
+    data_version_t version;
+    if (job->vmap_read()->query_entry(ldid, &version)) {
+      continue;
+    }
+    if (LookUpVersion(job, ldid, &version)) {
+      job->vmap_read()->set_entry(ldid, version);
+    } else {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool VersionManager::MemoizeVersionsForTemplate(JobEntry *job) {
+  TemplateJobEntry* tj = job->template_job();
+  assert(job->memoize());
+  assert(tj);
+  TemplateEntry* te = tj->template_entry();
+
+  assert(job->IsReadyForCompleteVersioning());
+
+  // Set the meta before set for later before set relation lookups.
+  tj->set_meta_before_set(job->meta_before_set());
+  tj->set_job_depth(job->job_depth());
+
+  if (job->sterile()) {
+    IDSet<logical_data_id_t>::ConstIter it;
+    for (it = job->union_set_p()->begin(); it != job->union_set_p()->end(); ++it) {
+      data_version_t version;
+      if (job->vmap_read()->query_entry(*it, &version)) {
+      } else if (LookUpVersion(job, *it, &version)) {
+        job->vmap_read()->set_entry(*it, version);
+      } else {
+        return false;
+      }
+
+      data_version_t base_version;
+      if (!te->vmap_base()->query_entry(*it, &base_version)) {
+        return false;
+      }
+
+      data_version_t diff_version = version - base_version;
+      assert(diff_version >= 0);
+      tj->vmap_read_diff()->set_entry(*it, diff_version);
+
+      // Memoize the acceess pattern
+      if (tj->read_set_p()->contains(*it)) {
+        te->AddToAccessPattern(*it, diff_version, tj->index());
+      }
+
+      if (tj->write_set_p()->contains(*it)) {
+        diff_version = diff_version + 1;
+      }
+      if (diff_version > 0) {
+        tj->vmap_write_diff()->set_entry(*it, diff_version);
+      }
+    }
+  } else {
+    LdoMap::const_iterator it;
+    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+      data_version_t version;
+      if (job->vmap_read()->query_entry(it->first, &version)) {
+      } else if (LookUpVersion(job, it->first, &version)) {
+        job->vmap_read()->set_entry(it->first, version);
+      } else {
+        return false;
+      }
+
+      data_version_t base_version;
+      if (!te->vmap_base()->query_entry(it->first, &base_version)) {
+        return false;
+      }
+
+      data_version_t diff_version = version - base_version;
+      assert(diff_version >= 0);
+      tj->vmap_read_diff()->set_entry(it->first, diff_version);
+
+      // Memoize the acceess pattern
+      if (tj->read_set_p()->contains(it->first)) {
+        te->AddToAccessPattern(it->first, diff_version, tj->index());
+      }
+
+      if (tj->write_set_p()->contains(it->first)) {
+        diff_version = diff_version + 1;
+      }
+      if (diff_version > 0) {
+        tj->vmap_write_diff()->set_entry(it->first, diff_version);
+      }
+    }
+  }
+
+  return true;
+}
+
+
+bool VersionManager::InsertComplexJobInLdl(ComplexJobEntry *job) {
+  ShadowJobEntryList list;
+  job->OMIDGetParentShadowJobs(&list);
+  // For now only one parent job per complex job is allowd!
+  assert(list.size() == 1);
+  ShadowJobEntry* sj = *(list.begin());
+  ComplexJobEntry* xj = sj->complex_job();
+  assert(xj == job);
+
+  VersionMap::ConstIter iter = sj->vmap_write_diff()->content_p()->begin();
+  for (; iter != sj->vmap_write_diff()->content_p()->end(); ++iter) {
+    data_version_t base_version;
+    if (xj->vmap_read()->query_entry(iter->first, &base_version)) {
+    } else if (LookUpVersion(xj, iter->first, &base_version)) {
+      xj->vmap_read()->set_entry(iter->first, base_version);
+    } else {
+      dbg(DBG_ERROR, "ERROR: complex job %lu could not be versioned for ldid %lu.", xj->job_id(), iter->first); //NOLINT
+      assert(false);
+      return false;
+    }
+
+    data_version_t diff_version;
+    if (sj->vmap_write_diff()->query_entry(iter->first, &diff_version)) {
+    } else {
+      dbg(DBG_ERROR, "ERROR: shadow job %lu did not have diff versioned for ldid %lu.", xj->job_id(), iter->first); //NOLINT
+      assert(false);
+      return false;
+    }
+
+    InsertCheckPointLdlEntry(
+        iter->first, xj->job_id(), base_version + diff_version, xj->job_depth());
+  }
+
+  return true;
+}
+
+
 bool VersionManager::CreateCheckPoint(JobEntry *job) {
   assert(!job->sterile());
 
@@ -189,7 +362,29 @@ bool VersionManager::CreateCheckPoint(JobEntry *job) {
 }
 
 
+bool VersionManager::DetectNewComplexJob(ComplexJobEntry *xj) {
+  boost::unique_lock<boost::recursive_mutex> lock(snap_shot_mutex_);
+  {
+    ChildCounter::iterator it = child_counter_.find(xj->parent_job_id());
+    assert(it != child_counter_.end());
+    it->second += xj->inner_job_ids_p()->size();
+  }
 
+  ShadowJobEntryList list;
+  xj->OMIDGetParentShadowJobs(&list);
+  // For now complex job can have only one parent job - omidm
+  assert(list.size() == 1);
+  JobEntry *j = *(list.begin());
+  assert(!j->sterile());
+  {
+    assert(child_counter_.find(j->job_id()) == child_counter_.end());
+    child_counter_[j->job_id()] = (counter_t) (1);
+    assert(parent_map_.find(j->job_id()) == parent_map_.end());
+    parent_map_[j->job_id()] = j;
+  }
+
+  return true;
+}
 
 bool VersionManager::DetectNewJob(JobEntry *job) {
   boost::unique_lock<boost::recursive_mutex> lock(snap_shot_mutex_);
@@ -251,6 +446,9 @@ bool VersionManager::InsertCheckPointLdlEntry(
 }
 
 bool VersionManager::GetSnapShot() {
+  // TODO(omidm): fix snap shot logic when there are complex jobs!
+  return false;
+
   boost::unique_lock<boost::recursive_mutex> lock(snap_shot_mutex_);
   if (snap_shot_pending_) {
     CleanUp();
@@ -283,31 +481,128 @@ bool VersionManager::LookUpVersion(
 
 size_t VersionManager::GetJobsNeedDataVersion(
     JobEntryList* list, VLD vld) {
-  Index::iterator iter = index_.find(vld.first);
-  if (iter == index_.end()) {
-    list->clear();
-    return 0;
-  } else {
-    {
-      boost::unique_lock<boost::recursive_mutex> lock(snap_shot_mutex_);
-      ParentMap::iterator it = parent_map_.begin();
-      for (; it != parent_map_.end(); ++it) {
-        if (!(it->second->done())) {
-          iter->second->AddJobEntryReader(it->second);
+  size_t count = 0;
+  list->clear();
+
+  assert(complex_jobs_.size() <= 1);
+
+  {
+    ComplexJobMap::iterator iter = complex_jobs_.begin();
+    for (; iter != complex_jobs_.end(); ++iter) {
+      ComplexJobEntry *xj = iter->second;
+      assert(!xj->done());
+
+      TemplateEntry *te = xj->template_entry();
+
+      data_version_t base_version;
+      if (xj->vmap_read()->query_entry(vld.first, &base_version)) {
+      } else if (LookUpVersion(xj, vld.first, &base_version)) {
+        xj->vmap_read()->set_entry(vld.first, base_version);
+      } else {
+        dbg(DBG_ERROR, "ERROR: could not version the base complex job %lu.\n", xj->job_id());
+        assert(false);
+      }
+
+      if (vld.second < base_version) {
+        continue;
+      }
+
+      data_version_t diff_version = vld.second - base_version;
+
+      std::list<size_t> indices;
+      te->QueryAccessPattern(vld.first, diff_version, &indices);
+      std::list<size_t>::iterator it = indices.begin();
+      for (; it != indices.end(); ++it) {
+        ShadowJobEntry *sj;
+        if (xj->OMIDGetShadowJobEntryByIndex(*it, sj)) {
+          if ((!sj->assigned()) ||
+              ((!sj->sterile()) && (!sj->done()))) {
+            list->push_back(sj);
+            ++count;
+          }
         }
       }
     }
-    return iter->second->GetJobsNeedVersion(list, vld.second);
   }
+
+  {
+    Index::iterator iter = index_.find(vld.first);
+    if (iter == index_.end()) {
+      return count;
+    } else {
+      {
+        boost::unique_lock<boost::recursive_mutex> lock(snap_shot_mutex_);
+        ParentMap::iterator it = parent_map_.begin();
+        for (; it != parent_map_.end(); ++it) {
+          if (!(it->second->done())) {
+            iter->second->AddJobEntryReader(it->second);
+          }
+        }
+      }
+
+      count += iter->second->GetJobsNeedVersion(list, vld.second, true);
+    }
+  }
+
+  return count;
 }
 
 bool VersionManager::NotifyJobDone(JobEntry* job) {
+  if (job->job_type() == JOB_CMPX) {
+    complex_jobs_.erase(job->job_id());
+    return true;
+  }
+
   assert(job->versioned());
   DetectDoneJob(job);
   return true;
 }
 
 bool VersionManager::RemoveJobEntry(JobEntry* job) {
+  // TODO(omidm): may need better clean up for complex and """*SHADOW*""" jobs.
+  if (job->job_type() == JOB_CMPX) {
+    assert(complex_jobs_.find(job->job_id()) == complex_jobs_.end());
+
+    ComplexJobEntry *xj = reinterpret_cast<ComplexJobEntry*>(job);
+    ShadowJobEntryList list;
+    xj->OMIDGetParentShadowJobs(&list);
+    // For now complex job can have only one parent job - omidm
+    assert(list.size() == 1);
+    JobEntry *j = *(list.begin());
+    assert(!j->sterile());
+
+    {
+      boost::unique_lock<boost::recursive_mutex> lock(snap_shot_mutex_);
+      if (snap_shot_.contains(j->job_id())) {
+        CleanUp();
+      }
+
+      assert(parent_map_.find(j->job_id()) != parent_map_.end());
+      parent_map_.erase(j->job_id());
+    }
+
+    LdoMap::const_iterator it;
+    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+      Index::iterator iter = index_.find(it->first);
+      if (iter != index_.end()) {
+        // Set versioned to comply with version entry assumption.
+        // Note that with active binding template job is never versioned -omidm
+        j->set_versioned(true);
+        iter->second->RemoveJobEntry(j);
+        // Even empty you cannot remove, otherwise the ldl would show as undefined!
+        // if (iter->second->is_empty()) {
+        //   delete iter->second;
+        //   index_.erase(iter);
+        //   std::cout << "version entry got empty!!\n";
+        // }
+      }
+    }
+
+    return true;
+  }
+
+
+
   assert(job->versioned());
 
   {

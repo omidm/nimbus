@@ -47,6 +47,11 @@ JobEntry::JobEntry() {
   Initialize();
   job_depth_ = NIMBUS_INIT_JOB_DEPTH;
   sterile_ = false;
+  memoize_ = false;
+  memoize_binding_ = false;
+  to_finalize_binding_template_ = false;
+  template_job_ = NULL;
+  binding_template_ = NULL;
   region_ = GeometricRegion();
   partial_versioned_ = false;
   versioned_ = false;
@@ -59,6 +64,8 @@ JobEntry::JobEntry() {
   write_region_valid_ = false;
   union_region_valid_ = false;
   assigned_worker_ = NULL;
+  parent_job_name_ = "";  // will be set for non-sterile and complex jobs.
+  grand_parent_job_name_ = "";  // will be set for complex jobs.
 }
 
 void JobEntry::Initialize() {
@@ -88,6 +95,14 @@ JobType JobEntry::job_type() const {
 
 std::string JobEntry::job_name() const {
   return job_name_;
+}
+
+std::string JobEntry::parent_job_name() const {
+  return parent_job_name_;
+}
+
+std::string JobEntry::grand_parent_job_name() const {
+  return grand_parent_job_name_;
 }
 
 job_id_t JobEntry::job_id() const {
@@ -175,6 +190,26 @@ bool JobEntry::sterile() const {
   return sterile_;
 }
 
+bool JobEntry::memoize() const {
+  return memoize_;
+}
+
+bool JobEntry::memoize_binding() const {
+  return memoize_binding_;
+}
+
+bool JobEntry::to_finalize_binding_template() const {
+  return to_finalize_binding_template_;
+}
+
+TemplateJobEntry* JobEntry::template_job() const {
+  return template_job_;
+}
+
+BindingTemplate* JobEntry::binding_template() const {
+  return binding_template_;
+}
+
 GeometricRegion JobEntry::region() const {
   return region_;
 }
@@ -233,6 +268,14 @@ void JobEntry::set_job_type(JobType job_type) {
 
 void JobEntry::set_job_name(std::string job_name) {
   job_name_ = job_name;
+}
+
+void JobEntry::set_parent_job_name(std::string parent_job_name) {
+  parent_job_name_ = parent_job_name;
+}
+
+void JobEntry::set_grand_parent_job_name(std::string grand_parent_job_name) {
+  grand_parent_job_name_ = grand_parent_job_name;
 }
 
 void JobEntry::set_job_id(job_id_t job_id) {
@@ -294,6 +337,10 @@ void JobEntry::set_vmap_write(boost::shared_ptr<VersionMap> vmap_write) {
   vmap_write_ = vmap_write;
 }
 
+void JobEntry::set_vmap_partial(boost::shared_ptr<VersionMap> vmap_partial) {
+  vmap_partial_ = vmap_partial;
+}
+
 void JobEntry::set_meta_before_set(boost::shared_ptr<MetaBeforeSet> meta_before_set) {
   meta_before_set_ = meta_before_set;
 }
@@ -327,9 +374,28 @@ void JobEntry::set_assigned_worker(SchedulerWorker *assigned_worker) {
   assigned_worker_ = assigned_worker;
 }
 
-
 void JobEntry::set_sterile(bool flag) {
   sterile_ = flag;
+}
+
+void JobEntry::set_memoize(bool flag) {
+  memoize_ = flag;
+}
+
+void JobEntry::set_memoize_binding(bool flag) {
+  memoize_binding_ = flag;
+}
+
+void JobEntry::set_to_finalize_binding_template(bool flag) {
+  to_finalize_binding_template_ = flag;
+}
+
+void JobEntry::set_template_job(TemplateJobEntry* template_job) {
+  template_job_ = template_job;
+}
+
+void JobEntry::set_binding_template(BindingTemplate* binding_template) {
+  binding_template_ = binding_template;
 }
 
 void JobEntry::set_region(GeometricRegion region) {
@@ -492,6 +558,9 @@ void JobEntry::MarkJobAsCompletelyResolved() {
     versioned_entire_context_ = true;
 }
 
+bool JobEntry::LookUpMetaBeforeSet(JobEntry* job) {
+  return meta_before_set_->LookUpBeforeSetChain(job->job_id(), job->job_depth());
+}
 
 
 

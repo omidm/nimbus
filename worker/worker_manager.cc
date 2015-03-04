@@ -112,6 +112,8 @@ bool WorkerManager::ClassifyAndAddJob(Job* job) {
 }
 
 bool WorkerManager::PushJob(Job* job) {
+  // TODO(quhang): when a job is dispatched.
+  worker_->StatDispatchJob();
   if (ClassifyAndAddJob(job)) {
     TriggerScheduling();
   }
@@ -127,6 +129,7 @@ bool WorkerManager::PushJobList(std::list<Job*>* job_list) {
       result = true;
     }
   }
+  worker_->StatDispatchJob(job_list->size());
   if (result) {
     TriggerScheduling();
   }
@@ -150,8 +153,13 @@ bool WorkerManager::FinishJob(Job* job) {
 
 bool WorkerManager::GetLocalJobDoneList(JobList* buffer) {
   pthread_mutex_lock(&local_job_done_list_lock_);
+  int len = local_job_done_list_.size();
   buffer->splice(buffer->end(), local_job_done_list_);
   pthread_mutex_unlock(&local_job_done_list_lock_);
+  // TODO(quhang): when a job is done.
+  if (len != 0) {
+    worker_->StatEndJob(len);
+  }
   return true;
 }
 
