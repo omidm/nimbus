@@ -47,6 +47,7 @@
 #include "data/app_data/app_data_defs.h"
 #include "data/app_data/app_var.h"
 #include "shared/dbg.h"
+#include "shared/fast_log.hh"
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
 #include "worker/data.h"
@@ -91,7 +92,9 @@ void AppVar::PullData(Data *d) {
     GeometricRegion dreg = d->region();
     GeometricRegion wreg = GeometricRegion::
         GetIntersection(write_region_, dreg);
+    nimbus::timer::StartTimer(nimbus::timer::kWriteAppData);
     WriteAppData(write_set, wreg);
+    nimbus::timer::StopTimer(nimbus::timer::kWriteAppData);
 }
 
 /**

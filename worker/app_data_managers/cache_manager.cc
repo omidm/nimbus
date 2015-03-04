@@ -50,6 +50,7 @@
 #include "data/app_data/app_data_defs.h"
 #include "data/app_data/app_object.h"
 #include "shared/dbg.h"
+#include "shared/fast_log.hh"
 #include "shared/geometric_region.h"
 #include "worker/app_data_manager.h"
 #include "worker/app_data_managers/cache_manager.h"
@@ -99,7 +100,9 @@ void CacheManager::WriteImmediately(AppVar *app_var,
         write_back.erase(d);
     }
 
+    nimbus::timer::StartTimer(nimbus::timer::kWriteAppData);
     app_var->WriteAppData(flush_set, app_var->write_region_);
+    nimbus::timer::StopTimer(nimbus::timer::kWriteAppData);
 }
 
 /**
@@ -147,8 +150,10 @@ void CacheManager::WriteImmediately(AppStruct *app_struct,
     }
 
 
+    nimbus::timer::StartTimer(nimbus::timer::kWriteAppData);
     app_struct->WriteAppData(var_type, flush_sets,
                              app_struct->write_region_);
+    nimbus::timer::StopTimer(nimbus::timer::kWriteAppData);
 }
 
 /**
@@ -208,7 +213,10 @@ AppVar *CacheManager::GetAppVarV(const DataArray &read_set,
     GeometricRegion write_region_old = cv->write_region_;
     cv->write_region_ = write_region;
 
+    nimbus::timer::StartTimer(nimbus::timer::kWriteAppData);
     cv->WriteAppData(flush, write_region_old);
+    nimbus::timer::StopTimer(nimbus::timer::kWriteAppData);
+
     for (size_t i = 0; i < sync.size(); ++i) {
         sync_co[i]->PullData(sync[i]);
     }
@@ -218,7 +226,10 @@ AppVar *CacheManager::GetAppVarV(const DataArray &read_set,
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
 
+    nimbus::timer::StartTimer(nimbus::timer::kReadAppData);
     cv->ReadAppData(diff, read_region);
+    nimbus::timer::StopTimer(nimbus::timer::kReadAppData);
+
     return cv;
 }
 
@@ -277,7 +288,10 @@ AppStruct *CacheManager::GetAppStructV(const std::vector<app_data::type_id_t> &v
     GeometricRegion write_region_old = cs->write_region_;
     cs->write_region_ = write_region;
 
+    nimbus::timer::StartTimer(nimbus::timer::kWriteAppData);
     cs->WriteAppData(var_type, flush_sets, write_region_old);
+    nimbus::timer::StopTimer(nimbus::timer::kWriteAppData);
+
     for (size_t t = 0; t < num_var; ++t) {
         DataArray &sync_t = sync_sets[t];
         AppObjects &sync_co_t = sync_co_sets[t];
@@ -292,7 +306,10 @@ AppStruct *CacheManager::GetAppStructV(const std::vector<app_data::type_id_t> &v
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
 
+    nimbus::timer::StartTimer(nimbus::timer::kReadAppData);
     cs->ReadAppData(var_type, diff_sets, read_region);
+    nimbus::timer::StopTimer(nimbus::timer::kReadAppData);
+
     return cs;
 }
 
