@@ -16,10 +16,10 @@ worker_t: $(OBJFILES) $(HFILES)
 .PHONY: worker_job_graph app_data_managers
 
 clean: clean-files
-	cd worker_job_graph && make clean && cd ..
+	make -C worker_job_graph clean && make -C app_data_managers clean
 
 worker_job_graph:
-	cd worker_job_graph && make && cd ..
+	make -C worker_job_graph
 
 app_data_managers:
-	cd app_data_managers && make && cd ..
+	make -C app_data_managers

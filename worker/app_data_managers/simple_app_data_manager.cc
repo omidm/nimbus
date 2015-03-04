@@ -156,7 +156,6 @@ void SimpleAppDataManager::ReleaseAccess(AppObject* app_object) {
       DataArray flush_set(write_back.begin(), write_back.end());
       write_back.clear();
       app_var->WriteAppData(flush_set, app_var->write_region_);
-      app_var->write_back_.clear();
     } else {
       AppStruct *app_struct = static_cast<AppStruct *>(app_object);
       assert(app_struct != NULL);
@@ -175,10 +174,5 @@ void SimpleAppDataManager::ReleaseAccess(AppObject* app_object) {
     app_object->Destroy();
     delete app_object;
 }
-
-void SimpleAppDataManager::SetLogNames(std::string wid_str) {
-    time_log = fopen((wid_str + "_nocache_time.txt").c_str(), "w");
-}
-
 
 }  // namespace nimbus
