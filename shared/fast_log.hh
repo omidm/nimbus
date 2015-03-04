@@ -60,6 +60,9 @@ enum TimerType {
   kSumCyclesTotal,
   kSumCyclesBlock,
   kSumCyclesRun,
+  kReadAppData,
+  kWriteAppData,
+  kSyncData,
   kMaxTimer
 };
 struct TimerRecord {

@@ -500,6 +500,7 @@ void ProjectionDriver::AppData_LoadFromNimbus(
 
 void ProjectionDriver::AppData_SaveToNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
+  nimbus::timer::StartTimer(nimbus::timer::kAssemblingCache);
   nimbus::PdiVector pdv;
   GeometricRegion array_reg_central(init_config.local_region.x(),
                                     init_config.local_region.y(),
@@ -678,6 +679,7 @@ void ProjectionDriver::AppData_SaveToNimbus(
     app_data_index_c2m = NULL;
     if (print_debug) dbg(APP_LOG, "[PROJECTION] SAVE INDEX_C2M %f seconds\n", log_timer.timer());
   }
+  nimbus::timer::StopTimer(nimbus::timer::kAssemblingCache);
 }
 
 }  // namespace PhysBAM

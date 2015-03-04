@@ -30,6 +30,7 @@
 #include "data/physbam/translator_physbam_old.h"
 #include "data/scalar_data.h"
 #include "shared/nimbus.h"
+#include "shared/fast_log.hh"
 #include "worker/physical_data_instance.h"
 #include "worker/static_config_manager.h"
 
@@ -723,6 +724,7 @@ Save_To_Nimbus_No_AppData(const nimbus::Job *job, const nimbus::DataArray &da, c
 template<class TV> void WATER_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
+    nimbus::timer::StartTimer(nimbus::timer::kAssemblingCache);
     nimbus::StaticConfigManager* config_manager = job->GetStaticConfigManager();
     if (static_config_collision_body) {
       config_manager->ReleaseStaticConfigVariable(static_config_collision_body);
@@ -986,6 +988,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
           cm->ReleaseAccess(app_data_ple);
           app_data_ple = NULL;
       }
+  nimbus::timer::StopTimer(nimbus::timer::kAssemblingCache);
 }
 //#####################################################################
 // Load from Nimbus
