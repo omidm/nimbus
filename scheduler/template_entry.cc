@@ -114,7 +114,6 @@ void TemplateEntry::CompleteParentJobIndices() {
   parent_job_indices_.clear();
   TemplateJobEntryVector::iterator iter = compute_jobs_.begin();
   for (; iter != compute_jobs_.end(); ++iter) {
-    std::cout << "******OMID: " << (*iter)->job_name() << std::endl;
     if (!(*iter)->sterile()) {
       parent_job_indices_.push_back(index);
     }

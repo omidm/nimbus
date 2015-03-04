@@ -254,11 +254,6 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
 
   // Testing the integrity of computations!
 
-  if (NIMBUS_COMMAND_TEMPLATE_ACTIVE) {
-    assert(worker_job_ids_.size() == worker_phy_ids_.size());
-    assert(worker_job_ids_.size() == worker_parameter_indices_.size());
-  }
-
   {
     PatternList::iterator iter = end_pattern_list_.begin();
     for (; iter != end_pattern_list_.end(); ++iter) {
@@ -441,17 +436,15 @@ void BindingTemplate::SpawnCommandTemplateAtWorkers(const std::vector<Parameter>
     {
       std::map<worker_id_t, std::vector<size_t> >::iterator it =
         worker_parameter_indices_.find(w_id);
-      assert(it != worker_parameter_indices_.end());
-      std::vector<size_t>::iterator i = it->second.begin();
-      for (; i != it->second.end(); ++i) {
-        assert((*i) <parameters.size());
-        params.push_back(parameters[*i]);
+      // a worker does not necessarily has compute jobs, and so parameter -omidm
+      if (it != worker_parameter_indices_.end()) {
+        std::vector<size_t>::iterator i = it->second.begin();
+        for (; i != it->second.end(); ++i) {
+          assert((*i) <parameters.size());
+          params.push_back(parameters[*i]);
+        }
       }
     }
-
-
-
-
 
     std::vector<physical_data_id_t> phy_ids;
     {

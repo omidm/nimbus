@@ -103,7 +103,6 @@ class TemplateManager {
 
 
   private:
-    Log log_;
     IDMaker *id_maker_;
     JobManager *job_manager_;
     TemplateMap template_map_;

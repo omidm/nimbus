@@ -169,7 +169,6 @@ class JobManager {
                                       bool memoizing_mode = false);
 
   private:
-    Log log_;
     AfterMap *after_map_;
     const LdoMap *ldo_map_p_;
     VersionManager version_manager_;

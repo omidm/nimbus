@@ -183,7 +183,6 @@ class Scheduler {
     Log log_;
     Log log_assign_;
     Log log_process_;
-    Log log_receive_stamp_;
 };
 
 }  // namespace nimbus

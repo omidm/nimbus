@@ -240,12 +240,12 @@ template<typename T, typename key_t>
 bool Graph<T, key_t>::AddEdge(key_t start_key, key_t end_key) {
   typename Vertex<T, key_t>::Iter start_iter;
   if (!HasVertex(start_key, &start_iter)) {
-    dbg(DBG_ERROR, "ERROR: start vertex with id %lu does not exist.\n", start_key);
+    dbg(DBG_WARN, "WARNING: start vertex with id %lu does not exist.\n", start_key);
     return false;
   }
   typename Vertex<T, key_t>::Iter end_iter;
   if (!HasVertex(end_key, &end_iter)) {
-    dbg(DBG_ERROR, "ERROR: end vertex with id %lu does not exist.\n", end_key);
+    dbg(DBG_WARN, "WARNING: end vertex with id %lu does not exist.\n", end_key);
     return false;
   }
   Vertex<T, key_t>* start = start_iter->second;
@@ -282,12 +282,12 @@ template<typename T, typename key_t>
 bool Graph<T, key_t>::AddEdge(key_t start_key, key_t end_key, Edge<T, key_t>** edge) {
   typename Vertex<T, key_t>::Iter start_iter;
   if (!HasVertex(start_key, &start_iter)) {
-    dbg(DBG_ERROR, "ERROR: start vertex with id %lu does not exist.\n", start_key);
+    dbg(DBG_WARN, "WARNING: start vertex with id %lu does not exist.\n", start_key);
     return false;
   }
   typename Vertex<T, key_t>::Iter end_iter;
   if (!HasVertex(end_key, &end_iter)) {
-    dbg(DBG_ERROR, "ERROR: end vertex with id %lu does not exist.\n", end_key);
+    dbg(DBG_WARN, "WARNING: end vertex with id %lu does not exist.\n", end_key);
     return false;
   }
   Vertex<T, key_t>* start = start_iter->second;

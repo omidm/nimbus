@@ -70,7 +70,6 @@ Scheduler::Scheduler(port_t port) {
   max_command_process_num_ = DEFAULT_MAX_COMMAND_PROCESS_NUM;
   max_job_done_command_process_num_ = DEFAULT_MAX_JOB_DONE_COMMAND_PROCESS_NUM;
   log_.set_file_name("log_scheduler");
-  log_receive_stamp_.set_file_name("log_receive_stamp");
 }
 
 Scheduler::~Scheduler() {
@@ -250,12 +249,6 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
 }
 
 void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
-  char buff[LOG_MAX_BUFF_SIZE];
-
-  snprintf(buff, sizeof(buff), "%10.9f JR id: %lu n: %s.",
-      Log::GetRawTime(), cm->job_id().elem(), cm->job_name().c_str());
-  log_receive_stamp_.log_WriteToFile(std::string(buff));
-
   JobEntry * job =
     job_manager_->AddComputeJobEntry(cm->job_name(),
                                      cm->job_id().elem(),
@@ -287,10 +280,6 @@ void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
     job->set_memoize(true);
     job->set_template_job(template_job);
   }
-
-  snprintf(buff, sizeof(buff), "%10.9f JE id: %lu n: %s.",
-      Log::GetRawTime(), cm->job_id().elem(), cm->job_name().c_str());
-  log_receive_stamp_.log_WriteToFile(std::string(buff));
 }
 
 void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
@@ -433,11 +422,10 @@ void Scheduler::ProcessPrepareRewindCommand(PrepareRewindCommand* cm) {
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   job_id_t job_id = cm->job_id().elem();
 
-  char buff[LOG_MAX_BUFF_SIZE];
-
-  snprintf(buff, sizeof(buff), "%10.9f DR id: %lu.",
-      Log::GetRawTime(), job_id);
-  log_receive_stamp_.log_WriteToFile(std::string(buff));
+  // Since we are flooding now, make sure that just compute jobs are dealt
+  // here. workers should filter copy job dones. -omidm
+  assert(!IDMaker::SchedulerProducedJobID(job_id) ||
+         job_id == NIMBUS_KERNEL_JOB_ID + 1);
 
   if (!id_maker_->SchedulerProducedJobID(job_id)) {
     // TODO(omidm): currently after map does not work with binding template so need flooding!
@@ -470,10 +458,6 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
 //    load_balancer_->NotifyJobDone(job);
 //    job_manager_->NotifyJobDone(job);
 //  }
-
-  snprintf(buff, sizeof(buff), "%10.9f DE id: %lu.",
-      Log::GetRawTime(), job_id);
-  log_receive_stamp_.log_WriteToFile(std::string(buff));
 }
 
 void Scheduler::ProcessTerminateCommand(TerminateCommand* cm) {
@@ -492,7 +476,7 @@ void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
         cm->parameters(),
         cm->parent_job_id().elem());
     log.StopTimer();
-    std::cout << "OMID SPAWN TEMPLATE. " << cm->job_graph_name() << log.timer() << std::endl;
+    std::cout << "TEMPLATE: SPAWN: " << cm->job_graph_name() << " " << log.timer() << std::endl;
   } else if (NIMBUS_NEW_TEMPLATES_ACTIVE) {
     Log log(Log::NO_FILE);
     log.StartTimer();
@@ -509,7 +493,7 @@ void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
       assert(false);
     }
     log.StopTimer();
-    std::cout << "OMID SPAWN NEW TEMPLATE. " << cm->job_graph_name() << log.timer() << std::endl;
+    std::cout << "TEMPLATE: NEW SPAWN: " << cm->job_graph_name() << " " << log.timer() << std::endl;
   }
 }
 
@@ -535,7 +519,7 @@ void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
     }
     template_manager_->SetBaseVersionMapForTemplate(template_name,
                                                     vmap_base);
-    std::cout << "OMID START TEMPLATE " << template_name << std::endl;
+    std::cout << "TEMPLATE: START " << template_name << std::endl;
   }
 }
 
@@ -545,7 +529,7 @@ void Scheduler::ProcessEndTemplateCommand(EndTemplateCommand* cm) {
     template_manager_->FinalizeNewTemplate(cm->job_graph_name());
     DefinedTemplateCommand command(cm->job_graph_name());
     server_->BroadcastCommand(&command);
-    std::cout << "OMID END TEMPLATE " << cm->job_graph_name() << std::endl;
+    std::cout << "TEMPLATE: END " << cm->job_graph_name() << std::endl;
   }
 }
 
