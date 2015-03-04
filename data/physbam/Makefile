@@ -13,7 +13,7 @@ PDIR_SOURCE = protobuf_source/
 IFLAGS += -I$(NIMBUS_ROOT)/application/physbam-lib/Public_Library
 
 proto_t:
-	cd $(PDIR_SOURCE) && make && cd ..
+	cd $(PDIR_SOURCE); make; cd ..
 
 data_t: proto_t $(OBJFILES) $(HFILES)
 
