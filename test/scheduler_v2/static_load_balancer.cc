@@ -80,8 +80,17 @@ size_t StaticLoadBalancer::AssignReadyJobs() {
 }
 
 bool StaticLoadBalancer::SetWorkerToAssignJob(JobEntry* job) {
+  if (job->job_type() == JOB_CMPX) {
+    ComplexJobEntry *xj = reinterpret_cast<ComplexJobEntry*>(job);
+    char buff[LOG_MAX_BUFF_SIZE];
+    snprintf(buff, sizeof(buff), "STATIC: %10.9lf complex job for %s.",
+        Log::GetRawTime(), xj->template_entry()->template_name().c_str());
+    log_.log_WriteToOutputStream(std::string(buff));
+    return true;
+  }
+
   Log log(Log::NO_FILE);
-  log.StartTimer();
+  log.log_StartTimer();
 
   StaticLoadBalancer::UpdateWorkerDomains();
   assert(worker_num_ == worker_map_.size());
@@ -157,12 +166,19 @@ bool StaticLoadBalancer::SetWorkerToAssignJob(JobEntry* job) {
 //    }
 //  }
 
-  log.StopTimer();
-  std::cout
-    << "STATIC: Picked worker: " << w_id
-    << " for job: " << job->job_name()
-    << " took: " << log.timer()
-    << " for union set size of: " << job->union_set_p()->size() << std::endl;
+  log.log_StopTimer();
+  char buff[LOG_MAX_BUFF_SIZE];
+  snprintf(buff, sizeof(buff), "STATIC: %10.9lf Picked worker %2.0u for %s.",
+      Log::GetRawTime(), w_id, job->job_name().c_str());
+  log_.log_WriteToOutputStream(std::string(buff));
+
+//  std::cout
+//    << Log::GetRawTime()
+//    << "STATIC: Picked worker: " << w_id
+//    << " for job: " << job->job_name()
+//    << " took: " << log.timer()
+//    << " for union set size of: " << job->union_set_p()->size()
+//    << std::endl;
 
   WorkerMap::iterator wmit = worker_map_.find(w_id);
   if (wmit == worker_map_.end()) {
