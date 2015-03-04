@@ -70,7 +70,6 @@ Scheduler::Scheduler(port_t port) {
   max_command_process_num_ = DEFAULT_MAX_COMMAND_PROCESS_NUM;
   max_job_done_command_process_num_ = DEFAULT_MAX_JOB_DONE_COMMAND_PROCESS_NUM;
   log_.set_file_name("log_scheduler");
-  log_receive_stamp_.set_file_name("log_receive_stamp");
 }
 
 Scheduler::~Scheduler() {
@@ -250,12 +249,6 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
 }
 
 void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
-  char buff[LOG_MAX_BUFF_SIZE];
-
-  snprintf(buff, sizeof(buff), "%10.9f JR id: %lu n: %s.",
-      Log::GetRawTime(), cm->job_id().elem(), cm->job_name().c_str());
-  log_receive_stamp_.log_WriteToFile(std::string(buff));
-
   JobEntry * job =
     job_manager_->AddComputeJobEntry(cm->job_name(),
                                      cm->job_id().elem(),
@@ -287,10 +280,6 @@ void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
     job->set_memoize(true);
     job->set_template_job(template_job);
   }
-
-  snprintf(buff, sizeof(buff), "%10.9f JE id: %lu n: %s.",
-      Log::GetRawTime(), cm->job_id().elem(), cm->job_name().c_str());
-  log_receive_stamp_.log_WriteToFile(std::string(buff));
 }
 
 void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
@@ -433,12 +422,6 @@ void Scheduler::ProcessPrepareRewindCommand(PrepareRewindCommand* cm) {
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   job_id_t job_id = cm->job_id().elem();
 
-  char buff[LOG_MAX_BUFF_SIZE];
-
-  snprintf(buff, sizeof(buff), "%10.9f DR id: %lu.",
-      Log::GetRawTime(), job_id);
-  log_receive_stamp_.log_WriteToFile(std::string(buff));
-
   if (!id_maker_->SchedulerProducedJobID(job_id)) {
     // TODO(omidm): currently after map does not work with binding template so need flooding!
     if (NIMBUS_BINDING_MEMOIZATION_ACTIVE) {
@@ -470,10 +453,6 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
 //    load_balancer_->NotifyJobDone(job);
 //    job_manager_->NotifyJobDone(job);
 //  }
-
-  snprintf(buff, sizeof(buff), "%10.9f DE id: %lu.",
-      Log::GetRawTime(), job_id);
-  log_receive_stamp_.log_WriteToFile(std::string(buff));
 }
 
 void Scheduler::ProcessTerminateCommand(TerminateCommand* cm) {
