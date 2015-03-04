@@ -44,7 +44,7 @@
 
 namespace nimbus {
 
-bool PhysicalDataMap::print_stat_ = true;
+bool PhysicalDataMap::print_stat_ = false;
 
 PhysicalDataMap::PhysicalDataMap() {
   sum_ = 0;
@@ -69,8 +69,8 @@ Data* PhysicalDataMap::AcquireAccess(
     physical_data_id_t physical_data_id,
     job_id_t job_id,
     AccessPattern access_pattern) {
-  outstanding_used_data_[job_id].insert(physical_data_id);
-  assert(internal_map_.find(physical_data_id) != internal_map_.end());
+  // outstanding_used_data_[job_id].insert(physical_data_id);
+  // assert(internal_map_.find(physical_data_id) != internal_map_.end());
   return internal_map_[physical_data_id].first;
 }
 
@@ -94,7 +94,7 @@ bool PhysicalDataMap::ReleaseAccess(
       }
     }
   }
-  outstanding_used_data_.erase(job_id);
+  // outstanding_used_data_.erase(job_id);
   return true;
 }
 
