@@ -422,6 +422,10 @@ void Scheduler::ProcessPrepareRewindCommand(PrepareRewindCommand* cm) {
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   job_id_t job_id = cm->job_id().elem();
 
+  // Since we are flooding now, make sure that just compute jobs are dealt
+  // here. workers should filter copy job dones. -omidm
+  assert(!IDMaker::SchedulerProducedJobID(job_id));
+
   if (!id_maker_->SchedulerProducedJobID(job_id)) {
     // TODO(omidm): currently after map does not work with binding template so need flooding!
     if (NIMBUS_BINDING_MEMOIZATION_ACTIVE) {
