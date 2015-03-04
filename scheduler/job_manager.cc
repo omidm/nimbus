@@ -198,6 +198,7 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
 }
 
 bool JobManager::AddComplexJobEntry(ComplexJobEntry* complex_job) {
+  Log log(Log::NO_FILE);
   job_id_t job_id = complex_job->job_id();
 
   if (!AddJobEntryToJobGraph(job_id, complex_job)) {
@@ -216,7 +217,12 @@ bool JobManager::AddComplexJobEntry(ComplexJobEntry* complex_job) {
   ReceiveMetaBeforeSetDepthVersioningDependency(complex_job);
   PassMetaBeforeSetDepthVersioningDependency(complex_job);
 
+  log.log_StartTimer();
   version_manager_.AddComplexJobEntry(complex_job);
+  log.log_StopTimer();
+  std::cout << "COMPLEX: VersionManager: "
+    << complex_job->template_entry()->template_name()
+    << " " << log.timer() << std::endl;
 
   std::list<job_id_t> list;
   complex_job->GetParentJobIds(&list);

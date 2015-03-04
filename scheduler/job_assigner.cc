@@ -260,6 +260,8 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
   size_t copy_job_num = bt->copy_job_num();
   size_t compute_job_num = bt->compute_job_num();
 
+  Log log(Log::NO_FILE);
+
   assert(compute_job_num == job->inner_job_ids_p()->size());
 
   std::vector<job_id_t> copy_job_ids;
@@ -267,20 +269,35 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
 
   std::vector<physical_data_id_t> physical_ids;
 
+  log.log_StartTimer();
   QueryDataManagerForPatterns(job,
                               bt->entry_pattern_list_p(),
                               bt->patterns_meta_data_p(),
                               &physical_ids);
+  log.log_StopTimer();
+  std::cout << "COMPLEX: QueryDataManager: "
+    << job->template_entry()->template_name()
+    << " " << log.timer() << std::endl;
 
+  log.log_StartTimer();
   bt->Instantiate(job->inner_job_ids(),
                   job->parameters(),
                   copy_job_ids,
                   physical_ids,
                   server_);
+  log.log_StopTimer();
+  std::cout << "COMPLEX: Instantiate: "
+    << job->template_entry()->template_name()
+    << " " << log.timer() << std::endl;
 
+  log.log_StartTimer();
   UpdateDataManagerByPatterns(job,
                               bt->end_pattern_list_p(),
                               &physical_ids);
+  log.log_StopTimer();
+  std::cout << "COMPLEX: UpdateDataManager: "
+    << job->template_entry()->template_name()
+    << " " << log.timer() << std::endl;
 
   return true;
 }
