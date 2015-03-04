@@ -424,7 +424,8 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
 
   // Since we are flooding now, make sure that just compute jobs are dealt
   // here. workers should filter copy job dones. -omidm
-  assert(!IDMaker::SchedulerProducedJobID(job_id));
+  assert(!IDMaker::SchedulerProducedJobID(job_id) ||
+         job_id == NIMBUS_KERNEL_JOB_ID + 1);
 
   if (!id_maker_->SchedulerProducedJobID(job_id)) {
     // TODO(omidm): currently after map does not work with binding template so need flooding!
