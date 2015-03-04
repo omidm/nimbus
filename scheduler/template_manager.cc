@@ -46,7 +46,6 @@ using namespace nimbus; // NOLINT
 
 TemplateManager::TemplateManager() {
   job_manager_ = NULL;
-  log_.set_file_name("log_template_manager");
 }
 
 TemplateManager::~TemplateManager() {
