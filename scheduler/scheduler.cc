@@ -476,7 +476,7 @@ void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
         cm->parameters(),
         cm->parent_job_id().elem());
     log.StopTimer();
-    std::cout << "OMID SPAWN TEMPLATE. " << cm->job_graph_name() << log.timer() << std::endl;
+    std::cout << "TEMPLATE: SPAWN: " << cm->job_graph_name() << " " << log.timer() << std::endl;
   } else if (NIMBUS_NEW_TEMPLATES_ACTIVE) {
     Log log(Log::NO_FILE);
     log.StartTimer();
@@ -493,7 +493,7 @@ void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
       assert(false);
     }
     log.StopTimer();
-    std::cout << "OMID SPAWN NEW TEMPLATE. " << cm->job_graph_name() << log.timer() << std::endl;
+    std::cout << "TEMPLATE: NEW SPAWN: " << cm->job_graph_name() << " " << log.timer() << std::endl;
   }
 }
 
@@ -519,7 +519,7 @@ void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
     }
     template_manager_->SetBaseVersionMapForTemplate(template_name,
                                                     vmap_base);
-    std::cout << "OMID START TEMPLATE " << template_name << std::endl;
+    std::cout << "TEMPLATE: START " << template_name << std::endl;
   }
 }
 
@@ -529,7 +529,7 @@ void Scheduler::ProcessEndTemplateCommand(EndTemplateCommand* cm) {
     template_manager_->FinalizeNewTemplate(cm->job_graph_name());
     DefinedTemplateCommand command(cm->job_graph_name());
     server_->BroadcastCommand(&command);
-    std::cout << "OMID END TEMPLATE " << cm->job_graph_name() << std::endl;
+    std::cout << "TEMPLATE: END " << cm->job_graph_name() << std::endl;
   }
 }
 
