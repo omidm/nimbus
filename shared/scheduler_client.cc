@@ -388,6 +388,7 @@ void SchedulerClient::CommandTemplateThread() {
                                         cts->parameters_,
                                         cts->physical_ids_,
                                         this);
+    delete cts;
   }
 }
 

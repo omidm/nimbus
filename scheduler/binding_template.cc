@@ -370,6 +370,7 @@ void BindingTemplate::SendCommandTemplateHeaderToWorkers(SchedulerServer *server
     std::vector<job_id_t> inner_job_ids;
     {
       std::map<worker_id_t, JobIdPtrList>::iterator it = worker_job_ids_.find(w_id);
+      // Worker definitely has a job, copy or compute. -omidm
       assert(it != worker_job_ids_.end());
       JobIdPtrList::iterator i = it->second.begin();
       for (; i != it->second.end(); ++i) {
@@ -380,10 +381,13 @@ void BindingTemplate::SendCommandTemplateHeaderToWorkers(SchedulerServer *server
     std::vector<physical_data_id_t> phy_ids;
     {
       std::map<worker_id_t, PhyIdPtrList>::iterator it = worker_phy_ids_.find(w_id);
-      assert(it != worker_phy_ids_.end());
-      PhyIdPtrList::iterator i = it->second.begin();
-      for (; i != it->second.end(); ++i) {
-        phy_ids.push_back(*(*i));
+      // a worker does not necessarily have physical data,
+      // e.g. it has compute jobs with empty read/write set -omidm
+      if (it != worker_phy_ids_.end()) {
+        PhyIdPtrList::iterator i = it->second.begin();
+        for (; i != it->second.end(); ++i) {
+          phy_ids.push_back(*(*i));
+        }
       }
     }
 
@@ -425,6 +429,7 @@ void BindingTemplate::SpawnCommandTemplateAtWorkers(const std::vector<Parameter>
     std::vector<job_id_t> inner_job_ids;
     {
       std::map<worker_id_t, JobIdPtrList>::iterator it = worker_job_ids_.find(w_id);
+      // Worker definitely has a job, copy or compute. -omidm
       assert(it != worker_job_ids_.end());
       JobIdPtrList::iterator i = it->second.begin();
       for (; i != it->second.end(); ++i) {
@@ -436,7 +441,7 @@ void BindingTemplate::SpawnCommandTemplateAtWorkers(const std::vector<Parameter>
     {
       std::map<worker_id_t, std::vector<size_t> >::iterator it =
         worker_parameter_indices_.find(w_id);
-      // a worker does not necessarily has compute jobs, and so parameter -omidm
+      // a worker does not necessarily have compute jobs, and so parameter -omidm
       if (it != worker_parameter_indices_.end()) {
         std::vector<size_t>::iterator i = it->second.begin();
         for (; i != it->second.end(); ++i) {
@@ -449,10 +454,13 @@ void BindingTemplate::SpawnCommandTemplateAtWorkers(const std::vector<Parameter>
     std::vector<physical_data_id_t> phy_ids;
     {
       std::map<worker_id_t, PhyIdPtrList>::iterator it = worker_phy_ids_.find(w_id);
-      assert(it != worker_phy_ids_.end());
-      PhyIdPtrList::iterator i = it->second.begin();
-      for (; i != it->second.end(); ++i) {
-        phy_ids.push_back(*(*i));
+      // a worker does not necessarily have physical data,
+      // e.g. it has compute jobs with empty read/write set -omidm
+      if (it != worker_phy_ids_.end()) {
+        PhyIdPtrList::iterator i = it->second.begin();
+        for (; i != it->second.end(); ++i) {
+          phy_ids.push_back(*(*i));
+        }
       }
     }
 

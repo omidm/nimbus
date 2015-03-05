@@ -142,30 +142,40 @@ void Scheduler::SchedulerCoreProcessor() {
   // Adding main job to the job manager.
   AddMainJob();
 
+
+  processed_command_num_ = 0;
+  log_.log_StartTimer();
+  log_assign_.log_ResetTimer();
+  log_process_.log_ResetTimer();
   // Main Loop of the scheduler.
   while (true) {
-    log_.log_StartTimer();
-
     RegisterPendingWorkers();
 
-    log_process_.StartTimer();
-    size_t command_num = ProcessQueuedSchedulerCommands();
-    log_process_.StopTimer();
+    log_process_.log_ResumeTimer();
+    processed_command_num_ += ProcessQueuedSchedulerCommands();
+    log_process_.log_StopTimer();
 
-    log_assign_.StartTimer();
+    log_assign_.log_ResumeTimer();
     AssignReadyJobs();
-    log_assign_.StopTimer();
+    log_assign_.log_StopTimer();
 
     RemoveObsoleteJobEntries();
 
     TerminationProcedure();
 
-    log_.log_StopTimer();
-    if ((log_.timer() >= .001) || (command_num > 0)) {
+    if ((log_.timer() >= 5.0) || (processed_command_num_ > 10000)) {
+      log_.log_StopTimer();
+      log_assign_.log_StopTimer();
+      log_process_.log_StopTimer();
       char buff[LOG_MAX_BUFF_SIZE];
-      snprintf(buff, sizeof(buff), "%10.9lf l: %2.5lf p: %2.5lf c: %5.0lu a: %2.5lf.",
-          Log::GetRawTime(), log_.timer(), log_process_.timer(), command_num, log_assign_.timer());
+      snprintf(buff, sizeof(buff), "%10.9lf l: %2.5lf p: %2.5lf a: %2.5lf c: %5.0lu.",
+          Log::GetRawTime(), log_.timer(), log_process_.timer(),
+          log_assign_.timer(), processed_command_num_);
       log_.log_WriteToOutputStream(std::string(buff), LOG_INFO);
+      processed_command_num_ = 0;
+      log_.log_StartTimer();
+      log_assign_.log_ResetTimer();
+      log_process_.log_ResetTimer();
     }
   }
 }
@@ -335,8 +345,9 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
         ++registered_worker_num_;
 
         char buff[LOG_MAX_BUFF_SIZE];
-        snprintf(buff, sizeof(buff), "Registered new worker, id: %u IP: %s port: %u time: %2.2lf.", // NOLINT
-            (*iter)->worker_id(), (*iter)->ip().c_str(), (*iter)->port(), log_.GetTime());
+        snprintf(buff, sizeof(buff), "%10.9lf Registered new worker, id: %u IP: %s port: %u time: %2.2lf.", // NOLINT
+            Log::GetRawTime(), (*iter)->worker_id(),
+            (*iter)->ip().c_str(), (*iter)->port(), log_.GetTime());
         log_.log_WriteToOutputStream(std::string(buff), LOG_INFO);
 
         dbg(DBG_SCHED, "Registered new worker, id: %u IP: %s port: %u.\n",

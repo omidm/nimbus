@@ -185,9 +185,17 @@ bool ShadowJobEntry::GetPhysicalWriteSet(IDSet<physical_data_id_t>* set) {
 }
 
 bool ShadowJobEntry::LookUpMetaBeforeSet(JobEntry* job) {
-  assert(job->job_type() == JOB_SHDW);
+  // if query job is not ShadowJob then we assume it is in before set path -omidm
+  if (job->job_type() != JOB_SHDW) {
+    return true;
+  }
   ShadowJobEntry* sj = reinterpret_cast<ShadowJobEntry*>(job);
-  assert(sj->complex_job() == complex_job_);
+
+  // if query job is not in the same complex job then we assume it is in before set path -omidm
+  if (sj->complex_job() != complex_job_) {
+    return true;
+  }
+
   TemplateJobEntry* tj = sj->template_job();
 
   return template_job_->meta_before_set()->LookUpBeforeSetChain(tj->job_id(), tj->job_depth());
