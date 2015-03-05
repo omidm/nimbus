@@ -202,59 +202,59 @@ def collect_output_data(scheduler_ip, worker_ips):
       config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_1,
       config.OUTPUT_PATH])
 
-  subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-      '-o', 'UserKnownHostsFile=/dev/null',
-      '-o', 'StrictHostKeyChecking=no',
-      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_2,
-      config.OUTPUT_PATH])
-
-  subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-      '-o', 'UserKnownHostsFile=/dev/null',
-      '-o', 'StrictHostKeyChecking=no',
-      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_3,
-      config.OUTPUT_PATH])
-
-  subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-      '-o', 'UserKnownHostsFile=/dev/null',
-      '-o', 'StrictHostKeyChecking=no',
-      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_4,
-      config.OUTPUT_PATH])
-
-  subprocess.call(['scp', '-r', '-i', config.PRIVATE_KEY,
-      '-o', 'UserKnownHostsFile=/dev/null',
-      '-o', 'StrictHostKeyChecking=no',
-      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_5,
-      config.OUTPUT_PATH])
-
-  subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-      '-o', 'UserKnownHostsFile=/dev/null',
-      '-o', 'StrictHostKeyChecking=no',
-      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-      config.REL_SCHEDULER_PATH + 'core',
-      config.OUTPUT_PATH])
+#  subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+#      '-o', 'UserKnownHostsFile=/dev/null',
+#      '-o', 'StrictHostKeyChecking=no',
+#      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
+#      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_2,
+#      config.OUTPUT_PATH])
+#
+#  subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+#      '-o', 'UserKnownHostsFile=/dev/null',
+#      '-o', 'StrictHostKeyChecking=no',
+#      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
+#      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_3,
+#      config.OUTPUT_PATH])
+#
+#  subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+#      '-o', 'UserKnownHostsFile=/dev/null',
+#      '-o', 'StrictHostKeyChecking=no',
+#      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
+#      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_4,
+#      config.OUTPUT_PATH])
+#
+#  subprocess.call(['scp', '-r', '-i', config.PRIVATE_KEY,
+#      '-o', 'UserKnownHostsFile=/dev/null',
+#      '-o', 'StrictHostKeyChecking=no',
+#      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
+#      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_5,
+#      config.OUTPUT_PATH])
+#
+#  subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+#      '-o', 'UserKnownHostsFile=/dev/null',
+#      '-o', 'StrictHostKeyChecking=no',
+#      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
+#      config.REL_SCHEDULER_PATH + 'core',
+#      config.OUTPUT_PATH])
 
   num = 0
   for ip in worker_ips:
     num += 1
-    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        # config.REL_WORKER_PATH + str(num) + '_' + config.LOG_FILE_NAME,
-        config.REL_WORKER_PATH  + '*_' + config.LOG_FILE_NAME,
-        config.OUTPUT_PATH])
-
-    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        # config.REL_WORKER_PATH + config.WORKER_LOG_FILE_NAME + str(config.FIRST_PORT + num),
-        config.REL_WORKER_PATH + config.WORKER_LOG_FILE_NAME + '*',
-        config.OUTPUT_PATH])
+#    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+#        '-o', 'UserKnownHostsFile=/dev/null',
+#        '-o', 'StrictHostKeyChecking=no',
+#        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+#        # config.REL_WORKER_PATH + str(num) + '_' + config.LOG_FILE_NAME,
+#        config.REL_WORKER_PATH  + '*_' + config.LOG_FILE_NAME,
+#        config.OUTPUT_PATH])
+#
+#    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+#        '-o', 'UserKnownHostsFile=/dev/null',
+#        '-o', 'StrictHostKeyChecking=no',
+#        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+#        # config.REL_WORKER_PATH + config.WORKER_LOG_FILE_NAME + str(config.FIRST_PORT + num),
+#        config.REL_WORKER_PATH + config.WORKER_LOG_FILE_NAME + '*',
+#        config.OUTPUT_PATH])
 
     subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
@@ -274,36 +274,43 @@ def collect_output_data(scheduler_ip, worker_ips):
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
         'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        config.REL_WORKER_PATH + 'core',
-        config.OUTPUT_PATH + str(num) + '_core'])
-
-    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        config.REL_WORKER_PATH + '*_cache_time.txt',
+        config.REL_WORKER_PATH + '*_time_per_thread.txt',
         config.OUTPUT_PATH])
 
-    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        config.REL_WORKER_PATH + '*_cache_objects.txt',
-        config.OUTPUT_PATH])
-
-    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        config.REL_WORKER_PATH + '*_cache_behavior.txt',
-        config.OUTPUT_PATH])
-
-    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        config.REL_WORKER_PATH  + 'log_wdx*',
-        config.OUTPUT_PATH])
+#    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+#        '-o', 'UserKnownHostsFile=/dev/null',
+#        '-o', 'StrictHostKeyChecking=no',
+#        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+#        config.REL_WORKER_PATH + 'core',
+#        config.OUTPUT_PATH + str(num) + '_core'])
+#
+#    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+#        '-o', 'UserKnownHostsFile=/dev/null',
+#        '-o', 'StrictHostKeyChecking=no',
+#        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+#        config.REL_WORKER_PATH + '*_cache_time.txt',
+#        config.OUTPUT_PATH])
+#
+#    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+#        '-o', 'UserKnownHostsFile=/dev/null',
+#        '-o', 'StrictHostKeyChecking=no',
+#        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+#        config.REL_WORKER_PATH + '*_cache_objects.txt',
+#        config.OUTPUT_PATH])
+#
+#    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+#        '-o', 'UserKnownHostsFile=/dev/null',
+#        '-o', 'StrictHostKeyChecking=no',
+#        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+#        config.REL_WORKER_PATH + '*_cache_behavior.txt',
+#        config.OUTPUT_PATH])
+#
+#    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+#        '-o', 'UserKnownHostsFile=/dev/null',
+#        '-o', 'StrictHostKeyChecking=no',
+#        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+#        config.REL_WORKER_PATH  + 'log_wdx*',
+#        config.OUTPUT_PATH])
 
 
 def clean_output_data(scheduler_ip, worker_ips):
