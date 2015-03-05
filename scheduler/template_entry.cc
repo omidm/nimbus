@@ -122,8 +122,13 @@ void TemplateEntry::CompleteParentJobIndices() {
 }
 
 void TemplateEntry::CompleteBreadthFirstSearch() {
+  std::cout << "OMID STARTED: " << template_name_ << std::endl;
   size_t depth = 0;
   while (assign_ordered_indices_.size() != compute_jobs_.size()) {
+    std::cout << "OMID depth: " << depth << std::endl;
+    std::cout << "OMID compute size: " << compute_jobs_.size() << std::endl;
+    std::cout << "OMID assigned ordered size: " << assign_ordered_indices_.size() << std::endl;
+    std::cout << "OMID traverese queue size: " << traverse_queue_.size() << std::endl;
     assert(depth++ < MAX_DEPTH);
     assert(traverse_queue_.size() != 0);
     std::list<Vertex<TemplateJobEntry, job_id_t>*> temp_traverse_queue;
@@ -141,6 +146,7 @@ void TemplateEntry::CompleteBreadthFirstSearch() {
         if (end->incoming_edges()->size() == 0) {
           temp_traverse_queue.push_back(end);
           assign_ordered_indices_.push_back(end->entry()->index());
+	  std::cout << "OMID for: " << template_name_ << " NEXT:  " << end->entry()->job_name() << " " << end->entry()->job_id() << std::endl; // NOLINT
         }
       }
     }
@@ -443,10 +449,13 @@ bool TemplateEntry::AddTemplateJobEntryToJobGraph(TemplateJobEntry *job) {
   Vertex<TemplateJobEntry, job_id_t> *vertex;
   bool added_node = job_graph_.AddVertex(job->job_id(), job, &vertex);
   assert(added_node);
+  std::cout << "OMID for: " << template_name_ << " ADD:  " << job->job_name() << " " << job->job_id() << std::endl; // NOLINT
+  std::cout << "OMID BEFORESET: " << job->before_set_p()->ToNetworkData() << std::endl; // NOLINT
 
   if (job->before_set_p()->size() == 0) {
     traverse_queue_.push_back(vertex);
     assign_ordered_indices_.push_back(job->index());
+    std::cout << "OMID for: " << template_name_ << " INIT:  " << job->job_name() << " " << job->job_id() << std::endl; // NOLINT
   } else {
     IDSet<job_id_t>::ConstIter it;
     for (it = job->before_set_p()->begin(); it != job->before_set_p()->end(); ++it) {
