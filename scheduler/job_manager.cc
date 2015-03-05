@@ -1047,6 +1047,13 @@ bool JobManager::CausingUnwantedSerialization(JobEntry* job,
                                               const logical_data_id_t& l_id,
                                               const PhysicalData& pd,
                                               bool memoizing_mode) {
+  // memoizing_mode can only work with shadow jobs and their special
+  // LookUpMetaBeforeSet, other wise it phases out job done and does not
+  // necessarily work for normal compute job. -omid
+  if (memoizing_mode) {
+    assert(job->job_type() == JOB_SHDW);
+  }
+
   bool result = false;
 
   if (!job->write_set_p()->contains(l_id)) {
