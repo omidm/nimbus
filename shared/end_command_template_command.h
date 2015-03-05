@@ -33,18 +33,44 @@
  */
 
  /*
-  * A Nimbus worker. 
+  * A EndCommandTemplateCommand is a message sent from a controller to the
+  * worker to mark the end of command template.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
-  * Modified: Chinmayee Shah <chinmayee.shah@stanford.edu>
   */
 
-#include <iostream>  // NOLINT
-#include <pthread.h>
+#ifndef NIMBUS_SHARED_END_COMMAND_TEMPLATE_COMMAND_H_
+#define NIMBUS_SHARED_END_COMMAND_TEMPLATE_COMMAND_H_
+
+
 #include <string>
+#include <vector>
+#include "shared/scheduler_command.h"
+#include "shared/protobuf_compiled/commands.pb.h"
 
-#include "application/test_cache/cache_test.h"
+namespace nimbus {
+class EndCommandTemplateCommand : public SchedulerCommand {
+  public:
+    EndCommandTemplateCommand();
 
-int main(int argc, char *argv[]) {
-  application::CacheTest::GetReadWriteTimes();
-}
+    explicit EndCommandTemplateCommand(const std::string& command_template_name);
+
+    ~EndCommandTemplateCommand();
+
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
+    virtual bool Parse(const SchedulerPBuf& buf);
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
+    std::string command_template_name();
+
+  private:
+    std::string command_template_name_;
+
+    bool ReadFromProtobuf(const EndCommandTemplatePBuf& buf);
+    bool WriteToProtobuf(EndCommandTemplatePBuf* buf);
+};
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_END_COMMAND_TEMPLATE_COMMAND_H_

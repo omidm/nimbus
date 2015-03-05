@@ -101,6 +101,13 @@ namespace nimbus {
     bool UpdatePhysicalInstance(LogicalDataObject* object,
                                 const PhysicalData& old_instance,
                                 const PhysicalData& new_instance);
+
+    bool UpdateVersionAndAccessRecord(const logical_data_id_t& ldid,
+                                      const physical_data_id_t& pdid,
+                                      const data_version_t& version,
+                                      const IDSet<job_id_t>& list_job_read,
+                                      const job_id_t& last_job_write);
+
     const PhysicalDataList* AllInstances(LogicalDataObject* object);
     int AllInstances(LogicalDataObject* object,
                      PhysicalDataList* dest);

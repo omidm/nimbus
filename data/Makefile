@@ -19,12 +19,12 @@ data_t: $(OBJFILES) $(HFILES)
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
 clean: clean-files
-	echo "  cleaning physbam/"; cd physbam; make clean; cd ../cache; make clean; cd ..
+	make -C physbam clean && make -C app_data clean
 
 .PHONY: physbam app_data
 
 physbam: 
-	cd physbam && make && cd ..
+	make -C physbam
 
 app_data:
-	cd app_data && make && cd ..
+	make -C app_data

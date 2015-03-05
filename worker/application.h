@@ -179,12 +179,7 @@ class Application {
   AppDataManager* app_data_manager() const;
   StaticConfigManager* static_config_manager() const;
 
-  void WriteToLog(std::string str);
-
-  void SetAppDataManagerLogNames(std::string wid_str);
-
  private:
-  Log log_;
   app_id_t id_;
   size_t priority_;
   // Protects job table.

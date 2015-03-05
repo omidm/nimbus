@@ -65,7 +65,6 @@
 #include "shared/distributed_db.h"
 #include "shared/cluster.h"
 #include "shared/parser.h"
-#include "shared/log.h"
 #include "shared/high_resolution_timer.h"
 #include "shared/profiler.h"
 #include "shared/helpers.h"
@@ -144,12 +143,7 @@ class Worker {
   std::list<job_id_t> hint_queue_;
   void AddFinishHintSet(const job_id_t job_id);
   bool InFinishHintSet(const job_id_t job_id);
-  FILE* event_log;
-  FILE* alloc_log;
   WorkerJobGraph worker_job_graph_;
-  Log log_;
-  Log version_log_;
-  Log data_hash_log_;
 
   Computer host_;
   boost::thread* client_thread_;
@@ -180,13 +174,19 @@ class Worker {
   virtual void ClearAfterSet(WorkerJobVertex* vertex);
   virtual void NotifyTransmissionDone(job_id_t job_id);
 
-  void PrintTimeStamp(const char* format, ...);
-
   virtual void ClearBlockedJobs(WorkerJobGraph* job_graph);
   virtual bool IsEmptyGraph(WorkerJobGraph* job_graph);
 
  public:
+  void StatAddJob();
+  void StatEndJob(int len);
+  void StatDispatchJob(int len = 1);
   void ResolveDataArray(Job* job);
+  void GetTimerStat(int64_t* idle, int64_t* block, int64_t* run);
+
+ private:
+  int stat_blocked_job_num_, stat_ready_job_num_;
+  int stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_;
 };
 }  // namespace nimbus
 

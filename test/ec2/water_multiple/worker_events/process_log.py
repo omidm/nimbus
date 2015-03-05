@@ -38,12 +38,14 @@ parser.add_argument(
     "-wn", "--workernum",
     dest="worker_num",
     default=1,
+    required=True,
     type=int,
     help="number of workers to process")
 parser.add_argument(
     "-cn", "--corenum",
     dest="core_num",
     default=1,
+    required=True,
     type=int,
     help="number of cores per worker")
 parser.add_argument(
@@ -55,8 +57,9 @@ parser.add_argument(
 args = parser.parse_args()
 
 CN = args.core_num
+WN = args.worker_num
 
-for i in range(1, args.worker_num + 1):
+for i in range(1, WN + 1):
   print 'Processing logs for worker ' + str(i) + '...'
 
   fe_log_file = args.dir + '/' + str(i) + '_event_fe.txt'

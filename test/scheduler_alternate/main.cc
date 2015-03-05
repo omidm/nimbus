@@ -49,6 +49,7 @@
 #include "shared/parser.h"
 
 
+
 void PrintUsage() {
   std::cout << "ERROR: wrong arguments\n";
   std::cout << "Usage:\n";
@@ -56,17 +57,25 @@ void PrintUsage() {
   std::cout << "REQUIRED ARGUMENTS:\n";
   std::cout << "\t-port [listening port]\n";
   std::cout << "OPTIONIAL:\n";
-  std::cout << "\t-wn [initial worker num, DEFAULT: 2]\n";
+  std::cout << "\t-wn [minimum initial worker num, DEFAULT: 2]\n";
+  std::cout << "\t-an [maximum batch job assignmet num, DEFAULT: 1]\n";
+  std::cout << "\t-tn [job assigner additional thread num, DEFAULT: 0]\n";
+  std::cout << "\t-cn [maximum batch command process num, DEFAULT: 10000]\n";
 }
-
-
 
 
 int main(int argc, char *argv[]) {
   port_t listening_port;
   size_t worker_num;
+  size_t assignment_num;
+  size_t job_assigner_thread_num;
+  size_t batch_command_process_num;
+
   bool listening_port_given = false;
   bool worker_num_given = false;
+  bool assignment_num_given = false;
+  bool job_assigner_thread_num_given = false;
+  bool batch_command_process_num_given = false;
 
   if (((argc - 1) % 2 != 0) || (argc < 3)) {
     PrintUsage();
@@ -92,6 +101,30 @@ int main(int argc, char *argv[]) {
         exit(-1);
       }
       worker_num_given = true;
+    } else if (tag == "-an") {
+      std::stringstream ss(val);
+      ss >> assignment_num;
+      if (ss.fail()) {
+        PrintUsage();
+        exit(-1);
+      }
+      assignment_num_given = true;
+    } else if (tag == "-tn") {
+      std::stringstream ss(val);
+      ss >> job_assigner_thread_num;
+      if (ss.fail()) {
+        PrintUsage();
+        exit(-1);
+      }
+      job_assigner_thread_num_given = true;
+    } else if (tag == "-cn") {
+      std::stringstream ss(val);
+      ss >> batch_command_process_num;
+      if (ss.fail()) {
+        PrintUsage();
+        exit(-1);
+      }
+      batch_command_process_num_given = true;
     } else {
       PrintUsage();
       exit(-1);
@@ -111,9 +144,20 @@ int main(int argc, char *argv[]) {
     s->set_min_worker_to_join(worker_num);
   }
 
-  // make sure the job asigner is serialized for scheduler alternate.
-  s->set_job_assigner_thread_num(0);
+  if (assignment_num_given) {
+    s->set_max_job_to_assign(assignment_num);
+  }
+
+  if (job_assigner_thread_num_given) {
+    s->set_job_assigner_thread_num(job_assigner_thread_num);
+  }
+
+  if (batch_command_process_num_given) {
+    s->set_max_command_process_num(batch_command_process_num);
+  }
 
   s->Run();
 }
+
+
 

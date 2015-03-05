@@ -124,12 +124,6 @@ class CacheManager : public AppDataManager {
          */
         virtual void InvalidateMappings(Data *d);
 
-        /**
-         * \brief Sets log file names for application data manager
-         * \param Worker id, to be used in file names
-         */
-        virtual void SetLogNames(std::string wid_str);
-
     protected:
         /**
          * \brief Requests an AppVar instance of type prototype

@@ -66,6 +66,7 @@
 #define LOGICAL_DATA_ID_BATCH (logical_data_id_t)(10000000000)
 #define PHYSICAL_DATA_ID_BATCH (physical_data_id_t)(10000000000)
 
+#define STATIC_BINDING_RECORD (size_t)(0)
 
 #define NIMBUS_KERNEL_JOB_NAME "kernel"
 #define NIMBUS_MAIN_JOB_NAME "main"
@@ -75,10 +76,14 @@
 #define NIMBUS_CREATE_DATA_JOB_NAME "createdata"
 #define NIMBUS_SAVE_DATA_JOB_NAME "savedata"
 #define NIMBUS_LOAD_DATA_JOB_NAME "loaddata"
+#define NIMBUS_COMPLEX_JOB_NAME "complex"
 
 #define NIMBUS_RECEIVER_KNOWN_IP "receiver_known_ip"
 
 #define NIMBUS_TEMPLATES_ACTIVE false
+#define NIMBUS_NEW_TEMPLATES_ACTIVE true
+#define NIMBUS_BINDING_MEMOIZATION_ACTIVE true
+#define NIMBUS_COMMAND_TEMPLATE_ACTIVE true
 
 #define NIMBUS_FAULT_TOLERANCE_ACTIVE false
 #define DEFAULT_CHECKPOINT_CREATION_RATE 30
@@ -121,7 +126,10 @@ namespace nimbus {
     JOB_SCHED  = 4,
     JOB_FUTURE = 5,
     JOB_SAVE   = 6,
-    JOB_LOAD   = 7
+    JOB_LOAD   = 7,
+    JOB_CMPX   = 8,
+    JOB_SHDW   = 9,
+    JOB_TMPL   = 10
   };
 
 

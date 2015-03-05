@@ -30,6 +30,7 @@
 #include "data/physbam/translator_physbam_old.h"
 #include "data/scalar_data.h"
 #include "shared/nimbus.h"
+#include "shared/fast_log.hh"
 #include "worker/physical_data_instance.h"
 #include "worker/static_config_manager.h"
 
@@ -299,6 +300,24 @@ Adjust_Phi_With_Sources(const T time)
   }
 }
 
+
+
+template<class TV> void WATER_EXAMPLE<TV>::
+Sum_Phi_3()
+{
+  T sum = 0;
+  for (typename GRID<TV>::CELL_ITERATOR iterator(mac_grid);
+       iterator.Valid();
+       iterator.Next()) {
+    TV_INT index = iterator.Cell_Index();
+      sum += particle_levelset_evolution.phi(index);
+  }
+
+  std::cout << "SUM_PHI_3: " << sum << std::endl;
+}
+
+
+
 // Enforces the boundary condition of particles.
 template<class TV> void WATER_EXAMPLE<TV>::
 Adjust_Particle_For_Domain_Boundaries(
@@ -484,7 +503,6 @@ Save_To_Nimbus_No_AppData(const nimbus::Job *job, const nimbus::DataArray &da, c
           array_shift,
           &pdv,
           &particle_levelset.levelset.phi);
-      std::cout << "OMID: write 3.\n";
     }
     application::DestroyTranslatorObjects(&pdv);
     if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
@@ -494,7 +512,6 @@ Save_To_Nimbus_No_AppData(const nimbus::Job *job, const nimbus::DataArray &da, c
           array_shift,
           &pdv,
           &particle_levelset.levelset.phi);
-      std::cout << "OMID: write 3.\n";
     }
     application::DestroyTranslatorObjects(&pdv);
     if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
@@ -504,7 +521,6 @@ Save_To_Nimbus_No_AppData(const nimbus::Job *job, const nimbus::DataArray &da, c
           array_shift,
           &pdv,
           &phi_ghost_bandwidth_seven);
-      std::cout << "OMID: write 7.\n";
     }
     application::DestroyTranslatorObjects(&pdv);
     if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
@@ -514,7 +530,6 @@ Save_To_Nimbus_No_AppData(const nimbus::Job *job, const nimbus::DataArray &da, c
           array_shift,
           &pdv,
           &phi_ghost_bandwidth_eight);
-      std::cout << "OMID: write 8.\n";
     }
     application::DestroyTranslatorObjects(&pdv);
 
@@ -709,6 +724,7 @@ Save_To_Nimbus_No_AppData(const nimbus::Job *job, const nimbus::DataArray &da, c
 template<class TV> void WATER_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
+    nimbus::timer::StartTimer(nimbus::timer::kAssemblingCache);
     nimbus::StaticConfigManager* config_manager = job->GetStaticConfigManager();
     if (static_config_collision_body) {
       config_manager->ReleaseStaticConfigVariable(static_config_collision_body);
@@ -972,6 +988,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
           cm->ReleaseAccess(app_data_ple);
           app_data_ple = NULL;
       }
+  nimbus::timer::StopTimer(nimbus::timer::kAssemblingCache);
 }
 //#####################################################################
 // Load from Nimbus

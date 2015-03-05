@@ -42,8 +42,11 @@
 #ifndef NIMBUS_WORKER_APP_DATA_MANAGERS_SIMPLE_APP_DATA_MANAGER_H_
 #define NIMBUS_WORKER_APP_DATA_MANAGERS_SIMPLE_APP_DATA_MANAGER_H_
 
+#include <boost/unordered_map.hpp>
+#include <pthread.h>
 #include <cstdio>
 #include <sstream>  // NOLINT
+#include <map>
 #include <vector>
 #include <string>
 
@@ -51,6 +54,7 @@
 #include "data/app_data/app_struct.h"
 #include "data/app_data/app_var.h"
 #include "worker/app_data_manager.h"
+#include "worker/app_data_managers/cache_table.h"
 
 namespace nimbus {
 
@@ -85,17 +89,17 @@ class SimpleAppDataManager : public AppDataManager {
          * no longer needed
          * \param app_object specified the application object to release
          */
-        virtual void ReleaseAccess(AppObject* simple_app_data_object);
+        virtual void ReleaseAccess(AppObject* cache_object);
 
         /**
-         * \brief Does not do anything
+         * \brief Writes data to write_set back nimbus objects synchronously
          * \param app_var is the application variable to write from
          * \param write_set is the set of nimbus objects to write to
          */
         virtual void WriteImmediately(AppVar *app_var, const DataArray &write_set);
 
         /**
-         * \brief Does not do anything
+         * \brief Writes data to write_set back nimbus objects synchronously
          * \param app_struct is the application struct to write from
          * \param var_type specifies the type of variables in the struct that
          * are to be written, corresponding to write_sets
@@ -106,22 +110,19 @@ class SimpleAppDataManager : public AppDataManager {
                               const std::vector<DataArray> &write_sets);
 
         /**
-         * \brief Does not do anything
+         * \brief If data is dirty, syncs with corresponding dirty application
+         * object, and clears the dirty mapping, no-op in case there is no
+         * caching
          * \param Data d to 
          */
         virtual void SyncData(Data *d);
 
         /**
-         * \brief Does not do anything
+         * \brief Invalidates mapping between d and all application objects ,
+         * dirty or not dirty, no-op in case there is no caching
          * \param Data d
          */
         virtual void InvalidateMappings(Data *d);
-
-        /**
-         * \brief Sets log file names for application data manager
-         * \param Worker id, to be used in file names
-         */
-        virtual void SetLogNames(std::string wid_str);
 
     protected:
         /**
@@ -174,6 +175,13 @@ class SimpleAppDataManager : public AppDataManager {
                                          app_data::Access access);
 
     private:
+        pthread_mutex_t cache_lock;
+        pthread_cond_t cache_cond;
+
+        uint64_t unique_id_allocator_;
+        typedef std::map<app_data::ob_id_t,
+                         CacheTable *> Pool;
+        Pool *pool_;
 };  // class SimpleAppDataManager
 }  // namespace nimbus
 

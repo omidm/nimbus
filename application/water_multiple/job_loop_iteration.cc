@@ -129,13 +129,14 @@ namespace application {
   void JobLoopIteration::SpawnWithBreakAllGranularity(
       bool done, int frame, T time, T dt, const nimbus::DataArray& da,
       const GeometricRegion& global_region) {
-    nimbus::JobQuery job_query(this);
+    // nimbus::JobQuery job_query(this);
     dbg(APP_LOG, "Loop frame is spawning super job 1, 2, 3 for frame %i.\n", frame);
 
     int job_num = 13;
     std::vector<nimbus::job_id_t> job_ids;
     GetNewJobID(&job_ids, job_num);
     nimbus::IDSet<nimbus::logical_data_id_t> read, write;
+    nimbus::IDSet<nimbus::job_id_t> before, after;
 
     // because of Half Region definition this number could be either 1 or 2 for now -omidm
     int update_ghost_velocities_job_num = kAppPartNum;
@@ -210,14 +211,17 @@ namespace application {
 
     struct timeval start_time;
     gettimeofday(&start_time, NULL);
+
+    StartTemplate("loop_iteration");
+
     /*
      * Spawning UPDATE_GHOST_VELOCITIES stage over two workrs
      */
     for (int i = 0; i < update_ghost_velocities_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
+      LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, NULL);
+      LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, NULL);
 
       nimbus::Parameter s11_params;
       std::string s11_str;
@@ -225,16 +229,19 @@ namespace application {
                          global_region, kRegY2W3Central[i],
                          kPNAInt, &s11_str);
       s11_params.set_ser_data(SerializedData(s11_str));
-      job_query.StageJob(UPDATE_GHOST_VELOCITIES,
+      before.clear();
+      StageJobAndLoadBeforeSet(&before, UPDATE_GHOST_VELOCITIES,
           update_ghost_velocities_job_ids[i],
-          read, write,
+          read, write);
+
+      SpawnComputeJob(UPDATE_GHOST_VELOCITIES,
+          update_ghost_velocities_job_ids[i],
+          read, write, before, after,
           s11_params, true,
           kRegY2W3Central[i]);
-      job_query.Hint(update_ghost_velocities_job_ids[i],
-                     kRegY2W3Central[i]);
     }
 
-    job_query.CommitStagedJobs();
+    MarkEndOfStage();
 
     /*
      * Spawning step particles.
@@ -248,20 +255,20 @@ namespace application {
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
         if (step_particles_single) {
-            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
+            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_POS_PARTICLES,
                     APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, kRegW3Outer[0], APP_POS_PARTICLES,
                     APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
                                global_region, kRegW3Central[0],
                                kPNAInt, &step_particles_str);
             job_region = kRegW3Central[0];
         } else {
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[sj], APP_FACE_VEL_GHOST, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[sj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, kRegY2W3Outer[sj], APP_FACE_VEL_GHOST, NULL);
+            LoadLdoIdsInSet(&read, kRegY2W3CentralWGB[sj], APP_POS_PARTICLES,
                     APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3Inner[sj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, kRegY2W3Inner[sj], APP_POS_PARTICLES,
                     APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             kScratchPosParticles.GetJobScratchData(this, kRegY2W3Central[sj], &write);
             kScratchNegParticles.GetJobScratchData(this, kRegY2W3Central[sj], &write);
@@ -276,15 +283,19 @@ namespace application {
         nimbus::Parameter step_particles_params;
         step_particles_params.set_ser_data(SerializedData(step_particles_str));
 
-        job_query.StageJob(STEP_PARTICLES,
+        before.clear();
+        StageJobAndLoadBeforeSet(&before, STEP_PARTICLES,
                 step_particles_job_ids[sj],
-                read, write,
+                read, write);
+
+        SpawnComputeJob(STEP_PARTICLES,
+                step_particles_job_ids[sj],
+                read, write, before, after,
                 step_particles_params, true,
                 job_region);
-        job_query.Hint(step_particles_job_ids[sj], job_region);
     }
 
-    job_query.CommitStagedJobs();
+    MarkEndOfStage();
 
     /*
      * Conditionally spawn synchronize jobs.
@@ -321,21 +332,24 @@ namespace application {
                                                           kRegY2W3CentralWGB[i],
                                                           kRegY2W3Inner[i],
                                                           &write);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Inner[i],
+            LoadLdoIdsInSet(&read, kRegY2W3Inner[i],
                 APP_POS_PARTICLES, APP_NEG_PARTICLES,
                 APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
 
-            job_query.StageJob(SYNCHRONIZE_PARTICLES,
+            before.clear();
+            StageJobAndLoadBeforeSet(&before, SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[i],
-                    read, write,
+                    read, write);
+
+            SpawnComputeJob(SYNCHRONIZE_PARTICLES,
+                    step_particles_sync_job_ids[i],
+                    read, write, before, after,
                     sync_particles_params, true,
                     kRegY2W3Central[i]);
-            job_query.Hint(step_particles_sync_job_ids[i],
-                           kRegY2W3Central[i]);
         }
     }
 
-    job_query.CommitStagedJobs();
+    MarkEndOfStage();
 
     {
       nimbus::Parameter params;
@@ -343,15 +357,18 @@ namespace application {
       GetNewJobID(&barrier_job_ids, 1);
       read.clear();
       write.clear();
-      job_query.StageJob(BARRIER_JOB,
+      before.clear();
+      StageJobAndLoadBeforeSet(&before, BARRIER_JOB,
                          barrier_job_ids[0],
-                         read, write,
+                         read, write, true);
+
+      SpawnComputeJob(BARRIER_JOB,
+                         barrier_job_ids[0],
+                         read, write, before, after,
                          params,
                          true,
-                         kRegW3Central[0],
-                         true);
-      job_query.Hint(barrier_job_ids[0], kRegW0Central[0], true);
-      job_query.CommitStagedJobs();
+                         kRegW3Central[0]);
+      MarkEndOfStage();
     }
 
     /*
@@ -359,10 +376,10 @@ namespace application {
      */
     for (int i = 0; i < first_extrapolate_phi_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_PHI, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
+      LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_PHI, NULL);
+      LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_PHI, NULL);
+      LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[i], APP_PHI, NULL);
 
       nimbus::Parameter s_extra_params;
       std::string s_extra_str;
@@ -370,26 +387,29 @@ namespace application {
                          global_region, kRegY2W3Central[i],
                          kPNAInt, &s_extra_str);
       s_extra_params.set_ser_data(SerializedData(s_extra_str));
-      job_query.StageJob(EXTRAPOLATE_PHI,
+      before.clear();
+      StageJobAndLoadBeforeSet(&before, EXTRAPOLATE_PHI,
           first_extrapolate_phi_job_ids[i],
-          read, write,
+          read, write);
+
+      SpawnComputeJob(EXTRAPOLATE_PHI,
+          first_extrapolate_phi_job_ids[i],
+          read, write, before, after,
           s_extra_params, true,
           kRegY2W3Central[i]);
-      job_query.Hint(first_extrapolate_phi_job_ids[i],
-                     kRegY2W3Central[i]);
     }
 
-    job_query.CommitStagedJobs();
+    MarkEndOfStage();
 
     /*
      * Spawning advect phi stage over multiple workers
      */
     for(int i = 0; i < advect_phi_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_FACE_VEL, APP_PHI, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
-      // LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_PHI, NULL);
+      LoadLdoIdsInSet(&write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
+      // LoadLdoIdsInSet(&write, kRegY2W3Central[i], APP_PHI, NULL);
 
       nimbus::Parameter s12_params;
       std::string s12_str;
@@ -397,15 +417,19 @@ namespace application {
                          global_region, kRegY2W3Central[i],
                          kPNAInt, &s12_str);
       s12_params.set_ser_data(SerializedData(s12_str));
-      job_query.StageJob(ADVECT_PHI,
+      before.clear();
+      StageJobAndLoadBeforeSet(&before, ADVECT_PHI,
           advect_phi_job_ids[i],
-          read, write,
+          read, write);
+
+      SpawnComputeJob(ADVECT_PHI,
+          advect_phi_job_ids[i],
+          read, write, before, after,
           s12_params, true,
           kRegY2W3Central[i]);
-      job_query.Hint(advect_phi_job_ids[i], kRegY2W3Central[i]);
     }
 
-    job_query.CommitStagedJobs();
+    MarkEndOfStage();
 
     /* 
      * Spawning multiple jobs for Advect V stage
@@ -413,11 +437,11 @@ namespace application {
 
     for (int i = 0; i < advect_v_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL_GHOST, APP_PHI, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Central[i], APP_FACE_VEL, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, APP_PSI_N, NULL);
+      LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_FACE_VEL_GHOST, APP_PHI, NULL);
+      LoadLdoIdsInSet(&read, kRegY2W3Central[i], APP_FACE_VEL, NULL);
+      LoadLdoIdsInSet(&read, kRegY2W1Outer[i], APP_PSI_D, APP_PSI_N, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLdoIdsInSet(&write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
 
       nimbus::Parameter s15_params;
       std::string s15_str;
@@ -425,16 +449,19 @@ namespace application {
                          global_region, kRegY2W3Central[i],
                          kPNAInt, &s15_str);
       s15_params.set_ser_data(SerializedData(s15_str));
-      job_query.StageJob(ADVECT_V,
+      before.clear();
+      StageJobAndLoadBeforeSet(&before, ADVECT_V,
           advect_v_job_ids[i],
-          read, write,
+          read, write);
+
+      SpawnComputeJob(ADVECT_V,
+          advect_v_job_ids[i],
+          read, write, before, after,
           s15_params, true,
           kRegY2W3Central[i]);
-      job_query.Hint(advect_v_job_ids[i],
-                     kRegY2W3Central[i]);
     }
 
-    job_query.CommitStagedJobs();
+    MarkEndOfStage();
 
     /*
      * Spawning advect removed particles.
@@ -449,22 +476,22 @@ namespace application {
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
         if (advect_removed_particles_single) {
-            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
+            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_REM_PARTICLES,
+            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_REM_PARTICLES,
+            LoadLdoIdsInSet(&write, kRegW3Outer[0], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES,  NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
                                global_region, kRegW3Central[0],
                                kPNAInt, &advect_rem_particles_str);
             job_region = kRegW3Central[0];
         } else {
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[sj], APP_FACE_VEL_GHOST,
+            LoadLdoIdsInSet(&read, kRegY2W3Outer[sj], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[sj], APP_POS_REM_PARTICLES,
+            LoadLdoIdsInSet(&read, kRegY2W3CentralWGB[sj], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[sj], APP_POS_REM_PARTICLES,
+            LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[sj], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES,  NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
                                global_region, kRegY2W3Central[sj],
@@ -475,16 +502,19 @@ namespace application {
         nimbus::Parameter advect_rem_particles_params;
         advect_rem_particles_params.set_ser_data(SerializedData(advect_rem_particles_str));
 
-        job_query.StageJob(ADVECT_REMOVED_PARTICLES,
+        before.clear();
+        StageJobAndLoadBeforeSet(&before, ADVECT_REMOVED_PARTICLES,
             advect_removed_particles_job_ids[sj],
-            read, write,
+            read, write);
+
+        SpawnComputeJob(ADVECT_REMOVED_PARTICLES,
+            advect_removed_particles_job_ids[sj],
+            read, write, before, after,
             advect_rem_particles_params, true,
             job_region);
-        job_query.Hint(advect_removed_particles_job_ids[sj],
-                       job_region);
     }
 
-    job_query.CommitStagedJobs();
+    MarkEndOfStage();
 
     {
       nimbus::Parameter params;
@@ -492,15 +522,18 @@ namespace application {
       GetNewJobID(&barrier_job_ids, 1);
       read.clear();
       write.clear();
-      job_query.StageJob(BARRIER_JOB,
+      before.clear();
+      StageJobAndLoadBeforeSet(&before, BARRIER_JOB,
                          barrier_job_ids[0],
-                         read, write,
+                         read, write, true);
+
+      SpawnComputeJob(BARRIER_JOB,
+                         barrier_job_ids[0],
+                         read, write, before, after,
                          params,
                          true,
-                         kRegW3Central[0],
-                         true);
-      job_query.Hint(barrier_job_ids[0], kRegW0Central[0], true);
-      job_query.CommitStagedJobs();
+                         kRegW3Central[0]);
+      MarkEndOfStage();
     }
 
     {
@@ -511,9 +544,9 @@ namespace application {
        */
       for (int i = 0; i < update_ghost_velocities_job_num; ++i) {
         read.clear();
-        LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
+        LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
         write.clear();
-        LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, NULL);
+        LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, NULL);
 
         nimbus::Parameter temp_params;
         std::string temp_str;
@@ -521,15 +554,18 @@ namespace application {
                            global_region, kRegY2W3Central[i],
                            kPNAInt, &temp_str);
         temp_params.set_ser_data(SerializedData(temp_str));
-        job_query.StageJob(UPDATE_GHOST_VELOCITIES,
+        before.clear();
+        StageJobAndLoadBeforeSet(&before, UPDATE_GHOST_VELOCITIES,
                            temp_job_ids[i],
-                           read, write,
+                           read, write);
+
+        SpawnComputeJob(UPDATE_GHOST_VELOCITIES,
+                           temp_job_ids[i],
+                           read, write, before, after,
                            temp_params, true,
                            kRegY2W3Central[i]);
-        job_query.Hint(temp_job_ids[i],
-                       kRegY2W3Central[i]);
       }
-      job_query.CommitStagedJobs();
+      MarkEndOfStage();
     }
 
 
@@ -538,9 +574,9 @@ namespace application {
      */
     for (int i = 0; i < apply_forces_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_FACE_VEL_GHOST, NULL);
+      LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_FACE_VEL, APP_FACE_VEL_GHOST, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, NULL);
+      LoadLdoIdsInSet(&write, kRegY2W3Central[i], APP_FACE_VEL, NULL);
 
       nimbus::Parameter s16_params;
       std::string s16_str;
@@ -548,16 +584,19 @@ namespace application {
                          global_region, kRegY2W3Central[i],
                          kPNAInt, &s16_str);
       s16_params.set_ser_data(SerializedData(s16_str));
-      job_query.StageJob(APPLY_FORCES,
+      before.clear();
+      StageJobAndLoadBeforeSet(&before, APPLY_FORCES,
           apply_forces_job_ids[i],
-          read, write,
+          read, write);
+
+      SpawnComputeJob(APPLY_FORCES,
+          apply_forces_job_ids[i],
+          read, write, before, after,
           s16_params, true,
           kRegY2W3Central[i]);
-      job_query.Hint(apply_forces_job_ids[i],
-                     kRegY2W3Central[i]);
     }
 
-    job_query.CommitStagedJobs();
+    MarkEndOfStage();
 
 
     {
@@ -568,9 +607,9 @@ namespace application {
        */
       for (int i = 0; i < update_ghost_velocities_job_num; ++i) {
         read.clear();
-        LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
+        LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
         write.clear();
-        LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, NULL);
+        LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, NULL);
 
         nimbus::Parameter temp_params;
         std::string temp_str;
@@ -578,15 +617,18 @@ namespace application {
                            global_region, kRegY2W3Central[i],
                            kPNAInt, &temp_str);
         temp_params.set_ser_data(SerializedData(temp_str));
-        job_query.StageJob(UPDATE_GHOST_VELOCITIES,
+        before.clear();
+        StageJobAndLoadBeforeSet(&before, UPDATE_GHOST_VELOCITIES,
                            temp_job_ids[i],
-                           read, write,
+                           read, write);
+
+        SpawnComputeJob(UPDATE_GHOST_VELOCITIES,
+                           temp_job_ids[i],
+                           read, write, before, after,
                            temp_params, true,
                            kRegY2W3Central[i]);
-        job_query.Hint(temp_job_ids[i],
-                       kRegY2W3Central[i]);
       }
-      job_query.CommitStagedJobs();
+      MarkEndOfStage();
     }
 
     /* 
@@ -601,24 +643,24 @@ namespace application {
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
         if (modify_levelset_single) {
-            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
+            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
                     APP_FACE_VEL, APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, kRegW3Outer[0], APP_PHI, NULL);
+            LoadLdoIdsInSet(&write, kRegW3Outer[0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
                                global_region, kRegW3Central[0],
                                kPNAInt, &modify_levelset_part_one_str);
             job_region = kRegW3Central[0];
         } else {
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_FACE_VEL_GHOST,
+            LoadLdoIdsInSet(&read, kRegY2W3Outer[mj], APP_FACE_VEL_GHOST,
                     APP_FACE_VEL, APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, kRegY2W3Outer[mj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[mj], APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[mj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[mj], APP_PHI, NULL);
+            LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[mj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
                                global_region, kRegY2W3Central[mj],
@@ -629,16 +671,19 @@ namespace application {
         nimbus::Parameter modify_levelset_params;
         modify_levelset_params.set_ser_data(SerializedData(modify_levelset_part_one_str));
 
-        job_query.StageJob(MODIFY_LEVELSET_PART_ONE,
+        before.clear();
+        StageJobAndLoadBeforeSet(&before, MODIFY_LEVELSET_PART_ONE,
             modify_levelset_part_one_job_ids[mj],
-            read, write,
+            read, write);
+
+        SpawnComputeJob(MODIFY_LEVELSET_PART_ONE,
+            modify_levelset_part_one_job_ids[mj],
+            read, write, before, after,
             modify_levelset_params, true,
             job_region);
-        job_query.Hint(modify_levelset_part_one_job_ids[mj],
-                       job_region);
     }
 
-    job_query.CommitStagedJobs();
+    MarkEndOfStage();
 
     /* 
      * Spawning modify levelset -- part two.
@@ -652,25 +697,25 @@ namespace application {
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
         if (modify_levelset_single) {
-            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
+            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
                     APP_FACE_VEL, APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, kRegW3Outer[0], APP_PHI, NULL);
+            LoadLdoIdsInSet(&write, kRegW3Outer[0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
                                global_region, kRegW3Central[0],
                                kPNAInt, &modify_levelset_part_two_str);
             job_region = kRegW3Central[0];
         } else {
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_FACE_VEL_GHOST,
+            LoadLdoIdsInSet(&read, kRegY2W3Outer[mj], APP_PHI, NULL);
+            LoadLdoIdsInSet(&read, kRegY2W3Outer[mj], APP_FACE_VEL_GHOST,
                     APP_FACE_VEL, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, kRegY2W3Outer[mj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[mj], APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[mj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[mj], APP_PHI, NULL);
+            LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[mj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
                                global_region, kRegY2W3Central[mj],
@@ -681,16 +726,19 @@ namespace application {
         nimbus::Parameter modify_levelset_params;
         modify_levelset_params.set_ser_data(SerializedData(modify_levelset_part_two_str));
 
-        job_query.StageJob(MODIFY_LEVELSET_PART_TWO,
+        before.clear();
+        StageJobAndLoadBeforeSet(&before, MODIFY_LEVELSET_PART_TWO,
             modify_levelset_part_two_job_ids[mj],
-            read, write,
+            read, write);
+
+        SpawnComputeJob(MODIFY_LEVELSET_PART_TWO,
+            modify_levelset_part_two_job_ids[mj],
+            read, write, before, after,
             modify_levelset_params, true,
             job_region);
-        job_query.Hint(modify_levelset_part_two_job_ids[mj],
-                       job_region);
     }
 
-    job_query.CommitStagedJobs();
+    MarkEndOfStage();
 
     /* 
      * Spawning adjust phi stage for multiple workers.
@@ -698,9 +746,9 @@ namespace application {
 
     for (int i = 0; i < adjust_phi_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_PHI, NULL);
+      LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_PHI, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_PHI, NULL);
+      LoadLdoIdsInSet(&write, kRegY2W3Central[i], APP_PHI, NULL);
 
       nimbus::Parameter adjust_phi_params;
       std::string adjust_phi_str;
@@ -708,16 +756,19 @@ namespace application {
                          global_region, kRegY2W3Central[i],
                          kPNAInt, &adjust_phi_str);
       adjust_phi_params.set_ser_data(SerializedData(adjust_phi_str));
-      job_query.StageJob(ADJUST_PHI,
+      before.clear();
+      StageJobAndLoadBeforeSet(&before, ADJUST_PHI,
           adjust_phi_job_ids[i],
-          read, write,
+          read, write);
+
+      SpawnComputeJob(ADJUST_PHI,
+          adjust_phi_job_ids[i],
+          read, write, before, after,
           adjust_phi_params, true,
           kRegY2W3Central[i]);
-      job_query.Hint(adjust_phi_job_ids[i],
-                     kRegY2W3Central[i]);
     }
 
-    job_query.CommitStagedJobs();
+    MarkEndOfStage();
 
     /* 
      * Spawning delete particles.
@@ -732,22 +783,22 @@ namespace application {
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
         if (delete_particles_single) {
-            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
+            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, kRegW3Outer[0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
                                global_region, kRegW3Central[0],
                                kPNAInt, &delete_particles_str);
             job_region = kRegW3Central[0];
         } else {
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[dj], APP_FACE_VEL_GHOST,
+            LoadLdoIdsInSet(&read, kRegY2W3Outer[dj], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[dj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, kRegY2W3CentralWGB[dj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[dj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[dj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
                                global_region, kRegY2W3Central[dj],
@@ -758,16 +809,19 @@ namespace application {
         nimbus::Parameter delete_particles_params;
         delete_particles_params.set_ser_data(SerializedData(delete_particles_str));
 
-        job_query.StageJob(DELETE_PARTICLES,
+        before.clear();
+        StageJobAndLoadBeforeSet(&before, DELETE_PARTICLES,
             delete_particles_job_ids[dj],
-            read, write,
+            read, write);
+
+        SpawnComputeJob(DELETE_PARTICLES,
+            delete_particles_job_ids[dj],
+            read, write, before, after,
             delete_particles_params, true,
             job_region);
-        job_query.Hint(delete_particles_job_ids[dj],
-                       job_region);
     }
 
-    job_query.CommitStagedJobs();
+    MarkEndOfStage();
 
     /* 
      * Spawning reincorporate particles stage over entire block
@@ -782,22 +836,22 @@ namespace application {
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
         if (reincorporate_particles_single) {
-            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL,
+            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_FACE_VEL,
                     APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, kRegW3Outer[0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
                                global_region, kRegW3Central[0],
                                kPNAInt, &reincorporate_particles_str);
             job_region = kRegW3Central[0];
         } else {
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[rj], APP_FACE_VEL,
+            LoadLdoIdsInSet(&read, kRegY2W3Outer[rj], APP_FACE_VEL,
                     APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[rj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, kRegY2W3CentralWGB[rj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[rj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[rj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
                                global_region, kRegY2W3Central[rj],
@@ -808,16 +862,19 @@ namespace application {
         nimbus::Parameter reincorporate_particles_params;
         reincorporate_particles_params.set_ser_data(SerializedData(reincorporate_particles_str));
 
-        job_query.StageJob(REINCORPORATE_PARTICLES,
+        before.clear();
+        StageJobAndLoadBeforeSet(&before, REINCORPORATE_PARTICLES,
             reincorporate_particles_job_ids[rj],
-            read, write,
+            read, write);
+
+        SpawnComputeJob(REINCORPORATE_PARTICLES,
+            reincorporate_particles_job_ids[rj],
+            read, write, before, after,
             reincorporate_particles_params, true,
             job_region);
-        job_query.Hint(reincorporate_particles_job_ids[rj],
-                       job_region);
     }
 
-    job_query.CommitStagedJobs();
+    MarkEndOfStage();
 
     /*
     std::vector<nimbus::job_id_t> barrier_job_ids;
@@ -829,7 +886,7 @@ namespace application {
                        read, write,
                        params,
                        false, true);
-    job_query.CommitStagedJobs();
+    MarkEndOfStage();
     */
 
     /*
@@ -846,16 +903,22 @@ namespace application {
                        kPNAInt, &projection_main_str);
     projection_main_params.set_ser_data(
         SerializedData(projection_main_str));
-    job_query.StageJob(PROJECTION_MAIN,
+    before.clear();
+    StageJobAndLoadBeforeSet(&before, PROJECTION_MAIN,
                     job_ids[10],
-                    read, write,
+                    read, write, true);
+
+    SpawnComputeJob(PROJECTION_MAIN,
+                    job_ids[10],
+                    read, write, before, after,
                     projection_main_params,
                     false,
-                    kRegW3Central[0],
-                    true);
-    job_query.Hint(job_ids[10], kRegW3Central[0], true);
-    job_query.CommitStagedJobs();
-    job_query.PrintTimeProfile();
+                    kRegW3Central[0]);
+    MarkEndOfStage();
+
+    EndTemplate("loop_iteration");
+
+    // job_query.PrintTimeProfile();
     {
       struct timeval t;
       gettimeofday(&t, NULL);
@@ -866,7 +929,7 @@ namespace application {
     }
     if (time == 0) {
       dbg(APP_LOG, "Print job dependency figure.\n");
-      job_query.GenerateDotFigure("loop_iteration.dot");
+      // job_query.GenerateDotFigure("loop_iteration.dot");
     }
   }
 } // namespace application

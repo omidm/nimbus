@@ -179,7 +179,6 @@ template<class TS> AppDataParticleLevelsetEvolution<TS>::
 
 template<class TS> void AppDataParticleLevelsetEvolution<TS>::
 Destroy() {
-    printf("Destroy APP PLE *****\n");
     if (data_) {
         delete data_;
         data_ = NULL;

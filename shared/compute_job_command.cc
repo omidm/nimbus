@@ -151,15 +151,32 @@ IDSet<physical_data_id_t> ComputeJobCommand::read_set() {
   return read_set_;
 }
 
+IDSet<physical_data_id_t>* ComputeJobCommand::read_set_p() {
+  return &read_set_;
+}
+
 IDSet<physical_data_id_t> ComputeJobCommand::write_set() {
   return write_set_;
+}
+
+IDSet<physical_data_id_t>* ComputeJobCommand::write_set_p() {
+  return &write_set_;
 }
 
 IDSet<job_id_t> ComputeJobCommand::after_set() {
   return after_set_;
 }
+
+IDSet<job_id_t>* ComputeJobCommand::after_set_p() {
+  return &after_set_;
+}
+
 IDSet<job_id_t> ComputeJobCommand::before_set() {
   return before_set_;
+}
+
+IDSet<job_id_t>* ComputeJobCommand::before_set_p() {
+  return &before_set_;
 }
 
 Parameter ComputeJobCommand::params() {

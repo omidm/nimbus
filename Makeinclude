@@ -30,7 +30,7 @@ CFLAGS = -Wall -g -O3
 # CFLAGS += -D_NIMBUS_NO_DBG # flaf to remove dbg statements
 # CFLAGS += -D_NIMBUS_NO_LOG # flaf to remove log statements
 # CFLAGS += -DNDEBUG
-CFLAGS  += -DN_APP_CACHE # use application cache or not
+# CFLAGS  += -DN_APP_CACHE # use application cache or not
 
 # For reasons I do not understand need to disable two-level loading namespace
 # optimizations under Darwin -pal

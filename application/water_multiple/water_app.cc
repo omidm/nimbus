@@ -68,8 +68,8 @@ namespace application {
         PhysBAM::Initialize_Particles();
         PhysBAM::Initialize_Read_Write_General_Structures();
 
-        dbg_add_mode(APP_LOG_STR);
-        dbg_add_mode(TRANSLATE_STR);
+        // dbg_add_mode(APP_LOG_STR);
+        // dbg_add_mode(TRANSLATE_STR);
 
         dbg(APP_LOG, "Loading water application\n");
 

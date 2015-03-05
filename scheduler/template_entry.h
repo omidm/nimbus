@@ -44,10 +44,12 @@
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 #include <iostream> // NOLINT
 #include <fstream> // NOLINT
 #include <sstream>
 #include <string>
+#include <list>
 #include <vector>
 #include <utility>
 #include <algorithm>
@@ -55,19 +57,36 @@
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "shared/log.h"
-#include "scheduler/job_manager.h"
+#include "shared/graph.h"
+#include "scheduler/shadow_job_entry.h"
+#include "scheduler/complex_job_entry.h"
+#include "scheduler/template_job_entry.h"
+#include "scheduler/binding_template.h"
 
 namespace nimbus {
+
+class JobManager;
+
 class TemplateEntry {
   public:
-    TemplateEntry();
+    explicit TemplateEntry(std::string template_name);
     ~TemplateEntry();
 
     bool finalized();
+    size_t compute_jobs_num();
+    std::string template_name();
+    boost::shared_ptr<VersionMap> vmap_base() const;
+
+    virtual void set_vmap_base(boost::shared_ptr<VersionMap> vmap_base);
 
     bool Finalize();
 
     bool CleanPartiallyFilledTemplate();
+
+    bool LoadBeforeSet(IDSet<job_id_t>* before_set,
+                       const size_t& index,
+                       const std::vector<job_id_t>& inner_job_ids,
+                       const std::vector<job_id_t>& outer_job_ids);
 
     bool Instantiate(JobManager *job_manager,
                      const std::vector<job_id_t>& inner_job_ids,
@@ -75,35 +94,66 @@ class TemplateEntry {
                      const std::vector<Parameter>& parameters,
                      const job_id_t& parent_job_id);
 
-    bool AddComputeJob(const std::string& job_name,
-                       const job_id_t& job_id,
-                       const IDSet<logical_data_id_t>& read_set,
-                       const IDSet<logical_data_id_t>& write_set,
-                       const IDSet<job_id_t>& before_set,
-                       const IDSet<job_id_t>& after_set,
-                       const job_id_t& parent_job_id,
-                       const job_id_t& future_job_id,
-                       const bool& sterile,
-                       const GeometricRegion& region);
+    bool GetComplexJobEntry(ComplexJobEntry*& complex_job,
+                            const job_id_t& job_id,
+                            const job_id_t& parent_job_id,
+                            const std::vector<job_id_t>& inner_job_ids,
+                            const std::vector<job_id_t>& outer_job_ids,
+                            const std::vector<Parameter>& parameters);
+
+    TemplateJobEntry* AddComputeJob(const std::string& job_name,
+                                    const job_id_t& job_id,
+                                    const IDSet<logical_data_id_t>& read_set,
+                                    const IDSet<logical_data_id_t>& write_set,
+                                    const IDSet<job_id_t>& before_set,
+                                    const IDSet<job_id_t>& after_set,
+                                    const job_id_t& parent_job_id,
+                                    const job_id_t& future_job_id,
+                                    const bool& sterile,
+                                    const GeometricRegion& region);
 
     bool AddExplicitCopyJob();
+
+    size_t GetParentJobIndices(std::list<size_t>* list);
+
+    TemplateJobEntry* GetJobAtIndex(size_t index);
+
+    bool InitializeCursor(ComplexJobEntry::Cursor* cursor);
+
+    bool AdvanceCursorForAssignment(ComplexJobEntry::Cursor* cursor);
+
+    void AddToAccessPattern(const logical_data_id_t& ldid,
+                        const data_version_t& diff_version,
+                        const size_t& job_index);
+
+    size_t QueryAccessPattern(const logical_data_id_t& ldid,
+                              const data_version_t& diff_version,
+                              std::list<size_t>* indices);
+
+    bool AddBindingRecord(size_t binding_tag,
+                          std::string grand_parent_name,
+                          BindingTemplate* binding_template);
+
+    bool QueryBindingRecord(size_t binding_tag,
+                            std::string grand_parent_name,
+                            BindingTemplate*& binding_template);
 
   private:
     typedef std::vector<boost::shared_ptr<job_id_t> > PtrList;
     typedef boost::unordered_set<boost::shared_ptr<job_id_t> > PtrSet;
     typedef boost::unordered_map<job_id_t, boost::shared_ptr<job_id_t> > PtrMap;
 
-    class ComputeJobEntry {
+    class TemplateComputeJobEntry {
       public:
-        ComputeJobEntry(const std::string& job_name,
-                        boost::shared_ptr<job_id_t> job_id_ptr,
-                        const IDSet<logical_data_id_t>& read_set,
-                        const IDSet<logical_data_id_t>& write_set,
-                        const PtrSet& before_set_ptrs,
-                        const PtrSet& after_set_ptrs,
-                        boost::shared_ptr<job_id_t> future_job_id_ptr,
-                        const bool& sterile,
-                        const GeometricRegion& region)
+        TemplateComputeJobEntry(const std::string& job_name,
+                                boost::shared_ptr<job_id_t> job_id_ptr,
+                                const IDSet<logical_data_id_t>& read_set,
+                                const IDSet<logical_data_id_t>& write_set,
+                                const PtrSet& before_set_ptrs,
+                                const PtrSet& after_set_ptrs,
+                                boost::shared_ptr<job_id_t> future_job_id_ptr,
+                                const bool& sterile,
+                                const GeometricRegion& region)
           : job_name_(job_name),
             job_id_ptr_(job_id_ptr),
             read_set_(read_set),
@@ -114,7 +164,7 @@ class TemplateEntry {
             sterile_(sterile),
             region_(region) {}
 
-        ~ComputeJobEntry() {}
+        ~TemplateComputeJobEntry() {}
 
         std::string job_name_;
         boost::shared_ptr<job_id_t> job_id_ptr_;
@@ -126,15 +176,44 @@ class TemplateEntry {
         bool sterile_;
         GeometricRegion region_;
     };
-
-    typedef std::vector<ComputeJobEntry> EntryList;
-
-    bool finalized_;
+    typedef std::vector<TemplateComputeJobEntry> EntryList;
     PtrList job_id_ptrs_;
     PtrMap job_id_ptrs_map_;
     EntryList entry_list_;
     // TODO(omidm): currently we do not support future job id in templates!
     boost::shared_ptr<job_id_t> future_job_id_ptr_;
+
+
+    typedef std::list<size_t> Bucket;
+    typedef boost::unordered_map<data_version_t, Bucket*> VersionIndex;
+    typedef boost::unordered_map<logical_data_id_t, VersionIndex*> AccessIndex;
+
+    typedef boost::unordered_map<std::string, BindingTemplate*> BindingMap;
+
+    std::string template_name_;
+
+    AccessIndex access_pattern_;
+    boost::mutex access_pattern_mutex_;
+
+    BindingMap binding_records_;
+
+    bool finalized_;
+    Graph<TemplateJobEntry, job_id_t> job_graph_;
+    std::list<Vertex<TemplateJobEntry, job_id_t>*> traverse_queue_;
+    TemplateJobEntryVector compute_jobs_;
+
+    std::list<size_t> parent_job_indices_;
+    std::vector<size_t> assign_ordered_indices_;
+    boost::unordered_set<size_t> assign_batch_mark_indices_;
+    size_t last_assign_index_;
+
+    boost::shared_ptr<VersionMap> vmap_base_;
+
+    bool AddTemplateJobEntryToJobGraph(TemplateJobEntry *job);
+
+    void CompleteParentJobIndices();
+
+    void CompleteBreadthFirstSearch();
 };
 
 }  // namespace nimbus

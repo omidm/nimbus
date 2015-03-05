@@ -91,6 +91,7 @@ void JobProjectionMain::SpawnJobs(
   std::vector<nimbus::job_id_t> projection_job_ids;
   GetNewJobID(&projection_job_ids, projection_job_num);
   nimbus::IDSet<nimbus::logical_data_id_t> read, write;
+  nimbus::IDSet<nimbus::job_id_t> before, after;
 
   nimbus::Parameter default_params;
   std::string default_params_str;
@@ -102,6 +103,9 @@ void JobProjectionMain::SpawnJobs(
 
   std::vector<nimbus::Parameter> default_part_params;
   default_part_params.resize(kProjAppPartNum);
+
+  StartTemplate("projection_main");
+
   for (int i = 0; i < kProjAppPartNum; ++i) {
     std::string default_params_str;
     SerializeParameter(
@@ -133,135 +137,153 @@ void JobProjectionMain::SpawnJobs(
        index < calculate_boundary_condition_part_one_job_num;
        ++index) {
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kProjRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &read, kProjRegY2W1Outer[index],
+    LoadLdoIdsInSet(&read, kProjRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLdoIdsInSet(&read, kProjRegY2W1Outer[index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &read, kProjRegY2W0Central[index],
+    LoadLdoIdsInSet(&read, kProjRegY2W0Central[index],
                         APP_U_INTERFACE, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kProjRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &write, kProjRegY2W1CentralWGB[index],
+    LoadLdoIdsInSet(&write, kProjRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLdoIdsInSet(&write, kProjRegY2W1CentralWGB[index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &write, kProjRegY2W0Central[index], APP_U_INTERFACE, NULL);
+    LoadLdoIdsInSet(&write, kProjRegY2W0Central[index], APP_U_INTERFACE, NULL);
 
-    job_query.StageJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
+    before.clear();
+    StageJobAndLoadBeforeSet(&before, PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
                        calculate_boundary_condition_part_one_job_ids[index],
-                       read, write,
+                       read, write);
+
+    SpawnComputeJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
+                       calculate_boundary_condition_part_one_job_ids[index],
+                       read, write, before, after,
                        default_part_params[index], true,
                        kProjRegY2W3Central[index]);
-    job_query.Hint(calculate_boundary_condition_part_one_job_ids[index],
-                   kProjRegY2W3Central[index]);
   }
-  job_query.CommitStagedJobs();
+  MarkEndOfStage();
 
   for (int index = 0;
        index < calculate_boundary_condition_part_two_job_num;
        ++index) {
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kProjRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &read, kProjRegY2W1Outer[index],
+    LoadLdoIdsInSet(&read, kProjRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLdoIdsInSet(&read, kProjRegY2W1Outer[index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &read, kProjRegY2W0Central[index], APP_U_INTERFACE, NULL);
+    LoadLdoIdsInSet(&read, kProjRegY2W0Central[index], APP_U_INTERFACE, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kProjRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &write, kProjRegY2W1CentralWGB[index],
+    LoadLdoIdsInSet(&write, kProjRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLdoIdsInSet(&write, kProjRegY2W1CentralWGB[index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &write, kProjRegY2W0Central[index],
+    LoadLdoIdsInSet(&write, kProjRegY2W0Central[index],
                         APP_U_INTERFACE, NULL);
 
-    job_query.StageJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,
+    before.clear();
+    StageJobAndLoadBeforeSet(&before, PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,
                        calculate_boundary_condition_part_two_job_ids[index],
-                       read, write,
+                       read, write);
+
+    SpawnComputeJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,
+                       calculate_boundary_condition_part_two_job_ids[index],
+                       read, write, before, after,
                        default_part_params[index], true,
                        kProjRegY2W3Central[index]);
-    job_query.Hint(calculate_boundary_condition_part_two_job_ids[index],
-                   kProjRegY2W3Central[index]);
   }
-  job_query.CommitStagedJobs();
+  MarkEndOfStage();
 
   // Construct matrix.
   for (int index = 0; index < construct_matrix_job_num; ++index) {
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kProjRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &read, kProjRegY2W1Outer[index],
+    LoadLdoIdsInSet(&read, kProjRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLdoIdsInSet(&read, kProjRegY2W1Outer[index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &read, kProjRegY2W0Central[index], APP_U_INTERFACE, NULL);
+    LoadLdoIdsInSet(&read, kProjRegY2W0Central[index], APP_U_INTERFACE, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kProjRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &write, kProjRegY2W1CentralWGB[index],
+    LoadLdoIdsInSet(&write, kProjRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLdoIdsInSet(&write, kProjRegY2W1CentralWGB[index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &write, kProjRegY2W0Central[index],
+    LoadLdoIdsInSet(&write, kProjRegY2W0Central[index],
                         APP_U_INTERFACE, APP_MATRIX_A,
                         APP_VECTOR_B, APP_PROJECTION_LOCAL_TOLERANCE,
                         APP_INDEX_M2C, APP_INDEX_C2M,
                         APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                         NULL);
 
-    job_query.StageJob(PROJECTION_CONSTRUCT_MATRIX,
+    before.clear();
+    StageJobAndLoadBeforeSet(&before, PROJECTION_CONSTRUCT_MATRIX,
                        construct_matrix_job_ids[index],
-                       read, write,
+                       read, write);
+
+    SpawnComputeJob(PROJECTION_CONSTRUCT_MATRIX,
+                       construct_matrix_job_ids[index],
+                       read, write, before, after,
                        default_part_params[index], true,
                        kProjRegY2W3Central[index]);
-    job_query.Hint(construct_matrix_job_ids[index], kProjRegY2W3Central[index]);
   }
-  job_query.CommitStagedJobs();
+  MarkEndOfStage();
 
   // Global initialize.
   read.clear();
-  LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
+  LoadLdoIdsInSet(&read, kRegW0Central[0],
                       APP_PROJECTION_INTERIOR_N, APP_PROJECTION_LOCAL_TOLERANCE,
                       NULL);
   write.clear();
-  LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
+  LoadLdoIdsInSet(&write, kRegW0Central[0],
                       APP_PROJECTION_GLOBAL_N,
                       APP_PROJECTION_GLOBAL_TOLERANCE,
                       APP_PROJECTION_DESIRED_ITERATIONS, NULL);
-  job_query.StageJob(PROJECTION_GLOBAL_INITIALIZE,
+  before.clear();
+  StageJobAndLoadBeforeSet(&before, PROJECTION_GLOBAL_INITIALIZE,
                      projection_job_ids[3],
-                     read, write,
+                     read, write);
+
+  SpawnComputeJob(PROJECTION_GLOBAL_INITIALIZE,
+                     projection_job_ids[3],
+                     read, write, before, after,
                      default_params, true,
                      kRegW3Central[0]);
   // Global initialize is a job that serves as a bottleneck.
-  job_query.Hint(projection_job_ids[3], kRegW3Central[0], true);
-  job_query.CommitStagedJobs();
+  MarkEndOfStage();
 
   // Local initialize.
   for (int index = 0; index < local_initialize_job_num; ++index) {
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kProjRegY2W0Central[index],
+    LoadLdoIdsInSet(&read, kProjRegY2W0Central[index],
                         APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                         APP_INDEX_M2C,
                         APP_INDEX_C2M,
                         APP_VECTOR_B,
                         APP_MATRIX_A, NULL);
-    LoadLogicalIdsInSet(this, &read, kProjRegY2W1Outer[index], APP_PRESSURE,
+    LoadLdoIdsInSet(&read, kProjRegY2W1Outer[index], APP_PRESSURE,
                         NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kProjRegY2W0Central[index],
+    LoadLdoIdsInSet(&write, kProjRegY2W0Central[index],
                         APP_VECTOR_B, APP_PROJECTION_LOCAL_RESIDUAL, APP_MATRIX_C,
                         APP_VECTOR_TEMP, APP_VECTOR_Z,
                         APP_VECTOR_PRESSURE,
                         NULL);
-    LoadLogicalIdsInSet(this, &write, kProjRegY2W1CentralWGB[index],
+    LoadLdoIdsInSet(&write, kProjRegY2W1CentralWGB[index],
                         APP_VECTOR_P_META_FORMAT, NULL);
-    job_query.StageJob(PROJECTION_LOCAL_INITIALIZE,
+    before.clear();
+    StageJobAndLoadBeforeSet(&before, PROJECTION_LOCAL_INITIALIZE,
                        local_initialize_job_ids[index],
-                       read, write,
+                       read, write);
+
+    SpawnComputeJob(PROJECTION_LOCAL_INITIALIZE,
+                       local_initialize_job_ids[index],
+                       read, write, before, after,
                        default_part_params[index], true,
                        kProjRegY2W3Central[index]);
-    job_query.Hint(local_initialize_job_ids[index], kProjRegY2W3Central[index]);
   }
-  job_query.CommitStagedJobs();
+  MarkEndOfStage();
 
   // Projection loop.
   read.clear();
-  LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
+  LoadLdoIdsInSet(&read, kRegW0Central[0],
                       APP_PROJECTION_INTERIOR_N,
                       APP_PROJECTION_LOCAL_RESIDUAL,
                       APP_PROJECTION_GLOBAL_TOLERANCE,
@@ -276,14 +298,21 @@ void JobProjectionMain::SpawnJobs(
       1, &projection_loop_iteration_str);
   projection_loop_iteration_params.set_ser_data(
       SerializedData(projection_loop_iteration_str));
-  job_query.StageJob(PROJECTION_LOOP_ITERATION,
+  before.clear();
+  StageJobAndLoadBeforeSet(&before, PROJECTION_LOOP_ITERATION,
                      projection_job_ids[4],
                      read, write,
-                     projection_loop_iteration_params, false,
-                     kRegW3Central[0],
                      true);
-  job_query.Hint(projection_job_ids[4], kRegW3Central[0], true);
-  job_query.CommitStagedJobs();
+
+  SpawnComputeJob(PROJECTION_LOOP_ITERATION,
+                     projection_job_ids[4],
+                     read, write, before, after,
+                     projection_loop_iteration_params, false,
+                     kRegW3Central[0]);
+  MarkEndOfStage();
+
+  EndTemplate("projection_main");
+
   job_query.PrintTimeProfile();
 
   if (time == 0) {

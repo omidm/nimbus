@@ -64,8 +64,6 @@ WorkerManager::WorkerManager() {
 
   pthread_mutex_init(&scheduling_critical_section_lock_, NULL);
 
-  log_ready_ = false;
-
   pthread_mutex_init(&computation_job_queue_lock_, NULL);
   pthread_mutex_init(&auxiliary_job_queue_lock_, NULL);
 
@@ -91,28 +89,6 @@ WorkerManager::~WorkerManager() {
   pthread_mutex_destroy(&auxiliary_job_queue_lock_);
 }
 
-void WorkerManager::PrintTimeStamp(
-    const char* event, const char* s, const uint64_t d) {
-  struct timespec t;
-  clock_gettime(CLOCK_REALTIME, &t);
-  double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
-  fprintf(event_log, "%f %s %s %lu\n", time_sum, event, s, d);
-}
-
-void WorkerManager::SetLoggingInterface(
-    Log* log, Log* version_log, Log* data_hash_log,
-    HighResolutionTimer* timer) {
-  log_ = log;
-  version_log_ = version_log;
-  data_hash_log_ = data_hash_log;
-  timer_ = timer;
-  log_ready_ = true;
-}
-
-void WorkerManager::SetEventLog(std::string wid_str) {
-  event_log = fopen((wid_str + "_event_be.txt").c_str(), "w");
-}
-
 
 bool WorkerManager::ClassifyAndAddJob(Job* job) {
   bool result;
@@ -136,6 +112,8 @@ bool WorkerManager::ClassifyAndAddJob(Job* job) {
 }
 
 bool WorkerManager::PushJob(Job* job) {
+  // TODO(quhang): when a job is dispatched.
+  worker_->StatDispatchJob();
   if (ClassifyAndAddJob(job)) {
     TriggerScheduling();
   }
@@ -151,6 +129,7 @@ bool WorkerManager::PushJobList(std::list<Job*>* job_list) {
       result = true;
     }
   }
+  worker_->StatDispatchJob(job_list->size());
   if (result) {
     TriggerScheduling();
   }
@@ -167,9 +146,6 @@ bool WorkerManager::PullAuxiliaryJobs(WorkerThreadAuxiliary* worker_thread,
 
 bool WorkerManager::FinishJob(Job* job) {
   pthread_mutex_lock(&local_job_done_list_lock_);
-  PrintTimeStamp("f",
-                 job->name().c_str(),
-                 job->id().elem());
   local_job_done_list_.push_back(job);
   pthread_mutex_unlock(&local_job_done_list_lock_);
   return true;
@@ -177,8 +153,13 @@ bool WorkerManager::FinishJob(Job* job) {
 
 bool WorkerManager::GetLocalJobDoneList(JobList* buffer) {
   pthread_mutex_lock(&local_job_done_list_lock_);
+  int len = local_job_done_list_.size();
   buffer->splice(buffer->end(), local_job_done_list_);
   pthread_mutex_unlock(&local_job_done_list_lock_);
+  // TODO(quhang): when a job is done.
+  if (len != 0) {
+    worker_->StatEndJob(len);
+  }
   return true;
 }
 
@@ -201,9 +182,6 @@ Job* WorkerManager::NextComputationJobToRun(
   worker_thread->job_assigned = false;
   Job* temp = worker_thread->next_job_to_run;
   assert(temp != NULL);
-  PrintTimeStamp("r",
-                 worker_thread->next_job_to_run->name().c_str(),
-                 worker_thread->next_job_to_run->id().elem());
   worker_thread->next_job_to_run = NULL;
   pthread_mutex_unlock(&scheduling_critical_section_lock_);
 
@@ -217,9 +195,6 @@ bool WorkerManager::SendCommand(SchedulerCommand* command) {
 }
 
 bool WorkerManager::LaunchThread(WorkerThread* worker_thread) {
-  assert(log_ready_);
-  worker_thread->SetLoggingInterface(
-      log_, version_log_, data_hash_log_, timer_);
   int error_code =
       pthread_create(&worker_thread->thread_id, NULL,
                      ThreadEntryPoint, worker_thread);

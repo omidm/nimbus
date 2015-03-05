@@ -374,7 +374,17 @@ bool nimbus::DataManager::UpdatePhysicalInstance(LogicalDataObject *object,
 }
 
 
-
+bool nimbus::DataManager::UpdateVersionAndAccessRecord(const logical_data_id_t& ldid,
+                                                       const physical_data_id_t& pdid,
+                                                       const data_version_t& version,
+                                                       const IDSet<job_id_t>& list_job_read,
+                                                       const job_id_t& last_job_write) {
+  return physical_object_map_.UpdateVersionAndAccessRecord(ldid,
+                                                           pdid,
+                                                           version,
+                                                           list_job_read,
+                                                           last_job_write);
+}
 
 /**
  * \fn const PhysicalDataList * nimbus::DataManager::AllInstances(LogicalDataObject *object)

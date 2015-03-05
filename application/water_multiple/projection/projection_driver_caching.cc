@@ -49,6 +49,7 @@
 #include "application/water_multiple/physbam_utils.h"
 #include "application/water_multiple/app_utils.h"
 #include "data/scalar_data.h"
+#include "shared/fast_log.hh"
 #include "shared/nimbus.h"
 
 #include "application/water_multiple/projection/projection_driver.h"
@@ -101,6 +102,7 @@ void set_up_meta_p(nimbus::AppVar* cv, void* data) {
 
 void ProjectionDriver::AppData_LoadFromNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
+  nimbus::timer::StartTimer(nimbus::timer::kAssemblingCache);
   nimbus::PdiVector pdv;
   GeometricRegion array_reg_central(init_config.local_region.x(),
                                     init_config.local_region.y(),
@@ -493,10 +495,12 @@ void ProjectionDriver::AppData_LoadFromNimbus(
   log_timer.StartTimer();
   AppData_Initialize(projection_data.local_n, projection_data.interior_n);
   if (print_debug) dbg(APP_LOG, "[PROJECTION] LOAD ELSE %f seconds\n", log_timer.timer());
+  nimbus::timer::StopTimer(nimbus::timer::kAssemblingCache);
 }
 
 void ProjectionDriver::AppData_SaveToNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
+  nimbus::timer::StartTimer(nimbus::timer::kAssemblingCache);
   nimbus::PdiVector pdv;
   GeometricRegion array_reg_central(init_config.local_region.x(),
                                     init_config.local_region.y(),
@@ -675,6 +679,7 @@ void ProjectionDriver::AppData_SaveToNimbus(
     app_data_index_c2m = NULL;
     if (print_debug) dbg(APP_LOG, "[PROJECTION] SAVE INDEX_C2M %f seconds\n", log_timer.timer());
   }
+  nimbus::timer::StopTimer(nimbus::timer::kAssemblingCache);
 }
 
 }  // namespace PhysBAM

@@ -72,35 +72,38 @@ class SchedulerCommand {
 
   enum Type {
     BASE,
-    ADD_COMPUTE        = SchedulerPBuf_Type_ADD_COMPUTE,
-    ADD_COPY           = SchedulerPBuf_Type_ADD_COPY,
-    SPAWN_JOB_GRAPH    = SchedulerPBuf_Type_SPAWN_JOB_GRAPH,
-    SPAWN_COMPUTE      = SchedulerPBuf_Type_SPAWN_COMPUTE,
-    SPAWN_COPY         = SchedulerPBuf_Type_SPAWN_COPY,
-    DEFINE_DATA        = SchedulerPBuf_Type_DEFINE_DATA,
-    HANDSHAKE          = SchedulerPBuf_Type_HANDSHAKE,
-    JOB_DONE           = SchedulerPBuf_Type_JOB_DONE,
-    EXECUTE_COMPUTE    = SchedulerPBuf_Type_EXECUTE_COMPUTE,
-    CREATE_DATA        = SchedulerPBuf_Type_CREATE_DATA,
-    REMOTE_SEND        = SchedulerPBuf_Type_REMOTE_SEND,
-    REMOTE_RECEIVE     = SchedulerPBuf_Type_REMOTE_RECEIVE,
-    LOCAL_COPY         = SchedulerPBuf_Type_LOCAL_COPY,
-    DEFINE_PARTITION   = SchedulerPBuf_Type_DEFINE_PARTITION,
-    LDO_ADD            = SchedulerPBuf_Type_LDO_ADD,
-    LDO_REMOVE         = SchedulerPBuf_Type_LDO_REMOVE,
-    PARTITION_ADD      = SchedulerPBuf_Type_PARTITION_ADD,
-    PARTITION_REMOVE   = SchedulerPBuf_Type_PARTITION_REMOVE,
-    TERMINATE          = SchedulerPBuf_Type_TERMINATE,
-    PROFILE            = SchedulerPBuf_Type_PROFILE,
-    START_TEMPLATE     = SchedulerPBuf_Type_START_TEMPLATE,
-    END_TEMPLATE       = SchedulerPBuf_Type_END_TEMPLATE,
-    DEFINED_TEMPLATE   = SchedulerPBuf_Type_DEFINED_TEMPLATE,
-    SPAWN_TEMPLATE     = SchedulerPBuf_Type_SPAWN_TEMPLATE,
-    SAVE_DATA          = SchedulerPBuf_Type_SAVE_DATA,
-    LOAD_DATA          = SchedulerPBuf_Type_LOAD_DATA,
-    SAVE_DATA_JOB_DONE = SchedulerPBuf_Type_SAVE_DATA_JOB_DONE,
-    PREPARE_REWIND     = SchedulerPBuf_Type_PREPARE_REWIND,
-    WORKER_DOWN        = SchedulerPBuf_Type_WORKER_DOWN
+    ADD_COMPUTE            = SchedulerPBuf_Type_ADD_COMPUTE,
+    ADD_COPY               = SchedulerPBuf_Type_ADD_COPY,
+    SPAWN_JOB_GRAPH        = SchedulerPBuf_Type_SPAWN_JOB_GRAPH,
+    SPAWN_COMPUTE          = SchedulerPBuf_Type_SPAWN_COMPUTE,
+    SPAWN_COPY             = SchedulerPBuf_Type_SPAWN_COPY,
+    DEFINE_DATA            = SchedulerPBuf_Type_DEFINE_DATA,
+    HANDSHAKE              = SchedulerPBuf_Type_HANDSHAKE,
+    JOB_DONE               = SchedulerPBuf_Type_JOB_DONE,
+    EXECUTE_COMPUTE        = SchedulerPBuf_Type_EXECUTE_COMPUTE,
+    CREATE_DATA            = SchedulerPBuf_Type_CREATE_DATA,
+    REMOTE_SEND            = SchedulerPBuf_Type_REMOTE_SEND,
+    REMOTE_RECEIVE         = SchedulerPBuf_Type_REMOTE_RECEIVE,
+    LOCAL_COPY             = SchedulerPBuf_Type_LOCAL_COPY,
+    DEFINE_PARTITION       = SchedulerPBuf_Type_DEFINE_PARTITION,
+    LDO_ADD                = SchedulerPBuf_Type_LDO_ADD,
+    LDO_REMOVE             = SchedulerPBuf_Type_LDO_REMOVE,
+    PARTITION_ADD          = SchedulerPBuf_Type_PARTITION_ADD,
+    PARTITION_REMOVE       = SchedulerPBuf_Type_PARTITION_REMOVE,
+    TERMINATE              = SchedulerPBuf_Type_TERMINATE,
+    PROFILE                = SchedulerPBuf_Type_PROFILE,
+    START_TEMPLATE         = SchedulerPBuf_Type_START_TEMPLATE,
+    END_TEMPLATE           = SchedulerPBuf_Type_END_TEMPLATE,
+    DEFINED_TEMPLATE       = SchedulerPBuf_Type_DEFINED_TEMPLATE,
+    SPAWN_TEMPLATE         = SchedulerPBuf_Type_SPAWN_TEMPLATE,
+    SAVE_DATA              = SchedulerPBuf_Type_SAVE_DATA,
+    LOAD_DATA              = SchedulerPBuf_Type_LOAD_DATA,
+    SAVE_DATA_JOB_DONE     = SchedulerPBuf_Type_SAVE_DATA_JOB_DONE,
+    PREPARE_REWIND         = SchedulerPBuf_Type_PREPARE_REWIND,
+    WORKER_DOWN            = SchedulerPBuf_Type_WORKER_DOWN,
+    START_COMMAND_TEMPLATE = SchedulerPBuf_Type_START_COMMAND_TEMPLATE,
+    END_COMMAND_TEMPLATE   = SchedulerPBuf_Type_END_COMMAND_TEMPLATE,
+    SPAWN_COMMAND_TEMPLATE = SchedulerPBuf_Type_SPAWN_COMMAND_TEMPLATE
   };
 
   typedef std::set<Type> TypeSet;
@@ -176,6 +179,9 @@ class SchedulerCommand {
   static const std::string SAVE_DATA_JOB_DONE_NAME;
   static const std::string PREPARE_REWIND_NAME;
   static const std::string WORKER_DOWN_NAME;
+  static const std::string START_COMMAND_TEMPLATE_NAME;
+  static const std::string END_COMMAND_TEMPLATE_NAME;
+  static const std::string SPAWN_COMMAND_TEMPLATE_NAME;
 
  private:
 };

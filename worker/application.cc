@@ -58,15 +58,6 @@ Application::Application() {
   pthread_mutex_init(&lock_data_table_, NULL);
   pthread_mutex_init(&lock_job_graph_table_, NULL);
   pthread_mutex_init(&lock_defined_templates_pool_, NULL);
-  log_.set_file_name("log_app");
-}
-
-void Application::WriteToLog(std::string str) {
-  double time = log_.GetTime();
-  std::ostringstream strs;
-  strs << time;
-  str += (" " + strs.str());
-  log_.WriteToFile(str);
 }
 
 Application::~Application() {
@@ -366,9 +357,4 @@ AppDataManager* Application::app_data_manager() const {
 
 StaticConfigManager* Application::static_config_manager() const {
   return static_config_manager_;
-}
-
-
-void Application::SetAppDataManagerLogNames(std::string wid_str) {
-  app_data_manager_->SetLogNames(wid_str);
 }

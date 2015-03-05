@@ -57,7 +57,7 @@ SpawnTemplateCommand::SpawnTemplateCommand(const std::string& job_graph_name,
                                            const ID<job_id_t>& parent_job_id)
   : job_graph_name_(job_graph_name),
     inner_job_ids_(inner_job_ids),
-    outer_job_ids_(inner_job_ids),
+    outer_job_ids_(outer_job_ids),
     parameters_(parameters),
     parent_job_id_(parent_job_id) {
   name_ = SPAWN_TEMPLATE_NAME;

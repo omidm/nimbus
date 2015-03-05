@@ -27,18 +27,21 @@ parser.add_argument(
     "-wn", "--workernum",
     dest="worker_num",
     default=1,
+    required=True,
     type=int,
     help="number of workers to process")
 parser.add_argument(
     "-cn", "--corenum",
     dest="core_num",
     default=1,
+    required=True,
     type=int,
     help="number of cores per worker")
 parser.add_argument(
     "-in", "--iternum",
     dest="iter_num",
     default=1,
+    required=True,
     type=int,
     help="number of iterations")
 
@@ -102,8 +105,12 @@ Data.append(map(operator.div, idle_time, [CN * IN] * WN))
 for i in range(0, len(Data)):
   Data[i].append(np.mean(Data[i]))
 
-Data[0].append(1.1)
-Data[1].append(3.0)
+# Data[0].append(1.1)
+# Data[1].append(3.0)
+# Data[2].append(0.0)
+
+Data[0].append(11.82)
+Data[1].append(12.74)
 Data[2].append(0.0)
 
 
@@ -144,10 +151,12 @@ for i in range(0, P):
 
 plt.ylabel('Time (seconds)')
 
-title  = 'PhysBAM Water Simulation Size 256 Cube, 64 uniform partitions, 100 projection iteration\n'
-title += '8 c3.2xlarge EC2 workers each with 8 threads, c3.4xlarge controller with 8 assigning threads\n'
+title  = 'PhysBAM Water Simulation Size 512 Cube, 64 uniform partitions, 100 projection iteration\n'
+title += '8 c3.2xlarge EC2 workers each with 8 threads, c3.4xlarge controller with 1 assigning threads\n'
 # title += 'job done optimization and disabled Nagle\'s algorithm'
-title += 'worker templates activated'
+# title += 'worker templates activated'
+# title += 'all non-sterile jobs templatized'
+title += 'Worker Template + Binding Template + No Explicit Inter-Worker Before Set'
 
 plt.title(title)
 xticks = []
@@ -162,7 +171,7 @@ plt.xticks(ind+width/2., xticks )
 
 plt.legend(reversed(Parts), reversed(Legends))
 
-plt.ylim(0, 35)
+# plt.ylim(0, 35)
 
 plt.savefig("test.png")
 plt.show()

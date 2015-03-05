@@ -64,7 +64,7 @@ bool CheckpointManager::AddJobToCheckpoint(checkpoint_id_t checkpoint_id,
   Index::iterator iter = index_.find(checkpoint_id);
   if (iter == index_.end()) {
     dbg(DBG_ERROR, "ERROR: checkpoint with id %lu does not exist!\n", checkpoint_id);
-    exit(-1);
+    assert(false);
     return false;
   } else {
     iter->second->AddJob(job);
@@ -77,7 +77,7 @@ bool CheckpointManager::CompleteJobForCheckpoint(checkpoint_id_t checkpoint_id,
   Index::iterator iter = index_.find(checkpoint_id);
   if (iter == index_.end()) {
     dbg(DBG_ERROR, "ERROR: checkpoint with id %lu does not exist!\n", checkpoint_id);
-    exit(-1);
+    assert(false);
     return false;
   } else {
     iter->second->CompleteJob(job);
@@ -93,7 +93,7 @@ bool CheckpointManager::AddSaveDataJobToCheckpoint(checkpoint_id_t checkpoint_id
   Index::iterator iter = index_.find(checkpoint_id);
   if (iter == index_.end()) {
     dbg(DBG_ERROR, "ERROR: checkpoint with id %lu does not exist!\n", checkpoint_id);
-    exit(-1);
+    assert(false);
     return false;
   } else {
     iter->second->AddSaveDataJob(job_id, ldid, version, worker_id);
@@ -107,7 +107,7 @@ bool CheckpointManager::NotifySaveDataJobDoneForCheckpoint(checkpoint_id_t check
   Index::iterator iter = index_.find(checkpoint_id);
   if (iter == index_.end()) {
     dbg(DBG_ERROR, "ERROR: checkpoint with id %lu does not exist!\n", checkpoint_id);
-    exit(-1);
+    assert(false);
     return false;
   } else {
     iter->second->NotifySaveDataJobDone(job_id, handle);
@@ -132,7 +132,7 @@ bool CheckpointManager::GetJobListFromCheckpoint(checkpoint_id_t checkpoint_id,
   Index::iterator iter = index_.find(checkpoint_id);
   if (iter == index_.end()) {
     dbg(DBG_ERROR, "ERROR: checkpoint with id %lu does not exist!\n", checkpoint_id);
-    exit(-1);
+    assert(false);
     return false;
   } else {
     iter->second->GetJobList(list);
@@ -147,7 +147,7 @@ bool CheckpointManager::GetHandleToLoadData(checkpoint_id_t checkpoint_id,
   Index::iterator iter = index_.find(checkpoint_id);
   if (iter == index_.end()) {
     dbg(DBG_ERROR, "ERROR: checkpoint with id %lu does not exist!\n", checkpoint_id);
-    exit(-1);
+    assert(false);
     return false;
   } else {
     iter->second->GetHandleToLoadData(ldid, version, handles);

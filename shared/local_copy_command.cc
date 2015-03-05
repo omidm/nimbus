@@ -136,6 +136,10 @@ IDSet<job_id_t> LocalCopyCommand::before_set() {
   return before_set_;
 }
 
+IDSet<job_id_t>* LocalCopyCommand::before_set_p() {
+  return &before_set_;
+}
+
 bool LocalCopyCommand::ReadFromProtobuf(const LocalCopyPBuf& buf) {
   job_id_.set_elem(buf.job_id());
   from_physical_data_id_.set_elem(buf.from_physical_id());

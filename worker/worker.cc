@@ -40,12 +40,14 @@
 
 #include <unistd.h>
 #include <boost/functional/hash.hpp>
+#include <algorithm>
 #include <cstdio>
 #include <sstream>
 #include <string>
 #include <ctime>
 #include <list>
 #include <limits>
+#include "shared/fast_log.hh"
 #include "shared/profiler_malloc.h"
 #include "worker/worker.h"
 #include "worker/worker_ldo_map.h"
@@ -58,20 +60,6 @@
 using boost::hash;
 
 namespace nimbus {
-
-/*
-// Comment(quhang): I moved these three functions to a seperate file:
-// worker/util_dumping.cc.
-// So that these utilities can be called outside "Worker" class.
-void DumpVersionInformation(Job *job, const DataArray& da, Log *log,
-                            std::string tag);
-
-void DumpDataHashInformation(Job *job, const DataArray& da, Log *log,
-                             std::string tag);
-
-void DumpDataOrderInformation(Job *job, const DataArray& da, Log *log,
-                              std::string tag);
- */
 
 Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     port_t listening_port, Application* a)
@@ -88,7 +76,6 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
         exit(1);
       }
     }
-    log_.InitTime();
     id_ = -1;
     ip_address_ = NIMBUS_RECEIVER_KNOWN_IP;
     worker_manager_ = new WorkerManager();
@@ -109,17 +96,6 @@ Worker::~Worker() {
   delete ddb_;
 }
 
-void Worker::PrintTimeStamp(const char* format, ...) {
-  va_list args;
-  va_start(args, format);
-  struct timespec t;
-  clock_gettime(CLOCK_REALTIME, &t);
-  double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
-  fprintf(event_log, "%f ", time_sum);
-  vfprintf(event_log, format, args);
-  va_end(args);
-}
-
 void Worker::Run() {
   std::cout << "Running the Worker" << std::endl;
 
@@ -134,10 +110,17 @@ void Worker::Run() {
 }
 
 void Worker::WorkerCoreProcessor() {
+  timer::InitializeKeys();
+  timer::InitializeTimers();
+  timer::StartTimer(timer::kSumCyclesTotal,
+                    WorkerManager::across_job_parallism);
+  stat_blocked_job_num_ = 0;
+  stat_ready_job_num_ = 0;
+  stat_busy_cores_ = 0;
+  stat_blocked_cores_ = 0;
+  stat_idle_cores_ = WorkerManager::across_job_parallism;
   std::cout << "Base Worker Core Processor" << std::endl;
   worker_manager_->worker_ = this;
-  worker_manager_->SetLoggingInterface(&log_, &version_log_, &data_hash_log_,
-                                       &timer_);
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Launching worker threads.\n");
   worker_manager_->StartWorkerThreads();
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Finishes launching worker threads.\n");
@@ -168,7 +151,6 @@ void Worker::WorkerCoreProcessor() {
       dbg(DBG_WORKER_FD,
           DBG_WORKER_FD_S"Receive-job transmission is done(job #%d)\n",
           receive_job_id);
-      PrintTimeStamp("io_done %lu\n", receive_job_id);
       process_jobs = true;
       NotifyTransmissionDone(receive_job_id);
       if (--quota <= 0) {
@@ -181,7 +163,6 @@ void Worker::WorkerCoreProcessor() {
     while (!local_job_done_list.empty()) {
       Job* job = local_job_done_list.front();
       local_job_done_list.pop_front();
-      PrintTimeStamp("local_done %lu\n", job->id().elem());
       process_jobs = true;
       NotifyLocalJobDone(job);
       if (--quota <= 0) {
@@ -189,6 +170,25 @@ void Worker::WorkerCoreProcessor() {
       }
     }
     if (!process_jobs) {
+//      typename WorkerJobVertex::Iter iter = worker_job_graph_.begin();
+//      for (; iter != worker_job_graph_.end(); ++iter) {
+//        if (iter->second->incoming_edges()->size() != 0) {
+//          Job* job = iter->second->entry()->get_job();
+//          std::string name = job->name();
+//          if (name.find("Copy") == std::string::npos &&
+//              name.find("extrapolate_phi") != std::string::npos) {
+//              std::cout << "OMID: " << job->id().elem() << " "
+//                << iter->second->incoming_edges()->size() << " ";
+//            WorkerJobEdge::Map::iterator it = iter->second->incoming_edges()->begin();
+//            for (; it != iter->second->incoming_edges()->end(); ++it) {
+//              WorkerJobEdge* edge = it->second;
+//              std::cout << edge->start_vertex()->entry()->get_job_id() << " ";
+//            }
+//            std::cout << job->before_set().ToNetworkData() << std::endl;
+//          }
+//        }
+//      }
+
       usleep(10);
     }
   }
@@ -222,9 +222,6 @@ void Worker::ResolveDataArray(Job* job) {
         data_map_.AcquireAccess(*iter, job->id().elem(),
                                 PhysicalDataMap::WRITE));
   }
-  // DumpVersionInformation(job, da, &version_log_, "version_in");
-  // DumpDataHashInformation(job, da, &data_hash_log_, "hash_in");
-  // DumpDataOrderInformation(job, job->data_array, &data_hash_log_, "data_order");
 }
 
 void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
@@ -304,20 +301,11 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
   ddb_->Initialize(ip_address_, id_);
 
   std::string wstr = int2string(id_);
-  // TODO(quhang) thread-safety(log).
-  worker_manager_->SetEventLog(wstr);
-  application_->SetAppDataManagerLogNames(wstr);
-  event_log = fopen((wstr + "_event_fe.txt").c_str(), "w");
-  alloc_log = fopen((wstr + "_data_objects.txt").c_str(), "w");
-  version_log_.set_file_name(wstr + "_version_log.txt");
-  data_hash_log_.set_file_name(wstr + "_data_hash_log.txt");
-  data_exchanger_->WriteTimeDriftToLog(time - cm->time());
 }
 
 // Processes jobdone command. Moves a job from blocked queue to ready queue if
 // its before set is satisfied.
 void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
-  PrintTimeStamp("recv_job %s %lu\n", "JOB_DONE", cm->job_id().elem());
   NotifyJobDone(cm->job_id().elem(), cm->final());
 }
 
@@ -327,8 +315,6 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
   Job* job = application_->CloneJob(cm->job_name());
   job->set_name("Compute:" + cm->job_name());
   job->set_id(cm->job_id());
-  // TODO(print_log): Receive a compute job.
-  PrintTimeStamp("recv_job %s %lu\n", job->name().c_str(), job->id().elem());
   job->set_read_set(cm->read_set());
   job->set_write_set(cm->write_set());
   job->set_before_set(cm->before_set());
@@ -337,9 +323,6 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
   job->set_sterile(cm->sterile());
   job->set_region(cm->region());
   job->set_parameters(cm->params());
-#ifndef MUTE_LOG
-  timer_.Start(job->id().elem());
-#endif  // MUTE_LOG
   AddJobToGraph(job);
 }
 
@@ -355,22 +338,14 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
   data->set_region(*(ldo->region()));
 
   data_map_.AddMapping(data->physical_id(), data);
-  struct timespec t;
-  clock_gettime(CLOCK_REALTIME, &t);
-  double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
-  fprintf(alloc_log, "%f : %lu\n", time_sum, sizeof(*data));
 
   Job * job = new CreateDataJob();
   job->set_name("CreateData:" + cm->data_name());
   job->set_id(cm->job_id());
-  PrintTimeStamp("recv_job %s %lu\n", job->name().c_str(), job->id().elem());
   IDSet<physical_data_id_t> write_set;
   write_set.insert(cm->physical_data_id().elem());
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
-#ifndef MUTE_LOG
-  timer_.Start(job->id().elem());
-#endif  // MUTE_LOG
   AddJobToGraph(job);
 }
 
@@ -380,7 +355,6 @@ void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
       cm->to_ip(), cm->to_port().elem());
   job->set_name("RemoteCopySend");
   job->set_id(cm->job_id());
-  PrintTimeStamp("recv_job %s %lu\n", job->name().c_str(), job->id().elem());
   job->set_receive_job_id(cm->receive_job_id());
   job->set_to_worker_id(cm->to_worker_id());
   job->set_to_ip(cm->to_ip());
@@ -389,9 +363,6 @@ void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
   read_set.insert(cm->from_physical_data_id().elem());
   job->set_read_set(read_set);
   job->set_before_set(cm->before_set());
-#ifndef MUTE_LOG
-  timer_.Start(job->id().elem());
-#endif  // MUTE_LOG
   AddJobToGraph(job);
 }
 
@@ -399,14 +370,10 @@ void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {
   Job * job = new RemoteCopyReceiveJob(application_);
   job->set_name("RemoteCopyReceive");
   job->set_id(cm->job_id());
-  PrintTimeStamp("recv_job %s %lu\n", job->name().c_str(), job->id().elem());
   IDSet<physical_data_id_t> write_set;
   write_set.insert(cm->to_physical_data_id().elem());
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
-#ifndef MUTE_LOG
-  timer_.Start(job->id().elem());
-#endif  // MUTE_LOG
   AddJobToGraph(job);
 }
 
@@ -414,15 +381,11 @@ void Worker::ProcessSaveDataCommand(SaveDataCommand* cm) {
   SaveDataJob * job = new SaveDataJob(ddb_, application_);
   job->set_name("SaveData");
   job->set_id(cm->job_id());
-  PrintTimeStamp("recv_job %s %lu\n", job->name().c_str(), job->id().elem());
   job->set_checkpoint_id(cm->checkpoint_id().elem());
   IDSet<physical_data_id_t> read_set;
   read_set.insert(cm->from_physical_data_id().elem());
   job->set_read_set(read_set);
   job->set_before_set(cm->before_set());
-#ifndef MUTE_LOG
-  timer_.Start(job->id().elem());
-#endif  // MUTE_LOG
   AddJobToGraph(job);
 }
 
@@ -430,15 +393,11 @@ void Worker::ProcessLoadDataCommand(LoadDataCommand* cm) {
   LoadDataJob * job = new LoadDataJob(ddb_, application_);
   job->set_name("LoadData");
   job->set_id(cm->job_id());
-  PrintTimeStamp("load_job %s %lu\n", job->name().c_str(), job->id().elem());
   job->set_handle(cm->handle());
   IDSet<physical_data_id_t> write_set;
   write_set.insert(cm->to_physical_data_id().elem());
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
-#ifndef MUTE_LOG
-  timer_.Start(job->id().elem());
-#endif  // MUTE_LOG
   AddJobToGraph(job);
 }
 
@@ -454,7 +413,6 @@ void Worker::ProcessPrepareRewindCommand(PrepareRewindCommand* cm) {
     while (!local_job_done_list.empty()) {
       Job* job = local_job_done_list.front();
       local_job_done_list.pop_front();
-      PrintTimeStamp("local_done %lu\n", job->id().elem());
       new_done = true;
       NotifyLocalJobDone(job);
     }
@@ -471,7 +429,6 @@ void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
   Job * job = new LocalCopyJob(application_);
   job->set_name("LocalCopy");
   job->set_id(cm->job_id());
-  PrintTimeStamp("recv_job %s %lu\n", job->name().c_str(), job->id().elem());
   IDSet<physical_data_id_t> read_set;
   read_set.insert(cm->from_physical_data_id().elem());
   job->set_read_set(read_set);
@@ -479,9 +436,6 @@ void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
   write_set.insert(cm->to_physical_data_id().elem());
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
-#ifndef MUTE_LOG
-  timer_.Start(job->id().elem());
-#endif  // MUTE_LOG
   AddJobToGraph(job);
 }
 
@@ -511,6 +465,10 @@ void Worker::ProcessPartitionRemoveCommand(PartitionRemoveCommand* cm) {
 void Worker::ProcessTerminateCommand(TerminateCommand* cm) {
   // profiler_thread_->interrupt();
   // profiler_thread_->join();
+  std::string file_name = int2string(id_) + "_time_per_thread.txt";
+  FILE* temp = fopen(file_name.c_str(), "w");
+  timer::PrintTimerSummary(temp);
+  fclose(temp);
   exit(cm->exit_status().elem());
 }
 
@@ -555,6 +513,9 @@ void Worker::LoadSchedulerCommands() {
   scheduler_command_table_[SchedulerCommand::SAVE_DATA] = new SaveDataCommand();
   scheduler_command_table_[SchedulerCommand::LOAD_DATA] = new LoadDataCommand();
   scheduler_command_table_[SchedulerCommand::PREPARE_REWIND] = new PrepareRewindCommand();
+  scheduler_command_table_[SchedulerCommand::START_COMMAND_TEMPLATE] = new StartCommandTemplateCommand(); // NOLINT
+  scheduler_command_table_[SchedulerCommand::END_COMMAND_TEMPLATE] = new EndCommandTemplateCommand(); //NOLINT
+  scheduler_command_table_[SchedulerCommand::SPAWN_COMMAND_TEMPLATE] = new SpawnCommandTemplateCommand(); // NOLINT
 }
 
 worker_id_t Worker::id() {
@@ -574,6 +535,8 @@ PhysicalDataMap* Worker::data_map() {
 }
 
 void Worker::AddJobToGraph(Job* job) {
+  // TODO(quhang): when a job is received.
+  StatAddJob();
   assert(job != NULL);
   job_id_t job_id = job->id().elem();
   dbg(DBG_WORKER_FD,
@@ -658,19 +621,7 @@ void Worker::AddJobToGraph(Job* job) {
   if (vertex->incoming_edges()->empty()) {
     vertex->entry()->set_state(WorkerJobEntry::READY);
     ResolveDataArray(job);
-    // TODO(print_log): dispatch a job, newly received with empty before set.
-    // if (!(dynamic_cast<CreateDataJob*>(job) || // NOLINT
-    //       dynamic_cast<LocalCopyJob*>(job) || // NOLINT
-    //       dynamic_cast<RemoteCopySendJob*>(job) || // NOLINT
-    //       dynamic_cast<RemoteCopyReceiveJob*>(job))) { // NOLINT
-     PrintTimeStamp("dispatch_job(new) %s %lu\n",
-                    job->name().c_str(), job->id().elem());
-    // }
     int success_flag = worker_manager_->PushJob(job);
-#ifndef MUTE_LOG
-    double wait_time = timer_.Stop(job->id().elem());
-    job->set_wait_time(wait_time);
-#endif  // MUTE_LOG
     vertex->entry()->set_job(NULL);
     assert(success_flag);
   }
@@ -696,19 +647,8 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
     if (after_job_vertex->incoming_edges()->empty()) {
       after_job_vertex->entry()->set_state(WorkerJobEntry::READY);
       assert(after_job_vertex->entry()->get_job() != NULL);
-      PrintTimeStamp("Resolve\n");
       ResolveDataArray(after_job_vertex->entry()->get_job());
-      Job* job = after_job_vertex->entry()->get_job();
-      PrintTimeStamp("dispatch_job(job_done) %d %s %lu %lu\n",
-                     deletion_list.size(),
-                     job->name().c_str(),
-                     job->id().elem(),
-                     vertex->entry()->get_job_id());
       job_list.push_back(after_job_vertex->entry()->get_job());
-// #ifndef MUTE_LOG
-//       double wait_time = timer_.Stop(after_job_vertex->entry()->get_job()->id().elem());
-//       after_job_vertex->entry()->get_job()->set_wait_time(wait_time);
-// #endif  // MUTE_LOG
       after_job_vertex->entry()->set_job(NULL);
     }
   }
@@ -815,13 +755,7 @@ void Worker::NotifyTransmissionDone(job_id_t job_id) {
         if (vertex->incoming_edges()->empty()) {
           vertex->entry()->set_state(WorkerJobEntry::READY);
           ResolveDataArray(receive_job);
-          PrintTimeStamp("dispatch_job(new) %s %lu\n",
-                         receive_job->name().c_str(), receive_job->id().elem());
           int success_flag = worker_manager_->PushJob(receive_job);
-#ifndef MUTE_LOG
-          double wait_time = timer_.Stop(receive_job->id().elem());
-          receive_job->set_wait_time(wait_time);
-#endif  // MUTE_LOG
           vertex->entry()->set_job(NULL);
           assert(success_flag);
         }
@@ -894,5 +828,78 @@ bool Worker::IsEmptyGraph(WorkerJobGraph* job_graph) {
   return true;
 }
 
+void Worker::StatAddJob() {
+  // printf("add %d %d %d %d %d\n",
+  //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
+  //        stat_blocked_job_num_, stat_ready_job_num_);
+  ++stat_blocked_job_num_;
+  if (stat_idle_cores_ != 0) {
+    --stat_idle_cores_;
+    ++stat_blocked_cores_;
+    timer::StartTimer(timer::kSumCyclesBlock);
+  }
+  // printf("#add %d %d %d %d %d\n",
+  //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
+  //        stat_blocked_job_num_, stat_ready_job_num_);
+}
+void Worker::StatDispatchJob(int len) {
+  // printf("%d dis %d %d %d %d %d\n", len,
+  //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
+  //        stat_blocked_job_num_, stat_ready_job_num_);
+  stat_blocked_job_num_ -= len;
+  stat_ready_job_num_ += len;
+  if (stat_blocked_cores_ > 0) {
+    int release_cores = std::min(stat_blocked_cores_, len);
+    if (release_cores > 0) {
+      stat_blocked_cores_ -= release_cores;
+      timer::StopTimer(timer::kSumCyclesBlock, release_cores);
+      stat_busy_cores_ += release_cores;
+      timer::StartTimer(timer::kSumCyclesRun, release_cores);
+    }
+  }
+  // printf("#dis %d %d %d %d %d\n",
+  //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
+  //        stat_blocked_job_num_, stat_ready_job_num_);
+}
+void Worker::StatEndJob(int len) {
+  // printf("%d end %d %d %d %d %d\n", len,
+  //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
+  //        stat_blocked_job_num_, stat_ready_job_num_);
+  using std::min;
+  stat_ready_job_num_ -= len;
+  int busy_cores = min(stat_ready_job_num_,
+                       WorkerManager::across_job_parallism);
+  int blocked_cores = min(stat_blocked_job_num_,
+                          WorkerManager::across_job_parallism - busy_cores);
+  int idle_cores =
+      WorkerManager::across_job_parallism - busy_cores - blocked_cores;
+  if (busy_cores != stat_busy_cores_) {
+    timer::StopTimer(timer::kSumCyclesRun, stat_busy_cores_ - busy_cores);
+  }
+  if (blocked_cores != stat_blocked_cores_) {
+    timer::StartTimer(timer::kSumCyclesBlock,
+                      blocked_cores - stat_blocked_cores_);
+  }
+  stat_busy_cores_ = busy_cores;
+  stat_blocked_cores_ = blocked_cores;
+  stat_idle_cores_ = idle_cores;
+  // printf("#end %d %d %d %d %d\n",
+  //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
+  //        stat_blocked_job_num_, stat_ready_job_num_);
+}
+
+// The unit is in nano-second.
+void GetTimerStat(int64_t* idle, int64_t* block, int64_t* run) {
+  static int64_t l_idle = 0, l_block = 0, l_run = 0;
+  int64_t c_block = timer::ReadTimer(timer::kSumCyclesBlock);
+  int64_t c_run = timer::ReadTimer(timer::kSumCyclesRun);
+  int64_t c_idle = timer::ReadTimer(timer::kSumCyclesTotal) - c_block - c_run;
+  *idle = c_idle - l_idle;
+  *block = c_block - l_block;
+  *run = c_run - l_run;
+  l_idle = c_idle;
+  l_block = c_block;
+  l_run = c_run;
+}
 
 }  // namespace nimbus

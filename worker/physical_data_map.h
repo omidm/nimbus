@@ -73,10 +73,7 @@ class PhysicalDataMap {
       physical_data_id_t physical_data_id);
 
  private:
-  static bool print_stat_;
   size_t sum_;
-  FILE* physical_data_log;
-  void PrintTimeStamp(const char* format, ...);
   typedef boost::unordered_set<physical_data_id_t> PhysicalDataIdSet;
   boost::unordered_map<job_id_t, PhysicalDataIdSet> outstanding_used_data_;
   typedef boost::unordered_map<physical_data_id_t, std::pair<Data*, size_t> >

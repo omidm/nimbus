@@ -212,6 +212,35 @@ bool nimbus::PhysicalObjectMap::UpdatePhysicalInstance(LogicalDataObject* obj,
   return false;
 }
 
+
+bool nimbus::PhysicalObjectMap::UpdateVersionAndAccessRecord(const logical_data_id_t& ldid,
+                                                             const physical_data_id_t& pdid,
+                                                             const data_version_t& version,
+                                                             const IDSet<job_id_t>& list_job_read,
+                                                             const job_id_t& last_job_write) {
+  PhysicalObjectMapType::iterator iter = data_map_.find(ldid);
+  if (iter == data_map_.end()) {
+    return false;
+  } else {
+    PhysicalDataList* v = iter->second;
+    PhysicalDataList::iterator it = v->begin();
+    for (; it != v->end(); ++it) {
+      if (it->id() == pdid) {
+        it->set_version(version);
+        it->set_list_job_read(list_job_read);
+        it->set_last_job_write(last_job_write);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+
+
+
+
+
 /**
  * \fn const PhysicalDataList * nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object)
  * \brief Brief description.

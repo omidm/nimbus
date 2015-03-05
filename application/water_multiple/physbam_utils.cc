@@ -51,6 +51,7 @@
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"
 #include "application/water_multiple/water_sources.h"
+#include "shared/fast_log.hh"
 #include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 #include "worker/worker_thread.h"
@@ -86,6 +87,7 @@ void GetAppAppObjects(
     const nimbus::Job &job,
     const nimbus::DataArray &da,
     AppAppObjects *app_data) {
+  nimbus::timer::StartTimer(nimbus::timer::kAssemblingCache);
   nimbus::GeometricRegion local_region = init_config.local_region;
   nimbus::GeometricRegion array_reg(local_region);
   nimbus::GeometricRegion array_reg_outer_1(array_reg.NewEnlarged(1));
@@ -256,7 +258,6 @@ void GetAppAppObjects(
     if (l8w) write8 = write;
 
     int order[3] = {3, 7, 8};
-
     if (l || lw) {
       order[0] = 7;
       order[1] = 8;
@@ -387,6 +388,7 @@ void GetAppAppObjects(
       config_manager->GetStaticConfigVariable(STATIC_CONFIG_FORCE,
                                               local_region));
   assert(app_data->static_config_force != NULL);
+  nimbus::timer::StopTimer(nimbus::timer::kAssemblingCache);
 }
 
 bool InitializeExampleAndDriver(
