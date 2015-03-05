@@ -18,14 +18,14 @@ import operator
 
 
 # 256
-running_time = [5.7,  5.6,   5.1,  5.1, 4.9, 3.6]
-blocked_time = [2.9,  2.8,   5.7, 10.6, 4.5, 3.5]
-idle_time    = [21.9, 17.1, 11.7,  4.4, 5.5, 7.7]
+running_time = [5.7,  5.6,   5.1,  5.1, 4.9, 3.6, 4.77, 4.80]
+blocked_time = [2.9,  2.8,   5.7, 10.6, 4.5, 3.5, 3.02, 3.61]
+idle_time    = [21.9, 17.1, 11.7,  4.4, 5.5, 7.7, 4.71, 2.93]
 
 # 512
-running_time = [19.3, 14.4]
-blocked_time = [16.8, 13.7]
-idle_time    = [4.5 , 5.2]
+# running_time = [19.3, 14.4]
+# blocked_time = [16.8, 13.7]
+# idle_time    = [4.5 , 5.2]
 
 # 256 old 
 # physbam = [1.1, 3.0]
@@ -34,7 +34,7 @@ idle_time    = [4.5 , 5.2]
 physbam = [1.7, 2.4]
 
 # 512
-physbam = [12, 12.4]
+# physbam = [12, 12.4]
 
 # Plot the results in stack bar 
 N = len(running_time)
@@ -109,17 +109,17 @@ plt.text(p[0].get_x() + p[0].get_width()/2.,
 plt.ylabel('Average Iteration Time (seconds)')
 # plt.xlabel('Different Simulation Setups')
 
-# title  = 'PhysBAM Water Simulation Size 256 Cube, 64 uniform partitions, 100 projection iteration\n'
-title  = 'PhysBAM Water Simulation Size 512 Cube, 64 uniform partitions, 100 projection iteration\n'
+title  = 'PhysBAM Water Simulation Size 256 Cube, 64 uniform partitions, 100 projection iteration\n'
+# title  = 'PhysBAM Water Simulation Size 512 Cube, 64 uniform partitions, 100 projection iteration\n'
 title += '8 c3.2xlarge EC2 workers each with 8 threads, c3.4xlarge controller with 8 assigning threads\n'
 
 plt.title(title)
 
 # 256
-xticks = ['No Template', 'Worker Template \n (Only Projection)', 'Complete Worker Template \n + Complex Jobs', 'Binding Template', 'No Explicit \n Inter-Worker Before Set', 'Removed Worker Logging', 'PhysBAM']
+xticks = ['No Template', 'Worker Template \n (Only Projection)', 'Worker Template \n + Complex Jobs', 'Binding Template', 'No Explicit \n Inter-Worker Before Set', 'Removed\nWorker Logging', 'Multi-Threaded\nMemoization', 'Command\nTemplates', 'PhysBAM']
 
 # 512
-xticks = ['Temlates and Memoization', 'Removed Worker Logging', 'PhysBAM']
+# xticks = ['Temlates and Memoization', 'Removed Worker Logging', 'PhysBAM']
 
 plt.xticks(np.arange(N + 1) + width/2., xticks )
 # plt.yticks(np.arange(0, total[0] , 6))
@@ -132,7 +132,7 @@ plt.legend(reversed(Parts), reversed(Legends))
 plt.ylim(0, 35)
 
 # 512
-plt.ylim(0, 45)
+# plt.ylim(0, 45)
 
 plt.savefig("test.png")
 plt.show()
