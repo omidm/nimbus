@@ -26,11 +26,11 @@ PLACEMENT_GROUP  = 'nimbus-cluster' # None
 PRIVATE_KEY      = '/home/omidm/.ssh/' + KEY_NAME + '.pem'
 
 # Experiment configurations
-WORKER_NUM           = 100
+WORKER_NUM           = 8
 SCHEDULER_NUM        = 1
-ASSIGNER_THREAD_NUM  = 4
+ASSIGNER_THREAD_NUM  = 8
 BATCH_ASSIGN_NUM     = 200
-OTHREAD_NUM          = 4
+OTHREAD_NUM          = 8
 INSTANCE_NUM         = WORKER_NUM + SCHEDULER_NUM
 FIRST_PORT           = 5800
 LOG_FILE_NAME        = 'ec2_log.txt'

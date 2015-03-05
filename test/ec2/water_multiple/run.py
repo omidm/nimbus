@@ -28,9 +28,20 @@ import ec2
 
 ip_addresses = ec2.get_ip_addresses(config.EC2_LOCATION);
 
-scheduler_ip = "54.184.182.178"
+scheduler_ip = "54.190.117.78"
+
+# worker_ips = ["54.71.30.252",
+#               "54.190.255.94",
+#               "54.190.76.192",
+#               "54.70.165.138",
+#               "54.189.39.139",
+#               "54.70.68.14",
+#               "54.188.214.119",
+#               "54.189.244.232"]
+
 worker_ips = list(ip_addresses)
 worker_ips.remove(scheduler_ip)
+
 # scheduler_ip = ip_addresses[0]
 # worker_ips = list(ip_addresses)
 # worker_ips.pop(0)
@@ -50,3 +61,19 @@ print worker_ips
 # utils.clean_output_data(scheduler_ip, worker_ips)
  
 # ec2.terminate_instances(config.EC2_LOCATION);
+
+
+
+
+# How to count number od iterations from std::out of controller? 
+# either count loop_iteration_part_two jobs: 
+#     cat log | grep complex | grep "projection_loop_iteration_end\." -c
+#                      +
+#     cat omid | grep Picked | grep " loop_iteration_part_two\."
+#
+# or count loop_iteration jobs (loop_frame is not templetized):
+#    cat omid | grep complex | grep "loop_iteration_part_two\." -c
+#                     +
+#    cat omid | grep Picked | grep " loop_iteration\." -c
+#
+
