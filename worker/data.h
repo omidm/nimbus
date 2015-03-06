@@ -112,6 +112,9 @@ class Data {
   void set_region(const GeometricRegion& region);
   void set_version(data_version_t version);
 
+  bool destroyed();
+  void set_destroyed(bool destroyed);
+
   /**
    * \brief Removes dirty object mappings
    */
@@ -198,6 +201,11 @@ class Data {
   std::string name_;
   data_version_t version_;
   bool advanceData_;
+
+  // destroyed_ is true after Destroy is called (memory is freed) by
+  // an app data manager (default at init = false).
+  // It should be set to false after Create in app data manager.
+  bool destroyed_;
 
   // Set of data ids that could be involved in SYNC jobs with this data.
   IDSet<logical_data_id_t> neighbors_;

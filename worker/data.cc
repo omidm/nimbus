@@ -47,6 +47,7 @@ using namespace nimbus; // NOLINT
 Data::Data() {
   dirty_app_object_ = NULL;
   pending_flag_ = 0;
+  destroyed_ = false;
 }
 
 Data* Data::Clone() {
@@ -96,6 +97,14 @@ void Data::set_region(const GeometricRegion& region) {
 
 void Data::set_version(data_version_t version) {
   version_ = version;
+}
+
+bool Data::destroyed() {
+  return destroyed_;
+}
+
+void Data::set_destroyed(bool destroyed) {
+  destroyed_ = destroyed;
 }
 
 /**

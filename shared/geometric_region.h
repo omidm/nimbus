@@ -61,6 +61,17 @@ namespace nimbus {
     int_dimension_t z;
     Coord();
     Coord(int_dimension_t xe, int_dimension_t ye, int_dimension_t ze);
+    Coord& operator= (const Coord& right) {
+      x = right.x;
+      y = right.y;
+      z = right.z;
+      return *this;
+    };
+    inline bool operator== (const Coord& right) const {
+      return (x == right.x &&
+              y == right.y &&
+              z == right.z);
+    };
   };
 
   Coord ElementWiseMin(Coord a, Coord b);

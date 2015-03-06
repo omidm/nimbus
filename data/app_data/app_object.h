@@ -67,8 +67,9 @@ class  AppObject {
     // list friend classes here
     friend class AppDataManager;
     friend class CacheManager;
-    friend class CacheTable;
+    friend class VDataCacheManager;
     friend class SimpleAppDataManager;
+    friend class CacheTable;
     friend class Data;
 
     public:
@@ -108,6 +109,25 @@ class  AppObject {
          * \param object_region is of type GeometricRegion
          */
         void set_object_region(const GeometricRegion &object_region);
+
+        /**
+         * \brief Accessor for innert_region_ member
+         * \return Instance's inner_delta_, of type Coord
+         */
+        Coord inner_delta() const;
+
+        /**
+         * \brief Setter for inner_delta_ member
+         * \param inner_delta is of type Coord
+         */
+        void set_inner_delta(const Coord &inner_delta);
+
+        /**
+         * \brief Accessor for inner_delta_valid_ member, indicates whether
+         * inner region is set, and can be used
+         * \return A boolean value
+         */
+        void ineer_region_valid() const;
 
         uint64_t unique_id() {
           return unique_id_;
@@ -156,8 +176,12 @@ class  AppObject {
         virtual void Destroy() = 0;
 
     protected:
-        // read/ write/ object region information
-        GeometricRegion object_region_;
+        // set once during initialization
+        Coord inner_delta_;  // to delete/ allocate phys. obj.
+        bool inner_delta_valid_;
+        GeometricRegion object_region_;  // complete object region (outer)
+
+        // updated every time there is a write
         GeometricRegion write_region_;
 
         /**

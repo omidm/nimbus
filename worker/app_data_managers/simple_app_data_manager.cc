@@ -74,7 +74,7 @@ SimpleAppDataManager::SimpleAppDataManager() {
 SimpleAppDataManager::~SimpleAppDataManager() {}
 
 /**
- * \detials SimpleAppDataManager writes back all the dirty data from write_sets back to
+ * \details SimpleAppDataManager writes back all the dirty data from write_sets back to
  * nimbus objects. Note that this is not thread safe, this function does not
  * use locks or pending flags. This is guaranteed to work correctly only under
  * the assumption:
@@ -106,7 +106,7 @@ void SimpleAppDataManager::WriteImmediately(AppVar *app_var,
 }
 
 /**
- * \detials SimpleAppDataManager writes back all the dirty data from write_sets back to
+ * \details SimpleAppDataManager writes back all the dirty data from write_sets back to
  * nimbus objects. Note that this is not thread safe, this function does not
  * use locks or pending flags. This is guaranteed to work correctly only under
  * the assumption:
