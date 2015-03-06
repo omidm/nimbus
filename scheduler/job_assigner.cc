@@ -46,8 +46,7 @@
 
 #define LB_UPDATE_RATE 100
 #define JOB_ASSIGNER_THREAD_NUM 1
-
-#define _NIMBUS_NO_LOG
+#define DM_CACHE_SIZE 1000
 
 namespace nimbus {
 
@@ -161,12 +160,48 @@ void JobAssigner::AssignJobs(const JobEntryList& list) {
   }
 }
 
+bool JobAssigner::QueryDataManagerCache(std::string record_name,
+                            const std::vector<physical_data_id_t>*& physical_ids) {
+  DMCache::iterator iter = dm_cache_.find(record_name);
+  if (iter == dm_cache_.end()) {
+    physical_ids = NULL;
+    return false;
+  }
+
+  physical_ids = iter->second;
+  return true;
+}
+
+bool JobAssigner::CacheDataManagerQuery(std::string record_name,
+                                   const std::vector<physical_data_id_t>* physical_ids) {
+  DMCache::iterator iter = dm_cache_.find(record_name);
+  if (iter != dm_cache_.end()) {
+    return false;
+  }
+
+  if (dm_cache_.size() == DM_CACHE_SIZE) {
+    std::string record_to_evict = dm_cache_queue_.front();
+    DMCache::iterator it = dm_cache_.find(record_to_evict);
+    assert(it != dm_cache_.end());
+    delete it->second;
+    dm_cache_.erase(it);
+    dm_cache_queue_.pop_front();
+  }
+
+  dm_cache_[record_name] = physical_ids;
+  dm_cache_queue_.push_back(record_name);
+
+  return true;
+}
+
 bool JobAssigner::QueryDataManagerForPatterns(
                       ComplexJobEntry* job,
                       const BindingTemplate *binding_template,
                       const std::vector<physical_data_id_t>*& physical_ids) {
+  // For now disable the cache, to check if the query is consistant with new computation.
+  bool found_in_cache = false;
   if (QueryDataManagerCache(binding_template->record_name(), physical_ids)) {
-    return true;
+    found_in_cache = true;
   }
 
   std::vector<physical_data_id_t> *result =
@@ -227,6 +262,18 @@ bool JobAssigner::QueryDataManagerForPatterns(
     ++it;
   }
 
+  // check if the new computation matches the cache query.
+  if (found_in_cache) {
+    assert(physical_ids->size() == result->size());
+    for (size_t i = 0; i < result->size(); ++i) {
+      assert(physical_ids->operator[](i) == result->operator[](i));
+    }
+    std::cout << "OMID: DM Cache Consistent.\n";
+    sleep(1);
+  }
+
+
+  CacheDataManagerQuery(binding_template->record_name(), result);
   physical_ids = result;
 
   return true;
