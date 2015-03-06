@@ -554,26 +554,38 @@ size_t TemplateEntry::QueryAccessPattern(const logical_data_id_t& ldid,
   return count;
 }
 
+std::string TemplateEntry::ProduceBindingRecordName(size_t load_balancing_tag,
+                                                    const std::string& grand_parent_name) {
+  std::string key = int2string(load_balancing_tag) + "-" + template_name_ + "-" + grand_parent_name;
+  return key;
+}
 
-bool TemplateEntry::AddBindingRecord(size_t binding_tag,
-                                     std::string grand_parent_name,
-                                     BindingTemplate* binding_template) {
-  std::string key = int2string(binding_tag) + "-" + template_name_ + "-" + grand_parent_name;
-  BindingMap::iterator iter = binding_records_.find(key);
+bool TemplateEntry::AddBindingRecord(size_t load_balancing_tag,
+                                     const std::string& grand_parent_name,
+                                     const std::vector<job_id_t>& compute_job_ids,
+                                     BindingTemplate*& binding_template) {
+  std::string record_name = ProduceBindingRecordName(load_balancing_tag, grand_parent_name);
+
+  BindingMap::iterator iter = binding_records_.find(record_name);
   if (iter != binding_records_.end()) {
+    binding_template = NULL;
     return false;
   }
 
-  binding_records_[key] = binding_template;
-  binding_template->set_command_template_name(key);
+  BindingTemplate* bt = new BindingTemplate(record_name,
+                                            compute_job_ids,
+                                            this);
+  binding_records_[record_name] = bt;
+  binding_template = bt;
   return true;
 }
 
-bool TemplateEntry::QueryBindingRecord(size_t binding_tag,
-                                       std::string grand_parent_name,
+bool TemplateEntry::QueryBindingRecord(size_t load_balancing_tag,
+                                       const std::string& grand_parent_name,
                                        BindingTemplate*& binding_template) {
-  std::string key = int2string(binding_tag) + "-" + template_name_ + "-" + grand_parent_name;
-  BindingMap::iterator iter = binding_records_.find(key);
+  std::string record_name = ProduceBindingRecordName(load_balancing_tag, grand_parent_name);
+
+  BindingMap::iterator iter = binding_records_.find(record_name);
   if (iter == binding_records_.end()) {
     binding_template = NULL;
     return false;

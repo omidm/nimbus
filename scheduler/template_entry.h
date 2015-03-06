@@ -130,12 +130,13 @@ class TemplateEntry {
                               const data_version_t& diff_version,
                               std::list<size_t>* indices);
 
-    bool AddBindingRecord(size_t binding_tag,
-                          std::string grand_parent_name,
-                          BindingTemplate* binding_template);
+    bool AddBindingRecord(size_t load_balancing_tag,
+                          const std::string& grand_parent_name,
+                          const std::vector<job_id_t>& compute_job_ids,
+                          BindingTemplate*& binding_template);
 
-    bool QueryBindingRecord(size_t binding_tag,
-                            std::string grand_parent_name,
+    bool QueryBindingRecord(size_t load_balancing_tag,
+                            const std::string& grand_parent_name,
                             BindingTemplate*& binding_template);
 
   private:
@@ -214,6 +215,9 @@ class TemplateEntry {
     void CompleteParentJobIndices();
 
     void CompleteBreadthFirstSearch();
+
+    std::string ProduceBindingRecordName(size_t load_balancing_tag,
+                                         const std::string& grand_parent_name);
 };
 
 }  // namespace nimbus

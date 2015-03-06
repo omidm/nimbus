@@ -98,6 +98,8 @@ namespace nimbus {
     boost::condition_variable_any job_queue_cond_;
     size_t pending_assignment_;
 
+    std::vector<physical_data_id_t> last_queried_physical_ids_;
+
     std::list<boost::thread*> job_assigner_threads_;
 
     virtual void Initialize();
@@ -162,13 +164,12 @@ namespace nimbus {
 
     virtual bool UpdateDataManagerByPatterns(
                     ComplexJobEntry* job,
-                    const BindingTemplate::PatternList* patterns,
+                    const BindingTemplate *binding_template,
                     const std::vector<physical_data_id_t>* physical_ids);
 
     virtual bool QueryDataManagerForPatterns(
                     ComplexJobEntry* job,
-                    const BindingTemplate::PatternList* patterns,
-                    const BindingTemplate::PatternMetaData* patterns_meta_data,
+                    const BindingTemplate *binding_template,
                     std::vector<physical_data_id_t>* physical_ids);
 
   private:

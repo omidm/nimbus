@@ -69,7 +69,8 @@ class TemplateEntry;
 
 class BindingTemplate {
   public:
-    BindingTemplate(const std::vector<job_id_t>& compute_job_ids,
+    BindingTemplate(const std::string& record_name,
+                    const std::vector<job_id_t>& compute_job_ids,
                     TemplateEntry* template_entry);
 
     ~BindingTemplate();
@@ -78,8 +79,7 @@ class BindingTemplate {
     bool finalized();
     size_t copy_job_num();
     size_t compute_job_num();
-
-    void set_command_template_name(std::string name);
+    std::string record_name();
 
     bool Finalize(const std::vector<job_id_t>& compute_job_ids);
 
@@ -291,7 +291,7 @@ class BindingTemplate {
     bool finalized_;
     bool established_command_template_;
     TemplateEntry *template_entry_;
-    std::string command_template_name_;
+    std::string record_name_;
     // Currently we do not support future job - omidm
     JobIdPtr future_job_id_ptr_;
 
