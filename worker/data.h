@@ -80,6 +80,10 @@ class Data {
   virtual void Create() {}
   virtual void Destroy() {}
 
+  virtual float FloatingHash() {
+    return 0;
+  }
+
   virtual uint32_t HashCode() {
     return 0;
   }

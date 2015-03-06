@@ -56,6 +56,16 @@ template<typename T> void DataCompressedScalarArray<T>::Create() {
   nimbus::PhysBAMDataWithMeta::Create();
 }
 
+template<typename T> float DataCompressedScalarArray<T>::FloatingHash() {
+  const T *b = (T *)buffer();
+  size_t s = size();
+  T sum = 0;
+  for (size_t i = 0; i < (s/sizeof(T)); ++i) {
+    sum += b[i];
+  }
+  return(float(sum));
+}
+
 template class DataCompressedScalarArray<float>;
 template class DataCompressedScalarArray<int>;
 

@@ -82,4 +82,14 @@ bool DataRawArrayM2C::LoadFromNimbus(PhysBAM::ARRAY<TV_INT>* array) {
   return true;
 }
 
+float DataRawArrayM2C::FloatingHash() {
+  const int *b = (int *)buffer();
+  size_t s = size();
+  int sum = 0;
+  for (size_t i = 0; i < (s/sizeof(int)); ++i) {
+    sum += b[i];
+  }
+  return(float(sum));
+}
+
 }  // namespace application

@@ -83,4 +83,14 @@ bool DataRawVectorNd::LoadFromNimbus(PhysBAM::VECTOR_ND<float>* vector) {
   return true;
 }
 
+float DataRawVectorNd::FloatingHash() {
+  const float *b = (float *)buffer();
+  size_t s = size();
+  float sum = 0;
+  for (size_t i = 0; i < (s/sizeof(float)); ++i) {
+    sum += b[i];
+  }
+  return(float(sum));
+}
+
 }  // namespace application
