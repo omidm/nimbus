@@ -65,24 +65,24 @@ BindingTemplate::BindingTemplate(const std::string& record_name,
 BindingTemplate::~BindingTemplate() {
 }
 
-bool BindingTemplate::finalized() {
+bool BindingTemplate::finalized() const {
   boost::unique_lock<boost::mutex> lock(mutex_);
   return finalized_;
 }
 
-size_t BindingTemplate::copy_job_num() {
+size_t BindingTemplate::copy_job_num() const {
   boost::unique_lock<boost::mutex> lock(mutex_);
   assert(finalized_);
   return copy_job_id_list_.size();
 }
 
-size_t BindingTemplate::compute_job_num() {
+size_t BindingTemplate::compute_job_num() const {
   boost::unique_lock<boost::mutex> lock(mutex_);
   assert(finalized_);
   return compute_job_id_list_.size();
 }
 
-std::string BindingTemplate::record_name() {
+std::string BindingTemplate::record_name() const {
   return record_name_;
 }
 
@@ -280,13 +280,13 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
 bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
                                   const std::vector<Parameter>& parameters,
                                   const std::vector<job_id_t>& copy_job_ids,
-                                  const std::vector<physical_data_id_t> physical_ids,
+                                  const std::vector<physical_data_id_t> *physical_ids,
                                   SchedulerServer *server) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   assert(finalized_);
   assert(compute_job_ids.size() == compute_job_id_list_.size());
   assert(copy_job_ids.size() == copy_job_id_list_.size());
-  assert(physical_ids.size() == phy_id_list_.size());
+  assert(physical_ids->size() == phy_id_list_.size());
 
   {
     size_t idx = 0;
@@ -310,7 +310,7 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
     size_t idx = 0;
     PhyIdPtrList::iterator iter = phy_id_list_.begin();
     for (; iter != phy_id_list_.end(); ++iter) {
-      *(*iter) = physical_ids[idx];
+      *(*iter) = physical_ids->operator[](idx);
       ++idx;
     }
   }

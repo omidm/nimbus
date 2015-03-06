@@ -164,12 +164,18 @@ void JobAssigner::AssignJobs(const JobEntryList& list) {
 bool JobAssigner::QueryDataManagerForPatterns(
                       ComplexJobEntry* job,
                       const BindingTemplate *binding_template,
-                      std::vector<physical_data_id_t>* physical_ids) {
+                      const std::vector<physical_data_id_t>*& physical_ids) {
+  if (QueryDataManagerCache(binding_template->record_name(), physical_ids)) {
+    return true;
+  }
+
+  std::vector<physical_data_id_t> *result =
+    new std::vector<physical_data_id_t>();
+
   const BindingTemplate::PatternList *patterns =
     binding_template->entry_pattern_list_p();
   const BindingTemplate::PatternMetaData *patterns_meta_data =
     binding_template->patterns_meta_data_p();
-  physical_ids->clear();
 
   if (!job_manager_->ResolveJobDataVersionsForPattern(job, patterns)) {
     assert(false);
@@ -209,7 +215,7 @@ bool JobAssigner::QueryDataManagerForPatterns(
             ((pi->version() == version) ||
              (pattern->version_type_ == BindingTemplate::WILD_CARD))) {
           found = true;
-          physical_ids->push_back(pi->id());
+          result->push_back(pi->id());
           instances.erase(pi);
           break;
         }
@@ -221,13 +227,15 @@ bool JobAssigner::QueryDataManagerForPatterns(
     ++it;
   }
 
+  physical_ids = result;
+
   return true;
 }
 
 bool JobAssigner::UpdateDataManagerByPatterns(
                       ComplexJobEntry* job,
                       const BindingTemplate *binding_template,
-                      const std::vector<physical_data_id_t>* physical_ids) {
+                      const std::vector<physical_data_id_t> *physical_ids) {
   const BindingTemplate::PatternList *patterns =
     binding_template->end_pattern_list_p();
 
@@ -273,29 +281,9 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
   std::vector<job_id_t> copy_job_ids;
   id_maker_->GetNewJobID(&copy_job_ids, copy_job_num);
 
-  std::vector<physical_data_id_t> physical_ids;
-
+  const std::vector<physical_data_id_t> *physical_ids;
   log.log_StartTimer();
-  QueryDataManagerForPatterns(job, bt, &physical_ids);
-
-  if (physical_ids.size() == last_queried_physical_ids_.size()) {
-    bool equal = true;
-    for (size_t i = 0; i < physical_ids.size(); ++i) {
-      if (physical_ids[i] != last_queried_physical_ids_[i]) {
-        equal = false;
-        break;
-      }
-    }
-    if (equal) {
-      std::cout << "OMID FOUND EQUAL QUERY for: "
-                << job->template_entry()->template_name()
-                << " grand parent of:"
-                << job->grand_parent_job_name()
-                << "\a\a\a\a" << std::endl;
-    }
-  }
-  last_queried_physical_ids_ = physical_ids;
-
+  QueryDataManagerForPatterns(job, bt, physical_ids);
   log.log_StopTimer();
   std::cout << "COMPLEX: QueryDataManager: "
     << job->template_entry()->template_name()
@@ -313,7 +301,7 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
     << " " << log.timer() << std::endl;
 
   log.log_StartTimer();
-  UpdateDataManagerByPatterns(job, bt, &physical_ids);
+  UpdateDataManagerByPatterns(job, bt, physical_ids);
   log.log_StopTimer();
   std::cout << "COMPLEX: UpdateDataManager: "
     << job->template_entry()->template_name()
