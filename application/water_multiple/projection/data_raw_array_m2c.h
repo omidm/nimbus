@@ -60,6 +60,7 @@ class DataRawArrayM2C : public nimbus::PhysBAMData {
   typedef PhysBAM::VECTOR<int, 3> TV_INT;
   explicit DataRawArrayM2C(std::string name);
   virtual nimbus::Data* Clone();
+  float FloatingHash();
 
   // Saves the PhysBAM data structure to this nimbus data instance.
   bool SaveToNimbus(const PhysBAM::ARRAY<TV_INT>& array_input);

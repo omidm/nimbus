@@ -145,6 +145,14 @@ AppVar *SimpleAppDataManager::GetAppVarV(const DataArray &read_set,
     }
     av->write_region_ = write_region;
     av->ReadAppData(read_set, read_region);
+    GeometricRegion p1(29, 29, 29, 2, 2, 2);
+    av->rc = NULL;
+    for (size_t i = 0; i < read_set.size(); ++i) {
+        Data *d = read_set[i];
+        if (d->region().Intersects(&p1))
+            av->rc = d;
+    }
+
     return av;
 }
 
@@ -197,6 +205,31 @@ void SimpleAppDataManager::ReleaseAccess(AppObject* app_object) {
       DataArray flush_set(write_back.begin(), write_back.end());
       write_back.clear();
       app_var->WriteAppData(flush_set, app_var->write_region_);
+      if (app_var->rc) {
+        Data *rc = app_var->rc;
+        Data *wc = rc->Clone();
+        wc->Copy(rc);
+        float ws0 = wc->FloatingHash();
+        app_var->WriteAppData(DataArray(1, wc), wc->region());
+        float rs = rc->FloatingHash();
+        float ws1 = wc->FloatingHash();
+        if (rs - ws1 < -0.01 || rs - ws1 > 0.01) {
+            printf("***== %s : Read variable sum %f, write variable sum before %f, after %f, check spurious write\n", wc->name().c_str(), rs, ws0, ws1);  // NOLINT
+        } else {
+            printf("###== %s : Read variable sum %f, write variable sum before %f, after %f, no spurious write\n", wc->name().c_str(), rs, ws0, ws1);  // NOLINT
+        }
+        app_var->rc = NULL;
+        wc->Destroy();
+        free(wc);
+      } else {
+        GeometricRegion p1(29, 29, 29, 2, 2, 2);
+        for (size_t i = 0; i < flush_set.size(); ++i) {
+            Data *d = flush_set[i];
+            if (d->region().Intersects(&p1)) {
+                printf("### non-spurious write variable sum %f\n", d->FloatingHash());
+            }
+        }
+      }
     } else {
       AppStruct *app_struct = static_cast<AppStruct *>(app_object);
       assert(app_struct != NULL);

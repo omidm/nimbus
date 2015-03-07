@@ -100,6 +100,9 @@ namespace nimbus {
 
     std::list<boost::thread*> job_assigner_threads_;
 
+    typedef boost::unordered_map<std::string, std::vector<physical_data_id_t>*> DMCache;
+    DMCache dm_cache_;
+
     virtual void Initialize();
 
     virtual void JobAssignerThread();
@@ -162,14 +165,16 @@ namespace nimbus {
 
     virtual bool UpdateDataManagerByPatterns(
                     ComplexJobEntry* job,
-                    const BindingTemplate::PatternList* patterns,
-                    const std::vector<physical_data_id_t>* physical_ids);
+                    const BindingTemplate *binding_template,
+                    const std::vector<physical_data_id_t> *physical_ids);
 
     virtual bool QueryDataManagerForPatterns(
                     ComplexJobEntry* job,
-                    const BindingTemplate::PatternList* patterns,
-                    const BindingTemplate::PatternMetaData* patterns_meta_data,
-                    std::vector<physical_data_id_t>* physical_ids);
+                    const BindingTemplate *binding_template,
+                    const std::vector<physical_data_id_t>*& physical_ids);
+
+    virtual bool QueryDataManagerCache(std::string record_name,
+                       const std::vector<physical_data_id_t>*& physical_ids) {return false;}
 
   private:
     JobAssigner(const JobAssigner& other) {}

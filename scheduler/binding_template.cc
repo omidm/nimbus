@@ -46,11 +46,12 @@
 
 using namespace nimbus; // NOLINT
 
-BindingTemplate::BindingTemplate(const std::vector<job_id_t>& compute_job_ids,
+BindingTemplate::BindingTemplate(const std::string& record_name,
+                                 const std::vector<job_id_t>& compute_job_ids,
                                  TemplateEntry *template_entry) {
   finalized_ = false;
   established_command_template_ = false;
-  command_template_name_ = "";  // has to be set before finalize.
+  record_name_ = record_name;
   template_entry_ = template_entry;
   future_job_id_ptr_ = JobIdPtr(new job_id_t(0));
 
@@ -64,42 +65,44 @@ BindingTemplate::BindingTemplate(const std::vector<job_id_t>& compute_job_ids,
 BindingTemplate::~BindingTemplate() {
 }
 
-bool BindingTemplate::finalized() {
+bool BindingTemplate::finalized() const {
   boost::unique_lock<boost::mutex> lock(mutex_);
   return finalized_;
 }
 
-size_t BindingTemplate::copy_job_num() {
+size_t BindingTemplate::copy_job_num() const {
   boost::unique_lock<boost::mutex> lock(mutex_);
   assert(finalized_);
   return copy_job_id_list_.size();
 }
 
-size_t BindingTemplate::compute_job_num() {
+size_t BindingTemplate::compute_job_num() const {
   boost::unique_lock<boost::mutex> lock(mutex_);
   assert(finalized_);
   return compute_job_id_list_.size();
 }
 
+std::string BindingTemplate::record_name() const {
+  return record_name_;
+}
+
 const BindingTemplate::PatternMetaData* BindingTemplate::patterns_meta_data_p() const {
   boost::unique_lock<boost::mutex> lock(mutex_);
+  assert(finalized_);
   return &patterns_meta_data_;
 }
 
 const BindingTemplate::PatternList* BindingTemplate::entry_pattern_list_p() const {
   boost::unique_lock<boost::mutex> lock(mutex_);
+  assert(finalized_);
   return &entry_pattern_list_;
 }
 
 const BindingTemplate::PatternList* BindingTemplate::end_pattern_list_p() const {
   boost::unique_lock<boost::mutex> lock(mutex_);
+  assert(finalized_);
   return &end_pattern_list_;
 }
-
-void BindingTemplate::set_command_template_name(std::string name) {
-  command_template_name_ = name;
-}
-
 
 bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
   boost::unique_lock<boost::mutex> lock(mutex_);
@@ -261,7 +264,6 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
     }
   }
 
-  assert(command_template_name_ != "");
   assert(copy_job_id_map_.size() == copy_job_id_list_.size());
   assert(compute_job_id_map_.size() == compute_job_id_list_.size());
   assert(phy_id_map_.size() == phy_id_list_.size());
@@ -278,13 +280,13 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
 bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
                                   const std::vector<Parameter>& parameters,
                                   const std::vector<job_id_t>& copy_job_ids,
-                                  const std::vector<physical_data_id_t> physical_ids,
+                                  const std::vector<physical_data_id_t> *physical_ids,
                                   SchedulerServer *server) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   assert(finalized_);
   assert(compute_job_ids.size() == compute_job_id_list_.size());
   assert(copy_job_ids.size() == copy_job_id_list_.size());
-  assert(physical_ids.size() == phy_id_list_.size());
+  assert(physical_ids->size() == phy_id_list_.size());
 
   {
     size_t idx = 0;
@@ -308,7 +310,7 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
     size_t idx = 0;
     PhyIdPtrList::iterator iter = phy_id_list_.begin();
     for (; iter != phy_id_list_.end(); ++iter) {
-      *(*iter) = physical_ids[idx];
+      *(*iter) = physical_ids->operator[](idx);
       ++idx;
     }
   }
@@ -391,7 +393,7 @@ void BindingTemplate::SendCommandTemplateHeaderToWorkers(SchedulerServer *server
       }
     }
 
-    StartCommandTemplateCommand cm(command_template_name_,
+    StartCommandTemplateCommand cm(record_name_,
                                    inner_job_ids,
                                    outer_job_ids,
                                    phy_ids);
@@ -409,7 +411,7 @@ void BindingTemplate::SendCommandTemplateFinalizeToWorkers(SchedulerServer *serv
   for (; iter != worker_ids_.end(); ++iter) {
     worker_id_t w_id = *iter;
 
-    EndCommandTemplateCommand cm(command_template_name_);
+    EndCommandTemplateCommand cm(record_name_);
 
     SchedulerWorker *worker;
     if (!server->GetSchedulerWorkerById(worker, w_id)) {
@@ -464,7 +466,7 @@ void BindingTemplate::SpawnCommandTemplateAtWorkers(const std::vector<Parameter>
       }
     }
 
-    SpawnCommandTemplateCommand cm(command_template_name_,
+    SpawnCommandTemplateCommand cm(record_name_,
                                    inner_job_ids,
                                    outer_job_ids,
                                    params,

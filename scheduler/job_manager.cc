@@ -770,8 +770,10 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
         }
 
         if (create_bt) {
-          bt = new BindingTemplate(complex_job->inner_job_ids(), te);
-          if (!te->AddBindingRecord(STATIC_BINDING_RECORD, grand_parent_name, bt)) {
+          if (!te->AddBindingRecord(STATIC_BINDING_RECORD,
+                                    grand_parent_name,
+                                    complex_job->inner_job_ids(),
+                                    bt)) {
             assert(false);
           }
         }

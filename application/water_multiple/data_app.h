@@ -51,6 +51,7 @@ namespace application {
         public:
             explicit DataApp(std::string name, nimbus::int_dimension_t size);
             virtual nimbus::Data* Clone();
+            virtual float FloatingHash() { return 0; }
     };
 
 } // namespace application

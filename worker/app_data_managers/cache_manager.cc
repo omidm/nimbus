@@ -60,7 +60,6 @@
 #define FIRST_UNIQUE_ID 1000
 
 namespace nimbus {
-
 /**
  * \details
  */

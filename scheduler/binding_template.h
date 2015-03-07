@@ -69,24 +69,24 @@ class TemplateEntry;
 
 class BindingTemplate {
   public:
-    BindingTemplate(const std::vector<job_id_t>& compute_job_ids,
+    BindingTemplate(const std::string& record_name,
+                    const std::vector<job_id_t>& compute_job_ids,
                     TemplateEntry* template_entry);
 
     ~BindingTemplate();
 
 
-    bool finalized();
-    size_t copy_job_num();
-    size_t compute_job_num();
-
-    void set_command_template_name(std::string name);
+    bool finalized() const;
+    size_t copy_job_num() const;
+    size_t compute_job_num() const;
+    std::string record_name() const;
 
     bool Finalize(const std::vector<job_id_t>& compute_job_ids);
 
     bool Instantiate(const std::vector<job_id_t>& compute_job_ids,
                      const std::vector<Parameter>& parameters,
                      const std::vector<job_id_t>& copy_job_ids,
-                     const std::vector<physical_data_id_t> physical_ids,
+                     const std::vector<physical_data_id_t> *physical_ids,
                      SchedulerServer *server);
 
     enum VERSION_TYPE {
@@ -291,7 +291,7 @@ class BindingTemplate {
     bool finalized_;
     bool established_command_template_;
     TemplateEntry *template_entry_;
-    std::string command_template_name_;
+    std::string record_name_;
     // Currently we do not support future job - omidm
     JobIdPtr future_job_id_ptr_;
 
