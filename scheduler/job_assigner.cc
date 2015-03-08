@@ -229,6 +229,14 @@ bool JobAssigner::QueryDataManagerForPatterns(
     PhysicalDataList instances;
     data_manager_->AllInstances(ldo, &instances);
 
+    if (ldo->id() == 10000087878) {
+      std::cout << "OMID LIST SIZE QUERY: " << instances.size() << std::endl;
+      PhysicalDataList::iterator pi = instances.begin();
+      for (; pi != instances.end(); ++pi) {
+        std::cout << "OMID PI: " << pi->id() << " V: " << pi->version() << std::endl;
+      }
+    }
+
     // For now we assume that binding for template does not require creating
     // new instances -omidm
     assert(instances.size() >= ldid_count);
@@ -251,6 +259,18 @@ bool JobAssigner::QueryDataManagerForPatterns(
              (pattern->version_type_ == BindingTemplate::WILD_CARD))) {
           found = true;
           result->push_back(pi->id());
+
+          // check if the new computation matches the cache query.
+          if (found_in_cache) {
+            if (pi->id() != physical_ids->operator[](result->size() - 1)) {
+              std::cout << "OMID LDID: " << ldo->id()
+                << " " << ldo->region()->ToNetworkData() << std::endl;
+              std::cout << "OMID: P: " << physical_ids->operator[](result->size() - 1) << std::endl;
+              std::cout << "OMID: R: " << pi->id() << std::endl;
+              assert(false);
+            }
+          }
+
           instances.erase(pi);
           break;
         }
@@ -266,10 +286,14 @@ bool JobAssigner::QueryDataManagerForPatterns(
   if (found_in_cache) {
     assert(physical_ids->size() == result->size());
     for (size_t i = 0; i < result->size(); ++i) {
-      assert(physical_ids->operator[](i) == result->operator[](i));
+      if (physical_ids->operator[](i) != result->operator[](i)) {
+        std::cout << "OMID: P: " << physical_ids->operator[](i) << std::endl;
+        std::cout << "OMID: R: " << result->operator[](i) << std::endl;
+        assert(false);
+      }
     }
     std::cout << "OMID: DM Cache Consistent.\n";
-    sleep(1);
+    // sleep(1);
   }
 
 
@@ -302,6 +326,12 @@ bool JobAssigner::UpdateDataManagerByPatterns(
     }
     data_version_t version = base_version + pe->version_diff_from_base_;
 
+    if (pe->ldid_ == 10000087878) {
+      std::cout << "OMID UPDATE PI: "
+                << physical_ids->operator[](physical_ids_idx)
+                << " V: " << version << std::endl;
+    }
+
     if (!data_manager_->UpdateVersionAndAccessRecord(pe->ldid_,
                                                      physical_ids->operator[](physical_ids_idx),
                                                      version,
@@ -322,6 +352,10 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
   size_t compute_job_num = bt->compute_job_num();
 
   Log log(Log::NO_FILE);
+  std::cout << "COMPLEX: Assigning: "
+    << job->template_entry()->template_name()
+    << " with record key: "
+    << bt->record_name() << std::endl;
 
   assert(compute_job_num == job->inner_job_ids_p()->size());
 
