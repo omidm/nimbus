@@ -44,12 +44,22 @@
 
 namespace nimbus {
 
-#define DEFAULT_MAX_JOB_TO_ASSIGN 1
-#define DEFAULT_MAX_JOB_TO_REMOVE 1
-#define DEFAULT_MIN_WORKER_TO_JOIN 2
+#define DEFAULT_CLEANER_THREAD_ACTIVE true
+#define DEFAULT_BOUNCER_THREAD_ACTIVE true
+
+#define DEFAULT_CONTROLLER_TEMPLATE_ACTIVE true
+#define DEFAULT_COMPLEX_MEMOIZATION_ACTIVE true
+#define DEFAULT_BINDING_MEMOIZATION_ACTIVE true
+#define DEFAULT_WORKER_TEMPLATE_ACTIVE true
+#define DEFAULT_DATA_MANAGER_QUERY_CACHE_ACTIVE true
+
+#define DEFAULT_ASSIGN_BATCH_SIZE 1
+#define DEFAULT_REMOVE_BATCH_SIZE 1
+#define DEFAULT_INIT_WORKER_NUM 2
 #define DEFAULT_JOB_ASSIGNER_THREAD_NUM 0
-#define DEFAULT_MAX_COMMAND_PROCESS_NUM 10000
-#define DEFAULT_MAX_JOB_DONE_COMMAND_PROCESS_NUM 10000
+#define DEFAULT_COMMAND_BATCH_SIZE 10000
+#define DEFAULT_JOB_DONE_BATCH_SIZE 10000
+
 
 Scheduler::Scheduler(port_t port) {
   server_ = NULL;
@@ -59,16 +69,27 @@ Scheduler::Scheduler(port_t port) {
   data_manager_ = NULL;
   job_assigner_ = NULL;
   load_balancer_ = NULL;
+
   listening_port_ = port;
   registered_worker_num_ = 0;
   terminate_application_flag_ = false;
-  cleaner_thread_active_ = false;
-  max_job_to_assign_ = DEFAULT_MAX_JOB_TO_ASSIGN;
-  max_job_to_remove_ = DEFAULT_MAX_JOB_TO_REMOVE;
-  min_worker_to_join_ = DEFAULT_MIN_WORKER_TO_JOIN;
+
+  cleaner_thread_active_ = DEFAULT_CLEANER_THREAD_ACTIVE;
+  bouncer_thread_active_ = DEFAULT_BOUNCER_THREAD_ACTIVE;
+
+  controller_template_active_ = DEFAULT_CONTROLLER_TEMPLATE_ACTIVE;
+  complex_memoization_active_ = DEFAULT_COMPLEX_MEMOIZATION_ACTIVE;
+  binding_memoization_active_ = DEFAULT_BINDING_MEMOIZATION_ACTIVE;
+  worker_template_active_ = DEFAULT_WORKER_TEMPLATE_ACTIVE;
+  data_manager_query_cache_active_ = DEFAULT_DATA_MANAGER_QUERY_CACHE_ACTIVE;
+
+  init_worker_num_ = DEFAULT_INIT_WORKER_NUM;
+  assign_batch_size_ = DEFAULT_ASSIGN_BATCH_SIZE;
+  remove_batch_size_ = DEFAULT_REMOVE_BATCH_SIZE;
   job_assigner_thread_num_ = DEFAULT_JOB_ASSIGNER_THREAD_NUM;
-  max_command_process_num_ = DEFAULT_MAX_COMMAND_PROCESS_NUM;
-  max_job_done_command_process_num_ = DEFAULT_MAX_JOB_DONE_COMMAND_PROCESS_NUM;
+  command_batch_size_ = DEFAULT_COMMAND_BATCH_SIZE;
+  job_done_batch_size_ = DEFAULT_JOB_DONE_BATCH_SIZE;
+
   log_.set_file_name("log_scheduler");
 }
 
@@ -111,28 +132,56 @@ void Scheduler::Run() {
   SchedulerCoreProcessor();
 }
 
-void Scheduler::set_max_job_to_remove(size_t num) {
-  max_job_to_remove_ = num;
+void Scheduler::set_cleaner_thread_active(bool flag) {
+  cleaner_thread_active_ = flag;
 }
 
-void Scheduler::set_max_job_to_assign(size_t num) {
-  max_job_to_assign_ = num;
+void Scheduler::set_bouncer_thread_active(bool flag) {
+  bouncer_thread_active_ = flag;
 }
 
-void Scheduler::set_min_worker_to_join(size_t num) {
-  min_worker_to_join_ = num;
+void Scheduler::set_controller_template_active(bool flag) {
+  controller_template_active_ = flag;
+}
+
+void Scheduler::set_complex_memoization_active(bool flag) {
+  complex_memoization_active_ = flag;
+}
+
+void Scheduler::set_binding_memoization_active(bool flag) {
+  binding_memoization_active_ = flag;
+}
+
+void Scheduler::set_worker_template_active(bool flag) {
+  worker_template_active_ = flag;
+}
+
+void Scheduler::set_data_manager_query_cache_active(bool flag) {
+  data_manager_query_cache_active_ = flag;
+}
+
+void Scheduler::set_remove_batch_size(size_t num) {
+  remove_batch_size_ = num;
+}
+
+void Scheduler::set_assign_batch_size(size_t num) {
+  assign_batch_size_ = num;
+}
+
+void Scheduler::set_init_worker_num(size_t num) {
+  init_worker_num_ = num;
 }
 
 void Scheduler::set_job_assigner_thread_num(size_t num) {
   job_assigner_thread_num_ = num;
 }
 
-void Scheduler::set_max_command_process_num(size_t num) {
-  max_command_process_num_ = num;
+void Scheduler::set_command_batch_size(size_t num) {
+  command_batch_size_ = num;
 }
 
-void Scheduler::set_max_job_done_command_process_num(size_t num) {
-  max_job_done_command_process_num_ = num;
+void Scheduler::set_job_done_batch_size(size_t num) {
+  job_done_batch_size_ = num;
 }
 
 void Scheduler::SchedulerCoreProcessor() {
@@ -183,7 +232,7 @@ void Scheduler::SchedulerCoreProcessor() {
 size_t Scheduler::ProcessQueuedSchedulerCommands() {
   size_t count = 0;
   SchedulerCommandList storage;
-  if (server_->ReceiveCommands(&storage, max_command_process_num_)) {
+  if (server_->ReceiveCommands(&storage, command_batch_size_)) {
     bool flush = false;
     SchedulerCommandList::iterator iter = storage.begin();
     for (; iter != storage.end(); iter++) {
@@ -400,7 +449,7 @@ void Scheduler::WaitForAllPrepareRewindResponses() {
   while (pending_workers.size() > 0) {
     size_t count = 0;
     SchedulerCommandList storage;
-    if (server_->ReceiveCommands(&storage, max_command_process_num_)) {
+    if (server_->ReceiveCommands(&storage, command_batch_size_)) {
       SchedulerCommandList::iterator iter = storage.begin();
       for (; iter != storage.end(); iter++) {
         SchedulerCommand* comm = *iter;
@@ -440,7 +489,7 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
 
   if (!id_maker_->SchedulerProducedJobID(job_id)) {
     // TODO(omidm): currently after map does not work with binding template so need flooding!
-    if (NIMBUS_BINDING_MEMOIZATION_ACTIVE) {
+    if (binding_memoization_active_) {
       cm->set_final(true);
       SchedulerWorkerList::iterator iter = server_->workers()->begin();
       for (; iter != server_->workers()->end(); ++iter) {
@@ -477,18 +526,7 @@ void Scheduler::ProcessTerminateCommand(TerminateCommand* cm) {
 }
 
 void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
-  // TODO(omidm): Implement!
-  if (NIMBUS_TEMPLATES_ACTIVE) {
-    Log log(Log::NO_FILE);
-    log.StartTimer();
-    template_manager_->InstantiateTemplate(cm->job_graph_name(),
-        cm->inner_job_ids(),
-        cm->outer_job_ids(),
-        cm->parameters(),
-        cm->parent_job_id().elem());
-    log.StopTimer();
-    std::cout << "TEMPLATE: SPAWN: " << cm->job_graph_name() << " " << log.timer() << std::endl;
-  } else if (NIMBUS_NEW_TEMPLATES_ACTIVE) {
+  if (complex_memoization_active_) {
     Log log(Log::NO_FILE);
     log.StartTimer();
     ComplexJobEntry* complex_job;
@@ -504,13 +542,23 @@ void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
       assert(false);
     }
     log.StopTimer();
-    std::cout << "TEMPLATE: NEW SPAWN: " << cm->job_graph_name() << " " << log.timer() << std::endl;
+    std::cout << "TEMPLATE: COMPLEX SPAWN: " << cm->job_graph_name() << " " << log.timer() << std::endl; // NOLINT
+  } else {
+    assert(controller_template_active_);
+    Log log(Log::NO_FILE);
+    log.StartTimer();
+    template_manager_->InstantiateTemplate(cm->job_graph_name(),
+                                           cm->inner_job_ids(),
+                                           cm->outer_job_ids(),
+                                           cm->parameters(),
+                                           cm->parent_job_id().elem());
+    log.StopTimer();
+    std::cout << "TEMPLATE: SPAWN: " << cm->job_graph_name() << " " << log.timer() << std::endl;
   }
 }
 
 void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
-  // TODO(omidm): Implement!
-  if (NIMBUS_TEMPLATES_ACTIVE || NIMBUS_NEW_TEMPLATES_ACTIVE) {
+  if (controller_template_active_) {
     std::string template_name = cm->job_graph_name();
     job_id_t job_id = cm->parent_job_id().elem();
 
@@ -535,8 +583,7 @@ void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
 }
 
 void Scheduler::ProcessEndTemplateCommand(EndTemplateCommand* cm) {
-  // TODO(omidm): Implement!
-  if (NIMBUS_TEMPLATES_ACTIVE || NIMBUS_NEW_TEMPLATES_ACTIVE) {
+  if (controller_template_active_) {
     template_manager_->FinalizeNewTemplate(cm->job_graph_name());
     DefinedTemplateCommand command(cm->job_graph_name());
     server_->BroadcastCommand(&command);
@@ -567,7 +614,7 @@ size_t Scheduler::RemoveObsoleteJobEntries() {
     return 0;
   }
 
-  return job_manager_->RemoveObsoleteJobEntries(max_job_to_remove_);
+  return job_manager_->RemoveObsoleteJobEntries(remove_batch_size_);
 }
 
 size_t Scheduler::AssignReadyJobs() {
@@ -575,9 +622,9 @@ size_t Scheduler::AssignReadyJobs() {
 }
 
 void Scheduler::RegisterInitialWorkers() {
-  while (registered_worker_num_ < min_worker_to_join_) {
+  while (registered_worker_num_ < init_worker_num_) {
     dbg(DBG_SCHED, "%d worker(s) are registered, waiting for %d more workers to join ...\n",
-        registered_worker_num_, min_worker_to_join_ - registered_worker_num_);
+        registered_worker_num_, init_worker_num_ - registered_worker_num_);
     ProcessQueuedSchedulerCommands();
     RegisterPendingWorkers();
     sleep(1);
@@ -660,18 +707,20 @@ void Scheduler::SetupDataManager() {
 void Scheduler::SetupJobManager() {
   job_manager_->set_after_map(after_map_);
   job_manager_->set_ldo_map_p(data_manager_->ldo_map_p());
+  job_manager_->set_binding_memoization_active(binding_memoization_active_);
 }
 
 void Scheduler::SetupTemplateManager() {
   template_manager_->set_job_manager(job_manager_);
   template_manager_->set_id_maker(id_maker_);
+  template_manager_->set_worker_template_active(worker_template_active_);
 }
 
 void Scheduler::SetupLoadBalancer() {
   load_balancer_->set_job_manager(job_manager_);
   load_balancer_->set_data_manager(data_manager_);
   load_balancer_->set_job_assigner(job_assigner_);
-  load_balancer_->set_max_job_to_assign(max_job_to_assign_);
+  load_balancer_->set_assign_batch_size(assign_batch_size_);
   load_balancer_thread_ = new boost::thread(boost::bind(&LoadBalancer::Run, load_balancer_));
 }
 
@@ -682,18 +731,22 @@ void Scheduler::SetupJobAssigner() {
   job_assigner_->set_data_manager(data_manager_);
   job_assigner_->set_load_balancer(load_balancer_);
   job_assigner_->set_thread_num(job_assigner_thread_num_);
+  job_assigner_->set_data_manager_query_cache_active(data_manager_query_cache_active_);
   job_assigner_->Run();
 }
 
 void Scheduler::SetupJobDoneBouncer() {
-  job_done_bouncer_thread_ = new boost::thread(
-      boost::bind(&Scheduler::JobDoneBouncerThread, this));
+  if (bouncer_thread_active_) {
+    job_done_bouncer_thread_ = new boost::thread(
+        boost::bind(&Scheduler::JobDoneBouncerThread, this));
+  }
 }
 
 void Scheduler::SetupCleaner() {
-  cleaner_thread_active_ = true;
-  cleaner_thread_ = new boost::thread(
-      boost::bind(&Scheduler::CleanerThread, this));
+  if (cleaner_thread_active_) {
+    cleaner_thread_ = new boost::thread(
+        boost::bind(&Scheduler::CleanerThread, this));
+  }
 }
 
 void Scheduler::SetupUserInterface() {
@@ -735,7 +788,7 @@ void Scheduler::CleanerThread() {
   while (true) {
     // TODO(omid): remove the busy loop!
 
-    job_manager_->RemoveObsoleteJobEntries(max_job_to_remove_);
+    job_manager_->RemoveObsoleteJobEntries(remove_batch_size_);
   }
 }
 
@@ -745,7 +798,7 @@ void Scheduler::JobDoneBouncerThread() {
 
     // Deal with new job dones.
     JobDoneCommandList storage;
-    server_->ReceiveJobDoneCommands(&storage, max_job_done_command_process_num_);
+    server_->ReceiveJobDoneCommands(&storage, job_done_batch_size_);
 
     JobDoneCommandList::iterator iter = storage.begin();
     for (; iter != storage.end(); ++iter) {

@@ -204,7 +204,7 @@ size_t ComplexJobEntry::GetShadowJobsForAssignment(JobEntryList* list,
 
     if (cursor_.state() == Cursor::END_ALL) {
       drained_all_ = true;
-      shadow_job->set_to_finalize_binding_template(NIMBUS_BINDING_MEMOIZATION_ACTIVE);
+      shadow_job->set_to_finalize_binding_template(true);
       break;
     } else if (cursor_.state() == Cursor::END_BATCH) {
       template_entry_->AdvanceCursorForAssignment(&cursor_);

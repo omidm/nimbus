@@ -75,6 +75,7 @@ class JobManager {
 
     void set_after_map(AfterMap* after_map);
     void set_ldo_map_p(const LdoMap* ldo_map_p);
+    void set_binding_memoization_active(bool flag);
 
     Graph<JobEntry, job_id_t> *job_graph_p();
 
@@ -173,6 +174,7 @@ class JobManager {
     const LdoMap *ldo_map_p_;
     VersionManager version_manager_;
     CheckpointManager checkpoint_manager_;
+    bool binding_memoization_active_;
 
     Graph<JobEntry, job_id_t> job_graph_;
     ComplexJobEntryMap complex_jobs_;

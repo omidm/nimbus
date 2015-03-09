@@ -54,6 +54,7 @@ JobManager::JobManager() {
 
   ldo_map_p_ = NULL;
   after_map_ = NULL;
+  binding_memoization_active_ = false;
   checkpoint_creation_rate_ = DEFAULT_CHECKPOINT_CREATION_RATE;
   non_sterile_counter_ = 0;
 }
@@ -73,6 +74,10 @@ void JobManager::set_after_map(AfterMap* after_map) {
 void JobManager::set_ldo_map_p(const LdoMap* ldo_map_p) {
   ldo_map_p_ = ldo_map_p;
   version_manager_.set_ldo_map_p(ldo_map_p);
+}
+
+void JobManager::set_binding_memoization_active(bool flag) {
+  binding_memoization_active_ = flag;
 }
 
 Graph<JobEntry, job_id_t>* JobManager::job_graph_p() {
@@ -756,7 +761,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
       assert(grand_parent_name != "");
       BindingTemplate *bt = NULL;
 
-      if (NIMBUS_BINDING_MEMOIZATION_ACTIVE) {
+      if (binding_memoization_active_) {
         bool create_bt = true;
         if (te->QueryBindingRecord(STATIC_BINDING_RECORD, grand_parent_name, bt)) {
           create_bt = false;
@@ -786,7 +791,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
       num += c_num;
       JobEntryList::iterator it = l.begin();
       for (; it != l.end(); ++it) {
-        (*it)->set_memoize_binding(NIMBUS_BINDING_MEMOIZATION_ACTIVE);
+        (*it)->set_memoize_binding(binding_memoization_active_);
         (*it)->set_binding_template(bt);
         list->push_back(*it);
         jobs_pending_to_assign_[(*it)->job_id()] = *it;

@@ -56,7 +56,7 @@ void LoadBalancer::Initialize() {
   job_manager_ = NULL;
   data_manager_ = NULL;
   job_assigner_ = NULL;
-  max_job_to_assign_ = 0;
+  assign_batch_size_ = 0;
 }
 
 LoadBalancer::~LoadBalancer() {
@@ -82,8 +82,8 @@ void LoadBalancer::set_job_assigner(JobAssigner *job_assigner) {
   job_assigner_ = job_assigner;
 }
 
-void LoadBalancer::set_max_job_to_assign(size_t num) {
-  max_job_to_assign_ = num;
+void LoadBalancer::set_assign_batch_size(size_t num) {
+  assign_batch_size_ = num;
 }
 
 void LoadBalancer::Run() {
@@ -93,7 +93,7 @@ void LoadBalancer::Run() {
 size_t LoadBalancer::AssignReadyJobs() {
   dbg(DBG_WARN, "WARNING: Base load balancer is being used!!!\n");
   JobEntryList list;
-  job_manager_->GetJobsReadyToAssign(&list, max_job_to_assign_);
+  job_manager_->GetJobsReadyToAssign(&list, assign_batch_size_);
 
   JobEntryList::iterator iter;
   for (iter = list.begin(); iter != list.end(); ++iter) {

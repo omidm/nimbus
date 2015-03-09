@@ -46,7 +46,6 @@
 
 #include <inttypes.h>
 #include <string>
-#include "shared/address_book.h"
 
 #define NIMBUS_LEVELDB_PRIVATE_KEY "~/cloud/src/nimbus/scripts/nimbus-rsa-key-pair"
 
@@ -79,12 +78,6 @@
 #define NIMBUS_COMPLEX_JOB_NAME "complex"
 
 #define NIMBUS_RECEIVER_KNOWN_IP "receiver_known_ip"
-
-#define NIMBUS_TEMPLATES_ACTIVE false
-#define NIMBUS_NEW_TEMPLATES_ACTIVE true
-#define NIMBUS_BINDING_MEMOIZATION_ACTIVE true
-#define NIMBUS_COMMAND_TEMPLATE_ACTIVE true
-#define NIMBUS_DM_QUERY_CACHE_ACTIVE true
 
 #define NIMBUS_FAULT_TOLERANCE_ACTIVE false
 #define DEFAULT_CHECKPOINT_CREATION_RATE 30

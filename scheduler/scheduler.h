@@ -73,12 +73,21 @@ class Scheduler {
 
     virtual void Run();
 
-    virtual void set_max_job_to_assign(size_t num);
-    virtual void set_max_job_to_remove(size_t num);
-    virtual void set_min_worker_to_join(size_t num);
+    virtual void set_cleaner_thread_active(bool flag);
+    virtual void set_bouncer_thread_active(bool flag);
+
+    virtual void set_controller_template_active(bool flag);
+    virtual void set_complex_memoization_active(bool flag);
+    virtual void set_binding_memoization_active(bool flag);
+    virtual void set_worker_template_active(bool flag);
+    virtual void set_data_manager_query_cache_active(bool flag);
+
+    virtual void set_assign_batch_size(size_t num);
+    virtual void set_remove_batch_size(size_t num);
+    virtual void set_init_worker_num(size_t num);
     virtual void set_job_assigner_thread_num(size_t num);
-    virtual void set_max_command_process_num(size_t num);
-    virtual void set_max_job_done_command_process_num(size_t num);
+    virtual void set_command_batch_size(size_t num);
+    virtual void set_job_done_batch_size(size_t num);
 
     /* TODO(omidm): figure out what we want for these methods. */
     virtual void LoadClusterMap(std::string) {}
@@ -164,18 +173,26 @@ class Scheduler {
     boost::thread* scheduler_server_thread_;
     boost::thread* load_balancer_thread_;
 
+    bool cleaner_thread_active_;
+    bool bouncer_thread_active_;
+
+    bool controller_template_active_;
+    bool complex_memoization_active_;
+    bool binding_memoization_active_;
+    bool worker_template_active_;
+    bool data_manager_query_cache_active_;
+
     port_t listening_port_;
+    size_t init_worker_num_;
+    size_t command_batch_size_;
+    size_t assign_batch_size_;
+    size_t remove_batch_size_;
+    size_t job_assigner_thread_num_;
+    size_t job_done_batch_size_;
+
     size_t registered_worker_num_;
     bool terminate_application_flag_;
-    bool cleaner_thread_active_;
     exit_status_t terminate_application_status_;
-
-    size_t max_job_to_assign_;
-    size_t max_job_to_remove_;
-    size_t min_worker_to_join_;
-    size_t job_assigner_thread_num_;
-    size_t max_command_process_num_;
-    size_t max_job_done_command_process_num_;
 
     CmSet user_command_set_;
     SchedulerCommand::PrototypeTable worker_command_table_;

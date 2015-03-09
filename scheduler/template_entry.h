@@ -69,7 +69,8 @@ class JobManager;
 
 class TemplateEntry {
   public:
-    explicit TemplateEntry(std::string template_name);
+    TemplateEntry(const std::string& template_name,
+                  bool worker_template_active_);
     ~TemplateEntry();
 
     bool finalized();
@@ -192,6 +193,7 @@ class TemplateEntry {
     typedef boost::unordered_map<std::string, BindingTemplate*> BindingMap;
 
     std::string template_name_;
+    bool worker_template_active_;
 
     AccessIndex access_pattern_;
     boost::mutex access_pattern_mutex_;

@@ -81,6 +81,7 @@ namespace nimbus {
     virtual void set_load_balancer(LoadBalancer *load_balancer);
     virtual void set_thread_num(size_t thread_num);
     virtual void set_checkpoint_id(checkpoint_id_t checkpoint_id);
+    virtual void set_data_manager_query_cache_active(bool flag);
 
     virtual void AssignJobs(const JobEntryList& list);
 
@@ -92,6 +93,7 @@ namespace nimbus {
     LoadBalancer *load_balancer_;
     size_t thread_num_;
     checkpoint_id_t checkpoint_id_;
+    bool data_manager_query_cache_active_;
 
     JobEntryList job_queue_;
     boost::recursive_mutex job_queue_mutex_;

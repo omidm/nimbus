@@ -78,7 +78,7 @@ namespace nimbus {
     virtual void set_job_manager(JobManager *job_manager);
     virtual void set_data_manager(DataManager *data_manager);
     virtual void set_job_assigner(JobAssigner *job_assigner);
-    virtual void set_max_job_to_assign(size_t num);
+    virtual void set_assign_batch_size(size_t num);
 
     virtual void Run();
 
@@ -99,7 +99,7 @@ namespace nimbus {
     JobManager *job_manager_;
     DataManager *data_manager_;
     JobAssigner *job_assigner_;
-    size_t max_job_to_assign_;
+    size_t assign_batch_size_;
 
   private:
     typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;

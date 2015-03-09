@@ -46,6 +46,7 @@ using namespace nimbus; // NOLINT
 
 TemplateManager::TemplateManager() {
   job_manager_ = NULL;
+  worker_template_active_ = false;
 }
 
 TemplateManager::~TemplateManager() {
@@ -64,12 +65,17 @@ void TemplateManager::set_id_maker(IDMaker *id_maker) {
   id_maker_ = id_maker;
 }
 
+void TemplateManager::set_worker_template_active(bool flag) {
+  worker_template_active_ = flag;
+}
+
 
 bool TemplateManager::DetectNewTemplate(const std::string& template_name) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   TemplateMap::iterator iter = template_map_.find(template_name);
   if (iter == template_map_.end()) {
-    template_map_[template_name] = new TemplateEntry(template_name);
+    template_map_[template_name] = new TemplateEntry(template_name,
+                                                     worker_template_active_);
   } else {
     if (!iter->second->finalized()) {
       if (iter->second->CleanPartiallyFilledTemplate()) {

@@ -63,6 +63,7 @@ void JobAssigner::Initialize() {
   job_manager_ = NULL;
   data_manager_ = NULL;
   load_balancer_ = NULL;
+  data_manager_query_cache_active_ = false;
 }
 
 JobAssigner::~JobAssigner() {
@@ -86,6 +87,10 @@ void JobAssigner::set_data_manager(DataManager *data_manager) {
 
 void JobAssigner::set_load_balancer(LoadBalancer *load_balancer) {
   load_balancer_ = load_balancer;
+}
+
+void JobAssigner::set_data_manager_query_cache_active(bool flag) {
+  data_manager_query_cache_active_ = flag;
 }
 
 void JobAssigner::set_thread_num(size_t thread_num) {
@@ -164,7 +169,7 @@ bool JobAssigner::QueryDataManagerForPatterns(
                       ComplexJobEntry* job,
                       const BindingTemplate *binding_template,
                       const std::vector<physical_data_id_t>*& physical_ids) {
-  if (NIMBUS_DM_QUERY_CACHE_ACTIVE) {
+  if (data_manager_query_cache_active_) {
     if (dm_query_cache_.Query(binding_template->record_name(), physical_ids)) {
       std::cout << "COMPLEX: Hit DM Query Cache.\n";
       return true;
