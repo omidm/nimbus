@@ -127,7 +127,7 @@ class  AppObject {
          * inner region is set, and can be used
          * \return A boolean value
          */
-        void ineer_region_valid() const;
+        bool inner_delta_valid() const;
 
         uint64_t unique_id() {
           return unique_id_;

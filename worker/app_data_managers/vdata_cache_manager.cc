@@ -33,8 +33,9 @@
  */
 
 /*
- * VDataCacheManager implements application data manager with simple_app_data caching of
- * application data across jobs.
+ * VDataCacheManager implements application data manager with caching of
+ * application data across jobs, and partial virtual data -- inner phys.
+ * object memory is freed after constructing the app obect.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
@@ -60,7 +61,8 @@
 
 namespace nimbus {
 
-VDataCacheManager::VDataCacheManager() {}
+VDataCacheManager::VDataCacheManager() {
+}
 
 VDataCacheManager::~VDataCacheManager() {}
 
@@ -163,6 +165,7 @@ AppVar *VDataCacheManager::GetAppVarV(const DataArray &read_set,
         (*pool_)[prototype.id()] = ct;
         cv = prototype.CreateNew(region);
         cv->set_unique_id(unique_id_allocator_++);
+        cv->set_inner_delta(prototype.inner_delta());
         assert(cv != NULL);
         ct->AddEntry(region, cv);
     } else {
@@ -175,7 +178,7 @@ AppVar *VDataCacheManager::GetAppVarV(const DataArray &read_set,
             ct->AddEntry(region, cv);
         }
     }
-    Coord inner_delta = app_var->inner_region().Delta();
+    Coord inner_delta = cv->inner_delta();
 
     cv->AcquireAccess(access);
     DataArray flush, sync, diff;
@@ -195,7 +198,7 @@ AppVar *VDataCacheManager::GetAppVarV(const DataArray &read_set,
 
     for (size_t i = 0; i < flush.size(); ++i) {
         Data *d = flush[i];
-        if (d->region().Delta() == inner_delta && d->Destroyed()) {
+        if (d->region().Delta() == inner_delta && d->destroyed()) {
             d->Create();
             d->set_destroyed(false);
         }
@@ -205,7 +208,12 @@ AppVar *VDataCacheManager::GetAppVarV(const DataArray &read_set,
     nimbus::timer::StopTimer(nimbus::timer::kWriteAppData);
 
     for (size_t i = 0; i < sync.size(); ++i) {
-        sync_co[i]->PullData(sync[i]);
+        Data *d = sync[i];
+        if (d->destroyed()) {
+            d->Create();
+            d->set_destroyed(false);
+        }
+        sync_co[i]->PullData(d);
     }
 
     pthread_mutex_lock(&cache_lock);
@@ -216,9 +224,9 @@ AppVar *VDataCacheManager::GetAppVarV(const DataArray &read_set,
     nimbus::timer::StartTimer(nimbus::timer::kReadAppData);
     cv->ReadAppData(diff, read_region);
     nimbus::timer::StopTimer(nimbus::timer::kReadAppData);
-    for (size_t i = 0; i < diff.size(); ++i) {
-        Data *d = diff[i];
-        if (d->region().Delta() == inner_delta && d->Destroyed()) {
+    for (size_t i = 0; i < write_set.size(); ++i) {
+        Data *d = write_set[i];
+        if (d->region().Delta() == inner_delta && !d->destroyed()) {
             d->Destroy();
             d->set_destroyed(true);
         }
@@ -255,6 +263,7 @@ AppStruct *VDataCacheManager::GetAppStructV(const std::vector<app_data::type_id_
         if (cs == NULL) {
             cs = prototype.CreateNew(region);
             cs->set_unique_id(unique_id_allocator_++);
+            cs->set_inner_delta(prototype.inner_delta());
             assert(cs != NULL);
             ct->AddEntry(region, cs);
         }
@@ -283,7 +292,7 @@ AppStruct *VDataCacheManager::GetAppStructV(const std::vector<app_data::type_id_
         DataArray &flush = flush_sets[t];
         for (size_t i = 0; i < flush.size(); ++i) {
             Data *d = flush[i];
-            if (d->region().Delta() == inner_delta && d->Destroyed()) {
+            if (d->region().Delta() == inner_delta && d->destroyed()) {
                 d->Create();
                 d->set_destroyed(false);
             }
@@ -297,6 +306,11 @@ AppStruct *VDataCacheManager::GetAppStructV(const std::vector<app_data::type_id_
         DataArray &sync_t = sync_sets[t];
         AppObjects &sync_co_t = sync_co_sets[t];
         for (size_t i = 0; i < sync_t.size(); ++i) {
+            Data *d = sync_t[i];
+            if (d->destroyed()) {
+                d->Create();
+                d->set_destroyed(false);
+            }
             sync_co_t[i]->PullData(sync_t[i]);
         }
     }
@@ -311,10 +325,10 @@ AppStruct *VDataCacheManager::GetAppStructV(const std::vector<app_data::type_id_
     cs->ReadAppData(var_type, diff_sets, read_region);
     nimbus::timer::StopTimer(nimbus::timer::kReadAppData);
     for (size_t t = 0; t < num_var; ++t) {
-        DataArray &diff = diff_sets[t];
-        for (size_t i = 0; i < diff.size(); ++i) {
-            Data *d = diff[i];
-            if (d->region().Delta() == inner_delta && d->Destroyed()) {
+        const DataArray &write_set_t = write_sets[t];
+        for (size_t i = 0; i < write_set_t.size(); ++i) {
+            Data *d = write_set_t[i];
+            if (d->region().Delta() == inner_delta && !d->destroyed()) {
                 d->Destroy();
                 d->set_destroyed(true);
             }
