@@ -113,6 +113,7 @@ class JobEntry {
     virtual GeometricRegion region() const;
     virtual bool partial_versioned() const;
     virtual bool versioned() const;
+    virtual bool versioned_for_pattern() const;
     virtual bool versioned_entire_context() const;
     virtual bool assigned() const;
     virtual bool done() const;
@@ -156,6 +157,7 @@ class JobEntry {
     virtual void set_region(GeometricRegion region);
     virtual void set_partial_versioned(bool flag);
     virtual void set_versioned(bool flag);
+    virtual void set_versioned_for_pattern(bool flag);
     virtual void set_versioned_entire_context(bool flag);
     virtual void set_assigned(bool flag);
     virtual void set_done(bool flag);
@@ -219,6 +221,7 @@ class JobEntry {
     GeometricRegion region_;
     bool partial_versioned_;
     bool versioned_;
+    bool versioned_for_pattern_;
     bool versioned_entire_context_;
     bool assigned_;
     bool done_;

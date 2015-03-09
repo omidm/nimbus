@@ -601,6 +601,7 @@ bool JobManager::ResolveJobDataVersionsForPattern(JobEntry *job,
   }
 
   if (version_manager_.ResolveJobDataVersionsForPattern(job, patterns)) {
+    job->set_versioned_for_pattern(true);
     return true;
   } else {
     dbg(DBG_ERROR, "ERROR: could not version job %lu for given pattern.\n", job->job_id());

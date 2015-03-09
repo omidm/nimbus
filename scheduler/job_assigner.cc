@@ -164,10 +164,11 @@ bool JobAssigner::QueryDataManagerForPatterns(
                       ComplexJobEntry* job,
                       const BindingTemplate *binding_template,
                       const std::vector<physical_data_id_t>*& physical_ids) {
-  // For now disable the cache, to check if the query is consistant with new computation.
-  bool found_in_cache = false;
-  if (dm_query_cache_.Query(binding_template->record_name(), physical_ids)) {
-    found_in_cache = true;
+  if (NIMBUS_DM_QUERY_CACHE_ACTIVE) {
+    if (dm_query_cache_.Query(binding_template->record_name(), physical_ids)) {
+      std::cout << "COMPLEX: Hit DM Query Cache.\n";
+      return true;
+    }
   }
 
   std::vector<physical_data_id_t> *result =
@@ -228,20 +229,6 @@ bool JobAssigner::QueryDataManagerForPatterns(
     ++it;
   }
 
-  // check if the new computation matches the cache query.
-  if (found_in_cache) {
-    assert(physical_ids->size() == result->size());
-    for (size_t i = 0; i < result->size(); ++i) {
-      if (physical_ids->operator[](i) != result->operator[](i)) {
-        std::cout << "OMID: P: " << physical_ids->operator[](i) << std::endl;
-        std::cout << "OMID: R: " << result->operator[](i) << std::endl;
-        assert(false);
-      }
-    }
-    std::cout << "OMID: DM Cache Consistent.\n";
-    // sleep(1);
-  }
-
   dm_query_cache_.Learn(binding_template->record_name(), result);
   physical_ids = result;
 
@@ -260,6 +247,13 @@ bool JobAssigner::UpdateDataManagerByPatterns(
   IDSet<job_id_t> list_job_read;
   list_job_read.insert(job->job_id());
   job_id_t last_job_write = job->job_id();
+
+
+  if (!job->versioned_for_pattern()) {
+    if (!job_manager_->ResolveJobDataVersionsForPattern(job, patterns)) {
+      assert(false);
+    }
+  }
 
   size_t physical_ids_idx = 0;
   BindingTemplate::PatternList::const_iterator iter = patterns->begin();
