@@ -1228,6 +1228,7 @@ JobAssigner::DataManagerQueryCache::~DataManagerQueryCache() {
 }
 
 void JobAssigner::DataManagerQueryCache::Invalidate() {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   if (state_ == LEARNING || state_ == VALID) {
     delete cached_phy_ids_;
   }
@@ -1237,6 +1238,7 @@ void JobAssigner::DataManagerQueryCache::Invalidate() {
 
 bool JobAssigner::DataManagerQueryCache::Query(std::string record_name,
                       const std::vector<physical_data_id_t>*& phy_ids) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   if (state_ == VALID && record_name_ == record_name) {
     phy_ids = cached_phy_ids_;
     return true;
@@ -1247,6 +1249,7 @@ bool JobAssigner::DataManagerQueryCache::Query(std::string record_name,
 
 void JobAssigner::DataManagerQueryCache::Learn(std::string record_name,
                       const std::vector<physical_data_id_t>* phy_ids) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   switch (state_) {
     case INIT:
       record_name_ = record_name;
@@ -1288,6 +1291,7 @@ void JobAssigner::DataManagerQueryCache::Learn(std::string record_name,
 bool JobAssigner::DataManagerQueryCache::SameQueries(
                       const std::vector<physical_data_id_t>* phy_ids_1,
                       const std::vector<physical_data_id_t>* phy_ids_2) {
+  // Already thread safe from Learn method. -omidm
   if (phy_ids_1->size() != phy_ids_2->size()) {
     return false;
   }

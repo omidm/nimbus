@@ -191,6 +191,7 @@ namespace nimbus {
         State state_;
         std::string record_name_;
         const std::vector<physical_data_id_t>* cached_phy_ids_;
+        boost::mutex mutex_;
 
         bool SameQueries(const std::vector<physical_data_id_t>* phy_ids_1,
                          const std::vector<physical_data_id_t>* phy_ids_2);
