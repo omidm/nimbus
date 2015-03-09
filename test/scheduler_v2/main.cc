@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
     ("dct", "deactivate controller template")
     ("dcm", "deactivate complex memoization")
     ("dbm", "deactivate binding memoization")
-    ("dwt", "deactivate worker template");
+    ("dwt", "deactivate worker template")
     ("dqc", "deactivate data manager query cache");
 
   po::variables_map vm;
