@@ -113,7 +113,9 @@ class JobManager {
 
     size_t NumJobsReadyToAssign();
 
-    size_t GetJobsReadyToAssign(JobEntryList* list, size_t max_num);
+    size_t GetJobsReadyToAssign(JobEntryList* list,
+                                size_t max_num,
+                                load_balancing_id_t lb_id);
 
     size_t RemoveObsoleteJobEntries(size_t max_to_remove);
 

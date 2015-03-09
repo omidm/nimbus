@@ -65,8 +65,10 @@ JobEntry::JobEntry() {
   write_region_valid_ = false;
   union_region_valid_ = false;
   assigned_worker_ = NULL;
-  parent_job_name_ = "";  // will be set for non-sterile and complex jobs.
-  grand_parent_job_name_ = "";  // will be set for complex jobs.
+  parent_job_name_ = "";  // will be set for non-sterile and complex jobs
+  grand_parent_job_name_ = "";  // will be set for complex jobs
+  load_balancing_id_ = NIMBUS_INIT_LOAD_BALANCING_ID;  // will be set by load_balancer/job_manager
+  parent_load_balancing_id_ = NIMBUS_INIT_LOAD_BALANCING_ID;  // will be set for complex jobs
 }
 
 void JobEntry::Initialize() {
@@ -245,6 +247,14 @@ bool JobEntry::future() const {
 
 checkpoint_id_t JobEntry::checkpoint_id() const {
   return checkpoint_id_;
+}
+
+load_balancing_id_t JobEntry::load_balancing_id() const {
+  return load_balancing_id_;
+}
+
+load_balancing_id_t JobEntry::parent_load_balancing_id() const {
+  return parent_load_balancing_id_;
 }
 
 const IDSet<logical_data_id_t>* JobEntry::read_set_p() const {
@@ -437,6 +447,14 @@ void JobEntry::set_future(bool flag) {
 
 void JobEntry::set_checkpoint_id(checkpoint_id_t checkpoint_id) {
   checkpoint_id_ = checkpoint_id;
+}
+
+void JobEntry::set_load_balancing_id(load_balancing_id_t lb_id) {
+  load_balancing_id_ = lb_id;
+}
+
+void JobEntry::set_parent_load_balancing_id(load_balancing_id_t lb_id) {
+  parent_load_balancing_id_ = lb_id;
 }
 
 bool JobEntry::GetPhysicalReadSet(IDSet<physical_data_id_t>* set) {

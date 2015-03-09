@@ -241,7 +241,7 @@ bool JobManager::AddComplexJobEntry(ComplexJobEntry* complex_job) {
   }
 
 
-  // set parent and grand parent job names for complex jobs.
+  // set parent and grand parent job names and parent lb_id for complex jobs.
   {
     JobEntry *parent_job = NULL;
     ComplexJobEntry *xj = NULL;
@@ -249,6 +249,7 @@ bool JobManager::AddComplexJobEntry(ComplexJobEntry* complex_job) {
       assert(!parent_job->sterile());
       complex_job->set_parent_job_name(parent_job->job_name());
       complex_job->set_grand_parent_job_name(parent_job->parent_job_name());
+      complex_job->set_parent_load_balancing_id(parent_job->load_balancing_id());
     } else if (GetComplexJobContainer(complex_job->parent_job_id(), xj)) {
       ShadowJobEntry *sj = NULL;
       if (!xj->OMIDGetShadowJobEntryById(complex_job->parent_job_id(), sj)) {
@@ -257,6 +258,7 @@ bool JobManager::AddComplexJobEntry(ComplexJobEntry* complex_job) {
       assert(!sj->sterile());
       complex_job->set_parent_job_name(sj->job_name());
       complex_job->set_grand_parent_job_name(xj->parent_job_name());
+      complex_job->set_parent_load_balancing_id(xj->load_balancing_id());
     }
   }
 
@@ -744,7 +746,9 @@ size_t JobManager::NumJobsReadyToAssign() {
   return jobs_ready_to_assign_.size();
 }
 
-size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
+size_t JobManager::GetJobsReadyToAssign(JobEntryList* list,
+                                        size_t max_num,
+                                        load_balancing_id_t lb_id) {
   size_t num = 0;
   list->clear();
 
@@ -754,16 +758,18 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
     JobEntry* job = iter->second;
     assert(!job->assigned());
 
+    assert((job->load_balancing_id() == NIMBUS_INIT_LOAD_BALANCING_ID) ||
+           (job->load_balancing_id() == lb_id));
+    job->set_load_balancing_id(lb_id);
+
     if (job->job_type() == JOB_CMPX) {
       ComplexJobEntry* complex_job = reinterpret_cast<ComplexJobEntry*>(job);
       TemplateEntry *te = complex_job->template_entry();
-      std::string grand_parent_name = complex_job->grand_parent_job_name();
-      assert(grand_parent_name != "");
       BindingTemplate *bt = NULL;
 
       if (binding_memoization_active_) {
         bool create_bt = true;
-        if (te->QueryBindingRecord(STATIC_BINDING_RECORD, grand_parent_name, bt)) {
+        if (te->QueryBindingRecord(complex_job, bt)) {
           create_bt = false;
           if (bt->finalized()) {
             list->push_back(complex_job);
@@ -776,10 +782,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
         }
 
         if (create_bt) {
-          if (!te->AddBindingRecord(STATIC_BINDING_RECORD,
-                                    grand_parent_name,
-                                    complex_job->inner_job_ids(),
-                                    bt)) {
+          if (!te->AddBindingRecord(complex_job, bt)) {
             assert(false);
           }
         }

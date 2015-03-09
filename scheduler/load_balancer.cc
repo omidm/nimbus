@@ -57,6 +57,7 @@ void LoadBalancer::Initialize() {
   data_manager_ = NULL;
   job_assigner_ = NULL;
   assign_batch_size_ = 0;
+  load_balancing_id_ = NIMBUS_INIT_LOAD_BALANCING_ID + 1;
 }
 
 LoadBalancer::~LoadBalancer() {
@@ -91,16 +92,17 @@ void LoadBalancer::Run() {
 }
 
 size_t LoadBalancer::AssignReadyJobs() {
-  dbg(DBG_WARN, "WARNING: Base load balancer is being used!!!\n");
   JobEntryList list;
-  job_manager_->GetJobsReadyToAssign(&list, assign_batch_size_);
+  job_manager_->GetJobsReadyToAssign(&list,
+                                    assign_batch_size_,
+                                    load_balancing_id_);
 
   JobEntryList::iterator iter;
   for (iter = list.begin(); iter != list.end(); ++iter) {
     JobEntry* job = *iter;
     if (!SetWorkerToAssignJob(job)) {
       dbg(DBG_ERROR, "ERROR: LoadBalancer: could not get worker to assign job %lu.\n", job->job_id()); // NOLINT
-      exit(-1);
+      assert(false);
     }
   }
 

@@ -119,6 +119,8 @@ class JobEntry {
     virtual bool done() const;
     virtual bool future() const;
     virtual checkpoint_id_t checkpoint_id() const;
+    virtual load_balancing_id_t load_balancing_id() const;
+    virtual load_balancing_id_t parent_load_balancing_id() const;
 
     virtual const IDSet<logical_data_id_t>* read_set_p() const;
     virtual const IDSet<logical_data_id_t>* write_set_p() const;
@@ -163,6 +165,8 @@ class JobEntry {
     virtual void set_done(bool flag);
     virtual void set_future(bool flag);
     virtual void set_checkpoint_id(checkpoint_id_t checkpoint_id);
+    virtual void set_load_balancing_id(load_balancing_id_t lb_id);
+    virtual void set_parent_load_balancing_id(load_balancing_id_t lb_id);
 
     virtual void set_physical_table_entry(logical_data_id_t l_id, physical_data_id_t p_id);
 
@@ -230,6 +234,8 @@ class JobEntry {
     bool write_region_valid_;
     bool union_region_valid_;
     checkpoint_id_t checkpoint_id_;
+    load_balancing_id_t load_balancing_id_;
+    load_balancing_id_t parent_load_balancing_id_;
 
   private:
     void Initialize();

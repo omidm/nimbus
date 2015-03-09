@@ -100,6 +100,7 @@ namespace nimbus {
     DataManager *data_manager_;
     JobAssigner *job_assigner_;
     size_t assign_batch_size_;
+    load_balancing_id_t load_balancing_id_;
 
   private:
     typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;

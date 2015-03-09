@@ -70,8 +70,6 @@ namespace nimbus {
 
     virtual void Run();
 
-    virtual size_t AssignReadyJobs();
-
     virtual void NotifyJobAssignment(const JobEntry *job);
 
     virtual void NotifyJobDone(const JobEntry *job);

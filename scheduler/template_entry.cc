@@ -556,17 +556,20 @@ size_t TemplateEntry::QueryAccessPattern(const logical_data_id_t& ldid,
   return count;
 }
 
-std::string TemplateEntry::ProduceBindingRecordName(size_t load_balancing_tag,
-                                                    const std::string& grand_parent_name) {
-  std::string key = int2string(load_balancing_tag) + "-" + template_name_ + "-" + grand_parent_name;
+std::string TemplateEntry::ProduceBindingRecordName(const JobEntry *job) {
+  std::string key = template_name_;
+  key += "-" + int2string(job->load_balancing_id());
+  key += "--" + job->grand_parent_job_name();
+  key += "-" + int2string(job->parent_load_balancing_id());
   return key;
 }
 
-bool TemplateEntry::AddBindingRecord(size_t load_balancing_tag,
-                                     const std::string& grand_parent_name,
-                                     const std::vector<job_id_t>& compute_job_ids,
+bool TemplateEntry::AddBindingRecord(const ComplexJobEntry *complex_job,
                                      BindingTemplate*& binding_template) {
-  std::string record_name = ProduceBindingRecordName(load_balancing_tag, grand_parent_name);
+  assert(complex_job->grand_parent_job_name() != "");
+  assert(complex_job->load_balancing_id() != NIMBUS_INIT_LOAD_BALANCING_ID);
+  assert(complex_job->parent_load_balancing_id() != NIMBUS_INIT_LOAD_BALANCING_ID);
+  std::string record_name = ProduceBindingRecordName(complex_job);
 
   BindingMap::iterator iter = binding_records_.find(record_name);
   if (iter != binding_records_.end()) {
@@ -575,7 +578,7 @@ bool TemplateEntry::AddBindingRecord(size_t load_balancing_tag,
   }
 
   BindingTemplate* bt = new BindingTemplate(record_name,
-                                            compute_job_ids,
+                                            complex_job->inner_job_ids(),
                                             this,
                                             worker_template_active_);
   binding_records_[record_name] = bt;
@@ -583,10 +586,9 @@ bool TemplateEntry::AddBindingRecord(size_t load_balancing_tag,
   return true;
 }
 
-bool TemplateEntry::QueryBindingRecord(size_t load_balancing_tag,
-                                       const std::string& grand_parent_name,
+bool TemplateEntry::QueryBindingRecord(const ComplexJobEntry *complex_job,
                                        BindingTemplate*& binding_template) {
-  std::string record_name = ProduceBindingRecordName(load_balancing_tag, grand_parent_name);
+  std::string record_name = ProduceBindingRecordName(complex_job);
 
   BindingMap::iterator iter = binding_records_.find(record_name);
   if (iter == binding_records_.end()) {

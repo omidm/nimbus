@@ -61,24 +61,6 @@ StaticLoadBalancer::~StaticLoadBalancer() {
 void StaticLoadBalancer::Run() {
 }
 
-size_t StaticLoadBalancer::AssignReadyJobs() {
-  JobEntryList list;
-  job_manager_->GetJobsReadyToAssign(&list, assign_batch_size_);
-
-  JobEntryList::iterator iter;
-  for (iter = list.begin(); iter != list.end(); ++iter) {
-    JobEntry* job = *iter;
-    if (!SetWorkerToAssignJob(job)) {
-      dbg(DBG_ERROR, "ERROR: StaticLoadBalancer: could not get worker to assign job %lu.\n", job->job_id()); // NOLINT
-      exit(-1);
-    }
-  }
-
-  job_assigner_->AssignJobs(list);
-
-  return list.size();
-}
-
 bool StaticLoadBalancer::SetWorkerToAssignJob(JobEntry* job) {
   if (job->job_type() == JOB_CMPX) {
     ComplexJobEntry *xj = reinterpret_cast<ComplexJobEntry*>(job);

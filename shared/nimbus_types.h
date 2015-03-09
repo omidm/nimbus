@@ -81,7 +81,9 @@
 
 #define NIMBUS_FAULT_TOLERANCE_ACTIVE false
 #define DEFAULT_CHECKPOINT_CREATION_RATE 30
-#define NIMBUS_INIT_CHECKPOINT_ID 0
+#define NIMBUS_INIT_CHECKPOINT_ID (checkpoint_id_t)(0)
+
+#define NIMBUS_INIT_LOAD_BALANCING_ID (load_balancing_id_t)(0)
 
 namespace nimbus {
   typedef uint32_t port_t;
@@ -91,6 +93,7 @@ namespace nimbus {
   typedef uint64_t logical_data_id_t;
   typedef uint64_t job_id_t;
   typedef uint64_t checkpoint_id_t;
+  typedef uint64_t load_balancing_id_t;
   typedef uint64_t command_id_t;
   typedef uint64_t partition_id_t;
   typedef uint64_t param_id_t;

@@ -1249,10 +1249,6 @@ bool JobAssigner::DataManagerQueryCache::Query(const std::string& record_name,
     return true;
   }
 
-  std::cout << "COMPLEX: state " << state_
-            << " RO: " << record_name_
-            << " RN: " << record_name << std::endl;
-
   return false;
 }
 
