@@ -182,9 +182,9 @@ namespace nimbus {
         };
 
         void Invalidate();
-        bool Query(std::string record_name,
+        bool Query(const std::string& record_name,
                    const std::vector<physical_data_id_t>*& phy_ids);
-        void Learn(std::string record_name,
+        void Learn(const std::string& record_name,
                    const std::vector<physical_data_id_t>* phy_ids);
 
       private:

@@ -1236,19 +1236,23 @@ void JobAssigner::DataManagerQueryCache::Invalidate() {
   state_ = INIT;
 }
 
-bool JobAssigner::DataManagerQueryCache::Query(std::string record_name,
-                      const std::vector<physical_data_id_t>*& phy_ids) {
+bool JobAssigner::DataManagerQueryCache::Query(const std::string& record_name,
+                              const std::vector<physical_data_id_t>*& phy_ids) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   if (state_ == VALID && record_name_ == record_name) {
     phy_ids = cached_phy_ids_;
     return true;
   }
 
+  std::cout << "COMPLEX: state " << state_
+            << " RO: " << record_name_
+            << " RN: " << record_name << std::endl;
+
   return false;
 }
 
-void JobAssigner::DataManagerQueryCache::Learn(std::string record_name,
-                      const std::vector<physical_data_id_t>* phy_ids) {
+void JobAssigner::DataManagerQueryCache::Learn(const std::string& record_name,
+                              const std::vector<physical_data_id_t>* phy_ids) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   switch (state_) {
     case INIT:
@@ -1268,7 +1272,7 @@ void JobAssigner::DataManagerQueryCache::Learn(std::string record_name,
           state_ = LEARNING;
         }
       } else {
-        record_name = record_name_;
+        record_name_ = record_name;
         delete cached_phy_ids_;
         cached_phy_ids_ = phy_ids;
         state_ = LEARNING;
@@ -1279,7 +1283,7 @@ void JobAssigner::DataManagerQueryCache::Learn(std::string record_name,
         delete cached_phy_ids_;
         cached_phy_ids_ = phy_ids;
       } else {
-        record_name = record_name_;
+        record_name_ = record_name;
         delete cached_phy_ids_;
         cached_phy_ids_ = phy_ids;
         state_ = LEARNING;
