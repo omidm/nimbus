@@ -698,6 +698,7 @@ void Scheduler::SetupIDMaker() {
 void Scheduler::SetupSchedulerServer() {
   LoadWorkerCommands();
   server_->set_worker_command_table(&worker_command_table_);
+  server_->set_bouncer_thread_active(bouncer_thread_active_);
   scheduler_server_thread_ = new boost::thread(boost::bind(&SchedulerServer::Run, server_));
 }
 

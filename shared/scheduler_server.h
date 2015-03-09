@@ -117,6 +117,8 @@ class SchedulerServer {
 
   virtual size_t worker_num();
 
+  virtual void set_bouncer_thread_active(bool flag);
+
   virtual void set_worker_command_table(SchedulerCommand::PrototypeTable* cmt);
 
   virtual bool RemoveWorker(worker_id_t worker_id);
@@ -129,6 +131,7 @@ class SchedulerServer {
   boost::mutex worker_mutex_;
   SchedulerWorkerList workers_;
   SchedulerCommand::PrototypeTable* worker_command_table_;
+  bool bouncer_thread_active_;
 
   boost::asio::io_service* io_service_;
   tcp::acceptor* acceptor_;

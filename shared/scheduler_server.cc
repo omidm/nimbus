@@ -57,7 +57,9 @@ using boost::asio::ip::tcp;
 namespace nimbus {
 
 SchedulerServer::SchedulerServer(port_t port_no)
-  : listening_port_(port_no) {}
+  : listening_port_(port_no) {
+    bouncer_thread_active_ = false;
+  }
 
 SchedulerServer::~SchedulerServer() {
   {
@@ -240,7 +242,8 @@ size_t SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
 
         boost::mutex::scoped_lock lock(command_queue_mutex_);
         received_commands_.push_back(command);
-        if (command->type() == SchedulerCommand::JOB_DONE) {
+        if ((command->type() == SchedulerCommand::JOB_DONE) &&
+            bouncer_thread_active_) {
           JobDoneCommand *comm = reinterpret_cast<JobDoneCommand*>(command);
           JobDoneCommand* dup_comm = new JobDoneCommand(comm->job_id(),
                                                         comm->run_time(),
@@ -409,6 +412,10 @@ bool SchedulerServer::RemoveWorker(worker_id_t worker_id) {
 
 size_t SchedulerServer::worker_num() {
   return workers_.size();
+}
+
+void SchedulerServer::set_bouncer_thread_active(bool flag) {
+  bouncer_thread_active_ = flag;
 }
 
 void
