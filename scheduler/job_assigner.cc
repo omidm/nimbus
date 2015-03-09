@@ -805,6 +805,7 @@ bool JobAssigner::AllocateLdoInstanceToJob(JobEntry* job,
   job->set_physical_table_entry(ldo->id(), pd.id());
 
   data_manager_->UpdatePhysicalInstance(ldo, pd, pd_new);
+  dm_query_cache_.Invalidate();
 
   return true;
 }
@@ -893,6 +894,7 @@ bool JobAssigner::LoadData(SchedulerWorker* worker,
   to_data_new.set_last_job_write(j[0]);
   to_data_new.clear_list_job_read();
   data_manager_->UpdatePhysicalInstance(ldo, *to_data, to_data_new);
+  dm_query_cache_.Invalidate();
 
   // find the before set.
   before.insert(to_data->list_job_read());
@@ -926,6 +928,7 @@ bool JobAssigner::SaveData(SchedulerWorker* worker,
   PhysicalData from_data_new = *from_data;
   from_data_new.add_to_list_job_read(j[0]);
   data_manager_->UpdatePhysicalInstance(ldo, *from_data, from_data_new);
+  dm_query_cache_.Invalidate();
 
   // find the before set.
   before.insert(from_data->last_job_write());
@@ -986,6 +989,7 @@ bool JobAssigner::CreateDataAtWorker(SchedulerWorker* worker,
   list_job_read.insert(j[0]);  // if other job wants to write, waits for creation.
   PhysicalData p(d[0], worker->worker_id(), NIMBUS_INIT_DATA_VERSION, list_job_read, j[0]);
   data_manager_->AddPhysicalInstance(ldo, p);
+  dm_query_cache_.Invalidate();
 
   // send the create command to worker.
   job_manager_->UpdateBeforeSet(&before);
@@ -1033,6 +1037,7 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   to_data_new.set_last_job_write(receive_id);
   to_data_new.clear_list_job_read();
   data_manager_->UpdatePhysicalInstance(ldo, *to_data, to_data_new);
+  dm_query_cache_.Invalidate();
 
   // send remote copy receive job to worker.
   before.clear();
@@ -1069,6 +1074,7 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   PhysicalData from_data_new = *from_data;
   from_data_new.add_to_list_job_read(send_id);
   data_manager_->UpdatePhysicalInstance(ldo, *from_data, from_data_new);
+  dm_query_cache_.Invalidate();
 
   // send remote copy send command to worker.
   before.clear();
@@ -1128,12 +1134,14 @@ bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
   PhysicalData from_data_new = *from_data;
   from_data_new.add_to_list_job_read(j[0]);
   data_manager_->UpdatePhysicalInstance(ldo, *from_data, from_data_new);
+  dm_query_cache_.Invalidate();
 
   PhysicalData to_data_new = *to_data;
   to_data_new.set_version(from_data->version());
   to_data_new.set_last_job_write(j[0]);
   to_data_new.clear_list_job_read();
   data_manager_->UpdatePhysicalInstance(ldo, *to_data, to_data_new);
+  dm_query_cache_.Invalidate();
 
   // send local copy command to worker.
   before.insert(to_data->list_job_read());
