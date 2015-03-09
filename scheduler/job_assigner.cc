@@ -160,47 +160,13 @@ void JobAssigner::AssignJobs(const JobEntryList& list) {
   }
 }
 
-bool JobAssigner::QueryDataManagerCache(std::string record_name,
-                            const std::vector<physical_data_id_t>*& physical_ids) {
-  DMCache::iterator iter = dm_cache_.find(record_name);
-  if (iter == dm_cache_.end()) {
-    physical_ids = NULL;
-    return false;
-  }
-
-  physical_ids = iter->second;
-  return true;
-}
-
-bool JobAssigner::CacheDataManagerQuery(std::string record_name,
-                                   const std::vector<physical_data_id_t>* physical_ids) {
-  DMCache::iterator iter = dm_cache_.find(record_name);
-  if (iter != dm_cache_.end()) {
-    return false;
-  }
-
-  if (dm_cache_.size() == DM_CACHE_SIZE) {
-    std::string record_to_evict = dm_cache_queue_.front();
-    DMCache::iterator it = dm_cache_.find(record_to_evict);
-    assert(it != dm_cache_.end());
-    delete it->second;
-    dm_cache_.erase(it);
-    dm_cache_queue_.pop_front();
-  }
-
-  dm_cache_[record_name] = physical_ids;
-  dm_cache_queue_.push_back(record_name);
-
-  return true;
-}
-
 bool JobAssigner::QueryDataManagerForPatterns(
                       ComplexJobEntry* job,
                       const BindingTemplate *binding_template,
                       const std::vector<physical_data_id_t>*& physical_ids) {
   // For now disable the cache, to check if the query is consistant with new computation.
   bool found_in_cache = false;
-  if (QueryDataManagerCache(binding_template->record_name(), physical_ids)) {
+  if (dm_query_cache_.Query(binding_template->record_name(), physical_ids)) {
     found_in_cache = true;
   }
 
@@ -229,14 +195,6 @@ bool JobAssigner::QueryDataManagerForPatterns(
     PhysicalDataList instances;
     data_manager_->AllInstances(ldo, &instances);
 
-    if (ldo->id() == 10000087878) {
-      std::cout << "OMID LIST SIZE QUERY: " << instances.size() << std::endl;
-      PhysicalDataList::iterator pi = instances.begin();
-      for (; pi != instances.end(); ++pi) {
-        std::cout << "OMID PI: " << pi->id() << " V: " << pi->version() << std::endl;
-      }
-    }
-
     // For now we assume that binding for template does not require creating
     // new instances -omidm
     assert(instances.size() >= ldid_count);
@@ -259,18 +217,6 @@ bool JobAssigner::QueryDataManagerForPatterns(
              (pattern->version_type_ == BindingTemplate::WILD_CARD))) {
           found = true;
           result->push_back(pi->id());
-
-          // check if the new computation matches the cache query.
-          if (found_in_cache) {
-            if (pi->id() != physical_ids->operator[](result->size() - 1)) {
-              std::cout << "OMID LDID: " << ldo->id()
-                << " " << ldo->region()->ToNetworkData() << std::endl;
-              std::cout << "OMID: P: " << physical_ids->operator[](result->size() - 1) << std::endl;
-              std::cout << "OMID: R: " << pi->id() << std::endl;
-              assert(false);
-            }
-          }
-
           instances.erase(pi);
           break;
         }
@@ -296,8 +242,7 @@ bool JobAssigner::QueryDataManagerForPatterns(
     // sleep(1);
   }
 
-
-  CacheDataManagerQuery(binding_template->record_name(), result);
+  dm_query_cache_.Learn(binding_template->record_name(), result);
   physical_ids = result;
 
   return true;
@@ -325,12 +270,6 @@ bool JobAssigner::UpdateDataManagerByPatterns(
       assert(false);
     }
     data_version_t version = base_version + pe->version_diff_from_base_;
-
-    if (pe->ldid_ == 10000087878) {
-      std::cout << "OMID UPDATE PI: "
-                << physical_ids->operator[](physical_ids_idx)
-                << " V: " << version << std::endl;
-    }
 
     if (!data_manager_->UpdateVersionAndAccessRecord(pe->ldid_,
                                                      physical_ids->operator[](physical_ids_idx),
@@ -1275,5 +1214,90 @@ bool JobAssigner::SendComputeJobToWorker(SchedulerWorker* worker,
     return false;
   }
 }
+
+JobAssigner::DataManagerQueryCache::DataManagerQueryCache() {
+  state_ = INIT;
+}
+
+JobAssigner::DataManagerQueryCache::~DataManagerQueryCache() {
+  if (state_ == LEARNING || state_ == VALID) {
+    delete cached_phy_ids_;
+  }
+}
+
+void JobAssigner::DataManagerQueryCache::Invalidate() {
+  if (state_ == LEARNING || state_ == VALID) {
+    delete cached_phy_ids_;
+  }
+
+  state_ = INIT;
+}
+
+bool JobAssigner::DataManagerQueryCache::Query(std::string record_name,
+                      const std::vector<physical_data_id_t>*& phy_ids) {
+  if (state_ == VALID && record_name_ == record_name) {
+    phy_ids = cached_phy_ids_;
+    return true;
+  }
+
+  return false;
+}
+
+void JobAssigner::DataManagerQueryCache::Learn(std::string record_name,
+                      const std::vector<physical_data_id_t>* phy_ids) {
+  switch (state_) {
+    case INIT:
+      record_name_ = record_name;
+      cached_phy_ids_ = phy_ids;
+      state_ = LEARNING;
+      break;
+    case LEARNING:
+      if (record_name_ == record_name) {
+        if (SameQueries(phy_ids, cached_phy_ids_)) {
+        delete cached_phy_ids_;
+        cached_phy_ids_ = phy_ids;
+        state_ = VALID;
+        } else {
+          delete cached_phy_ids_;
+          cached_phy_ids_ = phy_ids;
+          state_ = LEARNING;
+        }
+      } else {
+        record_name = record_name_;
+        delete cached_phy_ids_;
+        cached_phy_ids_ = phy_ids;
+        state_ = LEARNING;
+      }
+      break;
+    case VALID:
+      if (record_name_ == record_name) {
+        delete cached_phy_ids_;
+        cached_phy_ids_ = phy_ids;
+      } else {
+        record_name = record_name_;
+        delete cached_phy_ids_;
+        cached_phy_ids_ = phy_ids;
+        state_ = LEARNING;
+      }
+      break;
+  }
+}
+
+bool JobAssigner::DataManagerQueryCache::SameQueries(
+                      const std::vector<physical_data_id_t>* phy_ids_1,
+                      const std::vector<physical_data_id_t>* phy_ids_2) {
+  if (phy_ids_1->size() != phy_ids_2->size()) {
+    return false;
+  }
+
+  for (size_t i = 0; i < phy_ids_1->size(); ++i) {
+    if (phy_ids_1->operator[](i) != phy_ids_2->operator[](i)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 
 }  // namespace nimbus

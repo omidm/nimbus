@@ -100,11 +100,6 @@ namespace nimbus {
 
     std::list<boost::thread*> job_assigner_threads_;
 
-    typedef boost::unordered_map<std::string, const std::vector<physical_data_id_t>*> DMCache;
-    typedef std::list<std::string> DMCacheQueue;
-    DMCache dm_cache_;
-    DMCacheQueue dm_cache_queue_;
-
     virtual void Initialize();
 
     virtual void JobAssignerThread();
@@ -175,11 +170,33 @@ namespace nimbus {
                     const BindingTemplate *binding_template,
                     const std::vector<physical_data_id_t>*& physical_ids);
 
-    virtual bool QueryDataManagerCache(std::string record_name,
-                       const std::vector<physical_data_id_t>*& physical_ids);
+    class DataManagerQueryCache {
+      public:
+        DataManagerQueryCache();
+        ~DataManagerQueryCache();
 
-    virtual bool CacheDataManagerQuery(std::string record_name,
-                       const std::vector<physical_data_id_t>* physical_ids);
+        enum State {
+          INIT     = 0,
+          LEARNING = 1,
+          VALID    = 2
+        };
+
+        void Invalidate();
+        bool Query(std::string record_name,
+                   const std::vector<physical_data_id_t>*& phy_ids);
+        void Learn(std::string record_name,
+                   const std::vector<physical_data_id_t>* phy_ids);
+
+      private:
+        State state_;
+        std::string record_name_;
+        const std::vector<physical_data_id_t>* cached_phy_ids_;
+
+        bool SameQueries(const std::vector<physical_data_id_t>* phy_ids_1,
+                         const std::vector<physical_data_id_t>* phy_ids_2);
+    };
+
+    DataManagerQueryCache dm_query_cache_;
 
   private:
     JobAssigner(const JobAssigner& other) {}
