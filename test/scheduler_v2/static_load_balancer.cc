@@ -63,7 +63,7 @@ void StaticLoadBalancer::Run() {
 
 size_t StaticLoadBalancer::AssignReadyJobs() {
   JobEntryList list;
-  job_manager_->GetJobsReadyToAssign(&list, max_job_to_assign_);
+  job_manager_->GetJobsReadyToAssign(&list, assign_batch_size_);
 
   JobEntryList::iterator iter;
   for (iter = list.begin(); iter != list.end(); ++iter) {

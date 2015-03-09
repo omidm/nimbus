@@ -40,6 +40,7 @@
 
 #define DEBUG_MODE
 
+#include <boost/program_options.hpp>
 #include <iostream> // NOLINT
 #include "./scheduler_v2.h"
 #include "shared/nimbus.h"
@@ -62,95 +63,88 @@ void PrintUsage() {
 
 
 int main(int argc, char *argv[]) {
+  namespace po = boost::program_options;
+
   port_t listening_port;
   size_t worker_num;
-  size_t assignment_num;
-  size_t job_assigner_thread_num;
-  size_t batch_command_process_num;
+  size_t assign_batch_size;
+  size_t assign_thread_num;
+  size_t command_batch_size;
 
-  bool listening_port_given = false;
-  bool worker_num_given = false;
-  bool assignment_num_given = false;
-  bool job_assigner_thread_num_given = false;
-  bool batch_command_process_num_given = false;
+  po::options_description desc("Options");
+  desc.add_options()
+    ("help,h", "produce help message")
+    // Required arguments
+    ("port,p", po::value<port_t>(&listening_port)->required(), "listening port")
 
-  if (((argc - 1) % 2 != 0) || (argc < 3)) {
-    PrintUsage();
-    exit(-1);
+    // Optinal arguments
+    ("worker_num,w", po::value<size_t>(&worker_num), "number of initial workers")
+    ("assign_batch_size,a", po::value<size_t>(&assign_batch_size), "maximum number of jobs in a batch assignment") //NOLINT
+    ("assign_thread_num,t", po::value<size_t>(&assign_thread_num), "job assigner thread nums")
+    ("command_batch_size,c", po::value<size_t>(&command_batch_size), "maximum number of commands in a batch processing") //NOLINT
+
+    ("dct", "deactivate controller template")
+    ("dcm", "deactivate complex memoization")
+    ("dbm", "deactivate binding memoization")
+    ("dwt", "deactivate worker template");
+    ("dqc", "deactivate data manager query cache");
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+
+  if (vm.count("help")) {
+    std::cout << desc << "\n";
+    return 0;
   }
 
-  for (int i = 1; i < argc; i = i + 2) {
-    std::string tag = argv[i];
-    std::string val = argv[i+1];
-    if (tag == "-port") {
-      std::stringstream ss(val);
-      ss >> listening_port;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-      listening_port_given = true;
-    } else if (tag == "-wn") {
-      std::stringstream ss(val);
-      ss >> worker_num;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-      worker_num_given = true;
-    } else if (tag == "-an") {
-      std::stringstream ss(val);
-      ss >> assignment_num;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-      assignment_num_given = true;
-    } else if (tag == "-tn") {
-      std::stringstream ss(val);
-      ss >> job_assigner_thread_num;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-      job_assigner_thread_num_given = true;
-    } else if (tag == "-cn") {
-      std::stringstream ss(val);
-      ss >> batch_command_process_num;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-      batch_command_process_num_given = true;
-    } else {
-      PrintUsage();
-      exit(-1);
-    }
+  try {
+    po::notify(vm);
+    // std::cout << "***** OMID: " << vm["worker_num"].as<size_t>() << std::endl;
+  }
+  catch(std::exception& e) { // NOLINT
+    std::cerr << "ERROR: " << e.what() << "\n";
+    return -1;
   }
 
-  if (!listening_port_given) {
-    PrintUsage();
-    exit(-1);
-  }
 
   nimbus::nimbus_initialize();
 
   SchedulerV2 * s = new SchedulerV2(listening_port);
 
-  if (worker_num_given) {
-    s->set_min_worker_to_join(worker_num);
+  if (vm.count("worker_num")) {
+    s->set_init_worker_num(worker_num);
   }
 
-  if (assignment_num_given) {
-    s->set_max_job_to_assign(assignment_num);
+  if (vm.count("assign_batch_size")) {
+    s->set_assign_batch_size(assign_batch_size);
   }
 
-  if (job_assigner_thread_num_given) {
-    s->set_job_assigner_thread_num(job_assigner_thread_num);
+  if (vm.count("assign_thread_num")) {
+    s->set_job_assigner_thread_num(assign_thread_num);
   }
 
-  if (batch_command_process_num_given) {
-    s->set_max_command_process_num(batch_command_process_num);
+  if (vm.count("command_batch_size")) {
+    s->set_command_batch_size(command_batch_size);
+  }
+
+  if (vm.count("dct")) {
+    s->set_controller_template_active(false);
+  }
+
+  if (vm.count("dcm")) {
+    s->set_complex_memoization_active(false);
+  }
+
+  if (vm.count("dbm")) {
+    s->set_binding_memoization_active(false);
+  }
+
+  if (vm.count("dwt")) {
+    s->set_worker_template_active(false);
+  }
+
+  if (vm.count("dqc")) {
+    s->set_data_manager_query_cache_active(false);
   }
 
   s->Run();
