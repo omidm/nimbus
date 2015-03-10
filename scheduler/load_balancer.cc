@@ -57,7 +57,7 @@ void LoadBalancer::Initialize() {
   data_manager_ = NULL;
   job_assigner_ = NULL;
   assign_batch_size_ = 0;
-  load_balancing_id_ = NIMBUS_INIT_LOAD_BALANCING_ID + 1;
+  load_balancing_id_ = NIMBUS_INIT_LOAD_BALANCING_ID;
 }
 
 LoadBalancer::~LoadBalancer() {

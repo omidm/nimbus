@@ -74,7 +74,11 @@ bool StaticLoadBalancer::SetWorkerToAssignJob(JobEntry* job) {
   Log log(Log::NO_FILE);
   log.log_StartTimer();
 
-  StaticLoadBalancer::UpdateWorkerDomains();
+  if ((!initialized_domains_) ||
+      (worker_num_ != worker_domains_.size()) ||
+      (global_bounding_region_ != data_manager_->global_bounding_region())) {
+    StaticLoadBalancer::UpdateWorkerDomains();
+  }
   assert(worker_num_ == worker_map_.size());
   assert(worker_num_ == worker_domains_.size());
 
@@ -172,23 +176,19 @@ bool StaticLoadBalancer::SetWorkerToAssignJob(JobEntry* job) {
 }
 
 void StaticLoadBalancer::UpdateWorkerDomains() {
-  GeometricRegion global_bounding_region =
-    data_manager_->global_bounding_region();
+  global_bounding_region_ = data_manager_->global_bounding_region();
+  worker_domains_.clear();
 
-  if ((!initialized_domains_) ||
-      (worker_num_ != worker_domains_.size()) ||
-      (global_bounding_region_ != global_bounding_region)) {
-    global_bounding_region_ = global_bounding_region;
-    worker_domains_.clear();
+  // Update load balancing id.
+  ++load_balancing_id_;
 
-    size_t num_x, num_y, num_z;
-    SplitDimensions(worker_num_, &num_x, &num_y, &num_z);
+  size_t num_x, num_y, num_z;
+  SplitDimensions(worker_num_, &num_x, &num_y, &num_z);
 
-    GenerateDomains(num_x, num_y, num_z,
-                    global_bounding_region_);
+  GenerateDomains(num_x, num_y, num_z,
+                  global_bounding_region_);
 
-    initialized_domains_ = true;
-  }
+  initialized_domains_ = true;
 }
 
 void StaticLoadBalancer::GenerateDomains(size_t num_x,

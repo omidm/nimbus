@@ -148,6 +148,10 @@ bool DynamicLoadBalancer::NotifyDownWorker(worker_id_t worker_id) {
   if (iter != worker_map_.end()) {
     worker_map_.erase(iter);
     worker_num_ = worker_map_.size();
+
+    // Update load balancing id.
+    ++load_balancing_id_;
+
     region_map_.NotifyDownWorker(worker_id);
     return true;
   } else {
@@ -159,6 +163,9 @@ bool DynamicLoadBalancer::NotifyDownWorker(worker_id_t worker_id) {
 
 void DynamicLoadBalancer::BuildRegionMap() {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
+  // Update load balancing id.
+  ++load_balancing_id_;
 
   std::vector<worker_id_t> worker_ids;
   WorkerMap::iterator iter = worker_map_.begin();
@@ -179,6 +186,7 @@ void DynamicLoadBalancer::UpdateRegionMap() {
 
   if (region_map_.BalanceRegions(1, 2)) {
     log_.log_WriteToFile(region_map_.Print());
+    // Update load balancing id.
     ++load_balancing_id_;
     std::cout << "****** LBLBLBLBLB *******\n";
   } else {
