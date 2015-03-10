@@ -76,6 +76,8 @@ class JobManager {
     void set_after_map(AfterMap* after_map);
     void set_ldo_map_p(const LdoMap* ldo_map_p);
     void set_binding_memoization_active(bool flag);
+    void set_fault_tolerance_active(bool flag);
+    void set_checkpoint_creation_period(int64_t period);
 
     Graph<JobEntry, job_id_t> *job_graph_p();
 
@@ -185,9 +187,11 @@ class JobManager {
     JobEntryList jobs_done_;
     boost::mutex jobs_done_mutex_;
 
-    counter_t checkpoint_creation_rate_;
-    counter_t non_sterile_counter_;
     JobEntryMap non_sterile_jobs_;
+    bool fault_tolerance_active_;
+    int64_t checkpoint_creation_period_;
+    int64_t last_checkpoint_time_;
+    counter_t non_sterile_counter_;
 
     JobEntryMap jobs_ready_to_assign_;
     JobEntryMap jobs_pending_to_assign_;

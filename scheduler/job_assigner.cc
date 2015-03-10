@@ -64,6 +64,7 @@ void JobAssigner::Initialize() {
   data_manager_ = NULL;
   load_balancer_ = NULL;
   data_manager_query_cache_active_ = false;
+  fault_tolerance_active_ = false;
 }
 
 JobAssigner::~JobAssigner() {
@@ -99,6 +100,10 @@ void JobAssigner::set_thread_num(size_t thread_num) {
 
 void JobAssigner::set_checkpoint_id(checkpoint_id_t checkpoint_id) {
   checkpoint_id_ = checkpoint_id;
+}
+
+void JobAssigner::set_fault_tolerance_active(bool flag) {
+  fault_tolerance_active_ = flag;
 }
 
 void JobAssigner::Run() {
@@ -749,10 +754,10 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     return true;
   }
 
-  assert(NIMBUS_FAULT_TOLERANCE_ACTIVE);
-
   // If you are here, you may find the version in checkpoint.
   dbg(DBG_WARN, "WARNING: looking in to checkpoint to load the data.\n");
+  assert(fault_tolerance_active_);
+  assert(checkpoint_id_ > NIMBUS_INIT_CHECKPOINT_ID);
 
   WorkerHandleList handles;
   job_manager_->GetHandleToLoadData(checkpoint_id_, l_id, version, &handles);
@@ -849,6 +854,7 @@ bool JobAssigner::SaveJobContextForCheckpoint(JobEntry *job) {
 
     // If you are here, you may find the version in checkpoint.
     dbg(DBG_WARN, "WARNING: looking in to checkpoint to load the data for next checkpoint!.\n");
+    assert(checkpoint_id_ > NIMBUS_INIT_CHECKPOINT_ID);
 
     WorkerHandleList handles;
     job_manager_->GetHandleToLoadData(checkpoint_id_, ldid, version, &handles);

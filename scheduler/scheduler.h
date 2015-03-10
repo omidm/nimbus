@@ -82,6 +82,10 @@ class Scheduler {
     virtual void set_worker_template_active(bool flag);
     virtual void set_data_manager_query_cache_active(bool flag);
 
+    virtual void set_load_balancing_active(bool flag);
+    virtual void set_fault_tolerance_active(bool flag);
+    virtual void set_checkpoint_creation_period(int64_t period);
+
     virtual void set_assign_batch_size(size_t num);
     virtual void set_remove_batch_size(size_t num);
     virtual void set_init_worker_num(size_t num);
@@ -181,6 +185,10 @@ class Scheduler {
     bool binding_memoization_active_;
     bool worker_template_active_;
     bool data_manager_query_cache_active_;
+
+    bool load_balancing_active_;
+    bool fault_tolerance_active_;
+    int64_t checkpoint_creation_period_;
 
     port_t listening_port_;
     size_t init_worker_num_;

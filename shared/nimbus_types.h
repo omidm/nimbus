@@ -79,8 +79,6 @@
 
 #define NIMBUS_RECEIVER_KNOWN_IP "receiver_known_ip"
 
-#define NIMBUS_FAULT_TOLERANCE_ACTIVE false
-#define DEFAULT_CHECKPOINT_CREATION_RATE 30
 #define NIMBUS_INIT_CHECKPOINT_ID (checkpoint_id_t)(0)
 
 #define NIMBUS_INIT_LOAD_BALANCING_ID (load_balancing_id_t)(0)

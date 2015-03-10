@@ -55,7 +55,9 @@ JobManager::JobManager() {
   ldo_map_p_ = NULL;
   after_map_ = NULL;
   binding_memoization_active_ = false;
-  checkpoint_creation_rate_ = DEFAULT_CHECKPOINT_CREATION_RATE;
+  fault_tolerance_active_ = false;
+  checkpoint_creation_period_ = 10000000;
+  last_checkpoint_time_ = (int64_t)(Log::GetRawTime());
   non_sterile_counter_ = 0;
 }
 
@@ -78,6 +80,14 @@ void JobManager::set_ldo_map_p(const LdoMap* ldo_map_p) {
 
 void JobManager::set_binding_memoization_active(bool flag) {
   binding_memoization_active_ = flag;
+}
+
+void JobManager::set_fault_tolerance_active(bool flag) {
+  fault_tolerance_active_ = flag;
+}
+
+void JobManager::set_checkpoint_creation_period(int64_t period) {
+  checkpoint_creation_period_ = period;
 }
 
 Graph<JobEntry, job_id_t>* JobManager::job_graph_p() {
@@ -680,7 +690,8 @@ bool JobManager::RewindFromLastCheckpoint(checkpoint_id_t *checkpoint_id) {
     exit(-1);
     return false;
   }
-  dbg(DBG_SCHED, "Rewind from checkpoint %lu.\n", *checkpoint_id);
+  dbg(DBG_ERROR, "Rewind from checkpoint %lu.\n", *checkpoint_id);
+  last_checkpoint_time_ = (int64_t)(Log::GetRawTime());
 
   JobEntryList list;
   checkpoint_manager_.GetJobListFromCheckpoint(*checkpoint_id, &list);
@@ -949,15 +960,16 @@ void JobManager::NotifyJobDone(job_id_t job_id) {
     non_sterile_jobs_.erase(job_id);
   }
 
-  // TODO(omidm): check if the code works with complex jobs!
-  if (NIMBUS_FAULT_TOLERANCE_ACTIVE) {
+  if (fault_tolerance_active_) {
     if (!sterile) {
-      if ((++non_sterile_counter_) == checkpoint_creation_rate_) {
+      int64_t time = (int64_t)(Log::GetRawTime());
+      if (((time - last_checkpoint_time_) >= checkpoint_creation_period_) &&
+          (non_sterile_counter_++ > 10)) {
         // Initiate checkpoint creation.
-        non_sterile_counter_ = 0;
+        last_checkpoint_time_ = time;
         checkpoint_id_t checkpoint_id;
         checkpoint_manager_.CreateNewCheckpoint(&checkpoint_id);
-        dbg(DBG_SCHED, "Checkpoint created%lu.\n", checkpoint_id);
+        dbg(DBG_ERROR, "Checkpoint created %lu.\n", checkpoint_id);
         JobEntryMap::iterator it = non_sterile_jobs_.begin();
         for (; it != non_sterile_jobs_.end(); ++it) {
           // TODO(omidm): these checks may not necessarily pass, need general way

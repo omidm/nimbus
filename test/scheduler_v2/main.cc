@@ -48,20 +48,6 @@
 #include "shared/scheduler_command.h"
 #include "shared/parser.h"
 
-void PrintUsage() {
-  std::cout << "ERROR: wrong arguments\n";
-  std::cout << "Usage:\n";
-  std::cout << "./scheduler\n";
-  std::cout << "REQUIRED ARGUMENTS:\n";
-  std::cout << "\t-port [listening port]\n";
-  std::cout << "OPTIONIAL:\n";
-  std::cout << "\t-wn [minimum initial worker num, DEFAULT: 2]\n";
-  std::cout << "\t-an [maximum batch job assignmet num, DEFAULT: 1]\n";
-  std::cout << "\t-tn [job assigner additional thread num, DEFAULT: 0]\n";
-  std::cout << "\t-cn [maximum batch command process num, DEFAULT: 10000]\n";
-}
-
-
 int main(int argc, char *argv[]) {
   namespace po = boost::program_options;
 
@@ -70,6 +56,7 @@ int main(int argc, char *argv[]) {
   size_t assign_batch_size;
   size_t assign_thread_num;
   size_t command_batch_size;
+  int64_t ft_period;
 
   po::options_description desc("Options");
   desc.add_options()
@@ -82,12 +69,16 @@ int main(int argc, char *argv[]) {
     ("assign_batch_size,a", po::value<size_t>(&assign_batch_size), "maximum number of jobs in a batch assignment") //NOLINT
     ("assign_thread_num,t", po::value<size_t>(&assign_thread_num), "job assigner thread nums")
     ("command_batch_size,c", po::value<size_t>(&command_batch_size), "maximum number of commands in a batch processing") //NOLINT
+    ("ft_period", po::value<int64_t>(&ft_period), "checkpoint creation period for fault tolerance (seconds)") //NOLINT
 
     ("dct", "deactivate controller template")
     ("dcm", "deactivate complex memoization")
     ("dbm", "deactivate binding memoization")
     ("dwt", "deactivate worker template")
-    ("dqc", "deactivate data manager query cache");
+    ("dqc", "deactivate data manager query cache")
+
+    ("alb", "activate load balancing")
+    ("aft", "activate fault tolerance");
 
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -145,6 +136,18 @@ int main(int argc, char *argv[]) {
 
   if (vm.count("dqc")) {
     s->set_data_manager_query_cache_active(false);
+  }
+
+  if (vm.count("ft_period")) {
+    s->set_checkpoint_creation_period(ft_period);
+  }
+
+  if (vm.count("alb")) {
+    s->set_load_balancing_active(true);
+  }
+
+  if (vm.count("aft")) {
+    s->set_fault_tolerance_active(true);
   }
 
   s->Run();

@@ -53,6 +53,11 @@ namespace nimbus {
 #define DEFAULT_WORKER_TEMPLATE_ACTIVE true
 #define DEFAULT_DATA_MANAGER_QUERY_CACHE_ACTIVE true
 
+#define DEFAULT_LOAD_BALANCING_ACTIVE false
+#define DEFAULT_FAULT_TOLERANCE_ACTIVE false
+#define DEFAULT_CHECKPOINT_CREATION_PERIOD 30
+
+
 #define DEFAULT_ASSIGN_BATCH_SIZE 1
 #define DEFAULT_REMOVE_BATCH_SIZE 1
 #define DEFAULT_INIT_WORKER_NUM 2
@@ -82,6 +87,10 @@ Scheduler::Scheduler(port_t port) {
   binding_memoization_active_ = DEFAULT_BINDING_MEMOIZATION_ACTIVE;
   worker_template_active_ = DEFAULT_WORKER_TEMPLATE_ACTIVE;
   data_manager_query_cache_active_ = DEFAULT_DATA_MANAGER_QUERY_CACHE_ACTIVE;
+
+  load_balancing_active_ = DEFAULT_LOAD_BALANCING_ACTIVE;
+  fault_tolerance_active_ = DEFAULT_FAULT_TOLERANCE_ACTIVE;
+  checkpoint_creation_period_ = DEFAULT_CHECKPOINT_CREATION_PERIOD;
 
   init_worker_num_ = DEFAULT_INIT_WORKER_NUM;
   assign_batch_size_ = DEFAULT_ASSIGN_BATCH_SIZE;
@@ -158,6 +167,18 @@ void Scheduler::set_worker_template_active(bool flag) {
 
 void Scheduler::set_data_manager_query_cache_active(bool flag) {
   data_manager_query_cache_active_ = flag;
+}
+
+void Scheduler::set_load_balancing_active(bool flag) {
+  load_balancing_active_ = flag;
+}
+
+void Scheduler::set_fault_tolerance_active(bool flag) {
+  fault_tolerance_active_ = flag;
+}
+
+void Scheduler::set_checkpoint_creation_period(int64_t period) {
+  checkpoint_creation_period_ = period;
 }
 
 void Scheduler::set_remove_batch_size(size_t num) {
@@ -709,6 +730,8 @@ void Scheduler::SetupJobManager() {
   job_manager_->set_after_map(after_map_);
   job_manager_->set_ldo_map_p(data_manager_->ldo_map_p());
   job_manager_->set_binding_memoization_active(binding_memoization_active_);
+  job_manager_->set_fault_tolerance_active(fault_tolerance_active_);
+  job_manager_->set_checkpoint_creation_period(checkpoint_creation_period_);
 }
 
 void Scheduler::SetupTemplateManager() {
@@ -733,6 +756,7 @@ void Scheduler::SetupJobAssigner() {
   job_assigner_->set_load_balancer(load_balancer_);
   job_assigner_->set_thread_num(job_assigner_thread_num_);
   job_assigner_->set_data_manager_query_cache_active(data_manager_query_cache_active_);
+  job_assigner_->set_fault_tolerance_active(fault_tolerance_active_);
   job_assigner_->Run();
 }
 
