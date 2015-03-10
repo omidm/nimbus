@@ -229,17 +229,15 @@ bool JobManager::AddComplexJobEntry(ComplexJobEntry* complex_job) {
     << complex_job->template_entry()->template_name()
     << " " << log.timer() << std::endl;
 
-  std::list<job_id_t> list;
-  complex_job->GetParentJobIds(&list);
-  // For now complex job could have only one parent job, otherwise versioning goes wrong!
+
+  ShadowJobEntryList list;
+  complex_job->OMIDGetParentShadowJobs(&list);
+  // For now only one parent job per complex job is allowd!
   assert(list.size() == 1);
+  ShadowJobEntry* sj = *(list.begin());
+  non_sterile_jobs_[sj->job_id()] = sj;
+
   complex_jobs_[job_id] = complex_job;
-
-  // TODO(omidm): what does it mean for checkpointing logic?!!
-  if (!complex_job->sterile()) {
-    non_sterile_jobs_[job_id] = complex_job;
-  }
-
 
   // set parent and grand parent job names and parent lb_id for complex jobs.
   {
@@ -288,6 +286,8 @@ JobEntry* JobManager::AddKernelJobEntry() {
 
 JobEntry* JobManager::AddMainJobEntry(const job_id_t& job_id) {
   JobEntry* job = new MainJobEntry(job_id);
+
+  non_sterile_jobs_[job_id] = job;
 
   if (!AddJobEntryToJobGraph(job_id, job)) {
     delete job;
@@ -680,6 +680,7 @@ bool JobManager::RewindFromLastCheckpoint(checkpoint_id_t *checkpoint_id) {
     exit(-1);
     return false;
   }
+  dbg(DBG_SCHED, "Rewind from checkpoint %lu.\n", *checkpoint_id);
 
   JobEntryList list;
   checkpoint_manager_.GetJobListFromCheckpoint(*checkpoint_id, &list);
@@ -689,6 +690,7 @@ bool JobManager::RewindFromLastCheckpoint(checkpoint_id_t *checkpoint_id) {
   version_manager_.Reinitialize(&list);
 
   ClearJobGraph();
+  complex_jobs_.clear();
 
   {
     boost::unique_lock<boost::mutex> lock(jobs_done_mutex_);
@@ -770,9 +772,14 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list,
       // Due to dynamic load balancing, we need to once explicit bind the
       // complex job to issue required create commands. Only after that, the
       // second time we can memoize the compute/copy commands. Finally the
-      // third time we can reuse memoized binding information. -omidm
+      // third time we can reuse memoized binding information. The explicit
+      // binding could possibly have extra save data jobs for checkpointing,
+      // that should not intrupt the memoization in second time. But we do not
+      // want to do any memoization when checkpointing a shadow job. -omidm
       bool memoize_binding =
-        binding_memoization_active_ && te->ExplicitBindingBefore(complex_job);
+        binding_memoization_active_ &&
+        te->ExplicitBindingBefore(complex_job) &&
+        (complex_job->checkpoint_id() == NIMBUS_INIT_CHECKPOINT_ID);
 
       if (memoize_binding) {
         bool create_bt = true;
@@ -937,17 +944,20 @@ void JobManager::NotifyJobDone(job_id_t job_id) {
     }
   }
 
+  if (!sterile) {
+    assert(non_sterile_jobs_.count(job_id) != 0);
+    non_sterile_jobs_.erase(job_id);
+  }
 
   // TODO(omidm): check if the code works with complex jobs!
   if (NIMBUS_FAULT_TOLERANCE_ACTIVE) {
     if (!sterile) {
-      assert(non_sterile_jobs_.count(job_id) != 0);
-      non_sterile_jobs_.erase(job_id);
       if ((++non_sterile_counter_) == checkpoint_creation_rate_) {
         // Initiate checkpoint creation.
         non_sterile_counter_ = 0;
         checkpoint_id_t checkpoint_id;
         checkpoint_manager_.CreateNewCheckpoint(&checkpoint_id);
+        dbg(DBG_SCHED, "Checkpoint created%lu.\n", checkpoint_id);
         JobEntryMap::iterator it = non_sterile_jobs_.begin();
         for (; it != non_sterile_jobs_.end(); ++it) {
           // TODO(omidm): these checks may not necessarily pass, need general way
@@ -955,6 +965,11 @@ void JobManager::NotifyJobDone(job_id_t job_id) {
           // job graphs are not complicated.
           assert(!it->second->assigned());
           it->second->set_checkpoint_id(checkpoint_id);
+          if (it->second->job_type() == JOB_SHDW) {
+            // TODO(omidm): complex_job cannot be partially assigned, add assertion.
+            ShadowJobEntry *sj = reinterpret_cast<ShadowJobEntry*>(it->second);
+            sj->complex_job()->set_checkpoint_id(checkpoint_id);
+          }
           checkpoint_manager_.AddJobToCheckpoint(checkpoint_id, it->second);
         }
       }

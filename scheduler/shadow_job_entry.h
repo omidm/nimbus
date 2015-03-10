@@ -100,6 +100,9 @@ class ShadowJobEntry : public JobEntry {
     virtual TemplateJobEntry* template_job();
     virtual ComplexJobEntry* complex_job();
 
+    virtual IDSet<logical_data_id_t> read_set() const;
+    virtual IDSet<logical_data_id_t> write_set() const;
+    virtual IDSet<logical_data_id_t> union_set() const;
 
     virtual void set_read_set_p(const IDSet<logical_data_id_t>* read_set_p);
     virtual void set_write_set_p(const IDSet<logical_data_id_t>* write_set_p);

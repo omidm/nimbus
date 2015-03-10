@@ -94,7 +94,7 @@ class CheckpointEntry {
     Index index_;
     JobEntryMap jobs_;
     checkpoint_id_t checkpoint_id_;
-    int pending_count_;
+    int64_t pending_count_;
 
     void IncreasePendingCounter();
 

@@ -95,6 +95,17 @@ ShadowJobEntry::ShadowJobEntry(const std::string& job_name,
 ShadowJobEntry::~ShadowJobEntry() {
 }
 
+IDSet<logical_data_id_t> ShadowJobEntry::read_set() const {
+  return *read_set_p_;
+}
+
+IDSet<logical_data_id_t> ShadowJobEntry::write_set() const {
+  return *write_set_p_;
+}
+
+IDSet<logical_data_id_t> ShadowJobEntry::union_set() const {
+  return *union_set_p_;
+}
 
 const IDSet<logical_data_id_t>* ShadowJobEntry::read_set_p() const {
   return read_set_p_;

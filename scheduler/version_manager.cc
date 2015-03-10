@@ -700,6 +700,7 @@ void VersionManager::Reinitialize(const JobEntryList *list) {
   snap_shot_.clear();
   parent_map_.clear();
   child_counter_.clear();
+  complex_jobs_.clear();
 
   {
     Index::iterator iter = index_.begin();
