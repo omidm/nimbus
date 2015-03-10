@@ -767,7 +767,14 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list,
       TemplateEntry *te = complex_job->template_entry();
       BindingTemplate *bt = NULL;
 
-      if (binding_memoization_active_) {
+      // Due to dynamic load balancing, we need to once explicit bind the
+      // complex job to issue required create commands. Only after that, the
+      // second time we can memoize the compute/copy commands. Finally the
+      // third time we can reuse memoized binding information. -omidm
+      bool memoize_binding =
+        binding_memoization_active_ && te->ExplicitBindingBefore(complex_job);
+
+      if (memoize_binding) {
         bool create_bt = true;
         if (te->QueryBindingRecord(complex_job, bt)) {
           create_bt = false;
@@ -794,12 +801,13 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list,
       num += c_num;
       JobEntryList::iterator it = l.begin();
       for (; it != l.end(); ++it) {
-        (*it)->set_memoize_binding(binding_memoization_active_);
+        (*it)->set_memoize_binding(memoize_binding);
         (*it)->set_binding_template(bt);
         list->push_back(*it);
         jobs_pending_to_assign_[(*it)->job_id()] = *it;
       }
       if (complex_job->DrainedAllShadowJobsForAssignment()) {
+        te->MarkExplicitBinding(complex_job);
         jobs_ready_to_assign_.erase(iter++);
       } else {
         ++iter;

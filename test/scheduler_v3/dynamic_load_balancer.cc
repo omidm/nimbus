@@ -179,6 +179,8 @@ void DynamicLoadBalancer::UpdateRegionMap() {
 
   if (region_map_.BalanceRegions(1, 2)) {
     log_.log_WriteToFile(region_map_.Print());
+    ++load_balancing_id_;
+    std::cout << "****** LBLBLBLBLB *******\n";
   } else {
     // assert(false);
   }

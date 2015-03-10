@@ -601,6 +601,21 @@ bool TemplateEntry::QueryBindingRecord(const ComplexJobEntry *complex_job,
 }
 
 
+void TemplateEntry::MarkExplicitBinding(const ComplexJobEntry *complex_job) {
+  std::string record_name = ProduceBindingRecordName(complex_job);
+  explicit_binding_history_.insert(record_name);
+}
+
+bool TemplateEntry::ExplicitBindingBefore(const ComplexJobEntry *complex_job) {
+  std::string record_name = ProduceBindingRecordName(complex_job);
+  BindingSet::iterator iter = explicit_binding_history_.find(record_name);
+  if (iter != explicit_binding_history_.end()) {
+    return true;
+  }
+
+  return false;
+}
+
 
 
 

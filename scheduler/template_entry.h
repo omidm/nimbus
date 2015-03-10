@@ -137,6 +137,10 @@ class TemplateEntry {
     bool QueryBindingRecord(const ComplexJobEntry *complex_job,
                             BindingTemplate*& binding_template);
 
+    void MarkExplicitBinding(const ComplexJobEntry *complex_job);
+
+    bool ExplicitBindingBefore(const ComplexJobEntry *complex_job);
+
   private:
     typedef std::vector<boost::shared_ptr<job_id_t> > PtrList;
     typedef boost::unordered_set<boost::shared_ptr<job_id_t> > PtrSet;
@@ -187,6 +191,7 @@ class TemplateEntry {
     typedef boost::unordered_map<data_version_t, Bucket*> VersionIndex;
     typedef boost::unordered_map<logical_data_id_t, VersionIndex*> AccessIndex;
 
+    typedef boost::unordered_set<std::string> BindingSet;
     typedef boost::unordered_map<std::string, BindingTemplate*> BindingMap;
 
     std::string template_name_;
@@ -196,6 +201,7 @@ class TemplateEntry {
     boost::mutex access_pattern_mutex_;
 
     BindingMap binding_records_;
+    BindingSet explicit_binding_history_;
 
     bool finalized_;
     Graph<TemplateJobEntry, job_id_t> job_graph_;
