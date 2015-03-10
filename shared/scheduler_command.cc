@@ -117,6 +117,8 @@ const std::string SchedulerCommand::WORKER_DOWN_NAME = "workerdown";
 const std::string SchedulerCommand::START_COMMAND_TEMPLATE_NAME = "startcommandtemplate";
 const std::string SchedulerCommand::END_COMMAND_TEMPLATE_NAME = "endcommandtemplate";
 const std::string SchedulerCommand::SPAWN_COMMAND_TEMPLATE_NAME = "spawncommandtemplate";
+const std::string SchedulerCommand::REQUEST_STAT_NAME = "requeststat";
+const std::string SchedulerCommand::RESPOND_STAT_NAME = "respondstat";
 
 std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
   std::string str;
@@ -219,6 +221,12 @@ std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
       break;
     case SPAWN_COMMAND_TEMPLATE:
       str = SPAWN_COMMAND_TEMPLATE_NAME;
+      break;
+    case REQUEST_STAT:
+      str = REQUEST_STAT_NAME;
+      break;
+    case RESPOND_STAT:
+      str = RESPOND_STAT_NAME;
       break;
     default:
       std::cout << "Type did not found\n";

@@ -73,6 +73,8 @@
 #include "shared/start_command_template_command.h"
 #include "shared/end_command_template_command.h"
 #include "shared/spawn_command_template_command.h"
+#include "shared/request_stat_command.h"
+#include "shared/respond_stat_command.h"
 
 
 #endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_

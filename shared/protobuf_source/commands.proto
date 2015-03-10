@@ -116,6 +116,8 @@ message SchedulerPBuf{
      START_COMMAND_TEMPLATE = 31;
      END_COMMAND_TEMPLATE   = 32;
      SPAWN_COMMAND_TEMPLATE = 33;
+     REQUEST_STAT           = 34;
+     RESPOND_STAT           = 35;
   }
   required Type type = 1;
 
@@ -153,6 +155,8 @@ message SchedulerPBuf{
   optional StartCommandTemplatePBuf start_command_template = 31;
   optional EndCommandTemplatePBuf end_command_template     = 32;
   optional SpawnCommandTemplatePBuf spawn_command_template = 33;
+  optional RequestStatPBuf request_stat                    = 34;
+  optional RespondStatPBuf respond_stat                    = 35;
 }
 
 message AddComputeJobPBuf {
@@ -375,6 +379,17 @@ message PartitionRemovePBuf {
 
 message TerminatePBuf {
   optional int32 exit_status      = 1;                       
+}
+
+message RequestStatPBuf {
+  optional uint64 query_id     = 1;                       
+}
+
+message RespondStatPBuf {
+  optional uint64 query_id     = 1;                       
+  optional int64  run_time     = 2;
+  optional int64  block_time   = 3;
+  optional int64  idle_time    = 4;
 }
 
 message ProfilePBuf {

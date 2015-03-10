@@ -103,7 +103,9 @@ class SchedulerCommand {
     WORKER_DOWN            = SchedulerPBuf_Type_WORKER_DOWN,
     START_COMMAND_TEMPLATE = SchedulerPBuf_Type_START_COMMAND_TEMPLATE,
     END_COMMAND_TEMPLATE   = SchedulerPBuf_Type_END_COMMAND_TEMPLATE,
-    SPAWN_COMMAND_TEMPLATE = SchedulerPBuf_Type_SPAWN_COMMAND_TEMPLATE
+    SPAWN_COMMAND_TEMPLATE = SchedulerPBuf_Type_SPAWN_COMMAND_TEMPLATE,
+    REQUEST_STAT           = SchedulerPBuf_Type_REQUEST_STAT,
+    RESPOND_STAT           = SchedulerPBuf_Type_RESPOND_STAT
   };
 
   typedef std::set<Type> TypeSet;
@@ -182,6 +184,8 @@ class SchedulerCommand {
   static const std::string START_COMMAND_TEMPLATE_NAME;
   static const std::string END_COMMAND_TEMPLATE_NAME;
   static const std::string SPAWN_COMMAND_TEMPLATE_NAME;
+  static const std::string REQUEST_STAT_NAME;
+  static const std::string RESPOND_STAT_NAME;
 
  private:
 };
