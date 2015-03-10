@@ -97,10 +97,10 @@ def run_scheduler(scheduler_ip, worker_num):
   scheduler_command += 'sudo ' + config.EC2_NIMBUS_ROOT + 'scripts/configure_tcp.sh;'
   scheduler_command += 'ulimit -c unlimited;'
   scheduler_command += './scheduler'
-  scheduler_command += ' -port ' + str(config.FIRST_PORT)
-  scheduler_command += ' -wn ' + str(worker_num)
-  scheduler_command += ' -tn ' + str(config.ASSIGNER_THREAD_NUM)
-  scheduler_command += ' -an ' + str(config.BATCH_ASSIGN_NUM)
+  scheduler_command += ' -p ' + str(config.FIRST_PORT)
+  scheduler_command += ' -w ' + str(worker_num)
+  scheduler_command += ' -t ' + str(config.ASSIGNER_THREAD_NUM)
+  scheduler_command += ' -a ' + str(config.BATCH_ASSIGN_NUM)
   scheduler_command += ' &> ' + config.LOG_FILE_NAME
 
   subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
