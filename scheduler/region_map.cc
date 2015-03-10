@@ -109,6 +109,7 @@ void RegionMap::TrackRegionCoverage(DataManager *data_manager,
 
   GeometricRegion region;
   if (job->GetRegion(&region)) {
+    iter->second->AddCoveredRegion(&region);
   } else if (job->GetWriteSetRegion(data_manager, &region)) {
     if (region.GetSurfaceArea() < (0.25 * global_region_.GetSurfaceArea())) {
       iter->second->AddCoveredRegion(&region);

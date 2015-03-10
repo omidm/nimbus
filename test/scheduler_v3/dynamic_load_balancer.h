@@ -73,57 +73,31 @@ namespace nimbus {
 
     virtual void Run();
 
-    virtual size_t AssignReadyJobs();
-
-    virtual void NotifyJobAssignment(const JobEntry *job);
-
-    virtual void NotifyJobDone(const JobEntry *job);
-
     virtual void NotifyRegisteredWorker(SchedulerWorker *worker);
 
     virtual bool NotifyDownWorker(worker_id_t worker_id);
 
+    bool SetWorkerToAssignJob(JobEntry *job);
+
   private:
     typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
-    typedef std::map<job_id_t, JobProfile*> JobHistory;
 
     DynamicLoadBalancer(const DynamicLoadBalancer& other) {}
 
     Log log_;
     size_t worker_num_;
     GeometricRegion global_region_;
-
-    int stamp_state_;
-    boost::mutex stamp_mutex_;
-
-    JobHistory job_history_;
-    boost::recursive_mutex job_history_mutex_;
-
-    std::list<job_id_t> done_jobs_;
-
     RegionMap region_map_;
-    boost::recursive_mutex region_map_mutex_;
-
     WorkerMap worker_map_;
-    boost::recursive_mutex worker_map_mutex_;
-
     WorkerMonitor worker_monitor_;
-    boost::recursive_mutex worker_monitor_mutex_;
-
-    StragglerMap straggler_map_;
-    boost::recursive_mutex straggler_map_mutex_;
+    boost::recursive_mutex mutex_;
 
     size_t counter_;
-    bool update_;
     bool init_phase_;
-    boost::recursive_mutex update_mutex_;
-    boost::condition_variable_any update_cond_;
 
-    void InitializeRegionMap();
+    void BuildRegionMap();
 
     void UpdateRegionMap();
-
-    bool SetWorkerToAssignJob(JobEntry *job);
   };
 
 }  // namespace nimbus
