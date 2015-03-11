@@ -484,6 +484,8 @@ size_t VersionManager::GetJobsNeedDataVersion(
   size_t count = 0;
   list->clear();
 
+  // TODO(omidm): This is not necessarily true, if the non-sterile job is not
+  // bottleneck and runs and spawns the new jobs before it siblings finish.
   assert(complex_jobs_.size() <= 1);
 
   {
@@ -515,8 +517,9 @@ size_t VersionManager::GetJobsNeedDataVersion(
       for (; it != indices.end(); ++it) {
         ShadowJobEntry *sj;
         if (xj->OMIDGetShadowJobEntryByIndex(*it, sj)) {
+          bool done = xj->ShadowJobDone(sj->job_id());
           if ((!sj->assigned()) ||
-              ((!sj->sterile()) && (!sj->done()))) {
+              ((!sj->sterile()) && (!done))) {
             list->push_back(sj);
             ++count;
           }
@@ -549,6 +552,8 @@ size_t VersionManager::GetJobsNeedDataVersion(
 
 bool VersionManager::NotifyJobDone(JobEntry* job) {
   if (job->job_type() == JOB_CMPX) {
+    // TODO(omidm): does child_counter_ gets cleaned for the parent shadow job
+    // with in the complex job (DetectDoneJob ...).
     complex_jobs_.erase(job->job_id());
     return true;
   }

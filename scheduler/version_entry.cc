@@ -170,8 +170,13 @@ size_t VersionEntry::GetJobsNeedVersion(
   } else {
     BucketIter it = iiter->second->begin();
     for (; it != iiter->second->end(); ++it) {
+      bool done = (*it)->done();
+      if ((*it)->job_type() == JOB_SHDW) {
+        ShadowJobEntry *sj = reinterpret_cast<ShadowJobEntry*>(*it);
+        done = sj->complex_job()->ShadowJobDone(sj->job_id());
+      }
       if ((!(*it)->assigned()) ||
-          ((!(*it)->sterile()) && (!(*it)->done()))) {
+          ((!(*it)->sterile()) && (!done))) {
         list->push_back(*it);
         ++count;
       }
