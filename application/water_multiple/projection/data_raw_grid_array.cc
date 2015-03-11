@@ -83,4 +83,14 @@ bool DataRawGridArray::LoadFromNimbus(PhysBAM::ARRAY<T, TV_INT>* array) {
   return true;
 }
 
+float DataRawGridArray::FloatingHash() {
+  const T *b = (int *)buffer();
+  size_t s = size();
+  T sum = 0;
+  for (size_t i = 0; i < (s/sizeof(T)); ++i) {
+    sum += b[i];
+  }
+  return(float(sum));
+}
+
 } // namespace application

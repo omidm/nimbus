@@ -70,8 +70,9 @@ class GeometricRegion;
 class AppStruct : public AppObject {
     friend class AppDataManager;
     friend class CacheManager;
-    friend class CacheTable;
+    friend class VDataCacheManager;
     friend class SimpleAppDataManager;
+    friend class CacheTable;
     public:
         /**
          * \brief Creates an AppStruct

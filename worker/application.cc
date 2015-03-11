@@ -42,8 +42,10 @@
 #include "worker/application.h"
 #include "worker/app_data_manager.h"
 // NOTE: include application data manager implementation here
-#ifdef N_APP_CACHE
+#if defined N_APP_CACHE
 #include "worker/app_data_managers/simple_app_data_manager.h"
+#elif defined V_APP_CACHE
+#include "worker/app_data_managers/vdata_cache_manager.h"
 #else
 #include "worker/app_data_managers/cache_manager.h"
 #endif
@@ -82,8 +84,10 @@ void Application::Start(SchedulerClient* client,
   ldo_map_ = ldo_map;
   // NOTE: define which application data manager to use here
   // TODO(chinmayee): should we move this to an interface for application?
-#ifdef N_APP_CACHE
+#if defined N_APP_CACHE
   app_data_manager_ = new SimpleAppDataManager();
+#elif defined V_APP_CACHE
+  app_data_manager_ = new VDataCacheManager();
 #else
   app_data_manager_ = new CacheManager();
 #endif

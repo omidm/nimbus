@@ -122,4 +122,8 @@ bool DataSparseMatrix::LoadFromNimbus(
   return true;
 }
 
+float DataSparseMatrix::FloatingHash() {
+  return 0;
+}
+
 }  // namespace application
