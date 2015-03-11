@@ -54,6 +54,7 @@ template<typename T> class DataCompressedScalarArray
   explicit DataCompressedScalarArray(std::string name);
   virtual nimbus::Data* Clone();
   virtual void Create();
+  virtual float FloatingHash();
 };
 
 } // namespace application

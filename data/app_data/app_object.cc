@@ -60,7 +60,7 @@ app_data::ob_id_t AppObject::ids_allocated_ = 0;
  * \details
  */
 AppObject::AppObject() : unique_id_(0), id_(0),
-    access_(app_data::SHARED), users_(0) {
+    access_(app_data::SHARED), users_(0), inner_delta_valid_(false) {
   name_ = "default";
 }
 
@@ -68,7 +68,7 @@ AppObject::AppObject() : unique_id_(0), id_(0),
  * \details
  */
 AppObject::AppObject(const GeometricRegion &ob_reg) : unique_id_(0),
-    access_(app_data::SHARED), users_(0),
+    access_(app_data::SHARED), users_(0), inner_delta_valid_(false),
     object_region_(ob_reg) {
   name_ = "default";
 }
@@ -147,6 +147,28 @@ GeometricRegion AppObject::object_region() const {
  */
 void AppObject::set_object_region(const GeometricRegion &object_region) {
     object_region_ = object_region;
+}
+
+/**
+ * \details
+ */
+Coord AppObject::inner_delta() const {
+    return inner_delta_;
+}
+
+/**
+ * \details
+ */
+void AppObject::set_inner_delta(const Coord &inner_delta) {
+    inner_delta_ = inner_delta;
+    inner_delta_valid_ = true;
+}
+
+/**
+ * \details
+ */
+bool AppObject::inner_delta_valid() const {
+  return inner_delta_valid_;
 }
 
 }  // namespace nimbus

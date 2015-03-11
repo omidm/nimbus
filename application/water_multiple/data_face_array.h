@@ -49,6 +49,7 @@ template<typename T> class DataFaceArray : public nimbus::PhysBAMData {
   explicit DataFaceArray(std::string n);
   virtual nimbus::Data* Clone();
   virtual void Create();
+  virtual float FloatingHash();
 };
 
 } // namespace application

@@ -66,6 +66,7 @@ class GeometricRegion;
 class CacheTable {
     friend class AppDataManager;
     friend class CacheManager;
+    friend class VDataCacheManager;
     friend class SimpleAppDataManager;
 
     private:

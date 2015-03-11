@@ -33,14 +33,14 @@
  */
 
 /*
- * CacheManager implements application data manager with simple_app_data caching of
+ * VDataCacheManager implements application data manager with simple_app_data caching of
  * application data across jobs.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_WORKER_APP_DATA_MANAGERS_CACHE_MANAGER_H_
-#define NIMBUS_WORKER_APP_DATA_MANAGERS_CACHE_MANAGER_H_
+#ifndef NIMBUS_WORKER_APP_DATA_MANAGERS_VDATA_CACHE_MANAGER_H_
+#define NIMBUS_WORKER_APP_DATA_MANAGERS_VDATA_CACHE_MANAGER_H_
 
 #include <boost/unordered_map.hpp>
 #include <pthread.h>
@@ -53,8 +53,7 @@
 #include "data/app_data/app_data_defs.h"
 #include "data/app_data/app_struct.h"
 #include "data/app_data/app_var.h"
-#include "worker/app_data_manager.h"
-#include "worker/app_data_managers/cache_table.h"
+#include "worker/app_data_managers/cache_manager.h"
 
 namespace nimbus {
 
@@ -63,33 +62,26 @@ typedef std::vector<Data *> DataArray;
 class GeometricRegion;
 
 /**
- * \class CacheManager
- * \details CacheManager implements application data manager with simple_app_data
+ * \class VDataCacheManager
+ * \details VDataCacheManager implements application data manager with simple_app_data
  * caching of application data across jobs.
- * Internally, CacheManager contains a two level map - the
+ * Internally, VDataCacheManager contains a two level map - the
  * first level key is a prototype id, and the second level key is an
  * application object geometric region. Together, these keys map to a list of
  * AppVars or AppStructs.
  */
-class CacheManager : public AppDataManager {
+class VDataCacheManager : public CacheManager {
     public:
         /**
-         * \brief Creates a CacheManager instance
-         * \return Constructed CacheManager instance
+         * \brief Creates a VDataCacheManager instance
+         * \return Constructed VDataCacheManager instance
          */
-        CacheManager();
+        VDataCacheManager();
 
         /**
          * Destructor
          */
-        ~CacheManager();
-
-        /**
-         * \brief Informs application data manager that access to app_object is
-         * no longer needed
-         * \param app_object specified the application object to release
-         */
-        virtual void ReleaseAccess(AppObject* cache_object);
+        ~VDataCacheManager();
 
         /**
          * \brief Writes data to write_set back nimbus objects synchronously
@@ -116,13 +108,6 @@ class CacheManager : public AppDataManager {
          * \param Data d to 
          */
         virtual void SyncData(Data *d);
-
-        /**
-         * \brief Invalidates mapping between d and all application objects ,
-         * dirty or not dirty, no-op in case there is no caching
-         * \param Data d
-         */
-        virtual void InvalidateMappings(Data *d);
 
     protected:
         /**
@@ -173,16 +158,7 @@ class CacheManager : public AppDataManager {
                                          const AppStruct &prototype,
                                          const GeometricRegion &region,
                                          app_data::Access access);
-
-    protected:
-        pthread_mutex_t cache_lock;
-        pthread_cond_t cache_cond;
-
-        uint64_t unique_id_allocator_;
-        typedef std::map<app_data::ob_id_t,
-                         CacheTable *> Pool;
-        Pool *pool_;
-};  // class CacheManager
+};  // class VDataCacheManager
 }  // namespace nimbus
 
-#endif  // NIMBUS_WORKER_APP_DATA_MANAGERS_CACHE_MANAGER_H_
+#endif  // NIMBUS_WORKER_APP_DATA_MANAGERS_VDATA_CACHE_MANAGER_H_

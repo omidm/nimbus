@@ -14,3 +14,4 @@ RegW0  : (80, 80, 80), (1, 1, 1), (0, 0, 0) : central
 RegY2W3 : (80, 80, 80), (4, 4, 4), (3, 3, 3) : central, outer, inner, scratch, central_w_gb
 RegY2W1 : (80, 80, 80), (4, 4, 4), (1, 1, 1) : central, outer, inner, central_w_gb
 RegY2W0 : (80, 80, 80), (4, 4, 4), (0, 0, 0) : central
+RegY2W8 : (80, 80, 80), (4, 4, 4), (8, 8, 8) : inner

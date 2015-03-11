@@ -41,34 +41,41 @@
 
 namespace application {
 
+// face velocities
 AppDataFaceArray<T> kAppDataFaceVel(kDefaultRegion, 0, true, "face_vel");
 AppDataFaceArray<T> kAppDataFaceVelGhost(kDefaultRegion, 3, true, "face_vel_ghost");
-AppDataFaceArray<bool> kAppDataPsiN(kDefaultRegion, 1, true, "psi_n");
 
+// psi
+AppDataFaceArray<bool> kAppDataPsiN(kDefaultRegion, 1, true, "psi_n");
+AppDataScalarArray<bool> kAppDataPsiD(kDefaultRegion, 1, true, "psi_d");
+
+// phi
 AppDataScalarArray<T> kAppDataPhi3(kDefaultRegion, 3, true, "phi_3");
 AppDataScalarArray<T> kAppDataPhi7(kDefaultRegion, 7, true, "phi_7");
 AppDataScalarArray<T> kAppDataPhi8(kDefaultRegion, 8, true, "phi_8");
-AppDataScalarArray<bool> kAppDataPsiD(kDefaultRegion, 1, true, "psi_d");
+
+// particle levelset evolution
+AppDataParticleLevelsetEvolution<float> kAppDataPLE(kDefaultRegion, 3, true,
+                                                "particle_container");
+
+// pressure
+AppDataScalarArray<T> kAppDataPressure(kDefaultRegion, 1, true, "pressure");
 
 // Varibales for projection.
-AppDataScalarArray<T> kAppDataPressure(kDefaultRegion, 1, true, "pressure");
 AppDataScalarArray<int> kAppDataColors(kDefaultRegion, 1, true,
                                    "filled_region_colors");
 AppDataScalarArray<T> kAppDataDivergence(kDefaultRegion, 1, true, "divergence");
+
 // TODO(quhang): this app_data variable is questionable, because it cannot be
 // deleted if meta_p is being used.
 AppDataRawGridArray kAppDataIndexC2M(kDefaultRegion, true, "index_c2m");
-
-AppDataParticleLevelsetEvolution<float> kAppDataPLE(kDefaultRegion, 3, true,
-                                                "particle_container");
+AppDataArrayM2C kAppDataArrayM2C(kDefaultRegion, true, "index_m2c");
+AppDataCompressedScalarArray<float> kAppDataMetaP(kDefaultRegion, 1, true,
+                                              "vector_p_meta_format");
 
 AppDataSparseMatrix kAppDataSparseMatrixA(kDefaultRegion, true, "matrix_c");
 AppDataSparseMatrix kAppDataSparseMatrixC(kDefaultRegion, true, "matrix_a");
 
-AppDataArrayM2C kAppDataArrayM2C(kDefaultRegion, true, "index_m2c");
-
-AppDataCompressedScalarArray<float> kAppDataMetaP(kDefaultRegion, 1, true,
-                                              "vector_p_meta_format");
 
 AppDataVector kAppDataVectorB(kDefaultRegion, true, "vector_b");
 AppDataVector kAppDataVectorPressure(kDefaultRegion, true, "vector_pressure");

@@ -60,6 +60,16 @@ template<typename T> void DataFaceArray<T>::Create() {
   nimbus::PhysBAMData::Create();
 }
 
+template<typename T> float DataFaceArray<T>::FloatingHash() {
+  const T *b = (T *)buffer();
+  size_t s = size();
+  T sum = 0;
+  for (size_t i = 0; i < (s/sizeof(T)); ++i) {
+    sum += b[i];
+  }
+  return(float(sum));
+}
+
 template class DataFaceArray<float>;
 template class DataFaceArray<bool>;
 

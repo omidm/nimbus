@@ -60,6 +60,7 @@ class DataSparseMatrix : public nimbus::PhysBAMData {
  public:
   explicit DataSparseMatrix(std::string name);
   virtual nimbus::Data* Clone();
+  float FloatingHash();
 
   // Saves the PhysBAM data structure to this nimbus data instance.
   bool SaveToNimbus(

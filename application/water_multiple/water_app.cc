@@ -81,207 +81,237 @@ namespace application {
         PhysBAM::FILE_UTILITIES::Create_Directory(kOutputDir+"/common");
         PhysBAM::LOG::Instance()->Copy_Log_To_File(kOutputDir+"/common/log.txt", false);
 
-        dbg(APP_LOG, "Registering %s\n", APP_FACE_VEL);
-        RegisterData(APP_FACE_VEL, new DataFaceArray<float>(APP_FACE_VEL));
-        dbg(APP_LOG, "Registering %s\n", APP_FACE_VEL_GHOST);
-        RegisterData(APP_FACE_VEL_GHOST, new DataFaceArray<float>(APP_FACE_VEL_GHOST));
-        dbg(APP_LOG, "Registering %s\n", APP_PHI);
-        RegisterData(APP_PHI, new DataScalarArray<float>(APP_PHI));
-        dbg(APP_LOG, "Registering %s\n", APP_POS_PARTICLES);
-        RegisterData(APP_POS_PARTICLES, new DataParticleArray(APP_POS_PARTICLES));
-        dbg(APP_LOG, "Registering %s\n", APP_NEG_PARTICLES);
-        RegisterData(APP_NEG_PARTICLES, new DataParticleArray(APP_NEG_PARTICLES));
-        dbg(APP_LOG, "Registering %s\n", APP_POS_REM_PARTICLES);
-        RegisterData(APP_POS_REM_PARTICLES, new DataParticleArray(APP_POS_REM_PARTICLES));
-        dbg(APP_LOG, "Registering %s\n", APP_NEG_REM_PARTICLES);
-        RegisterData(APP_NEG_REM_PARTICLES, new DataParticleArray(APP_NEG_REM_PARTICLES));
-        dbg(APP_LOG, "Registering %s\n", APP_LAST_UNIQUE_PARTICLE_ID);
-        RegisterData(APP_LAST_UNIQUE_PARTICLE_ID, new nimbus::ScalarData<int>(APP_LAST_UNIQUE_PARTICLE_ID));
-        dbg(APP_LOG, "Registering %s\n", APP_DT);
-        RegisterData(APP_DT, new nimbus::ScalarData<float>(APP_DT));
+        // REGISTER DATA
+        {
+            dbg(APP_LOG, "Registering %s\n", APP_FACE_VEL);
+            RegisterData(APP_FACE_VEL, new DataFaceArray<float>(APP_FACE_VEL));
+            dbg(APP_LOG, "Registering %s\n", APP_FACE_VEL_GHOST);
+            RegisterData(APP_FACE_VEL_GHOST, new DataFaceArray<float>(APP_FACE_VEL_GHOST));
+            dbg(APP_LOG, "Registering %s\n", APP_PHI);
+            RegisterData(APP_PHI, new DataScalarArray<float>(APP_PHI));
+            dbg(APP_LOG, "Registering %s\n", APP_POS_PARTICLES);
+            RegisterData(APP_POS_PARTICLES, new DataParticleArray(APP_POS_PARTICLES));
+            dbg(APP_LOG, "Registering %s\n", APP_NEG_PARTICLES);
+            RegisterData(APP_NEG_PARTICLES, new DataParticleArray(APP_NEG_PARTICLES));
+            dbg(APP_LOG, "Registering %s\n", APP_POS_REM_PARTICLES);
+            RegisterData(APP_POS_REM_PARTICLES, new DataParticleArray(APP_POS_REM_PARTICLES));
+            dbg(APP_LOG, "Registering %s\n", APP_NEG_REM_PARTICLES);
+            RegisterData(APP_NEG_REM_PARTICLES, new DataParticleArray(APP_NEG_REM_PARTICLES));
+            dbg(APP_LOG, "Registering %s\n", APP_LAST_UNIQUE_PARTICLE_ID);
+            RegisterData(APP_LAST_UNIQUE_PARTICLE_ID, new nimbus::ScalarData<int>(APP_LAST_UNIQUE_PARTICLE_ID));
+            dbg(APP_LOG, "Registering %s\n", APP_DT);
+            RegisterData(APP_DT, new nimbus::ScalarData<float>(APP_DT));
 
-        // These Nimbus data types are used in projection but not used in
-        // internal projection loop. They are generally used to generate the
-        // matrixes or vectors used in internal projection loop.
-        // PSI_D.
-        dbg(APP_LOG, "Registering %s\n", APP_PSI_D);
-        RegisterData(APP_PSI_D, new DataScalarArray<bool>(APP_PSI_D));
-        // PSI_N.
-        dbg(APP_LOG, "Registering %s\n", APP_PSI_N);
-        RegisterData(APP_PSI_N, new DataFaceArray<bool>(APP_PSI_N));
-        // PRESSURE.
-        dbg(APP_LOG, "Registering %s\n", APP_PRESSURE);
-        RegisterData(APP_PRESSURE, new DataScalarArray<float>(APP_PRESSURE));
-        // FILLED_REGION_COLORS.
-        dbg(APP_LOG, "Registering %s\n", APP_FILLED_REGION_COLORS);
-        RegisterData(APP_FILLED_REGION_COLORS,
-            new DataScalarArray<int>(APP_FILLED_REGION_COLORS));
-        // DIVERGENCE.
-        dbg(APP_LOG, "Registering %s\n", APP_DIVERGENCE);
-        RegisterData(APP_DIVERGENCE, new DataScalarArray<float>(APP_DIVERGENCE));
+            // These Nimbus data types are used in projection but not used in
+            // internal projection loop. They are generally used to generate the
+            // matrixes or vectors used in internal projection loop.
+            // PSI_D.
+            dbg(APP_LOG, "Registering %s\n", APP_PSI_D);
+            RegisterData(APP_PSI_D, new DataScalarArray<bool>(APP_PSI_D));
+            // PSI_N.
+            dbg(APP_LOG, "Registering %s\n", APP_PSI_N);
+            RegisterData(APP_PSI_N, new DataFaceArray<bool>(APP_PSI_N));
+            // PRESSURE.
+            dbg(APP_LOG, "Registering %s\n", APP_PRESSURE);
+            RegisterData(APP_PRESSURE, new DataScalarArray<float>(APP_PRESSURE));
+            // FILLED_REGION_COLORS.
+            dbg(APP_LOG, "Registering %s\n", APP_FILLED_REGION_COLORS);
+            RegisterData(APP_FILLED_REGION_COLORS,
+                new DataScalarArray<int>(APP_FILLED_REGION_COLORS));
+            // DIVERGENCE.
+            dbg(APP_LOG, "Registering %s\n", APP_DIVERGENCE);
+            RegisterData(APP_DIVERGENCE, new DataScalarArray<float>(APP_DIVERGENCE));
 
-        // These Nimbus data types are used in internal projection loop. They
-        // are derived from boundary conditions and act as the linkage between
-        // inside projection and outside projection.
-        // MATRIX_A.
-        dbg(APP_LOG, "Registering %s\n", APP_MATRIX_A);
-        RegisterData(APP_MATRIX_A, new DataSparseMatrix(APP_MATRIX_A));
-        // VECTOR_B.
-        dbg(APP_LOG, "Registering %s\n", APP_VECTOR_B);
-        RegisterData(APP_VECTOR_B, new DataRawVectorNd(APP_VECTOR_B));
-        // VECTOR_X.
-        // dbg(APP_LOG, "Registering %s\n", APP_VECTOR_X);
-        // RegisterData(APP_VECTOR_X, new DataRawVectorNd(APP_VECTOR_X));
-        // INDEX_C2M.
-        dbg(APP_LOG, "Registering %s\n", APP_INDEX_C2M);
-        RegisterData(APP_INDEX_C2M, new DataRawGridArray(APP_INDEX_C2M));
-        // INDEX_M2C.
-        dbg(APP_LOG, "Registering %s\n", APP_INDEX_M2C);
-        RegisterData(APP_INDEX_M2C, new DataRawArrayM2C(APP_INDEX_M2C));
-        // PROJECTION_LOCAL_N.
-        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_LOCAL_N);
-        RegisterData(APP_PROJECTION_LOCAL_N,
-            new nimbus::ScalarData<int>(APP_PROJECTION_LOCAL_N));
-        // PROJECTION_INTERIOR_N.
-        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_INTERIOR_N);
-        RegisterData(APP_PROJECTION_INTERIOR_N,
-            new nimbus::ScalarData<int>(APP_PROJECTION_INTERIOR_N));
+            // These Nimbus data types are used in internal projection loop. They
+            // are derived from boundary conditions and act as the linkage between
+            // inside projection and outside projection.
+            // MATRIX_A.
+            dbg(APP_LOG, "Registering %s\n", APP_MATRIX_A);
+            RegisterData(APP_MATRIX_A, new DataSparseMatrix(APP_MATRIX_A));
+            // VECTOR_B.
+            dbg(APP_LOG, "Registering %s\n", APP_VECTOR_B);
+            RegisterData(APP_VECTOR_B, new DataRawVectorNd(APP_VECTOR_B));
+            // VECTOR_X.
+            // dbg(APP_LOG, "Registering %s\n", APP_VECTOR_X);
+            // RegisterData(APP_VECTOR_X, new DataRawVectorNd(APP_VECTOR_X));
+            // INDEX_C2M.
+            dbg(APP_LOG, "Registering %s\n", APP_INDEX_C2M);
+            RegisterData(APP_INDEX_C2M, new DataRawGridArray(APP_INDEX_C2M));
+            // INDEX_M2C.
+            dbg(APP_LOG, "Registering %s\n", APP_INDEX_M2C);
+            RegisterData(APP_INDEX_M2C, new DataRawArrayM2C(APP_INDEX_M2C));
+            // PROJECTION_LOCAL_N.
+            dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_LOCAL_N);
+            RegisterData(APP_PROJECTION_LOCAL_N,
+                new nimbus::ScalarData<int>(APP_PROJECTION_LOCAL_N));
+            // PROJECTION_INTERIOR_N.
+            dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_INTERIOR_N);
+            RegisterData(APP_PROJECTION_INTERIOR_N,
+                new nimbus::ScalarData<int>(APP_PROJECTION_INTERIOR_N));
 
-        // These Nimbus data types are used only in internal projection loop.
-        // They are mostly static configurations set for projeciton.
-        // PROJECTION_LOCAL_TOLERANCE.
-        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_LOCAL_TOLERANCE);
-        RegisterData(APP_PROJECTION_LOCAL_TOLERANCE,
-            new nimbus::ScalarData<float>(APP_PROJECTION_LOCAL_TOLERANCE));
-        // PROJECTION_GLOBAL_TOLERANCE.
-        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_GLOBAL_TOLERANCE);
-        RegisterData(APP_PROJECTION_GLOBAL_TOLERANCE,
-            new nimbus::ScalarData<float>(APP_PROJECTION_GLOBAL_TOLERANCE));
-        // PROJECTION_GLOBAL_N.
-        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_GLOBAL_N);
-        RegisterData(APP_PROJECTION_GLOBAL_N,
-            new nimbus::ScalarData<int>(APP_PROJECTION_GLOBAL_N));
-        // PROJECTION_DESIRED_N.
-        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_DESIRED_ITERATIONS);
-        RegisterData(APP_PROJECTION_DESIRED_ITERATIONS,
-            new nimbus::ScalarData<int>(APP_PROJECTION_DESIRED_ITERATIONS));
+            // These Nimbus data types are used only in internal projection loop.
+            // They are mostly static configurations set for projeciton.
+            // PROJECTION_LOCAL_TOLERANCE.
+            dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_LOCAL_TOLERANCE);
+            RegisterData(APP_PROJECTION_LOCAL_TOLERANCE,
+                new nimbus::ScalarData<float>(APP_PROJECTION_LOCAL_TOLERANCE));
+            // PROJECTION_GLOBAL_TOLERANCE.
+            dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_GLOBAL_TOLERANCE);
+            RegisterData(APP_PROJECTION_GLOBAL_TOLERANCE,
+                new nimbus::ScalarData<float>(APP_PROJECTION_GLOBAL_TOLERANCE));
+            // PROJECTION_GLOBAL_N.
+            dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_GLOBAL_N);
+            RegisterData(APP_PROJECTION_GLOBAL_N,
+                new nimbus::ScalarData<int>(APP_PROJECTION_GLOBAL_N));
+            // PROJECTION_DESIRED_N.
+            dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_DESIRED_ITERATIONS);
+            RegisterData(APP_PROJECTION_DESIRED_ITERATIONS,
+                new nimbus::ScalarData<int>(APP_PROJECTION_DESIRED_ITERATIONS));
 
-        // These Nimbus data types are used in internal projection loop.
-        // PROJECTION_LOCAL_RESIDUAL.
-        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_LOCAL_RESIDUAL);
-        RegisterData(APP_PROJECTION_LOCAL_RESIDUAL,
-            new nimbus::ScalarData<double>(APP_PROJECTION_LOCAL_RESIDUAL));
-        // PROJECTION_LOCAL_RHO.
-        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_LOCAL_RHO);
-        RegisterData(APP_PROJECTION_LOCAL_RHO,
-            new nimbus::ScalarData<double>(APP_PROJECTION_LOCAL_RHO));
-        // PROJECTION_GLOBAL_RHO.
-        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_GLOBAL_RHO);
-        RegisterData(APP_PROJECTION_GLOBAL_RHO,
-            new nimbus::ScalarData<double>(APP_PROJECTION_GLOBAL_RHO));
-        // PROJECTION_GLOBAL_RHO_OLD.
-        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_GLOBAL_RHO_OLD);
-        RegisterData(APP_PROJECTION_GLOBAL_RHO_OLD,
-            new nimbus::ScalarData<double>(APP_PROJECTION_GLOBAL_RHO_OLD));
-        // PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA.
-        dbg(APP_LOG, "Registering %s\n",
-            APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA);
-        RegisterData(APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA,
-            new nimbus::ScalarData<double>(
-                APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA));
-        // PROJECTION_ALPHA.
-        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_ALPHA);
-        RegisterData(APP_PROJECTION_ALPHA,
-            new nimbus::ScalarData<float>(APP_PROJECTION_ALPHA));
-        // PROJECTION_BETA.
-        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_BETA);
-        RegisterData(APP_PROJECTION_BETA,
-            new nimbus::ScalarData<float>(APP_PROJECTION_BETA));
-        // MATRIX_C.
-        dbg(APP_LOG, "Registering %s\n", APP_MATRIX_C);
-        RegisterData(APP_MATRIX_C, new DataSparseMatrix(APP_MATRIX_C));
-        // VECTOR_Z.
-        dbg(APP_LOG, "Registering %s\n", APP_VECTOR_PRESSURE);
-        RegisterData(APP_VECTOR_PRESSURE,
-                     new DataRawVectorNd(APP_VECTOR_PRESSURE));
-        // VECTOR_Z.
-        dbg(APP_LOG, "Registering %s\n", APP_VECTOR_Z);
-        RegisterData(APP_VECTOR_Z, new DataRawVectorNd(APP_VECTOR_Z));
-        // VECTOR_P_META_FORMAT.
-        dbg(APP_LOG, "Registering %s\n", APP_VECTOR_P_META_FORMAT);
-        RegisterData(APP_VECTOR_P_META_FORMAT,
-                     new DataCompressedScalarArray<float>(APP_VECTOR_P_META_FORMAT));
-        // VECTOR_TEMP.
-        dbg(APP_LOG, "Registering %s\n", APP_VECTOR_TEMP);
-        RegisterData(APP_VECTOR_TEMP, new DataRawVectorNd(APP_VECTOR_TEMP));
+            // These Nimbus data types are used in internal projection loop.
+            // PROJECTION_LOCAL_RESIDUAL.
+            dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_LOCAL_RESIDUAL);
+            RegisterData(APP_PROJECTION_LOCAL_RESIDUAL,
+                new nimbus::ScalarData<double>(APP_PROJECTION_LOCAL_RESIDUAL));
+            // PROJECTION_LOCAL_RHO.
+            dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_LOCAL_RHO);
+            RegisterData(APP_PROJECTION_LOCAL_RHO,
+                new nimbus::ScalarData<double>(APP_PROJECTION_LOCAL_RHO));
+            // PROJECTION_GLOBAL_RHO.
+            dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_GLOBAL_RHO);
+            RegisterData(APP_PROJECTION_GLOBAL_RHO,
+                new nimbus::ScalarData<double>(APP_PROJECTION_GLOBAL_RHO));
+            // PROJECTION_GLOBAL_RHO_OLD.
+            dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_GLOBAL_RHO_OLD);
+            RegisterData(APP_PROJECTION_GLOBAL_RHO_OLD,
+                new nimbus::ScalarData<double>(APP_PROJECTION_GLOBAL_RHO_OLD));
+            // PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA.
+            dbg(APP_LOG, "Registering %s\n",
+                APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA);
+            RegisterData(APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA,
+                new nimbus::ScalarData<double>(
+                    APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA));
+            // PROJECTION_ALPHA.
+            dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_ALPHA);
+            RegisterData(APP_PROJECTION_ALPHA,
+                new nimbus::ScalarData<float>(APP_PROJECTION_ALPHA));
+            // PROJECTION_BETA.
+            dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_BETA);
+            RegisterData(APP_PROJECTION_BETA,
+                new nimbus::ScalarData<float>(APP_PROJECTION_BETA));
+            // MATRIX_C.
+            dbg(APP_LOG, "Registering %s\n", APP_MATRIX_C);
+            RegisterData(APP_MATRIX_C, new DataSparseMatrix(APP_MATRIX_C));
+            // VECTOR_Z.
+            dbg(APP_LOG, "Registering %s\n", APP_VECTOR_PRESSURE);
+            RegisterData(APP_VECTOR_PRESSURE,
+                         new DataRawVectorNd(APP_VECTOR_PRESSURE));
+            // VECTOR_Z.
+            dbg(APP_LOG, "Registering %s\n", APP_VECTOR_Z);
+            RegisterData(APP_VECTOR_Z, new DataRawVectorNd(APP_VECTOR_Z));
+            // VECTOR_P_META_FORMAT.
+            dbg(APP_LOG, "Registering %s\n", APP_VECTOR_P_META_FORMAT);
+            RegisterData(APP_VECTOR_P_META_FORMAT,
+                         new DataCompressedScalarArray<float>(APP_VECTOR_P_META_FORMAT));
+            // VECTOR_TEMP.
+            dbg(APP_LOG, "Registering %s\n", APP_VECTOR_TEMP);
+            RegisterData(APP_VECTOR_TEMP, new DataRawVectorNd(APP_VECTOR_TEMP));
 
 
-        dbg(APP_LOG, "Registering scratch %s\n", APP_POS_PARTICLES);
-        kScratchPosParticles.RegisterScratchNames(this, new DataParticleArray(APP_POS_PARTICLES));
-        dbg(APP_LOG, "Registering scratch %s\n", APP_NEG_PARTICLES);
-        kScratchNegParticles.RegisterScratchNames(this, new DataParticleArray(APP_NEG_PARTICLES));
-        dbg(APP_LOG, "Registering scratch %s\n", APP_POS_REM_PARTICLES);
-        kScratchPosRemParticles.RegisterScratchNames(this, new DataParticleArray(APP_POS_REM_PARTICLES));
-        dbg(APP_LOG, "Registering scratch %s\n", APP_NEG_REM_PARTICLES);
-        kScratchNegRemParticles.RegisterScratchNames(this, new DataParticleArray(APP_NEG_REM_PARTICLES));
+            dbg(APP_LOG, "Registering scratch %s\n", APP_POS_PARTICLES);
+            kScratchPosParticles.RegisterScratchNames(this, new DataParticleArray(APP_POS_PARTICLES));
+            dbg(APP_LOG, "Registering scratch %s\n", APP_NEG_PARTICLES);
+            kScratchNegParticles.RegisterScratchNames(this, new DataParticleArray(APP_NEG_PARTICLES));
+            dbg(APP_LOG, "Registering scratch %s\n", APP_POS_REM_PARTICLES);
+            kScratchPosRemParticles.RegisterScratchNames(this, new DataParticleArray(APP_POS_REM_PARTICLES));
+            dbg(APP_LOG, "Registering scratch %s\n", APP_NEG_REM_PARTICLES);
+            kScratchNegRemParticles.RegisterScratchNames(this, new DataParticleArray(APP_NEG_REM_PARTICLES));
+        }
 
-        RegisterJob(MAIN, new JobMain(this));
-        RegisterJob(INITIALIZE, new JobInitialize(this));
-        RegisterJob(CALCULATE_DT, new JobCalculateDt(this));
-        RegisterJob(UPDATE_GHOST_VELOCITIES, new JobAdjustPhiWithObjects(this));
-        RegisterJob(EXTRAPOLATE_PHI, new JobExtrapolatePhi(this));
-        RegisterJob(ADVECT_PHI, new JobAdvectPhi(this));
-        RegisterJob(STEP_PARTICLES, new JobStepParticles(this));
-        RegisterJob(ADVECT_REMOVED_PARTICLES, new JobAdvectRemovedParticles(this));
-        RegisterJob(ADVECT_V, new JobAdvectV(this));
-        RegisterJob(APPLY_FORCES, new JobApplyForces(this));
-        RegisterJob(LOOP_ITERATION, new JobLoopIteration(this));
-        RegisterJob(LOOP_ITERATION_PART_TWO, new JobLoopIterationPartTwo(this));
-        RegisterJob(LOOP_FRAME, new JobLoopFrame(this));
-        RegisterJob(WRITE_OUTPUT, new JobWriteOutput(this));
-        RegisterJob(RESEED_PARTICLES, new JobReseedParticles(this));
-        RegisterJob(MODIFY_LEVELSET_PART_ONE, new JobModifyLevelsetPartOne(this));
-        RegisterJob(MODIFY_LEVELSET_PART_TWO, new JobModifyLevelsetPartTwo(this));
-        RegisterJob(MAKE_SIGNED_DISTANCE, new JobMakeSignedDistance(this));
-        RegisterJob(ADJUST_PHI, new JobAdjustPhi(this));
-        RegisterJob(DELETE_PARTICLES, new JobDeleteParticles(this));
-        RegisterJob(REINCORPORATE_PARTICLES, new JobReincorporateRemovedParticles(this));
-        RegisterJob(PROJECTION_MAIN, new JobProjectionMain(this));
-        RegisterJob(PROJECTION_TRANSFORM_PRESSURE,
-                    new JobProjectionTransformPressure(this));
-        RegisterJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
-                    new JobProjectionCalculateBoundaryConditionPartOne(this));
-        RegisterJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,
-                    new JobProjectionCalculateBoundaryConditionPartTwo(this));
-        RegisterJob(PROJECTION_CONSTRUCT_MATRIX,
-                    new JobProjectionConstructMatrix(this));
-        RegisterJob(PROJECTION_WRAPUP, new JobProjectionWrapup(this));
-        RegisterJob(EXTRAPOLATION, new JobExtrapolation(this));
-        RegisterJob(SYNCHRONIZE_PARTICLES, new JobSynchronizeParticles(this));
+        // APP DATA INNER REGIONS
+        {
+            kAppDataFaceVel.set_inner_delta(kRegY2W3Inner[0].Delta());
+            kAppDataFaceVelGhost.set_inner_delta(kRegY2W3Inner[0].Delta());
+            kAppDataPsiN.set_inner_delta(kRegY2W1Inner[0].Delta());
+            kAppDataPsiD.set_inner_delta(kRegY2W1Inner[0].Delta());
+            kAppDataPhi3.set_inner_delta(kRegY2W8Inner[0].Delta());
+            kAppDataPhi7.set_inner_delta(kRegY2W8Inner[0].Delta());
+            kAppDataPhi8.set_inner_delta(kRegY2W8Inner[0].Delta());
+            kAppDataPLE.set_inner_delta(kRegY2W3Inner[0].Delta());
+            kAppDataPressure.set_inner_delta(kRegY2W1Inner[0].Delta());
+            kAppDataColors.set_inner_delta(kProjRegY2W1Inner[0].Delta());
+            kAppDataDivergence.set_inner_delta(kProjRegY2W1Inner[0].Delta());
+            kAppDataIndexC2M.set_inner_delta(kProjRegY2W0Central[0].Delta());
+            kAppDataArrayM2C.set_inner_delta(kProjRegY2W0Central[0].Delta());
+            kAppDataMetaP.set_inner_delta(kProjRegY2W1Inner[0].Delta());
+            kAppDataSparseMatrixA.set_inner_delta(kProjRegY2W0Central[0].Delta());
+            kAppDataSparseMatrixC.set_inner_delta(kProjRegY2W0Central[0].Delta());
+            kAppDataVectorB.set_inner_delta(kProjRegY2W0Central[0].Delta());
+            kAppDataVectorPressure.set_inner_delta(kProjRegY2W0Central[0].Delta());
+            kAppDataVectorZ.set_inner_delta(kProjRegY2W0Central[0].Delta());
+            kAppDataVectorTemp.set_inner_delta(kProjRegY2W0Central[0].Delta());
+        }
 
-        RegisterJob(PROJECTION_GLOBAL_INITIALIZE,
-                    new JobProjectionGlobalInitialize(this));
-        RegisterJob(PROJECTION_LOCAL_INITIALIZE,
-                    new JobProjectionLocalInitialize(this));
-        RegisterJob(PROJECTION_LOOP_ITERATION, new JobProjectionLoopIteration(this));
-        RegisterJob(PROJECTION_STEP_ONE, new JobProjectionStepOne(this));
-        RegisterJob(PROJECTION_REDUCE_RHO, new JobProjectionReduceRho(this));
-        RegisterJob(PROJECTION_STEP_TWO, new JobProjectionStepTwo(this));
-        RegisterJob(PROJECTION_STEP_THREE, new JobProjectionStepThree(this));
-        RegisterJob(PROJECTION_REDUCE_ALPHA,
-                    new JobProjectionReduceAlpha(this));
-        RegisterJob(PROJECTION_STEP_FOUR, new JobProjectionStepFour(this));
-        RegisterJob(BARRIER_JOB, new JobBarrier(this));
+        // REGISTER JOBS
+        {
+            RegisterJob(MAIN, new JobMain(this));
+            RegisterJob(INITIALIZE, new JobInitialize(this));
+            RegisterJob(CALCULATE_DT, new JobCalculateDt(this));
+            RegisterJob(UPDATE_GHOST_VELOCITIES, new JobAdjustPhiWithObjects(this));
+            RegisterJob(EXTRAPOLATE_PHI, new JobExtrapolatePhi(this));
+            RegisterJob(ADVECT_PHI, new JobAdvectPhi(this));
+            RegisterJob(STEP_PARTICLES, new JobStepParticles(this));
+            RegisterJob(ADVECT_REMOVED_PARTICLES, new JobAdvectRemovedParticles(this));
+            RegisterJob(ADVECT_V, new JobAdvectV(this));
+            RegisterJob(APPLY_FORCES, new JobApplyForces(this));
+            RegisterJob(LOOP_ITERATION, new JobLoopIteration(this));
+            RegisterJob(LOOP_ITERATION_PART_TWO, new JobLoopIterationPartTwo(this));
+            RegisterJob(LOOP_FRAME, new JobLoopFrame(this));
+            RegisterJob(WRITE_OUTPUT, new JobWriteOutput(this));
+            RegisterJob(RESEED_PARTICLES, new JobReseedParticles(this));
+            RegisterJob(MODIFY_LEVELSET_PART_ONE, new JobModifyLevelsetPartOne(this));
+            RegisterJob(MODIFY_LEVELSET_PART_TWO, new JobModifyLevelsetPartTwo(this));
+            RegisterJob(MAKE_SIGNED_DISTANCE, new JobMakeSignedDistance(this));
+            RegisterJob(ADJUST_PHI, new JobAdjustPhi(this));
+            RegisterJob(DELETE_PARTICLES, new JobDeleteParticles(this));
+            RegisterJob(REINCORPORATE_PARTICLES, new JobReincorporateRemovedParticles(this));
+            RegisterJob(PROJECTION_MAIN, new JobProjectionMain(this));
+            RegisterJob(PROJECTION_TRANSFORM_PRESSURE,
+                        new JobProjectionTransformPressure(this));
+            RegisterJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
+                        new JobProjectionCalculateBoundaryConditionPartOne(this));
+            RegisterJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,
+                        new JobProjectionCalculateBoundaryConditionPartTwo(this));
+            RegisterJob(PROJECTION_CONSTRUCT_MATRIX,
+                        new JobProjectionConstructMatrix(this));
+            RegisterJob(PROJECTION_WRAPUP, new JobProjectionWrapup(this));
+            RegisterJob(EXTRAPOLATION, new JobExtrapolation(this));
+            RegisterJob(SYNCHRONIZE_PARTICLES, new JobSynchronizeParticles(this));
 
-        RegisterStaticConfigPrototype(
-            STATIC_CONFIG_VALID_MASK, new StaticConfigValidMask(kDefaultRegion));
-        RegisterStaticConfigPrototype(
-            STATIC_CONFIG_U_INTERFACE, new StaticConfigUInterface(kDefaultRegion));
-        RegisterStaticConfigPrototype(
-            STATIC_CONFIG_FORCE, new StaticConfigForce(kDefaultRegion));
-        RegisterStaticConfigPrototype(
-            STATIC_CONFIG_COLLISION_BODY,
-            new StaticConfigCollisionBody(kDefaultRegion));
+            RegisterJob(PROJECTION_GLOBAL_INITIALIZE,
+                        new JobProjectionGlobalInitialize(this));
+            RegisterJob(PROJECTION_LOCAL_INITIALIZE,
+                        new JobProjectionLocalInitialize(this));
+            RegisterJob(PROJECTION_LOOP_ITERATION, new JobProjectionLoopIteration(this));
+            RegisterJob(PROJECTION_STEP_ONE, new JobProjectionStepOne(this));
+            RegisterJob(PROJECTION_REDUCE_RHO, new JobProjectionReduceRho(this));
+            RegisterJob(PROJECTION_STEP_TWO, new JobProjectionStepTwo(this));
+            RegisterJob(PROJECTION_STEP_THREE, new JobProjectionStepThree(this));
+            RegisterJob(PROJECTION_REDUCE_ALPHA,
+                        new JobProjectionReduceAlpha(this));
+            RegisterJob(PROJECTION_STEP_FOUR, new JobProjectionStepFour(this));
+            RegisterJob(BARRIER_JOB, new JobBarrier(this));
+
+            RegisterStaticConfigPrototype(
+                STATIC_CONFIG_VALID_MASK, new StaticConfigValidMask(kDefaultRegion));
+            RegisterStaticConfigPrototype(
+                STATIC_CONFIG_U_INTERFACE, new StaticConfigUInterface(kDefaultRegion));
+            RegisterStaticConfigPrototype(
+                STATIC_CONFIG_FORCE, new StaticConfigForce(kDefaultRegion));
+            RegisterStaticConfigPrototype(
+                STATIC_CONFIG_COLLISION_BODY,
+                new StaticConfigCollisionBody(kDefaultRegion));
+        }
 
         nimbus::TranslatorPhysBAM<float>::log = translator_log;
         nimbus::TranslatorPhysBAMOld<PhysBAM::VECTOR<float, 3> >::log = translator_log;
