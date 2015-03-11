@@ -63,7 +63,7 @@ void DynamicLoadBalancer::Run() {
 bool DynamicLoadBalancer::SetWorkerToAssignJob(JobEntry *job) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
 
-  if (job->job_name() == "loop_frame") {
+  if (job->job_name() == "some-random-name-loop_frame") {
     UpdateRegionMap();
   }
 
