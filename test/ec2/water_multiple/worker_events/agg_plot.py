@@ -128,14 +128,12 @@ plt.text(p[0].get_x() + p[0].get_width()/2.,
 # 512
 if S == 512:
   p = plt.bar(N + 1, physbam_4_2_8[0], width, color='#ffffb3', bottom=0)
-  Parts.append(p[0])
   plt.text(p[0].get_x() + p[0].get_width()/2.,
            p[0].get_y() + p[0].get_height()/2.,
            '{:.1f}'.format(physbam_4_2_8[0]),
            ha='center', va='center')
   
   p = plt.bar(N + 1, physbam_4_2_8[1], width, color='#fc8d62', bottom=physbam_4_2_8[0])
-  Parts.append(p[0])
   plt.text(p[0].get_x() + p[0].get_width()/2.,
            p[0].get_y() + p[0].get_height()/2.,
            '{:.1f}'.format(physbam_4_2_8[1]),
