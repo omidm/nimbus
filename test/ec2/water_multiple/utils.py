@@ -117,6 +117,7 @@ def run_worker(scheduler_ip, worker_ip, num):
   worker_command += 'sudo ' + config.EC2_NIMBUS_ROOT + 'scripts/configure_tcp.sh;'
   worker_command += 'ulimit -c unlimited;'
   worker_command += './worker'
+  # worker_command += 'taskset -c 0-3,8-11 ./worker'
   worker_command += ' -port ' + str(config.FIRST_PORT + num)
   worker_command += ' -ip ' + worker_ip
   worker_command += ' -sip ' + scheduler_ip
