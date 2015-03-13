@@ -168,17 +168,18 @@ template <class TS> class TranslatorPhysBAM {
             }
             for (size_t i = 0; i < read_inner.size(); ++i) {
                 PhysBAMData *data = static_cast<PhysBAMData*>(read_inner[i]);
-                Dimension3Vector overlap = GetOverlapSize(data->region(), region);
+                const GeometricRegion dregion = data->region();
+                Dimension3Vector overlap = GetOverlapSize(dregion, region);
                 if (HasOverlap(overlap)) {
                     T* buffer = reinterpret_cast<T*>(data->buffer());
-                    Dimension3Vector src = GetOffset(data->region(), region);
-                    Dimension3Vector dest = GetOffset(region, data->region());
+                    Dimension3Vector src = GetOffset(dregion, region);
+                    Dimension3Vector dest = GetOffset(region, dregion);
                     //  x, y and z values are stored separately due to the
                     // difference in number of x, y and z values in face arrays
                     for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
                         int mult_x = 1;
-                        int mult_y = data->region().dx();
-                        int mult_z = data->region().dy() * data->region().dx();
+                        int mult_y = dregion.dx();
+                        int mult_z = dregion.dy() * dregion.dx();
                         int range_x = overlap(X_COORD);
                         int range_y = overlap(Y_COORD);
                         int range_z = overlap(Z_COORD);
@@ -187,23 +188,23 @@ template <class TS> class TranslatorPhysBAM {
                             case X_COORD:
                                 range_x += 1;
                                 mult_y  += 1;
-                                mult_z  += data->region().dy();
+                                mult_z  += dregion.dy();
                                 break;
                             case Y_COORD:
                                 range_y += 1;
-                                mult_z  += data->region().dx();
-                                src_offset += (data->region().dx() + 1) *
-                                    (data->region().dy()) *
-                                    (data->region().dz());
+                                mult_z  += dregion.dx();
+                                src_offset += (dregion.dx() + 1) *
+                                    (dregion.dy()) *
+                                    (dregion.dz());
                                 break;
                             case Z_COORD:
                                 range_z += 1;
-                                src_offset += ((data->region().dx()) *
-                                        (data->region().dy() + 1) *
-                                        (data->region().dz())) +
-                                    ((data->region().dx() + 1) *
-                                     (data->region().dy()) *
-                                     (data->region().dz()));
+                                src_offset += ((dregion.dx()) *
+                                        (dregion.dy() + 1) *
+                                        (dregion.dz())) +
+                                    ((dregion.dx() + 1) *
+                                     (dregion.dy()) *
+                                     (dregion.dz()));
                                 break;
                         }
                         for (int z = 0; z < range_z; ++z) {
@@ -221,7 +222,7 @@ template <class TS> class TranslatorPhysBAM {
                                     int dest_z = z + dest(Z_COORD) + region.z() - shift.z;
                                     typename PhysBAM::VECTOR<int, 3>
                                         destinationIndex(dest_x, dest_y, dest_z);
-                                    assert(source_index < data->size() / (int) sizeof(T) && source_index >= 0); // NOLINT
+                                    // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
                                     if (flag(dim, destinationIndex) == 0) {
                                         (*fa)(dim, destinationIndex) = buffer[source_index];
                                         flag(dim, destinationIndex) = 1;
@@ -250,17 +251,18 @@ template <class TS> class TranslatorPhysBAM {
             int cz2 = inner.z() + inner.dz();
             for (size_t i = 0; i < read_outer.size(); ++i) {
                 PhysBAMData *data = static_cast<PhysBAMData*>(read_outer[i]);
-                Dimension3Vector overlap = GetOverlapSize(data->region(), region);
+                const GeometricRegion dregion = data->region();
+                Dimension3Vector overlap = GetOverlapSize(dregion, region);
                 if (HasOverlap(overlap)) {
                     T* buffer = reinterpret_cast<T*>(data->buffer());
-                    Dimension3Vector src = GetOffset(data->region(), region);
-                    Dimension3Vector dest = GetOffset(region, data->region());
+                    Dimension3Vector src = GetOffset(dregion, region);
+                    Dimension3Vector dest = GetOffset(region, dregion);
                     //  x, y and z values are stored separately due to the
                     // difference in number of x, y and z values in face arrays
                     for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
                         int mult_x = 1;
-                        int mult_y = data->region().dx();
-                        int mult_z = data->region().dy() * data->region().dx();
+                        int mult_y = dregion.dx();
+                        int mult_z = dregion.dy() * dregion.dx();
                         int range_x = overlap(X_COORD);
                         int range_y = overlap(Y_COORD);
                         int range_z = overlap(Z_COORD);
@@ -269,23 +271,23 @@ template <class TS> class TranslatorPhysBAM {
                             case X_COORD:
                                 range_x += 1;
                                 mult_y  += 1;
-                                mult_z  += data->region().dy();
+                                mult_z  += dregion.dy();
                                 break;
                             case Y_COORD:
                                 range_y += 1;
-                                mult_z  += data->region().dx();
-                                src_offset += (data->region().dx() + 1) *
-                                    (data->region().dy()) *
-                                    (data->region().dz());
+                                mult_z  += dregion.dx();
+                                src_offset += (dregion.dx() + 1) *
+                                    (dregion.dy()) *
+                                    (dregion.dz());
                                 break;
                             case Z_COORD:
                                 range_z += 1;
-                                src_offset += ((data->region().dx()) *
-                                        (data->region().dy() + 1) *
-                                        (data->region().dz())) +
-                                    ((data->region().dx() + 1) *
-                                     (data->region().dy()) *
-                                     (data->region().dz()));
+                                src_offset += ((dregion.dx()) *
+                                        (dregion.dy() + 1) *
+                                        (dregion.dz())) +
+                                    ((dregion.dx() + 1) *
+                                     (dregion.dy()) *
+                                     (dregion.dz()));
                                 break;
                         }
                         for (int z = 0; z < range_z; ++z) {
@@ -306,13 +308,13 @@ template <class TS> class TranslatorPhysBAM {
                                     int dest_z = loc_z - shift.z;
                                     typename PhysBAM::VECTOR<int, 3>
                                         destinationIndex(dest_x, dest_y, dest_z);
-                                    assert(source_index < data->size() / (int) sizeof(T) && source_index >= 0); // NOLINT
+                                    // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
                                     if ( (dim == X_COORD && (loc_x == cx1 || loc_x == cx2)) ||
                                          (dim == Y_COORD && (loc_y == cy1 || loc_y == cy2)) ||
                                          (dim == Z_COORD && (loc_z == cz1 || loc_z == cz2)) ) {
                                             typename PhysBAM::VECTOR<int, 3>
                                                 destinationIndex(dest_x, dest_y, dest_z);
-                                            assert(source_index < data->size() / (int) sizeof(T) && source_index >= 0); // NOLINT
+                                            // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
                                             (*fa)(dim, destinationIndex) +=
                                                 buffer[source_index];
                                             (*fa)(dim, destinationIndex) /= 2;
@@ -325,7 +327,7 @@ template <class TS> class TranslatorPhysBAM {
                                             if ((flag(dim, destinationIndex) == 1)) {
                                                 typename PhysBAM::VECTOR<int, 3>
                                                     destinationIndex(dest_x, dest_y, dest_z);
-                                                assert(source_index < data->size() / (int) sizeof(T) && source_index >= 0); // NOLINT
+                                                // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
                                                 (*fa)(dim, destinationIndex) +=
                                                     buffer[source_index];
                                                 (*fa)(dim, destinationIndex) /= 2;
@@ -386,17 +388,18 @@ template <class TS> class TranslatorPhysBAM {
             }
             for (size_t i = 0; i < read_outer.size(); ++i) {
                 PhysBAMData *data = static_cast<PhysBAMData*>(read_outer[i]);
-                Dimension3Vector overlap = GetOverlapSize(data->region(), region);
+                const GeometricRegion dregion = data->region();
+                Dimension3Vector overlap = GetOverlapSize(dregion, region);
                 if (HasOverlap(overlap)) {
                     bool* buffer = reinterpret_cast<bool*>(data->buffer());
-                    Dimension3Vector src = GetOffset(data->region(), region);
-                    Dimension3Vector dest = GetOffset(region, data->region());
+                    Dimension3Vector src = GetOffset(dregion, region);
+                    Dimension3Vector dest = GetOffset(region, dregion);
                     //  x, y and z values are stored separately due to the
                     // difference in number of x, y and z values in face arrays
                     for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
                         int mult_x = 1;
-                        int mult_y = data->region().dx();
-                        int mult_z = data->region().dy() * data->region().dx();
+                        int mult_y = dregion.dx();
+                        int mult_z = dregion.dy() * dregion.dx();
                         int range_x = overlap(X_COORD);
                         int range_y = overlap(Y_COORD);
                         int range_z = overlap(Z_COORD);
@@ -405,23 +408,23 @@ template <class TS> class TranslatorPhysBAM {
                             case X_COORD:
                                 range_x += 1;
                                 mult_y  += 1;
-                                mult_z  += data->region().dy();
+                                mult_z  += dregion.dy();
                                 break;
                             case Y_COORD:
                                 range_y += 1;
-                                mult_z  += data->region().dx();
-                                src_offset += (data->region().dx() + 1) *
-                                    (data->region().dy()) *
-                                    (data->region().dz());
+                                mult_z  += dregion.dx();
+                                src_offset += (dregion.dx() + 1) *
+                                    (dregion.dy()) *
+                                    (dregion.dz());
                                 break;
                             case Z_COORD:
                                 range_z += 1;
-                                src_offset += ((data->region().dx()) *
-                                        (data->region().dy() + 1) *
-                                        (data->region().dz())) +
-                                    ((data->region().dx() + 1) *
-                                     (data->region().dy()) *
-                                     (data->region().dz()));
+                                src_offset += ((dregion.dx()) *
+                                        (dregion.dy() + 1) *
+                                        (dregion.dz())) +
+                                    ((dregion.dx() + 1) *
+                                     (dregion.dy()) *
+                                     (dregion.dz()));
                                 break;
                         }
                         for (int z = 0; z < range_z; ++z) {
@@ -442,7 +445,7 @@ template <class TS> class TranslatorPhysBAM {
                                     int dest_z = loc_z - shift.z;
                                     typename PhysBAM::VECTOR<int, 3>
                                         destinationIndex(dest_x, dest_y, dest_z);
-                                    assert(source_index < data->size() / (int) sizeof(bool) && source_index >= 0); // NOLINT
+                                    // assert(source_index < dsize / (int) sizeof(bool) && source_index >= 0); // NOLINT
                                     (*fa)(dim, destinationIndex) = buffer[source_index];
                                 }
                             }
@@ -452,17 +455,18 @@ template <class TS> class TranslatorPhysBAM {
             }
             for (size_t i = 0; i < read_inner.size(); ++i) {
                 PhysBAMData *data = static_cast<PhysBAMData*>(read_inner[i]);
-                Dimension3Vector overlap = GetOverlapSize(data->region(), region);
+                const GeometricRegion dregion = data->region();
+                Dimension3Vector overlap = GetOverlapSize(dregion, region);
                 if (HasOverlap(overlap)) {
                     bool* buffer = reinterpret_cast<bool*>(data->buffer());
-                    Dimension3Vector src = GetOffset(data->region(), region);
-                    Dimension3Vector dest = GetOffset(region, data->region());
+                    Dimension3Vector src = GetOffset(dregion, region);
+                    Dimension3Vector dest = GetOffset(region, dregion);
                     //  x, y and z values are stored separately due to the
                     // difference in number of x, y and z values in face arrays
                     for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
                         int mult_x = 1;
-                        int mult_y = data->region().dx();
-                        int mult_z = data->region().dy() * data->region().dx();
+                        int mult_y = dregion.dx();
+                        int mult_z = dregion.dy() * dregion.dx();
                         int range_x = overlap(X_COORD);
                         int range_y = overlap(Y_COORD);
                         int range_z = overlap(Z_COORD);
@@ -471,23 +475,23 @@ template <class TS> class TranslatorPhysBAM {
                             case X_COORD:
                                 range_x += 1;
                                 mult_y  += 1;
-                                mult_z  += data->region().dy();
+                                mult_z  += dregion.dy();
                                 break;
                             case Y_COORD:
                                 range_y += 1;
-                                mult_z  += data->region().dx();
-                                src_offset += (data->region().dx() + 1) *
-                                    (data->region().dy()) *
-                                    (data->region().dz());
+                                mult_z  += dregion.dx();
+                                src_offset += (dregion.dx() + 1) *
+                                    (dregion.dy()) *
+                                    (dregion.dz());
                                 break;
                             case Z_COORD:
                                 range_z += 1;
-                                src_offset += ((data->region().dx()) *
-                                        (data->region().dy() + 1) *
-                                        (data->region().dz())) +
-                                    ((data->region().dx() + 1) *
-                                     (data->region().dy()) *
-                                     (data->region().dz()));
+                                src_offset += ((dregion.dx()) *
+                                        (dregion.dy() + 1) *
+                                        (dregion.dz())) +
+                                    ((dregion.dx() + 1) *
+                                     (dregion.dy()) *
+                                     (dregion.dz()));
                                 break;
                         }
                         for (int z = 0; z < range_z; ++z) {
@@ -505,14 +509,14 @@ template <class TS> class TranslatorPhysBAM {
                                     int dest_z = z + dest(Z_COORD) + region.z() - shift.z;
                                     typename PhysBAM::VECTOR<int, 3>
                                         destinationIndex(dest_x, dest_y, dest_z);
-                                    assert(source_index < data->size() / (int) sizeof(bool) && source_index >= 0); // NOLINT
+                                    // assert(source_index < dsize / (int) sizeof(bool) && source_index >= 0); // NOLINT
                                     if (flag(dim, destinationIndex) == 0) {
                                         (*fa)(dim, destinationIndex) = buffer[source_index];
                                         flag(dim, destinationIndex) = 1;
                                     } else {
                                         if (flag(dim, destinationIndex) == 1) {
-                                            assert((*fa)(dim, destinationIndex)
-                                                    == buffer[source_index]);
+                                            // assert((*fa)(dim, destinationIndex)
+                                            //         == buffer[source_index]);
                                             flag(dim, destinationIndex) = 2;
                                         } else {
                                             // TODO(quhang) needs a more elegant solution.
@@ -558,21 +562,22 @@ template <class TS> class TranslatorPhysBAM {
             DataArray::const_iterator iter = write_set.begin();
             for (; iter != write_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
+                const GeometricRegion dregion = data->region();
 
-                Dimension3Vector overlap = GetOverlapSize(data->region(), region);
+                Dimension3Vector overlap = GetOverlapSize(dregion, region);
                 if (!HasOverlap(overlap)) {continue;}
 
                 T* buffer = reinterpret_cast<T*>(data->buffer());
 
-                Dimension3Vector src = GetOffset(region, data->region());
-                Dimension3Vector dest = GetOffset(data->region(), region);
+                Dimension3Vector src = GetOffset(region, dregion);
+                Dimension3Vector dest = GetOffset(dregion, region);
 
                 //  x, y and z values are stored separately due to the
                 // difference in number of x, y and z values in face arrays
                 for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
                     int mult_x = 1;
-                    int mult_y = data->region().dx();
-                    int mult_z = data->region().dy() * data->region().dx();
+                    int mult_y = dregion.dx();
+                    int mult_z = dregion.dy() * dregion.dx();
                     int range_x = overlap(X_COORD);
                     int range_y = overlap(Y_COORD);
                     int range_z = overlap(Z_COORD);
@@ -581,23 +586,23 @@ template <class TS> class TranslatorPhysBAM {
                         case X_COORD:
                             range_x += 1;
                             mult_y  += 1;
-                            mult_z  += data->region().dy();
+                            mult_z  += dregion.dy();
                             break;
                         case Y_COORD:
                             range_y += 1;
-                            mult_z  += data->region().dx();
-                            dst_offset += (data->region().dx() + 1) *
-                                (data->region().dy()) *
-                                (data->region().dz());
+                            mult_z  += dregion.dx();
+                            dst_offset += (dregion.dx() + 1) *
+                                (dregion.dy()) *
+                                (dregion.dz());
                             break;
                         case Z_COORD:
                             range_z += 1;
-                            dst_offset += ((data->region().dx()) *
-                                    (data->region().dy() + 1) *
-                                    (data->region().dz())) +
-                                ((data->region().dx() + 1) *
-                                 (data->region().dy()) *
-                                 (data->region().dz()));
+                            dst_offset += ((dregion.dx()) *
+                                    (dregion.dy() + 1) *
+                                    (dregion.dz())) +
+                                ((dregion.dx() + 1) *
+                                 (dregion.dy()) *
+                                 (dregion.dz()));
                             break;
                     }
                     for (int z = 0; z < range_z; ++z) {
@@ -622,7 +627,7 @@ template <class TS> class TranslatorPhysBAM {
                                 // The PhysBAM FACE_ARRAY object abstracts away whether
                                 // the data is stored in struct of array or array of struct
                                 // form (in practice, usually struct of arrays
-                                assert(destination_index < data->size() / (int) sizeof(T) && destination_index >= 0); // NOLINT
+                                // assert(destination_index < dsize / (int) sizeof(T) && destination_index >= 0); // NOLINT
                                 buffer[destination_index] = (*fa)(dim, sourceIndex);
                             }
                         }
@@ -1147,9 +1152,11 @@ template <class TS> class TranslatorPhysBAM {
             DataArray::const_iterator iter = read_set.begin();
             for (; iter != read_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
+                const GeometricRegion dregion = data->region();
+                const size_t dsize = data->size();
                 ParticleInternal* buffer =
                     reinterpret_cast<ParticleInternal*>(data->buffer());
-                ParticleInternal* buffer_end = buffer + static_cast<int>(data->size())
+                ParticleInternal* buffer_end = buffer + static_cast<int>(dsize)
                     / static_cast<int>(sizeof(ParticleInternal));
 
                 for (ParticleInternal* p = buffer; p != buffer_end; ++p) {
@@ -1168,7 +1175,7 @@ template <class TS> class TranslatorPhysBAM {
                         TV_INT bucket_index(round(absolute_position.x - shift.x),
                                 round(absolute_position.y - shift.y),
                                 round(absolute_position.z - shift.z));
-                        assert(particles->Valid_Index(bucket_index));
+                        // assert(particles->Valid_Index(bucket_index));
                         if (!(*particles)(bucket_index)) {
                             (*particles)(bucket_index) = particle_container->
                                 Allocate_Particles(particle_container->template_particles);
@@ -1250,7 +1257,7 @@ template <class TS> class TranslatorPhysBAM {
             iter = write_set.begin();
             for (; iter != write_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
-                GeometricRegion data_region = data->region();
+                const GeometricRegion data_region = data->region();
                 GeometricRegion pregion = data_region;
                 pregion.Translate(neg_shift);
 
@@ -1383,10 +1390,12 @@ template <class TS> class TranslatorPhysBAM {
             DataArray::const_iterator iter = read_set.begin();
             for (; iter != read_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
+                const GeometricRegion dregion = data->region();
+                const size_t dsize = data->size();
                 RemovedParticleInternal* buffer =
                     reinterpret_cast<RemovedParticleInternal*>(data->buffer());
                 RemovedParticleInternal* buffer_end = buffer
-                    + static_cast<int>(data->size())
+                    + static_cast<int>(dsize)
                     / static_cast<int>(sizeof(RemovedParticleInternal));
 
                 for (RemovedParticleInternal* p = buffer; p != buffer_end; ++p) {
@@ -1403,7 +1412,7 @@ template <class TS> class TranslatorPhysBAM {
                         TV_INT bucket_index(round(absolute_position.x - shift.x),
                                 round(absolute_position.y - shift.y),
                                 round(absolute_position.z - shift.z));
-                        assert(particles->Valid_Index(bucket_index));
+                        // assert(particles->Valid_Index(bucket_index));
                         // NOTE(By Chinmayee): Please comment out these changes and don't
                         // delete them when pushing any updates, till we verify that the
                         // code works correctly, and does not give any assertion failure or
@@ -1493,7 +1502,7 @@ template <class TS> class TranslatorPhysBAM {
             iter = write_set.begin();
             for (; iter != write_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
-                GeometricRegion data_region = data->region();
+                const GeometricRegion data_region = data->region();
                 GeometricRegion pregion = data_region;
                 pregion.Translate(neg_shift);
 
@@ -1589,13 +1598,14 @@ template <class TS> class TranslatorPhysBAM {
             sa->hash_code = 0;
             for (size_t i = 0; i < read_set.size(); ++i) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(read_set[i]);
-                Dimension3Vector overlap = GetOverlapSize(data->region(), region);
+                const GeometricRegion dregion = data->region();
+                Dimension3Vector overlap = GetOverlapSize(dregion, region);
 
                 if (HasOverlap(overlap)) {
                     T* buffer  = reinterpret_cast<T*>(data->buffer());
 
-                    Dimension3Vector src  = GetOffset(data->region(), region);
-                    Dimension3Vector dest = GetOffset(region, data->region());
+                    Dimension3Vector src  = GetOffset(dregion, region);
+                    Dimension3Vector dest = GetOffset(region, dregion);
 
                     for (int z = 0; z < overlap(Z_COORD); ++z) {
                         for (int y = 0; y < overlap(Y_COORD); ++y) {
@@ -1604,14 +1614,14 @@ template <class TS> class TranslatorPhysBAM {
                                 int source_y = y + src(Y_COORD);
                                 int source_z = z + src(Z_COORD);
                                 int source_index =
-                                    (source_z * (data->region().dy() * data->region().dx())) +
-                                    (source_y * (data->region().dx())) +
+                                    (source_z * (dregion.dy() * dregion.dx())) +
+                                    (source_y * (dregion.dx())) +
                                     source_x;
                                 int dest_x = x + dest(X_COORD) + region.x() - shift.x;
                                 int dest_y = y + dest(Y_COORD) + region.y() - shift.y;
                                 int dest_z = z + dest(Z_COORD) + region.z() - shift.z;
                                 TV_INT destination_index(dest_x, dest_y, dest_z);
-                                assert(source_index < data->size() / (int) sizeof(T) && source_index >= 0); // NOLINT
+                                // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
                                 (*sa)(destination_index) = buffer[source_index];
                             }
                         }
@@ -1650,14 +1660,14 @@ template <class TS> class TranslatorPhysBAM {
             }
             for (size_t i = 0; i < write_set.size(); ++i) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(write_set[i]);
-                GeometricRegion temp = data->region();
-                Dimension3Vector overlap = GetOverlapSize(temp, region);
+                const GeometricRegion dregion = data->region();
+                Dimension3Vector overlap = GetOverlapSize(dregion, region);
 
                 if (HasOverlap(overlap)) {
                     T* buffer  = reinterpret_cast<T*>(data->buffer());
 
-                    Dimension3Vector src  = GetOffset(region, data->region());
-                    Dimension3Vector dest = GetOffset(data->region(), region);
+                    Dimension3Vector src  = GetOffset(region, dregion);
+                    Dimension3Vector dest = GetOffset(dregion, region);
 
                     for (int z = 0; z < overlap(Z_COORD); ++z) {
                         for (int y = 0; y < overlap(Y_COORD); ++y) {
@@ -1666,14 +1676,14 @@ template <class TS> class TranslatorPhysBAM {
                                 int dest_y = y + dest(Y_COORD);
                                 int dest_z = z + dest(Z_COORD);
                                 int destination_index =
-                                    (dest_z * (data->region().dy() * data->region().dx())) +
-                                    (dest_y * (data->region().dx())) +
+                                    (dest_z * (dregion.dy() * dregion.dx())) +
+                                    (dest_y * (dregion.dx())) +
                                     dest_x;
                                 int source_x = x + src(X_COORD) + region.x() - shift.x;
                                 int source_y = y + src(Y_COORD) + region.y() - shift.y;
                                 int source_z = z + src(Z_COORD) + region.z() - shift.z;
                                 TV_INT source_index(source_x, source_y, source_z);
-                                assert(destination_index < data->size() / (int) sizeof(T) && destination_index >= 0); // NOLINT
+                                // assert(destination_index < dsize / (int) sizeof(T) && destination_index >= 0); // NOLINT
                                 buffer[destination_index] = (*sa)(source_index);
                             }
                         }
@@ -1716,14 +1726,15 @@ template <class TS> class TranslatorPhysBAM {
           for (size_t i = 0; i < read_set.size(); ++i) {
             PhysBAMDataWithMeta* nimbus_data =
                 dynamic_cast<PhysBAMDataWithMeta*>(read_set[i]);  // NOLINT
-            assert(nimbus_data != NULL);
+            const GeometricRegion nimbus_dregion = nimbus_data->region();
+            // assert(nimbus_data != NULL);
             GeometricRegion inter_region = GeometricRegion::GetIntersection(
-                nimbus_data->region(), region);
+                nimbus_dregion, region);
             char* buffer = nimbus_data->buffer();
             if (buffer == NULL || nimbus_data->size() == 0) {
               continue;
             }
-            assert(nimbus_data->has_meta_data());
+            // assert(nimbus_data->has_meta_data());
             int_dimension_t elements =
                 nimbus_data->meta_data_size() / 3 / sizeof(int_dimension_t);
             char* real_data_buffer = buffer + nimbus_data->meta_data_size();
@@ -1743,8 +1754,8 @@ template <class TS> class TranslatorPhysBAM {
                   z >= inter_region.z() &&
                   z < inter_region.z() + inter_region.dz()) {
                 int m_index = index_data(x - shift.x, y - shift.y, z - shift.z);
-                assert(m_index >= 1);
-                assert(m_index <= data_length);
+                // assert(m_index >= 1);
+                // assert(m_index <= data_length);
                 (*data)(m_index) = value;
               }
             }
@@ -1782,9 +1793,10 @@ template <class TS> class TranslatorPhysBAM {
           for (size_t i = 0; i < write_set.size(); ++i) {
             PhysBAMDataWithMeta* nimbus_data =
                 dynamic_cast<PhysBAMDataWithMeta*>(write_set[i]);  // NOLINT
-            assert(nimbus_data != NULL);
+            // assert(nimbus_data != NULL);
+            const GeometricRegion nimbus_dregion = nimbus_data->region();
             GeometricRegion inter_region = GeometricRegion::GetIntersection(
-                nimbus_data->region(), region);
+                nimbus_dregion, region);
             if (!inter_region.NoneZeroArea()) {
               continue;
             }
