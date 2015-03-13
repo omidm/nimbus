@@ -90,9 +90,9 @@ void VDataCacheManager::WriteImmediately(AppVar *app_var,
         write_back.erase(d);
     }
 
-    nimbus::timer::StartTimer(nimbus::timer::kWriteAppData);
+    nimbus::timer::StartTimer(nimbus::timer::kWriteAppDataField);
     app_var->WriteAppData(flush_set, app_var->write_region_);
-    nimbus::timer::StopTimer(nimbus::timer::kWriteAppData);
+    nimbus::timer::StopTimer(nimbus::timer::kWriteAppDataField);
 }
 
 /**
@@ -136,10 +136,10 @@ void VDataCacheManager::WriteImmediately(AppStruct *app_struct,
     }
 
 
-    nimbus::timer::StartTimer(nimbus::timer::kWriteAppData);
+    nimbus::timer::StartTimer(nimbus::timer::kWriteAppDataParticle);
     app_struct->WriteAppData(var_type, flush_sets,
                              app_struct->write_region_);
-    nimbus::timer::StopTimer(nimbus::timer::kWriteAppData);
+    nimbus::timer::StopTimer(nimbus::timer::kWriteAppDataParticle);
 }
 
 /**
@@ -203,9 +203,9 @@ AppVar *VDataCacheManager::GetAppVarV(const DataArray &read_set,
             d->set_destroyed(false);
         }
     }
-    nimbus::timer::StartTimer(nimbus::timer::kWriteAppData);
+    nimbus::timer::StartTimer(nimbus::timer::kWriteAppDataField);
     cv->WriteAppData(flush, write_region_old);
-    nimbus::timer::StopTimer(nimbus::timer::kWriteAppData);
+    nimbus::timer::StopTimer(nimbus::timer::kWriteAppDataField);
 
     for (size_t i = 0; i < sync.size(); ++i) {
         Data *d = sync[i];
@@ -221,9 +221,9 @@ AppVar *VDataCacheManager::GetAppVarV(const DataArray &read_set,
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
 
-    nimbus::timer::StartTimer(nimbus::timer::kReadAppData);
+    nimbus::timer::StartTimer(nimbus::timer::kReadAppDataField);
     cv->ReadAppData(diff, read_region);
-    nimbus::timer::StopTimer(nimbus::timer::kReadAppData);
+    nimbus::timer::StopTimer(nimbus::timer::kReadAppDataField);
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set[i];
         if (d->region().Delta() == inner_delta && !d->destroyed()) {
@@ -298,9 +298,9 @@ AppStruct *VDataCacheManager::GetAppStructV(const std::vector<app_data::type_id_
             }
         }
     }
-    nimbus::timer::StartTimer(nimbus::timer::kWriteAppData);
+    nimbus::timer::StartTimer(nimbus::timer::kWriteAppDataParticle);
     cs->WriteAppData(var_type, flush_sets, write_region_old);
-    nimbus::timer::StopTimer(nimbus::timer::kWriteAppData);
+    nimbus::timer::StopTimer(nimbus::timer::kWriteAppDataParticle);
 
     for (size_t t = 0; t < num_var; ++t) {
         DataArray &sync_t = sync_sets[t];
@@ -321,9 +321,9 @@ AppStruct *VDataCacheManager::GetAppStructV(const std::vector<app_data::type_id_
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
 
-    nimbus::timer::StartTimer(nimbus::timer::kReadAppData);
+    nimbus::timer::StartTimer(nimbus::timer::kReadAppDataParticle);
     cs->ReadAppData(var_type, diff_sets, read_region);
-    nimbus::timer::StopTimer(nimbus::timer::kReadAppData);
+    nimbus::timer::StopTimer(nimbus::timer::kReadAppDataParticle);
     for (size_t t = 0; t < num_var; ++t) {
         const DataArray &write_set_t = write_sets[t];
         for (size_t i = 0; i < write_set_t.size(); ++i) {

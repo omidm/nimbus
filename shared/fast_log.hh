@@ -62,6 +62,11 @@ enum TimerType {
   kSumCyclesRun,
   kReadAppData,
   kWriteAppData,
+  kReadAppDataField,
+  kReadAppDataParticle,
+  kWriteAppDataField,
+  kWriteAppDataParticle,
+  kInitializeCalculateDt,
   kSyncData,
   kMaxTimer
 };

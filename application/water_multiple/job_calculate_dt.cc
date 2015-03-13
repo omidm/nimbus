@@ -82,8 +82,10 @@ void JobCalculateDt::Execute(
   data_config.SetFlag(DataConfig::VELOCITY);
   data_config.SetFlag(DataConfig::DT);
   data_config.SetFlag(DataConfig::LEVELSET);
+  nimbus::timer::StartTimer(nimbus::timer::kInitializeCalculateDt);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
+  nimbus::timer::StopTimer(nimbus::timer::kInitializeCalculateDt);
 
   {
     application::ScopeTimer scope_timer(name());
