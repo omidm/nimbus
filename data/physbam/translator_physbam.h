@@ -659,6 +659,7 @@ template <class TS> class TranslatorPhysBAM {
                 ParticleContainer *particle_container,
                 const int_dimension_t scale,
                 bool positive) {
+            timer::StartTimer(timer::k10);
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -672,6 +673,7 @@ template <class TS> class TranslatorPhysBAM {
                     msg << "### TID: " << tid << "  Delete Particles (New Translator) end : " << log->GetTime(); // NOLINT
                     log->WriteToFile(msg.str());
                 }
+                timer::StopTimer(timer::k10);
                 return;
             }
 
@@ -766,6 +768,7 @@ template <class TS> class TranslatorPhysBAM {
                 msg << "### TID: " << tid << "  Delete Particles (New Translator) end : " << log->GetTime(); // NOLINT
                 log->WriteToFile(msg.str());
             }
+            timer::StopTimer(timer::k10);
         }
 
         static void DeleteRemovedParticles(
@@ -774,6 +777,7 @@ template <class TS> class TranslatorPhysBAM {
                 ParticleContainer *particle_container,
                 const int_dimension_t scale,
                 bool positive) {
+            timer::StartTimer(timer::k11);
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -787,6 +791,7 @@ template <class TS> class TranslatorPhysBAM {
                     msg << "### TID: " << tid << "  Delete Removed Particles (New Translator) end : " << log->GetTime(); // NOLINT
                     log->WriteToFile(msg.str());
                 }
+                timer::StopTimer(timer::k11);
                 return;
             }
 
@@ -882,6 +887,7 @@ template <class TS> class TranslatorPhysBAM {
                 msg << "### TID: " << tid << "  Delete Removed Particles (New Translator) end : " << log->GetTime(); // NOLINT
                 log->WriteToFile(msg.str());
             }
+            timer::StopTimer(timer::k11);
         }
 
         /*
@@ -895,6 +901,7 @@ template <class TS> class TranslatorPhysBAM {
                 ParticleContainer *particle_container,
                 const int_dimension_t scale,
                 bool positive) {
+            timer::StartTimer(timer::k12);
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -993,6 +1000,7 @@ template <class TS> class TranslatorPhysBAM {
                 msg << "### TID: " << tid << "  Delete Particles (New Translator) end : " << log->GetTime(); // NOLINT
                 log->WriteToFile(msg.str());
             }
+            timer::StopTimer(timer::k12);
         }
 
         /*
@@ -1006,6 +1014,7 @@ template <class TS> class TranslatorPhysBAM {
                 ParticleContainer *particle_container,
                 const int_dimension_t scale,
                 bool positive) {
+            timer::StartTimer(timer::k13);
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -1105,6 +1114,7 @@ template <class TS> class TranslatorPhysBAM {
                 msg << "### TID: " << tid << "  Delete Removed Particles (New Translator) end : " << log->GetTime(); // NOLINT
                 log->WriteToFile(msg.str());
             }
+            timer::StopTimer(timer::k13);
         }
 
         /* Reads the particle data from the PhysicalDataInstances "instances",
@@ -1354,6 +1364,7 @@ template <class TS> class TranslatorPhysBAM {
                 const int_dimension_t kScale,
                 bool positive,
                 bool merge = false) {
+            timer::StartTimer(timer::k14);
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -1395,6 +1406,7 @@ template <class TS> class TranslatorPhysBAM {
                     log->WriteToFile(msg.str());
                 }
                 dbg(DBG_WARN, "Physical data instances are empty.\n");
+                timer::StopTimer(timer::k14);
                 return;
             }
 
@@ -1461,6 +1473,7 @@ template <class TS> class TranslatorPhysBAM {
                 msg << "### TID: " << tid << "  Read Removed Particles (New Translator) end : " << log->GetTime(); // NOLINT
                 log->WriteToFile(msg.str());
             }
+            timer::StopTimer(timer::k14);
         }
 
         /* Writes the removed particle data from PhysBAM particle container
@@ -1479,6 +1492,7 @@ template <class TS> class TranslatorPhysBAM {
                 const int_dimension_t kScale,
                 bool positive
                 ) {
+            timer::StartTimer(timer::k15);
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -1492,6 +1506,7 @@ template <class TS> class TranslatorPhysBAM {
                     msg << "### TID: " << tid << "  Write Removed Particles (New Translator) end : " << log->GetTime(); // NOLINT
                     log->WriteToFile(msg.str());
                 }
+                timer::StopTimer(timer::k15);
                 return;
             }
             DataArray::const_iterator iter = write_set.begin();
@@ -1581,6 +1596,7 @@ template <class TS> class TranslatorPhysBAM {
                 msg << "### TID: " << tid << "  Write Removed Particles (New Translator) end : " << log->GetTime(); // NOLINT
                 log->WriteToFile(msg.str());
             }
+                timer::StopTimer(timer::k15);
         }
 
         /* Read scalar array from PhysicalDataInstances specified by instances,
@@ -1605,6 +1621,7 @@ template <class TS> class TranslatorPhysBAM {
                     msg << "### TID: " << tid << "  Read Scalar Array (New Translator) end : " << log->GetTime(); // NOLINT
                     log->WriteToFile(msg.str());
                 }
+                timer::StopTimer(timer::k5);
                 return;
             }
             sa->hash_code = 0;

@@ -88,6 +88,17 @@ std::string TimerName(TimerType timer_type) {
     case k7: return "k7";
     case k8: return "k8";
     case k9: return "k9";
+    case k10: return "k10";
+    case k11: return "k11";
+    case k12: return "k12";
+    case k13: return "k13";
+    case k14: return "k14";
+    case k15: return "k15";
+    case k16: return "k16";
+    case k17: return "k17";
+    case k18: return "k18";
+    case k19: return "k19";
+    case k20: return "k20";
     default: return "Unknown";
   };
 }
