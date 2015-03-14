@@ -54,6 +54,7 @@ namespace nimbus {
 #define DEFAULT_DATA_MANAGER_QUERY_CACHE_ACTIVE true
 
 #define DEFAULT_LOAD_BALANCING_ACTIVE false
+#define DEFAULT_LOAD_BALANCING_PERIOD 30
 #define DEFAULT_FAULT_TOLERANCE_ACTIVE false
 #define DEFAULT_CHECKPOINT_CREATION_PERIOD 30
 
@@ -89,6 +90,7 @@ Scheduler::Scheduler(port_t port) {
   data_manager_query_cache_active_ = DEFAULT_DATA_MANAGER_QUERY_CACHE_ACTIVE;
 
   load_balancing_active_ = DEFAULT_LOAD_BALANCING_ACTIVE;
+  load_balancing_period_ = DEFAULT_LOAD_BALANCING_PERIOD;
   fault_tolerance_active_ = DEFAULT_FAULT_TOLERANCE_ACTIVE;
   checkpoint_creation_period_ = DEFAULT_CHECKPOINT_CREATION_PERIOD;
 
@@ -175,6 +177,10 @@ void Scheduler::set_load_balancing_active(bool flag) {
 
 void Scheduler::set_fault_tolerance_active(bool flag) {
   fault_tolerance_active_ = flag;
+}
+
+void Scheduler::set_load_balancing_period(int64_t period) {
+  load_balancing_period_ = period;
 }
 
 void Scheduler::set_checkpoint_creation_period(int64_t period) {

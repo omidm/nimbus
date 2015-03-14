@@ -54,6 +54,7 @@ int main(int argc, char *argv[]) {
   size_t assign_batch_size;
   size_t assign_thread_num;
   size_t command_batch_size;
+  int64_t lb_period;
   int64_t ft_period;
 
   po::options_description desc("Options");
@@ -67,6 +68,7 @@ int main(int argc, char *argv[]) {
     ("assign_batch_size,a", po::value<size_t>(&assign_batch_size), "maximum number of jobs in a batch assignment") //NOLINT
     ("assign_thread_num,t", po::value<size_t>(&assign_thread_num), "job assigner thread nums")
     ("command_batch_size,c", po::value<size_t>(&command_batch_size), "maximum number of commands in a batch processing") //NOLINT
+    ("lb_period", po::value<int64_t>(&lb_period), "query period for load balancing (seconds)") //NOLINT
     ("ft_period", po::value<int64_t>(&ft_period), "checkpoint creation period for fault tolerance (seconds)") //NOLINT
 
     ("dct", "deactivate controller template")
@@ -134,6 +136,10 @@ int main(int argc, char *argv[]) {
 
   if (vm.count("dqc")) {
     s->set_data_manager_query_cache_active(false);
+  }
+
+  if (vm.count("lb_period")) {
+    s->set_load_balancing_period(lb_period);
   }
 
   if (vm.count("ft_period")) {
