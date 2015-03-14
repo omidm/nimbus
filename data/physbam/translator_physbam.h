@@ -61,6 +61,7 @@
 #include "data/physbam/physbam_data_with_meta.h"
 
 #include "shared/log.h"
+#include "shared/fast_log.hh"
 #include "shared/nimbus_types.h"
 #include "shared/geometric_region.h"
 #include "worker/physical_data_instance.h"
@@ -127,7 +128,9 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &read_set,
                 typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
+            timer::StartTimer(timer::k1);
             ReadFaceArrayInner(region, inner, shift, read_set, fa);
+            timer::StopTimer(timer::k1);
         }
 
         /** Take a FaceArray described by region and read its data from the
@@ -544,6 +547,7 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &write_set,
                 typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
+            timer::StartTimer(timer::k2);
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -557,6 +561,7 @@ template <class TS> class TranslatorPhysBAM {
                     msg << "### TID: " << tid << "  Write Face Array (New Translator) end : " << log->GetTime(); // NOLINT
                     log->WriteToFile(msg.str());
                 }
+                timer::StopTimer(timer::k2);
                 return;
             }
             DataArray::const_iterator iter = write_set.begin();
@@ -640,6 +645,7 @@ template <class TS> class TranslatorPhysBAM {
                 msg << "### TID: " << tid << "  Write Face Array (New Translator) end : " << log->GetTime(); // NOLINT
                 log->WriteToFile(msg.str());
             }
+            timer::StopTimer(timer::k2);
         }
 
         /*
@@ -1118,6 +1124,7 @@ template <class TS> class TranslatorPhysBAM {
                 const int_dimension_t kScale,
                 bool positive,
                 bool merge = false) {
+            timer::StartTimer(timer::k3);
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -1205,6 +1212,7 @@ template <class TS> class TranslatorPhysBAM {
                 msg << "### TID: " << tid << "  Read Particles (New Translator) end : " << log->GetTime(); // NOLINT
                 log->WriteToFile(msg.str());
             }
+            timer::StopTimer(timer::k3);
         }
 
 
@@ -1222,6 +1230,7 @@ template <class TS> class TranslatorPhysBAM {
                 ParticleContainer *particle_container,
                 const int_dimension_t kScale,
                 bool positive) {
+            timer::StartTimer(timer::k4);
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -1235,6 +1244,7 @@ template <class TS> class TranslatorPhysBAM {
                     msg << "### TID: " << tid << "  Write Particles (New Translator) end : " << log->GetTime(); // NOLINT
                     log->WriteToFile(msg.str());
                 }
+                timer::StopTimer(timer::k4);
                 return;
             }
 
@@ -1324,6 +1334,7 @@ template <class TS> class TranslatorPhysBAM {
                 msg << "### TID: " << tid << "  Write Particles (New Translator) end : " << log->GetTime(); // NOLINT
                 log->WriteToFile(msg.str());
             }
+            timer::StopTimer(timer::k4);
         }
 
         /* Reads the removed particle data from the PhysicalDataInstances
@@ -1580,6 +1591,7 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &read_set,
                 typename PhysBAM::ARRAY<T, TV_INT>* sa) {
+            timer::StartTimer(timer::k5);
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -1634,6 +1646,7 @@ template <class TS> class TranslatorPhysBAM {
                 msg << "### TID: " << tid << "  Read Scalar Array (New Translator) end : " << log->GetTime(); // NOLINT
                 log->WriteToFile(msg.str());
             }
+            timer::StopTimer(timer::k5);
         }
 
         /* Write scalar array data into PhysicalDataInstances specified by instances,
@@ -1643,6 +1656,7 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &write_set,
                 typename PhysBAM::ARRAY<T, TV_INT>* sa) {
+            timer::StartTimer(timer::k6);
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -1656,6 +1670,7 @@ template <class TS> class TranslatorPhysBAM {
                     msg << "### TID: " << tid << "  Write Scalar Array (New Translator) end : " << log->GetTime(); // NOLINT
                     log->WriteToFile(msg.str());
                 }
+                timer::StopTimer(timer::k6);
                 return;
             }
             for (size_t i = 0; i < write_set.size(); ++i) {
@@ -1696,6 +1711,7 @@ template <class TS> class TranslatorPhysBAM {
                 msg << "### TID: " << tid << "  Write Scalar Array (New Translator) end : " << log->GetTime(); // NOLINT
                 log->WriteToFile(msg.str());
             }
+            timer::StopTimer(timer::k6);
         }
 
         template<typename T> static void ReadCompressedScalarArray(
@@ -1705,6 +1721,7 @@ template <class TS> class TranslatorPhysBAM {
                 PhysBAM::VECTOR_ND<T>* data,
                 const int_dimension_t data_length,
                 const PhysBAM::ARRAY<int, TV_INT>& index_data) {
+          timer::StartTimer(timer::k7);
           if (data->Size() != data_length) {
             data->Resize(data_length);
           }
@@ -1721,6 +1738,7 @@ template <class TS> class TranslatorPhysBAM {
                   << log->GetTime();
               log->WriteToFile(msg.str());
             }
+            timer::StopTimer(timer::k7);
             return;
           }
           for (size_t i = 0; i < read_set.size(); ++i) {
@@ -1766,6 +1784,7 @@ template <class TS> class TranslatorPhysBAM {
                 << log->GetTime();
             log->WriteToFile(msg.str());
           }
+          timer::StopTimer(timer::k7);
         }
 
         template<typename T> static void WriteCompressedScalarArray(
@@ -1775,6 +1794,7 @@ template <class TS> class TranslatorPhysBAM {
                 const PhysBAM::VECTOR_ND<T>& data,
                 const int_dimension_t data_length,
                 const PhysBAM::ARRAY<int, TV_INT>& index_data) {
+          timer::StartTimer(timer::k8);
           if (log) {
             std::stringstream msg;
             msg << "### Write Compressed Scalar Array (New Translator) start : "
@@ -1788,6 +1808,7 @@ template <class TS> class TranslatorPhysBAM {
                   << log->GetTime();
               log->WriteToFile(msg.str());
             }
+            timer::StopTimer(timer::k8);
             return;
           }
           for (size_t i = 0; i < write_set.size(); ++i) {
@@ -1844,6 +1865,7 @@ template <class TS> class TranslatorPhysBAM {
                 << log->GetTime();
             log->WriteToFile(msg.str());
           }
+          timer::StopTimer(timer::k8);
         }
 
     private:

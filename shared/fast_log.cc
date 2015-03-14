@@ -79,6 +79,15 @@ std::string TimerName(TimerType timer_type) {
     case kWriteAppDataParticle: return "kWriteAppDataParticle";
     case kInitializeCalculateDt: return "kInitializeCalculateDt";
     case kSyncData: return "kSyncData";
+    case k1: return "k1";
+    case k2: return "k2";
+    case k3: return "k3";
+    case k4: return "k4";
+    case k5: return "k5";
+    case k6: return "k6";
+    case k7: return "k7";
+    case k8: return "k8";
+    case k9: return "k9";
     default: return "Unknown";
   };
 }
