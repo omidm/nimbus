@@ -58,6 +58,9 @@ void LoadBalancer::Initialize() {
   job_assigner_ = NULL;
   assign_batch_size_ = 0;
   load_balancing_id_ = NIMBUS_INIT_LOAD_BALANCING_ID;
+  // by default it is safe to load balance, unless job manager is memoizing
+  // binding, and so we cannot load balance. -omidm
+  safe_to_load_balance_ = true;
 }
 
 LoadBalancer::~LoadBalancer() {
@@ -65,6 +68,10 @@ LoadBalancer::~LoadBalancer() {
 
 ClusterMap* LoadBalancer::cluster_map() {
   return cluster_map_;
+}
+
+bool LoadBalancer::safe_to_load_balance() {
+  return safe_to_load_balance_;
 }
 
 void LoadBalancer::set_cluster_map(ClusterMap* cluster_map) {
@@ -95,7 +102,8 @@ size_t LoadBalancer::AssignReadyJobs() {
   JobEntryList list;
   job_manager_->GetJobsReadyToAssign(&list,
                                     assign_batch_size_,
-                                    load_balancing_id_);
+                                    load_balancing_id_,
+                                    &safe_to_load_balance_);
 
   JobEntryList::iterator iter;
   for (iter = list.begin(); iter != list.end(); ++iter) {

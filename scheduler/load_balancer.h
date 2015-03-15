@@ -74,6 +74,7 @@ namespace nimbus {
 
     ClusterMap* cluster_map();
 
+    virtual bool safe_to_load_balance();
     virtual void set_cluster_map(ClusterMap* cluster_map);
     virtual void set_job_manager(JobManager *job_manager);
     virtual void set_data_manager(DataManager *data_manager);
@@ -101,6 +102,7 @@ namespace nimbus {
     JobAssigner *job_assigner_;
     size_t assign_batch_size_;
     load_balancing_id_t load_balancing_id_;
+    bool safe_to_load_balance_;
 
   private:
     typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;

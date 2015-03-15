@@ -761,7 +761,8 @@ size_t JobManager::NumJobsReadyToAssign() {
 
 size_t JobManager::GetJobsReadyToAssign(JobEntryList* list,
                                         size_t max_num,
-                                        load_balancing_id_t lb_id) {
+                                        load_balancing_id_t lb_id,
+                                        bool *safe_to_load_balance_) {
   size_t num = 0;
   list->clear();
 
@@ -819,12 +820,14 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list,
       num += c_num;
       JobEntryList::iterator it = l.begin();
       for (; it != l.end(); ++it) {
+        *safe_to_load_balance_ = false;
         (*it)->set_memoize_binding(memoize_binding);
         (*it)->set_binding_template(bt);
         list->push_back(*it);
         jobs_pending_to_assign_[(*it)->job_id()] = *it;
       }
       if (complex_job->DrainedAllShadowJobsForAssignment()) {
+        *safe_to_load_balance_ = true;
         te->MarkExplicitBinding(complex_job);
         jobs_ready_to_assign_.erase(iter++);
       } else {

@@ -669,6 +669,14 @@ size_t Scheduler::AssignReadyJobs() {
 }
 
 void Scheduler::QueryWorkerStats() {
+  if (!load_balancing_active_) {
+    return;
+  }
+
+  if (!load_balancer_->safe_to_load_balance()) {
+    return;
+  }
+
   int64_t time = (int64_t)(Log::GetRawTime());
 
   if ((time - last_query_stat_time_) >= load_balancing_period_) {
