@@ -1636,23 +1636,37 @@ template <class TS> class TranslatorPhysBAM {
                     Dimension3Vector src  = GetOffset(dregion, region);
                     Dimension3Vector dest = GetOffset(region, dregion);
 
-                    for (int z = 0; z < overlap(Z_COORD); ++z) {
+                    for (int x = 0; x < overlap(X_COORD); ++x) {
                         for (int y = 0; y < overlap(Y_COORD); ++y) {
-                            for (int x = 0; x < overlap(X_COORD); ++x) {
-                                int source_x = x + src(X_COORD);
-                                int source_y = y + src(Y_COORD);
-                                int source_z = z + src(Z_COORD);
-                                int source_index =
-                                    (source_z * (dregion.dy() * dregion.dx())) +
-                                    (source_y * (dregion.dx())) +
-                                    source_x;
-                                int dest_x = x + dest(X_COORD) + region.x() - shift.x;
-                                int dest_y = y + dest(Y_COORD) + region.y() - shift.y;
-                                int dest_z = z + dest(Z_COORD) + region.z() - shift.z;
-                                TV_INT destination_index(dest_x, dest_y, dest_z);
-                                // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
-                                (*sa)(destination_index) = buffer[source_index];
-                            }
+                            // for (int z = 0; z < overlap(Z_COORD); ++z) {
+                            //     int source_x = x + src(X_COORD);
+                            //     int source_y = y + src(Y_COORD);
+                            //     int source_z = z + src(Z_COORD);
+                            //     int source_index =
+                            //         (source_x * (dregion.dy() * dregion.dz())) +
+                            //         (source_y * (dregion.dz())) +
+                            //         source_z;
+                            //     int dest_x = x + dest(X_COORD) + region.x() - shift.x;
+                            //     int dest_y = y + dest(Y_COORD) + region.y() - shift.y;
+                            //     int dest_z = z + dest(Z_COORD) + region.z() - shift.z;
+                            //     TV_INT destination_index(dest_x, dest_y, dest_z);
+                            //     // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
+                            //     (*sa)(destination_index) = buffer[source_index];
+                            // }
+                            int source_x = x + src(X_COORD);
+                            int source_y = y + src(Y_COORD);
+                            int source_z = 0 + src(Z_COORD);
+                            int source_index =
+                                (source_x * (dregion.dy() * dregion.dz())) +
+                                (source_y * (dregion.dz())) +
+                                source_z;
+                            int dest_x = x + dest(X_COORD) + region.x() - shift.x;
+                            int dest_y = y + dest(Y_COORD) + region.y() - shift.y;
+                            int dest_z = 0 + dest(Z_COORD) + region.z() - shift.z;
+                            TV_INT destination_index(dest_x, dest_y, dest_z);
+                            memcpy(&((*sa)(destination_index)),  // NOLINT
+                                   &(buffer[source_index]),
+                                   sizeof(T) * overlap(Z_COORD));
                         }
                     }
                 }
@@ -1701,23 +1715,39 @@ template <class TS> class TranslatorPhysBAM {
                     Dimension3Vector src  = GetOffset(region, dregion);
                     Dimension3Vector dest = GetOffset(dregion, region);
 
-                    for (int z = 0; z < overlap(Z_COORD); ++z) {
+                    for (int x = 0; x < overlap(X_COORD); ++x) {
                         for (int y = 0; y < overlap(Y_COORD); ++y) {
-                            for (int x = 0; x < overlap(X_COORD); ++x) {
-                                int dest_x = x + dest(X_COORD);
-                                int dest_y = y + dest(Y_COORD);
-                                int dest_z = z + dest(Z_COORD);
-                                int destination_index =
-                                    (dest_z * (dregion.dy() * dregion.dx())) +
-                                    (dest_y * (dregion.dx())) +
-                                    dest_x;
-                                int source_x = x + src(X_COORD) + region.x() - shift.x;
-                                int source_y = y + src(Y_COORD) + region.y() - shift.y;
-                                int source_z = z + src(Z_COORD) + region.z() - shift.z;
-                                TV_INT source_index(source_x, source_y, source_z);
-                                // assert(destination_index < dsize / (int) sizeof(T) && destination_index >= 0); // NOLINT
-                                buffer[destination_index] = (*sa)(source_index);
-                            }
+                            // for (int z = 0; z < overlap(Z_COORD); ++z) {
+                            //     int dest_x = x + dest(X_COORD);
+                            //     int dest_y = y + dest(Y_COORD);
+                            //     int dest_z = z + dest(Z_COORD);
+                            //     int destination_index =
+                            //         (dest_x * (dregion.dy() * dregion.dz())) +
+                            //         (dest_y * (dregion.dz())) +
+                            //         dest_z;
+                            //     int source_x = x + src(X_COORD) + region.x() - shift.x;
+                            //     int source_y = y + src(Y_COORD) + region.y() - shift.y;
+                            //     int source_z = z + src(Z_COORD) + region.z() - shift.z;
+                            //     TV_INT source_index(source_x, source_y, source_z);
+                            //     // assert(destination_index < dsize / (int) sizeof(T) && destination_index >= 0); // NOLINT
+                            //     buffer[destination_index] = (*sa)(source_index);
+                            // }
+                            int dest_x = x + dest(X_COORD);
+                            int dest_y = y + dest(Y_COORD);
+                            int dest_z = 0 + dest(Z_COORD);
+                            int destination_index =
+                                (dest_x * (dregion.dy() * dregion.dz())) +
+                                (dest_y * (dregion.dz())) +
+                                dest_z;
+                            int source_x = x + src(X_COORD) + region.x() - shift.x;
+                            int source_y = y + src(Y_COORD) + region.y() - shift.y;
+                            int source_z = 0 + src(Z_COORD) + region.z() - shift.z;
+                            TV_INT source_index(source_x, source_y, source_z);
+                            // assert(destination_index < dsize / (int) sizeof(T) && destination_index >= 0); // NOLINT
+                            buffer[destination_index] = (*sa)(source_index);
+                            memcpy(&(buffer[destination_index]),
+                                   &((*sa)(source_index)),  // NOLINT
+                                   overlap(Z_COORD) * sizeof(T));
                         }
                     }
                 }
