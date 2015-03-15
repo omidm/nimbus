@@ -133,6 +133,7 @@ class Scheduler {
     virtual void ProcessSaveDataJobDoneCommand(SaveDataJobDoneCommand* cm);
     virtual void ProcessWorkerDownCommand(WorkerDownCommand* cm);
     virtual void ProcessPrepareRewindCommand(PrepareRewindCommand* cm);
+    virtual void ProcessRespondStatCommand(RespondStatCommand* cm);
 
     virtual void WaitForAllPrepareRewindResponses();
 

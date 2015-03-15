@@ -274,6 +274,9 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::PREPARE_REWIND:
       ProcessPrepareRewindCommand(reinterpret_cast<PrepareRewindCommand*>(cm));
       break;
+    case SchedulerCommand::REQUEST_STAT:
+      ProcessRequestStatCommand(reinterpret_cast<RequestStatCommand*>(cm));
+      break;
     default:
       std::cout << "ERROR: " << cm->ToNetworkData() <<
         " have not been implemented in ProcessSchedulerCommand yet." <<
@@ -425,6 +428,14 @@ void Worker::ProcessPrepareRewindCommand(PrepareRewindCommand* cm) {
   client_->SendCommand(&command);
 }
 
+void Worker::ProcessRequestStatCommand(RequestStatCommand* cm) {
+  int64_t idle, block, run;
+  GetTimerStat(&idle, &block, &run);
+  RespondStatCommand command(cm->query_id(), id_, run, block, idle);
+  client_->SendCommand(&command);
+}
+
+
 void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
   Job * job = new LocalCopyJob(application_);
   job->set_name("LocalCopy");
@@ -516,6 +527,7 @@ void Worker::LoadSchedulerCommands() {
   scheduler_command_table_[SchedulerCommand::START_COMMAND_TEMPLATE] = new StartCommandTemplateCommand(); // NOLINT
   scheduler_command_table_[SchedulerCommand::END_COMMAND_TEMPLATE] = new EndCommandTemplateCommand(); //NOLINT
   scheduler_command_table_[SchedulerCommand::SPAWN_COMMAND_TEMPLATE] = new SpawnCommandTemplateCommand(); // NOLINT
+  scheduler_command_table_[SchedulerCommand::REQUEST_STAT] = new RequestStatCommand();
 }
 
 worker_id_t Worker::id() {
@@ -889,7 +901,7 @@ void Worker::StatEndJob(int len) {
 }
 
 // The unit is in nano-second.
-void GetTimerStat(int64_t* idle, int64_t* block, int64_t* run) {
+void Worker::GetTimerStat(int64_t* idle, int64_t* block, int64_t* run) {
   static int64_t l_idle = 0, l_block = 0, l_run = 0;
   int64_t c_block = timer::ReadTimer(timer::kSumCyclesBlock);
   int64_t c_run = timer::ReadTimer(timer::kSumCyclesRun);

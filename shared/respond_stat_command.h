@@ -52,6 +52,7 @@ class RespondStatCommand : public SchedulerCommand {
   public:
     RespondStatCommand();
     RespondStatCommand(const counter_t& query_id,
+                       const worker_id_t& worker_id,
                        const int64_t& run_time,
                        const int64_t& block_time,
                        const int64_t& idle_time);
@@ -63,6 +64,7 @@ class RespondStatCommand : public SchedulerCommand {
     virtual std::string ToNetworkData();
     virtual std::string ToString();
     counter_t query_id();
+    worker_id_t worker_id();
     int64_t run_time();
     int64_t block_time();
     int64_t idle_time();
@@ -71,6 +73,7 @@ class RespondStatCommand : public SchedulerCommand {
 
   private:
     counter_t query_id_;
+    worker_id_t worker_id_;
     int64_t run_time_;
     int64_t block_time_;
     int64_t idle_time_;

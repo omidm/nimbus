@@ -52,10 +52,12 @@ RespondStatCommand::RespondStatCommand() {
 }
 
 RespondStatCommand::RespondStatCommand(const counter_t& query_id,
+                                       const worker_id_t& worker_id,
                                        const int64_t& run_time,
                                        const int64_t& block_time,
                                        const int64_t& idle_time)
   : query_id_(query_id),
+    worker_id_(worker_id),
     run_time_(run_time),
     block_time_(block_time),
     idle_time_(idle_time) {
@@ -111,6 +113,7 @@ std::string RespondStatCommand::ToString() {
   std::string str;
   str += (name_ + " ");
   str += ("query_id:" + boost::lexical_cast<std::string>(query_id_) + " ");
+  str += ("worker_id:" + boost::lexical_cast<std::string>(worker_id_) + " ");
   str += ("run_time: " + boost::lexical_cast<std::string>(run_time_) + " ");
   str += ("block_time: " + boost::lexical_cast<std::string>(block_time_) + " ");
   str += ("idle_time: " + boost::lexical_cast<std::string>(idle_time_));
@@ -119,6 +122,10 @@ std::string RespondStatCommand::ToString() {
 
 counter_t RespondStatCommand::query_id() {
   return query_id_;
+}
+
+worker_id_t RespondStatCommand::worker_id() {
+  return worker_id_;
 }
 
 int64_t RespondStatCommand::run_time() {
@@ -135,6 +142,7 @@ int64_t RespondStatCommand::idle_time() {
 
 bool RespondStatCommand::ReadFromProtobuf(const RespondStatPBuf& buf) {
   query_id_ = buf.query_id();
+  worker_id_ = buf.worker_id();
   run_time_ = buf.run_time();
   block_time_ = buf.block_time();
   idle_time_ = buf.idle_time();
@@ -143,6 +151,7 @@ bool RespondStatCommand::ReadFromProtobuf(const RespondStatPBuf& buf) {
 
 bool RespondStatCommand::WriteToProtobuf(RespondStatPBuf* buf) {
   buf->set_query_id(query_id());
+  buf->set_worker_id(worker_id());
   buf->set_run_time(run_time());
   buf->set_block_time(block_time());
   buf->set_idle_time(idle_time());

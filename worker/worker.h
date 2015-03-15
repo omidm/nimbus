@@ -113,6 +113,7 @@ class Worker {
   virtual void ProcessSaveDataCommand(SaveDataCommand* command);
   virtual void ProcessLoadDataCommand(LoadDataCommand* command);
   virtual void ProcessPrepareRewindCommand(PrepareRewindCommand* command);
+  virtual void ProcessRequestStatCommand(RequestStatCommand *command);
 
   worker_id_t id();
   void set_id(worker_id_t id);

@@ -334,6 +334,9 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::PREPARE_REWIND:
       ProcessPrepareRewindCommand(reinterpret_cast<PrepareRewindCommand*>(cm));
       break;
+    case SchedulerCommand::RESPOND_STAT:
+      ProcessRespondStatCommand(reinterpret_cast<RespondStatCommand*>(cm));
+      break;
     default:
       dbg(DBG_ERROR, "ERROR: %s have not been implemented in ProcessSchedulerCommand yet.\n",
           cm->ToNetworkData().c_str());
@@ -514,6 +517,15 @@ void Scheduler::ProcessPrepareRewindCommand(PrepareRewindCommand* cm) {
   exit(-1);
 }
 
+void Scheduler::ProcessRespondStatCommand(RespondStatCommand* cm) {
+  responded_worker_num_++;
+  std::cout << "\n*******Process Stat Worker: " << cm->worker_id() << std::endl;
+  std::cout << "Stat Run:   " << cm->run_time() / (double)1000000000 << std::endl; // NOLINT
+  std::cout << "Stat Block: " << cm->block_time() / (double)1000000000 << std::endl; // NOLINT
+  std::cout << "Stat Idle:  " << cm->idle_time() / (double)1000000000 << std::endl; // NOLINT
+  std::cout << "*******************************" << cm->worker_id() << std::endl; // NOLINT
+}
+
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   job_id_t job_id = cm->job_id().elem();
 
@@ -660,6 +672,7 @@ void Scheduler::QueryWorkerStats() {
   int64_t time = (int64_t)(Log::GetRawTime());
 
   if ((time - last_query_stat_time_) >= load_balancing_period_) {
+    std::cout << "\n\n ***** Begin Stat Query *****\n";
     RequestStatCommand command(query_stat_id_);
     server_->BroadcastCommand(&command);
 
@@ -828,6 +841,7 @@ void Scheduler::LoadWorkerCommands() {
   worker_command_table_[SchedulerCommand::SAVE_DATA_JOB_DONE] = new SaveDataJobDoneCommand();
   worker_command_table_[SchedulerCommand::WORKER_DOWN]        = new WorkerDownCommand();
   worker_command_table_[SchedulerCommand::PREPARE_REWIND]     = new PrepareRewindCommand();
+  worker_command_table_[SchedulerCommand::RESPOND_STAT]       = new RespondStatCommand();
 }
 
 void Scheduler::LoadUserCommands() {
