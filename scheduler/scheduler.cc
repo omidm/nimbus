@@ -77,8 +77,11 @@ Scheduler::Scheduler(port_t port) {
   load_balancer_ = NULL;
 
   listening_port_ = port;
+  query_stat_id_ = 0;
+  responded_worker_num_ = 0;
   registered_worker_num_ = 0;
   terminate_application_flag_ = false;
+  last_query_stat_time_ = (int64_t)(Log::GetRawTime());
 
   cleaner_thread_active_ = DEFAULT_CLEANER_THREAD_ACTIVE;
   bouncer_thread_active_ = DEFAULT_BOUNCER_THREAD_ACTIVE;
@@ -218,6 +221,8 @@ void Scheduler::SchedulerCoreProcessor() {
   // Adding main job to the job manager.
   AddMainJob();
 
+  // reinit the last_query_stat_time_
+  last_query_stat_time_ = (int64_t)(Log::GetRawTime());
 
   processed_command_num_ = 0;
   log_.log_StartTimer();
@@ -226,6 +231,8 @@ void Scheduler::SchedulerCoreProcessor() {
   // Main Loop of the scheduler.
   while (true) {
     RegisterPendingWorkers();
+
+    QueryWorkerStats();
 
     log_process_.log_ResumeTimer();
     processed_command_num_ += ProcessQueuedSchedulerCommands();
@@ -449,6 +456,7 @@ void Scheduler::ProcessWorkerDownCommand(WorkerDownCommand* cm) {
   load_balancer_->NotifyDownWorker(worker_id);
 
   server_->RemoveWorker(worker_id);
+  --registered_worker_num_;
 
   data_manager_->RemoveAllInstanceByWorker(worker_id);
   data_manager_->ResetAllInstances();
@@ -647,6 +655,25 @@ size_t Scheduler::RemoveObsoleteJobEntries() {
 size_t Scheduler::AssignReadyJobs() {
   return load_balancer_->AssignReadyJobs();
 }
+
+void Scheduler::QueryWorkerStats() {
+  int64_t time = (int64_t)(Log::GetRawTime());
+
+  if ((time - last_query_stat_time_) >= load_balancing_period_) {
+    RequestStatCommand command(query_stat_id_);
+    server_->BroadcastCommand(&command);
+
+    while (responded_worker_num_ < registered_worker_num_) {
+      ProcessQueuedSchedulerCommands();
+    }
+
+    ++query_stat_id_;
+    responded_worker_num_ = 0;
+    last_query_stat_time_ = (int64_t)(Log::GetRawTime());
+  }
+}
+
+
 
 void Scheduler::RegisterInitialWorkers() {
   while (registered_worker_num_ < init_worker_num_) {

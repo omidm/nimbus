@@ -107,6 +107,8 @@ class Scheduler {
 
     virtual size_t RegisterPendingWorkers();
 
+    virtual void QueryWorkerStats();
+
     virtual size_t AssignReadyJobs();
 
     virtual size_t RemoveObsoleteJobEntries();
@@ -200,6 +202,9 @@ class Scheduler {
     size_t job_assigner_thread_num_;
     size_t job_done_batch_size_;
 
+    counter_t query_stat_id_;
+    int64_t last_query_stat_time_;
+    size_t responded_worker_num_;
     size_t registered_worker_num_;
     bool terminate_application_flag_;
     exit_status_t terminate_application_status_;
