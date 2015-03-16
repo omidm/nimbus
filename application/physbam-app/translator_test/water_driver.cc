@@ -171,7 +171,7 @@ Initialize()
 
     example.Set_Boundary_Conditions(time); // get so CFL is correct
     if(!example.restart) {
-        printf("Write initialized data ...\n");
+        printf("\nWrite initialized data ...\n");
         Write_Output_Files(example.first_frame);
     }
 }
@@ -181,7 +181,7 @@ Initialize()
 template<class TV> void WATER_DRIVER<TV>::
 TestParticles()
 {
-    printf("Testing particles ...\n\n");
+    printf("\nTesting particles ...\n\n");
 
     // Define/ create data
     int start[] = {-2, 1, 4, scale-2, scale+1};
@@ -237,7 +237,7 @@ Test()
     nimbus::timer::InitializeKeys();
     nimbus::timer::InitializeTimers();
 
-    printf("Testing translator ...\n\n");
+    printf("\nTesting translator ...\n");
 
     TestParticles();
 

@@ -691,9 +691,9 @@ template <class TS> class TranslatorPhysBAM {
                 GeometricRegion pregion = regions[r];
                 pregion.Translate(neg_shift);
 
-                for (int z = pregion.z(); z <= pregion.z() + pregion.dz(); ++z) {
+                for (int x = pregion.x(); x <= pregion.x() + pregion.dx(); ++x) {
                     for (int y = pregion.y(); y <= pregion.y() + pregion.dy() ; ++y) {
-                        for (int x = pregion.x(); x <= pregion.x() + pregion.dx(); ++x) {
+                        for (int z = pregion.z(); z <= pregion.z() + pregion.dz(); ++z) {
                             TV_INT bucket_index(x, y, z);
 
                             if (!(x == pregion.x() || x == pregion.x() + pregion.dx() ||
@@ -920,21 +920,41 @@ template <class TS> class TranslatorPhysBAM {
             GeometricRegion pinner = inner;
             pinner.Translate(neg_shift);
 
-            for (int z = pouter.z(); z <= pouter.z() + pouter.dz(); ++z) {
-                for (int y = pouter.y(); y <= pouter.y() + pouter.dy() ; ++y) {
-                    for (int x = pouter.x(); x <= pouter.x() + pouter.dx(); ++x) {
+            const int_dimension_t pix = pinner.x();
+            const int_dimension_t piy = pinner.y();
+            const int_dimension_t piz = pinner.z();
+            const int_dimension_t pidx = pinner.dx();
+            const int_dimension_t pidy = pinner.dy();
+            const int_dimension_t pidz = pinner.dz();
+            const int_dimension_t pox = pouter.x();
+            const int_dimension_t poy = pouter.y();
+            const int_dimension_t poz = pouter.z();
+            const int_dimension_t podx = pouter.dx();
+            const int_dimension_t pody = pouter.dy();
+            const int_dimension_t podz = pouter.dz();
+
+            const int_dimension_t ix = inner.x();
+            const int_dimension_t iy = inner.y();
+            const int_dimension_t iz = inner.z();
+            const int_dimension_t idx = inner.dx();
+            const int_dimension_t idy = inner.dy();
+            const int_dimension_t idz = inner.dz();
+
+            for (int z = poz; z <= poz + podz; ++z) {
+                for (int y = poy; y <= poy + pody ; ++y) {
+                    for (int x = pox; x <= pox + podx; ++x) {
                         TV_INT bucket_index(x, y, z);
 
-                        if ((x < pinner.x() || x > pinner.x() + pinner.dx() ||
-                             y < pinner.y() || y > pinner.y() + pinner.dy() ||
-                             z < pinner.z() || z > pinner.z() + pinner.dz())) {
+                        if ((x < pix || x > pix + pidx ||
+                             y < piy || y > piy + pidy ||
+                             z < piz || z > piz + pidz)) {
                             particle_container->Free_Particle_And_Clear_Pointer(
                                     (*particles)(bucket_index));
                         } else {
                             // TODO(later): can optimize this further
-                            if (x == pinner.x() || x == pinner.x() + pinner.dx() ||
-                                y == pinner.y() || y == pinner.y() + pinner.dy() ||
-                                z == pinner.z() || z == pinner.z() + pinner.dz()) {
+                            if (x == pix || x == pix + pidx ||
+                                y == piy || y == piy + pidy ||
+                                z == piz || z == piz + pidz) {
                                 ParticleBucket *particle_bucket = (*particles)(bucket_index);
                                 if (!particle_bucket)
                                     continue;
@@ -951,12 +971,12 @@ template <class TS> class TranslatorPhysBAM {
                                         TV particle_position = particle_bucket->X(i);
                                         TV absolute_position = particle_position *
                                             static_cast<float>(scale) + 1.0;
-                                        if (absolute_position.x >= inner.x() &&
-                                            absolute_position.x < inner.x() + inner.dx() &&
-                                            absolute_position.y >= inner.y() &&
-                                            absolute_position.y < inner.y() + inner.dy() &&
-                                            absolute_position.z >= inner.z() &&
-                                            absolute_position.z < inner.z() + inner.dz()) {
+                                        if (absolute_position.x >= ix &&
+                                            absolute_position.x < ix + idx &&
+                                            absolute_position.y >= iy &&
+                                            absolute_position.y < iy + idy &&
+                                            absolute_position.z >= iz &&
+                                            absolute_position.z < iz + idz) {
                                             if (!new_particles_alloc) {
                                                 new_particles_alloc = true;
                                                 (*particles)(bucket_index) =

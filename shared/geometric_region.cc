@@ -296,65 +296,6 @@ GeometricRegion GeometricRegion::GetBoundingBox(const GeometricRegion &region1,
   return GeometricRegionFromRange(min, max);
 }
 
-/**
- * \fn int_dimension_t GeometricRegion::x()
- * \brief Brief description.
- * \return
-*/
-int_dimension_t GeometricRegion::x() const {
-  return x_;
-}
-
-
-/**
- * \fn int_dimension_t GeometricRegion::y()
- * \brief Brief description.
- * \return
-*/
-int_dimension_t GeometricRegion::y() const {
-  return y_;
-}
-
-
-/**
- * \fn int_dimension_t GeometricRegion::z()
- * \brief Brief description.
- * \return
-*/
-int_dimension_t GeometricRegion::z() const {
-  return z_;
-}
-
-
-/**
- * \fn int_dimension_t GeometricRegion::dx()
- * \brief Brief description.
- * \return
-*/
-int_dimension_t GeometricRegion::dx() const {
-  return dx_;
-}
-
-
-/**
- * \fn int_dimension_t GeometricRegion::dy()
- * \brief Brief description.
- * \return
-*/
-int_dimension_t GeometricRegion::dy() const {
-  return dy_;
-}
-
-
-/**
- * \fn int_dimension_t GeometricRegion::dz()
- * \brief Brief description.
- * \return
-*/
-int_dimension_t GeometricRegion::dz() const {
-  return dz_;
-}
-
 Coord GeometricRegion::MinCorner() const {
   Coord result(x_, y_, z_);
   return result;
