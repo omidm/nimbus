@@ -95,6 +95,14 @@ namespace nimbus {
 
     virtual bool SetWorkerToAssignJob(JobEntry *job);
 
+    virtual bool BalanceLoad(counter_t query_id);
+
+    virtual bool AddWorkerStat(const counter_t& query_id,
+                               const worker_id_t& worker_id,
+                               const int64_t& run_time,
+                               const int64_t& block_time,
+                               const int64_t& idle_time);
+
   protected:
     ClusterMap* cluster_map_;
     JobManager *job_manager_;
@@ -104,14 +112,38 @@ namespace nimbus {
     load_balancing_id_t load_balancing_id_;
     bool safe_to_load_balance_;
 
+    class WorkerStat {
+      public:
+        WorkerStat(const counter_t& query_id,
+                   const worker_id_t& worker_id,
+                   const int64_t& run_time,
+                   const int64_t& block_time,
+                   const int64_t& idle_time)
+          : query_id_(query_id),
+            worker_id_(worker_id),
+            run_time_(run_time),
+            block_time_(block_time),
+            idle_time_(idle_time) {}
+        ~WorkerStat() {}
+
+        counter_t query_id_;
+        worker_id_t worker_id_;
+        int64_t run_time_;
+        int64_t block_time_;
+        int64_t idle_time_;
+    };
+
+    typedef boost::unordered_map<worker_id_t, WorkerStat*> StatQuery;
+    typedef std::map<counter_t, StatQuery*> QueryMap;
+
+    QueryMap queries_;
+
   private:
-    typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
-
     LoadBalancer(const LoadBalancer& other) {}
-
-    WorkerMap worker_map_;
-
     void Initialize();
+
+    typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
+    WorkerMap worker_map_;
   };
 
 }  // namespace nimbus

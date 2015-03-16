@@ -41,6 +41,7 @@
 
 
 #include "./dynamic_load_balancer.h"
+#include <stdlib.h>
 
 #define LB_UPDATE_RATE 2000
 
@@ -159,6 +160,41 @@ bool DynamicLoadBalancer::NotifyDownWorker(worker_id_t worker_id) {
         worker_id);
     return false;
   }
+}
+
+bool DynamicLoadBalancer::BalanceLoad(counter_t query_id) {
+  QueryMap::iterator iter = queries_.find(query_id);
+  assert(iter != queries_.end());
+
+  StatQuery *st = iter->second;
+  int64_t r1 = 0, r2 = 0;
+  {
+    StatQuery::iterator it = st->find(1);
+    assert(it != st->end());
+    r1 = it->second->run_time_;
+  }
+  {
+    StatQuery::iterator it = st->find(2);
+    assert(it != st->end());
+    r2 = it->second->run_time_;
+  }
+  if ((r1 - r2) > (.1 * r1)) {
+    if (region_map_.BalanceRegions(2, 1)) {
+      log_.log_WriteToFile(region_map_.Print());
+      // Update load balancing id.
+      ++load_balancing_id_;
+      std::cout << "\n****** LBLBLBLBLB 2 >>> 1 *******\n";
+    }
+  } else if ((r2 - r1) > (.1 * r1)) {
+    if (region_map_.BalanceRegions(1, 2)) {
+      log_.log_WriteToFile(region_map_.Print());
+      // Update load balancing id.
+      ++load_balancing_id_;
+      std::cout << "\n****** LBLBLBLBLB 1 >>> 2 *******\n";
+    }
+  }
+
+  return true;
 }
 
 void DynamicLoadBalancer::BuildRegionMap() {

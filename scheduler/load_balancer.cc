@@ -126,6 +126,12 @@ bool LoadBalancer::SetWorkerToAssignJob(JobEntry *job) {
   return true;
 }
 
+bool LoadBalancer::BalanceLoad(counter_t query_id) {
+  dbg(DBG_WARN, "WARNING: Base load balancer is being used, no load balancing hapens.!!!\n"); // NOLINT
+  QueryMap::iterator iter = queries_.find(query_id);
+  assert(iter != queries_.end());
+  return true;
+}
 
 void LoadBalancer::NotifyJobAssignment(const JobEntry *job) {
   dbg(DBG_WARN, "WARNING: Base load balancer is being used!!!\n");
@@ -160,6 +166,28 @@ bool LoadBalancer::NotifyDownWorker(worker_id_t worker_id) {
     exit(-1);
     return false;
   }
+}
+
+bool LoadBalancer::AddWorkerStat(const counter_t& query_id,
+                                 const worker_id_t& worker_id,
+                                 const int64_t& run_time,
+                                 const int64_t& block_time,
+                                 const int64_t& idle_time) {
+  WorkerStat *ws = new WorkerStat(query_id,
+                                  worker_id,
+                                  run_time,
+                                  block_time,
+                                  idle_time);
+  QueryMap::iterator iter = queries_.find(query_id);
+  if (iter != queries_.end()) {
+    iter->second->operator[](worker_id) = ws;
+  } else {
+    StatQuery *sq = new StatQuery();
+    queries_[query_id] = sq;
+    sq->operator[](worker_id) = ws;
+  }
+
+  return true;
 }
 
 }  // namespace nimbus

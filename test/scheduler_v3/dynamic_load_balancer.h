@@ -77,6 +77,8 @@ namespace nimbus {
 
     virtual bool NotifyDownWorker(worker_id_t worker_id);
 
+    virtual bool BalanceLoad(counter_t query_id);
+
     bool SetWorkerToAssignJob(JobEntry *job);
 
   private:
@@ -89,7 +91,6 @@ namespace nimbus {
     GeometricRegion global_region_;
     RegionMap region_map_;
     WorkerMap worker_map_;
-    WorkerMonitor worker_monitor_;
     boost::recursive_mutex mutex_;
 
     size_t counter_;

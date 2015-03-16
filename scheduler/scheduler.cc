@@ -519,7 +519,13 @@ void Scheduler::ProcessPrepareRewindCommand(PrepareRewindCommand* cm) {
 
 void Scheduler::ProcessRespondStatCommand(RespondStatCommand* cm) {
   responded_worker_num_++;
-  std::cout << "\n*******Process Stat Worker: " << cm->worker_id() << std::endl;
+  load_balancer_->AddWorkerStat(cm->query_id(),
+                                cm->worker_id(),
+                                cm->run_time(),
+                                cm->block_time(),
+                                cm->idle_time());
+
+  std::cout << "\n** Stat Worker: " << cm->worker_id() << std::endl;
   std::cout << "Stat Run:   " << cm->run_time() / (double)1000000000 << std::endl; // NOLINT
   std::cout << "Stat Block: " << cm->block_time() / (double)1000000000 << std::endl; // NOLINT
   std::cout << "Stat Idle:  " << cm->idle_time() / (double)1000000000 << std::endl; // NOLINT
@@ -680,13 +686,15 @@ void Scheduler::QueryWorkerStats() {
   int64_t time = (int64_t)(Log::GetRawTime());
 
   if ((time - last_query_stat_time_) >= load_balancing_period_) {
-    std::cout << "\n\n ***** Begin Stat Query *****\n";
+    std::cout << "\n\n***** Begin Stat Query *****\n";
     RequestStatCommand command(query_stat_id_);
     server_->BroadcastCommand(&command);
 
     while (responded_worker_num_ < registered_worker_num_) {
       ProcessQueuedSchedulerCommands();
     }
+
+    load_balancer_->BalanceLoad(query_stat_id_);
 
     ++query_stat_id_;
     responded_worker_num_ = 0;
