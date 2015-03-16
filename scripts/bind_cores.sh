@@ -7,7 +7,7 @@
 #          binds all the threads of process scheduler to core 0-3
 #
 
-/bin/ps -eLf -fu $USER | grep $1 | grep -v grep |awk '{print $4}' | while read pid;
+/bin/ps -eLf -fu $USER | grep $1 | grep -v grep | grep -v bind_cores | grep -v "export DBG" | awk '{print $4}' | while read pid;
 do
   echo $pid
   taskset -cp $2 $pid
