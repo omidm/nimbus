@@ -35,10 +35,21 @@ Run: ./scheduler
 ------------------------------------------------------------------------------
 Note:
 ------------------------------------------------------------------------------
-In order to simulate the load imbalance at the worker, after spawning the
-worker you could limit the cpu usage of the worker using cpulimit:
+In order to simulate the load imbalance at the worker, there are two solutions:
 
-cpulimit -p <PID> -l <cpu-limit-percentage>
+(1) after spawning the worker you could limit worker cpu usage with "cpulimit":
 
-one easy way of geting PID is using top/htop. Also see cpulmit man page.
+    Running worker: "cpulimit -e worker -l <cpu-limit-percentage>"
+    Running worker: "cpulimit -p <foreach-worker-PID> -l <cpu-limit-percentage>"
+
+    (note**) for an "n" processor machine the percentage limit is 0-n*100. but
+    cpulimit sometimes does not work well for multi-processor machine
+
+
+(2) or you could use "taskset":
+
+    Running worker:  "taskset -cp <cores> <foreach-worker-PID>"
+    Launch  worker:  "taskset -c <cores> ./worker <args>"
+
+(note) one easy way of geting PID is using top/htop.
 
