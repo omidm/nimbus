@@ -52,4 +52,5 @@ In order to simulate the load imbalance at the worker, there are two solutions:
     Launch  worker:  "taskset -c <cores> ./worker <args>"
 
 (note) one easy way of geting PID is using top/htop.
+(note**) see the script "bind_cores.sh" in nimbus/scripts/.
 
