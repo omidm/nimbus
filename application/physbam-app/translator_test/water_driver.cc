@@ -18,6 +18,7 @@
 #include "application/physbam-app/translator_test/particle_test.h"
 #include "application/physbam-app/translator_test/water_driver.h"
 #include "application/physbam-app/translator_test/water_example.h"
+#include "shared/fast_log.hh"
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
 #include "worker/data.h"
@@ -216,12 +217,14 @@ TestParticles()
     particle_test.enl_region = nimbus::GeometricRegion(-2, -2, -2, scale+6, scale+6, scale+6);
 
     for (size_t t = 0; t < 10; ++t) {
+        particle_test.WriteParticles(particle_test.enl_region, particle_out,
+                                     &example.particle_levelset_evolution.particle_levelset,
+                                     true);
         particle_test.DeleteOutsideParticles(&example.particle_levelset_evolution.particle_levelset, true);
+        particle_test.ReadParticles(particle_test.enl_region, particle_out,
+                                    &example.particle_levelset_evolution.particle_levelset,
+                                    true);
     }
-
-    // nimbus::Timer delete_particles("Delete Particles");
-    // nimbus::Timer read_particles("Read Particles");
-    // nimbus::Timer write_particles("Write Particles");
 }
 //#####################################################################
 // Test
@@ -231,9 +234,17 @@ Test()
 {
     Initialize();
 
+    nimbus::timer::InitializeKeys();
+    nimbus::timer::InitializeTimers();
+
     printf("Testing translator ...\n\n");
 
     TestParticles();
+
+    std::string file_name = "times.txt";
+    FILE* temp = fopen(file_name.c_str(), "w");
+    nimbus::timer::PrintTimerSummary(temp);
+    fclose(temp);
 
     printf("\n... Test translator complete\n\n");
 } 
