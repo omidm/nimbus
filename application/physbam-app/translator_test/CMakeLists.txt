@@ -29,14 +29,18 @@ add_definitions(-DDUMP_NDATA=FALSE )
 
 #Manually list your cpp and h files here - do NOT use GLOB/GLOB_RECURSE
 SET(${PROJECT_NAME}_cpp
+    ${PROJECT_SOURCE_DIR}/data_face_array.cc
     ${PROJECT_SOURCE_DIR}/data_particle_array.cc
+    ${PROJECT_SOURCE_DIR}/face_array_test.cc
     ${PROJECT_SOURCE_DIR}/main.cc
     ${PROJECT_SOURCE_DIR}/particle_test.cc
     ${PROJECT_SOURCE_DIR}/water_driver.cc
     ${PROJECT_SOURCE_DIR}/water_example.cc
     )
 SET(${PROJECT_NAME}_h
+    ${PROJECT_SOURCE_DIR}/data_face_array.h
     ${PROJECT_SOURCE_DIR}/data_particle_array.h
+    ${PROJECT_SOURCE_DIR}/face_array_test.h
     ${PROJECT_SOURCE_DIR}/particle_test.h
     ${PROJECT_SOURCE_DIR}/physbam_include.h
     ${PROJECT_SOURCE_DIR}/water_driver.h

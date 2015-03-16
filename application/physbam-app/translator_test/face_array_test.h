@@ -36,10 +36,10 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_PHYSBAM_APP_TRANSLATOR_TEST_PARTICLE_TEST_H_
-#define NIMBUS_APPLICATION_PHYSBAM_APP_TRANSLATOR_TEST_PARTICLE_TEST_H_
+#ifndef NIMBUS_APPLICATION_PHYSBAM_APP_TRANSLATOR_TEST_FACE_ARRAY_TEST_H_
+#define NIMBUS_APPLICATION_PHYSBAM_APP_TRANSLATOR_TEST_FACE_ARRAY_TEST_H_
 
-#include "application/water_multiple/physbam_include.h"
+#include "application/physbam-app/translator_test/physbam_include.h"
 #include "data/physbam/translator_physbam.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
@@ -47,7 +47,7 @@
 
 namespace test {
 
-class ParticleTest {
+template<typename T> class FaceArrayTest {
     public:
         typedef float TS;
         typedef typename PhysBAM::VECTOR<TS, 3> TV;
@@ -55,10 +55,8 @@ class ParticleTest {
         typedef typename PhysBAM::RANGE<TV> Range;
         typedef typename PhysBAM::GRID<TV> Grid;
 
-        typedef typename PhysBAM::PARTICLE_LEVELSET_EVOLUTION_UNIFORM<Grid> PhysBAMPLE;
-        typedef typename PhysBAM::PARTICLE_LEVELSET_UNIFORM<Grid> PhysBAMParticleContainer;
-        typedef typename PhysBAM::PARTICLE_LEVELSET_PARTICLES<TV> PhysBAMParticleBucket;
-        typedef typename PhysBAM::PARTICLE_LEVELSET_EVOLUTION<Grid> PhysBAMParticleArray;
+        typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
+        typedef typename PhysBAM::ARRAY<T, FaceIndex> PhysBAMFaceArray;
 
         typedef typename nimbus::TranslatorPhysBAM<TS> Translator;
 
@@ -67,14 +65,13 @@ class ParticleTest {
         nimbus::GeometricRegion loc_region;
         nimbus::GeometricRegion enl_region;
         nimbus::int_dimension_t scale;
-        void DeleteOutsideParticles(PhysBAMParticleContainer *particle_levelset, bool positive);
-        void ReadParticles(nimbus::GeometricRegion read_region,
+        void ReadFaceArray(nimbus::GeometricRegion read_region,
                            nimbus::DataArray &read_array,
-                           PhysBAMParticleContainer *particle_levelset, bool positive);
-        void WriteParticles(nimbus::GeometricRegion write_region,
+                           PhysBAMFaceArray *fa);
+        void WriteFaceArray(nimbus::GeometricRegion write_region,
                             nimbus::DataArray &write_array,
-                            PhysBAMParticleContainer *particle_levelset, bool positive);
-}; // class ParticleTest
+                            PhysBAMFaceArray *fa);
+}; // class FaceArrayTest
 } // namespace test
 
-#endif // NIMBUS_APPLICATION_PHYSBAM_APP_TRANSLATOR_TEST_PARTICLE_TEST_H_
+#endif // NIMBUS_APPLICATION_PHYSBAM_APP_TRANSLATOR_TEST_FACE_ARRAY_TEST_H_
