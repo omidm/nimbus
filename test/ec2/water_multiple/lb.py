@@ -94,7 +94,7 @@ import matplotlib.pyplot as plt
 
 iter_num = range(0, len(time))
 
-line = plt.plot(iter_num, time, '-*')
+line = plt.plot(time, iter_num, '-*')
 
 plt.xlabel('Time (S)')
 plt.ylabel('Iteration Number')

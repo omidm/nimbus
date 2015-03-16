@@ -43,7 +43,7 @@
 #include "./dynamic_load_balancer.h"
 #include <stdlib.h>
 
-#define LB_UPDATE_RATE 2000
+#define LB_UPDATE_THRESHOLD (double)(0.2) // NOLINT
 
 namespace nimbus {
 
@@ -167,6 +167,59 @@ bool DynamicLoadBalancer::BalanceLoad(counter_t query_id) {
   assert(iter != queries_.end());
 
   StatQuery *st = iter->second;
+
+  if (worker_map_.size() < 2) {
+    std::cout << "There is not at least two workers to load balance.\n";
+    return false;
+  }
+
+  WorkerMap::iterator w1_iter = worker_map_.begin();
+  WorkerMap::iterator w2_iter = worker_map_.begin();
+  ++w2_iter;
+  for (; w2_iter != worker_map_.end();) {
+    worker_id_t w1 = w1_iter->first;
+    worker_id_t w2 = w2_iter->first;
+
+    int64_t r1 = 0, r2 = 0;
+    {
+      StatQuery::iterator it = st->find(w1);
+      assert(it != st->end());
+      r1 = it->second->run_time_;
+    }
+    {
+      StatQuery::iterator it = st->find(w2);
+      assert(it != st->end());
+      r2 = it->second->run_time_;
+    }
+    double load_imbalance = ((double)(std::abs(r1 - r2))) / ((double)(std::max(r1, r2))); // NOLINT
+    if (load_imbalance >= LB_UPDATE_THRESHOLD) {
+      if (r1 > r2) {
+        if (region_map_.BalanceRegions(w2, w1)) {
+          log_.log_WriteToFile(region_map_.Print());
+          // Update load balancing id.
+          ++load_balancing_id_;
+          std::cout << "\n****** LB : "
+                    <<  w2 << " grows into " << w1
+                    << " LIB factor :" << load_imbalance
+                    << std::endl;
+        }
+      } else if (r2 > r1) {
+        if (region_map_.BalanceRegions(w1, w2)) {
+          log_.log_WriteToFile(region_map_.Print());
+          // Update load balancing id.
+          ++load_balancing_id_;
+          std::cout << "\n****** LB : "
+                    <<  w1 << " grows into " << w2
+                    << " LIB factor :" << load_imbalance
+                    << std::endl;
+        }
+      }
+    }
+
+    ++w1_iter;
+    ++w2_iter;
+  }
+
   int64_t r1 = 0, r2 = 0;
   {
     StatQuery::iterator it = st->find(1);
