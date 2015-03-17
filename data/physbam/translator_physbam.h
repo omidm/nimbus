@@ -1860,10 +1860,11 @@ template <class TS> class TranslatorPhysBAM {
           }
           DataArray::iterator write_data =
               const_cast<DataArray&>(write_set).begin();
-          for (; write_data != write_set.end(); ++write_data) {
+          for (; write_data != const_cast<DataArray&>(write_set).end();
+               ++write_data) {
             PhysBAMDataWithMeta* nimbus_data =
                 dynamic_cast<PhysBAMDataWithMeta*>(*write_data);  // NOLINT
-            // assert(nimbus_data != NULL);
+            assert(nimbus_data != NULL);
             const GeometricRegion loop_region =
                 GeometricRegion::GetIntersection(nimbus_data->region(), region);
             if (!loop_region.NoneZeroArea()) {
@@ -1871,17 +1872,21 @@ template <class TS> class TranslatorPhysBAM {
             }
 
             nimbus_data->Destroy();
+            nimbus_data->ResetMetaData();
             nimbus_data->set_has_meta_data();
+            nimbus_data->set_meta_data_hash(static_cast<int64_t>(HASH_SEED));
 
             timer::StartTimer(timer::k19);
             int_dimension_t total = 0;
+            if (index_data.array.Get_Array_Pointer() == NULL) {
+              continue;
+            }
             {
               int* base_pointer =
                   const_cast<int*>(index_data.array.Get_Array_Pointer())
-                  - (index_data.domain.min_corner.x *
-                    index_data.counts.y + index_data.domain.min_corner.y)
-                    * index_data.counts.z
-                  - index_data.domain.min_corner.z;
+                  - ((index_data.domain.min_corner.x * index_data.counts.y
+                      + index_data.domain.min_corner.y) * index_data.counts.z
+                     + index_data.domain.min_corner.z);
               const int step_x = index_data.counts.y * index_data.counts.z;
               const int step_y = index_data.counts.z;
               const int_dimension_t loop_x
@@ -1898,7 +1903,7 @@ template <class TS> class TranslatorPhysBAM {
                   = loop_z + loop_region.dz();
               for (int_dimension_t x = loop_x; x < loop_x_end; x += step_x)
                 for (int_dimension_t y = loop_y; y < loop_y_end; y += step_y) {
-                  int* p = &(base_pointer[loop_x + loop_y + loop_z]);
+                  int* p = &(base_pointer[x + y + loop_z]);
                   for (int_dimension_t z = loop_z; z < loop_z_end; ++z)
                     if (*(p++) >= 1) {
                       ++total;
@@ -1923,10 +1928,9 @@ template <class TS> class TranslatorPhysBAM {
             {
               int* base_pointer =
                   const_cast<int*>(index_data.array.Get_Array_Pointer())
-                  - (index_data.domain.min_corner.x *
-                    index_data.counts.y + index_data.domain.min_corner.y)
-                    * index_data.counts.z
-                  - index_data.domain.min_corner.z;
+                  - ((index_data.domain.min_corner.x * index_data.counts.y
+                      + index_data.domain.min_corner.y) * index_data.counts.z
+                     + index_data.domain.min_corner.z);
               const int step_x = index_data.counts.y * index_data.counts.z;
               const int step_y = index_data.counts.z;
               const int_dimension_t loop_x = loop_region.x() - shift.x;
@@ -1935,16 +1939,20 @@ template <class TS> class TranslatorPhysBAM {
               const int_dimension_t loop_x_end = loop_x + loop_region.dx();
               const int_dimension_t loop_y_end = loop_y + loop_region.dy();
               const int_dimension_t loop_z_end = loop_z + loop_region.dz();
+              const int_dimension_t shift_x = shift.x;
+              const int_dimension_t shift_y = shift.y;
+              const int_dimension_t shift_z = shift.z;
               for (int_dimension_t x = loop_x; x < loop_x_end; ++x)
                 for (int_dimension_t y = loop_y; y < loop_y_end; ++y) {
-                  int_dimension_t offset = step_x*loop_x + step_y*loop_y;
+                  const int_dimension_t offset = step_x*x + step_y*y;
                   int* p = &(base_pointer[offset + loop_z]);
                   for (int_dimension_t z = loop_z; z < loop_z_end; ++z) {
-                    if (*(p++) >= 1) {
-                      *(meta_pointer++) = x;
-                      *(meta_pointer++) = y;
-                      *(meta_pointer++) = z;
-                      *(data_pointer++) = data(offset + z);
+                    int m_index = *(p++);
+                    if (m_index >= 1) {
+                      *(meta_pointer++) = x + shift_x;
+                      *(meta_pointer++) = y + shift_y;
+                      *(meta_pointer++) = z + shift_z;
+                      *(data_pointer++) = data(m_index);
                     }
                   }
                 }
