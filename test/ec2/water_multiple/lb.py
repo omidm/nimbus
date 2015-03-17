@@ -84,20 +84,37 @@ print base_time
 for i in range (0, len(time)):
   time[i] = time[i] - base_time
 
+diff = []
+for i in range (0, len(time) - 1):
+  diff.append(time[i + 1] - time[i])
+
 print "Time: "
 print time
-
 
 import numpy as np
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 
+time = [t / 60 for t in time]
+
 iter_num = range(0, len(time))
 
 line = plt.plot(time, iter_num, '-*')
 
-plt.xlabel('Time (S)')
+plt.xlabel('Time (minute)')
 plt.ylabel('Iteration Number')
+# plt.axis([40, 160, 0, 0.03])
+plt.grid(True)
+
+plt.show()
+
+
+iter_num = range(0, len(time) - 1)
+
+line = plt.bar(iter_num, diff)
+
+plt.xlabel('Iteration Number')
+plt.ylabel('Iteration Duration (second)')
 # plt.axis([40, 160, 0, 0.03])
 plt.grid(True)
 
