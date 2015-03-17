@@ -51,9 +51,11 @@ namespace test {
 template<typename T> void FaceArrayTest<T>::
 ReadFaceArray(nimbus::GeometricRegion read_region,
               nimbus::DataArray &read_array,
-              PhysBAMFaceArray *fa) {
+              PhysBAMFaceArray *fa,
+              PhysBAMFaceArray &flag
+              ) {
     Translator::template
-        ReadFaceArray<T>(read_region, loc_region, shift, read_array, fa);
+        ReadFaceArray<T>(read_region, loc_region, shift, read_array, fa, flag);
 }
 
 template<typename T> void FaceArrayTest<T>::

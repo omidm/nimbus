@@ -1,4 +1,4 @@
-all: check proto_t data_t
+all: proto_t data_t
 
 NIMBUS_ROOT = ../..
 include $(NIMBUS_ROOT)/Makeinclude

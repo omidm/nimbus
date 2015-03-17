@@ -178,6 +178,7 @@ Initialize()
     }
 
     // extra variables
+    example.face_velocities_ghost_flag.Resize(example.incompressible.grid,example.number_of_ghost_cells,false);
     example.face_velocities_ghost.Resize(example.incompressible.grid,example.number_of_ghost_cells,false);
     example.incompressible.boundary->Fill_Ghost_Cells_Face(example.mac_grid,example.face_velocities,example.face_velocities_ghost,time,example.number_of_ghost_cells);
 }
@@ -275,11 +276,20 @@ TestFaceArray()
     face_array_test.loc_region = nimbus::GeometricRegion(1, 1, 1, scale, scale, scale);
     face_array_test.enl_region = nimbus::GeometricRegion(-2, -2, -2, scale+6, scale+6, scale+6);
 
+//    for (size_t t = 0; t < 10; ++t) {
+//        face_array_test.WriteFaceArray(face_array_test.enl_region, face_array_out,
+//                                       &example.face_velocities_ghost);
+//        face_array_test.ReadFaceArray(face_array_test.enl_region, face_array_out,
+//                                      &example.face_velocities_ghost);
+//    }
+
+
     for (size_t t = 0; t < 10; ++t) {
-        face_array_test.WriteFaceArray(face_array_test.enl_region, face_array_out,
+        face_array_test.WriteFaceArray(face_array_test.enl_region, face_array_in,
                                        &example.face_velocities_ghost);
-        face_array_test.ReadFaceArray(face_array_test.enl_region, face_array_out,
-                                      &example.face_velocities_ghost);
+        example.face_velocities_ghost_flag.Fill(0);
+        face_array_test.ReadFaceArray(face_array_test.enl_region, face_array_in,
+                                      &example.face_velocities_ghost, example.face_velocities_ghost_flag);
     }
 }
 //#####################################################################
