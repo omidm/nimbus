@@ -40,7 +40,7 @@
  * represents a point in space. The class derives the scalar type
  * (typically float) from this VECTOR, as well as the dimensionality.
  *
- * Author: Philip Levis <pal@cs.stanford.edu>,
+ * Buthor: Philip Levis <pal@cs.stanford.edu>,
  *         Chinmayee Shah <chshah@stanford.edu>,
  *         Hang Qu <quhang@stanford.edu>
  */
@@ -127,9 +127,11 @@ template <class TS> class TranslatorPhysBAM {
                 const GeometricRegion &inner,
                 const Coord &shift,
                 const DataArray &read_set,
-                typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
+                typename PhysBAM::ARRAY<T, FaceIndex>* fa,
+                typename PhysBAM::ARRAY<T, FaceIndex>& flag
+                ) {
             timer::StartTimer(timer::k1);
-            ReadFaceArrayInner(region, inner, shift, read_set, fa);
+            ReadFaceArrayInner(region, inner, shift, read_set, fa, flag);
             timer::StopTimer(timer::k1);
         }
 
@@ -141,7 +143,9 @@ template <class TS> class TranslatorPhysBAM {
                 const GeometricRegion &inner,
                 const Coord &shift,
                 const DataArray &read_set,
-                typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
+                typename PhysBAM::ARRAY<T, FaceIndex>* fa,
+                typename PhysBAM::ARRAY<T, FaceIndex>& flag
+                ) {
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -157,9 +161,12 @@ template <class TS> class TranslatorPhysBAM {
                 }
                 return;
             }
-            PhysBAM::ARRAY<T, FaceIndex> flag;
-            flag = *fa;
-            flag.Fill(0);
+            int_dimension_t rx = region.x();
+            int_dimension_t ry = region.y();
+            int_dimension_t rz = region.z();
+            // PhysBAM::ARRAY<T, FaceIndex> flag;
+            // flag = *fa;
+            // flag.Fill(0);
             DataArray read_inner;
             DataArray read_outer;
             for (size_t i = 0; i < read_set.size(); ++i) {
@@ -175,14 +182,17 @@ template <class TS> class TranslatorPhysBAM {
                 Dimension3Vector overlap = GetOverlapSize(dregion, region);
                 if (HasOverlap(overlap)) {
                     T* buffer = reinterpret_cast<T*>(data->buffer());
-                    Dimension3Vector src = GetOffset(dregion, region);
-                    Dimension3Vector dest = GetOffset(region, dregion);
+                    const Dimension3Vector src = GetOffset(dregion, region);
+                    const Dimension3Vector dest = GetOffset(region, dregion);
+                    int tx = dest(X_COORD) + rx - shift.x;
+                    int ty = dest(Y_COORD) + ry - shift.y;
+                    int tz = dest(Z_COORD) + rz - shift.z;
                     //  x, y and z values are stored separately due to the
                     // difference in number of x, y and z values in face arrays
                     for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
-                        int mult_x = 1;
-                        int mult_y = dregion.dx();
-                        int mult_z = dregion.dy() * dregion.dx();
+                        int mult_x = dregion.dy() * dregion.dz();
+                        int mult_y = dregion.dz();
+                        // const int mult_z = 1;
                         int range_x = overlap(X_COORD);
                         int range_y = overlap(Y_COORD);
                         int range_z = overlap(Z_COORD);
@@ -190,18 +200,18 @@ template <class TS> class TranslatorPhysBAM {
                         switch (dim) {
                             case X_COORD:
                                 range_x += 1;
-                                mult_y  += 1;
-                                mult_z  += dregion.dy();
                                 break;
                             case Y_COORD:
                                 range_y += 1;
-                                mult_z  += dregion.dx();
+                                mult_x  += dregion.dz();
                                 src_offset += (dregion.dx() + 1) *
                                     (dregion.dy()) *
                                     (dregion.dz());
                                 break;
                             case Z_COORD:
                                 range_z += 1;
+                                mult_y  += 1;
+                                mult_x  += dregion.dy();
                                 src_offset += ((dregion.dx()) *
                                         (dregion.dy() + 1) *
                                         (dregion.dz())) +
@@ -210,25 +220,28 @@ template <class TS> class TranslatorPhysBAM {
                                      (dregion.dz()));
                                 break;
                         }
-                        for (int z = 0; z < range_z; ++z) {
+                        const int source_x = src(X_COORD);
+                        const int source_y = src(Y_COORD);
+                        const int source_z = src(Z_COORD);
+                        int source_index_x = src_offset + (source_x-1) * mult_x;
+                        for (int x = 0; x < range_x; ++x) {
+                            source_index_x += mult_x;
+                            int source_index_y = source_index_x + (source_y - 1) * mult_y;
                             for (int y = 0; y < range_y; ++y) {
-                                for (int x = 0; x < range_x; ++x) {
-                                    int source_x = x + src(X_COORD);
-                                    int source_y = y + src(Y_COORD);
-                                    int source_z = z + src(Z_COORD);
-                                    int source_index = source_x * mult_x +
-                                        source_y * mult_y +
-                                        source_z * mult_z;
-                                    source_index += src_offset;
-                                    int dest_x = x + dest(X_COORD) + region.x() - shift.x;
-                                    int dest_y = y + dest(Y_COORD) + region.y() - shift.y;
-                                    int dest_z = z + dest(Z_COORD) + region.z() - shift.z;
+                                source_index_y += mult_y;
+                                int source_index_z = source_index_y + (source_z - 1);
+                                for (int z = 0; z < range_z; ++z) {
+                                    source_index_z += 1;
+                                    int source_index = source_index_z;
+                                    int dest_x = x + tx;
+                                    int dest_y = y + ty;
+                                    int dest_z = z + tz;
                                     typename PhysBAM::VECTOR<int, 3>
                                         destinationIndex(dest_x, dest_y, dest_z);
                                     // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
                                     if (flag(dim, destinationIndex) == 0) {
                                         (*fa)(dim, destinationIndex) = buffer[source_index];
-                                        flag(dim, destinationIndex) = 1;
+                                         // flag(dim, destinationIndex) = 1;
                                     } else if (flag(dim, destinationIndex) == 1) {
                                         if ((*fa)(dim, destinationIndex)
                                                 != buffer[source_index]) {
@@ -246,105 +259,105 @@ template <class TS> class TranslatorPhysBAM {
                     }
                 }
             }
-            int cx1 = inner.x();
-            int cx2 = inner.x() + inner.dx();
-            int cy1 = inner.y();
-            int cy2 = inner.y() + inner.dy();
-            int cz1 = inner.z();
-            int cz2 = inner.z() + inner.dz();
-            for (size_t i = 0; i < read_outer.size(); ++i) {
-                PhysBAMData *data = static_cast<PhysBAMData*>(read_outer[i]);
-                const GeometricRegion dregion = data->region();
-                Dimension3Vector overlap = GetOverlapSize(dregion, region);
-                if (HasOverlap(overlap)) {
-                    T* buffer = reinterpret_cast<T*>(data->buffer());
-                    Dimension3Vector src = GetOffset(dregion, region);
-                    Dimension3Vector dest = GetOffset(region, dregion);
-                    //  x, y and z values are stored separately due to the
-                    // difference in number of x, y and z values in face arrays
-                    for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
-                        int mult_x = 1;
-                        int mult_y = dregion.dx();
-                        int mult_z = dregion.dy() * dregion.dx();
-                        int range_x = overlap(X_COORD);
-                        int range_y = overlap(Y_COORD);
-                        int range_z = overlap(Z_COORD);
-                        int src_offset = 0;
-                        switch (dim) {
-                            case X_COORD:
-                                range_x += 1;
-                                mult_y  += 1;
-                                mult_z  += dregion.dy();
-                                break;
-                            case Y_COORD:
-                                range_y += 1;
-                                mult_z  += dregion.dx();
-                                src_offset += (dregion.dx() + 1) *
-                                    (dregion.dy()) *
-                                    (dregion.dz());
-                                break;
-                            case Z_COORD:
-                                range_z += 1;
-                                src_offset += ((dregion.dx()) *
-                                        (dregion.dy() + 1) *
-                                        (dregion.dz())) +
-                                    ((dregion.dx() + 1) *
-                                     (dregion.dy()) *
-                                     (dregion.dz()));
-                                break;
-                        }
-                        for (int z = 0; z < range_z; ++z) {
-                            for (int y = 0; y < range_y; ++y) {
-                                for (int x = 0; x < range_x; ++x) {
-                                    int source_x = x + src(X_COORD);
-                                    int source_y = y + src(Y_COORD);
-                                    int source_z = z + src(Z_COORD);
-                                    int source_index = source_x * mult_x +
-                                        source_y * mult_y +
-                                        source_z * mult_z;
-                                    source_index += src_offset;
-                                    int loc_x = x + dest(X_COORD) + region.x();
-                                    int loc_y = y + dest(Y_COORD) + region.y();
-                                    int loc_z = z + dest(Z_COORD) + region.z();
-                                    int dest_x = loc_x - shift.x;
-                                    int dest_y = loc_y - shift.y;
-                                    int dest_z = loc_z - shift.z;
-                                    typename PhysBAM::VECTOR<int, 3>
-                                        destinationIndex(dest_x, dest_y, dest_z);
-                                    // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
-                                    if ( (dim == X_COORD && (loc_x == cx1 || loc_x == cx2)) ||
-                                         (dim == Y_COORD && (loc_y == cy1 || loc_y == cy2)) ||
-                                         (dim == Z_COORD && (loc_z == cz1 || loc_z == cz2)) ) {
-                                            typename PhysBAM::VECTOR<int, 3>
-                                                destinationIndex(dest_x, dest_y, dest_z);
-                                            // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
-                                            (*fa)(dim, destinationIndex) +=
-                                                buffer[source_index];
-                                            (*fa)(dim, destinationIndex) /= 2;
-                                            flag(dim, destinationIndex) = 2;
-                                    } else {
-                                        if (flag(dim, destinationIndex) == 0) {
-                                            (*fa)(dim, destinationIndex) = buffer[source_index];
-                                            flag(dim, destinationIndex) = 1;
-                                        } else {
-                                            if ((flag(dim, destinationIndex) == 1)) {
-                                                typename PhysBAM::VECTOR<int, 3>
-                                                    destinationIndex(dest_x, dest_y, dest_z);
-                                                // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
-                                                (*fa)(dim, destinationIndex) +=
-                                                    buffer[source_index];
-                                                (*fa)(dim, destinationIndex) /= 2;
-                                            } else {
-                                                assert(false);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            // int cx1 = inner.x();
+            // int cx2 = inner.x() + inner.dx();
+            // int cy1 = inner.y();
+            // int cy2 = inner.y() + inner.dy();
+            // int cz1 = inner.z();
+            // int cz2 = inner.z() + inner.dz();
+            // for (size_t i = 0; i < read_outer.size(); ++i) {
+            //     PhysBAMData *data = static_cast<PhysBAMData*>(read_outer[i]);
+            //     const GeometricRegion dregion = data->region();
+            //     Dimension3Vector overlap = GetOverlapSize(dregion, region);
+            //     if (HasOverlap(overlap)) {
+            //         T* buffer = reinterpret_cast<T*>(data->buffer());
+            //         Dimension3Vector src = GetOffset(dregion, region);
+            //         Dimension3Vector dest = GetOffset(region, dregion);
+            //         //  x, y and z values are stored separately due to the
+            //         // difference in number of x, y and z values in face arrays
+            //         for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
+            //             int mult_x = 1;
+            //             int mult_y = dregion.dx();
+            //             int mult_z = dregion.dy() * dregion.dx();
+            //             int range_x = overlap(X_COORD);
+            //             int range_y = overlap(Y_COORD);
+            //             int range_z = overlap(Z_COORD);
+            //             int src_offset = 0;
+            //             switch (dim) {
+            //                 case X_COORD:
+            //                     range_x += 1;
+            //                     mult_y  += 1;
+            //                     mult_z  += dregion.dy();
+            //                     break;
+            //                 case Y_COORD:
+            //                     range_y += 1;
+            //                     mult_z  += dregion.dx();
+            //                     src_offset += (dregion.dx() + 1) *
+            //                         (dregion.dy()) *
+            //                         (dregion.dz());
+            //                     break;
+            //                 case Z_COORD:
+            //                     range_z += 1;
+            //                     src_offset += ((dregion.dx()) *
+            //                             (dregion.dy() + 1) *
+            //                             (dregion.dz())) +
+            //                         ((dregion.dx() + 1) *
+            //                          (dregion.dy()) *
+            //                          (dregion.dz()));
+            //                     break;
+            //             }
+            //             for (int z = 0; z < range_z; ++z) {
+            //                 for (int y = 0; y < range_y; ++y) {
+            //                     for (int x = 0; x < range_x; ++x) {
+            //                         int source_x = x + src(X_COORD);
+            //                         int source_y = y + src(Y_COORD);
+            //                         int source_z = z + src(Z_COORD);
+            //                         int source_index = source_x * mult_x +
+            //                             source_y * mult_y +
+            //                             source_z * mult_z;
+            //                         source_index += src_offset;
+            //                         int loc_x = x + dest(X_COORD) + region.x();
+            //                         int loc_y = y + dest(Y_COORD) + region.y();
+            //                         int loc_z = z + dest(Z_COORD) + region.z();
+            //                         int dest_x = loc_x - shift.x;
+            //                         int dest_y = loc_y - shift.y;
+            //                         int dest_z = loc_z - shift.z;
+            //                         typename PhysBAM::VECTOR<int, 3>
+            //                             destinationIndex(dest_x, dest_y, dest_z);
+            //                         // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
+            //                         if ( (dim == X_COORD && (loc_x == cx1 || loc_x == cx2)) ||
+            //                              (dim == Y_COORD && (loc_y == cy1 || loc_y == cy2)) ||
+            //                              (dim == Z_COORD && (loc_z == cz1 || loc_z == cz2)) ) {
+            //                                 typename PhysBAM::VECTOR<int, 3>
+            //                                     destinationIndex(dest_x, dest_y, dest_z);
+            //                                 // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
+            //                                 (*fa)(dim, destinationIndex) +=
+            //                                     buffer[source_index];
+            //                                 (*fa)(dim, destinationIndex) /= 2;
+            //                                 flag(dim, destinationIndex) = 2;
+            //                         } else {
+            //                             if (flag(dim, destinationIndex) == 0) {
+            //                                 (*fa)(dim, destinationIndex) = buffer[source_index];
+            //                                 flag(dim, destinationIndex) = 1;
+            //                             } else {
+            //                                 if ((flag(dim, destinationIndex) == 1)) {
+            //                                     typename PhysBAM::VECTOR<int, 3>
+            //                                         destinationIndex(dest_x, dest_y, dest_z);
+            //                                     // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
+            //                                     (*fa)(dim, destinationIndex) +=
+            //                                         buffer[source_index];
+            //                                     (*fa)(dim, destinationIndex) /= 2;
+            //                                 } else {
+            //                                     assert(false);
+            //                                 }
+            //                             }
+            //                         }
+            //                     }
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -361,7 +374,9 @@ template <class TS> class TranslatorPhysBAM {
                 const GeometricRegion &inner,
                 const Coord &shift,
                 const DataArray &read_set,
-                typename PhysBAM::ARRAY<bool, FaceIndex>* fa) {
+                typename PhysBAM::ARRAY<bool, FaceIndex>* fa,
+                typename PhysBAM::ARRAY<bool, FaceIndex>& flag
+                ) {
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -377,8 +392,8 @@ template <class TS> class TranslatorPhysBAM {
                 }
                 return;
             }
-            PhysBAM::ARRAY<bool, FaceIndex> flag;
-            flag = *fa;
+            // PhysBAM::ARRAY<bool, FaceIndex> flag;
+            // flag = *fa;
             flag.Fill(0);
             DataArray read_inner;
             DataArray read_outer;
