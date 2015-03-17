@@ -1870,7 +1870,8 @@ template <class TS> class TranslatorPhysBAM {
               continue;
             }
 
-            nimbus_data->ClearTempBuffer();
+            nimbus_data->Destroy();
+            nimbus_data->set_has_meta_data();
 
             timer::StartTimer(timer::k19);
             int_dimension_t total = 0;
@@ -1906,11 +1907,12 @@ template <class TS> class TranslatorPhysBAM {
             }
             timer::StopTimer(timer::k19);
 
+            if (total == 0) {
+              continue;
+            }
             size_t total_size = total * (sizeof(int_dimension_t)*3 + sizeof(T));
             size_t meta_data_size = total * (sizeof(int_dimension_t)*3);
-            nimbus_data->set_buffer(
-                total_size != 0 ? new char[total_size] : NULL, total_size);
-            nimbus_data->set_has_meta_data();
+            nimbus_data->set_buffer(new char[total_size], total_size);
             nimbus_data->set_meta_data_size(meta_data_size);
             int_dimension_t* meta_pointer =
                 reinterpret_cast<int_dimension_t*>(nimbus_data->buffer());
