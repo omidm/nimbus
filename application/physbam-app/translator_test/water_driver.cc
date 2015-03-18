@@ -14,7 +14,9 @@
 #include <PhysBAM_Geometry/Solids_Geometry/RIGID_GEOMETRY.h>
 #include <PhysBAM_Fluids/PhysBAM_Incompressible/Incompressible_Flows/PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM.h>
 #include <PhysBAM_Dynamics/Boundaries/BOUNDARY_PHI_WATER.h>
+#include "application/physbam-app/translator_test/data_face_array.h"
 #include "application/physbam-app/translator_test/data_particle_array.h"
+#include "application/physbam-app/translator_test/face_array_test.h"
 #include "application/physbam-app/translator_test/particle_test.h"
 #include "application/physbam-app/translator_test/water_driver.h"
 #include "application/physbam-app/translator_test/water_example.h"
@@ -171,9 +173,14 @@ Initialize()
 
     example.Set_Boundary_Conditions(time); // get so CFL is correct
     if(!example.restart) {
-        printf("Write initialized data ...\n");
+        printf("\nWrite initialized data ...\n");
         Write_Output_Files(example.first_frame);
     }
+
+    // extra variables
+    example.face_velocities_ghost_flag.Resize(example.incompressible.grid,example.number_of_ghost_cells,false);
+    example.face_velocities_ghost.Resize(example.incompressible.grid,example.number_of_ghost_cells,false);
+    example.incompressible.boundary->Fill_Ghost_Cells_Face(example.mac_grid,example.face_velocities,example.face_velocities_ghost,time,example.number_of_ghost_cells);
 }
 //#####################################################################
 // Test Particles
@@ -181,7 +188,7 @@ Initialize()
 template<class TV> void WATER_DRIVER<TV>::
 TestParticles()
 {
-    printf("Testing particles ...\n\n");
+    printf("\nTesting particles ...\n\n");
 
     // Define/ create data
     int start[] = {-2, 1, 4, scale-2, scale+1};
@@ -193,7 +200,7 @@ TestParticles()
     for (size_t x = 0; x < 5; ++x) {
         for (size_t y = 0; y < 5; ++y) {
             for (size_t z = 0; z < 5; ++z) {
-                if (! (x == y && y == z) ) {
+                if (! (x == 2 && y == 2 && z == 2) ) {
                     particle_array[i] = new test::DataParticleArray("pos-particles");
                     particle_array[i]->set_region(
                             nimbus::GeometricRegion(start[x], start[y], start[z],
@@ -225,6 +232,72 @@ TestParticles()
                                     &example.particle_levelset_evolution.particle_levelset,
                                     true);
     }
+
+    // TODO(chinmayee): add test for delete in array of regions
+}
+//#####################################################################
+// Test FaceArray
+//#####################################################################
+template<class TV> void WATER_DRIVER<TV>::
+TestFaceArray()
+{
+    printf("\nTesting face arrays ...\n\n");
+
+    // Define/ create data
+    int start[] = {-2, 1, 4, scale-2, scale+1};
+    int delta[] = {3, 3, scale-6, 3, 3};
+    nimbus::DataArray face_array_all(5*5*5);
+    nimbus::DataArray face_array_out;
+    nimbus::DataArray face_array_in;
+    size_t i = 0;
+    for (size_t x = 0; x < 5; ++x) {
+        for (size_t y = 0; y < 5; ++y) {
+            for (size_t z = 0; z < 5; ++z) {
+                // if (! (x == 2 && y == 2 && z == 2) ) {
+                    face_array_all[i] = new test::DataFaceArray<float>("facearray");
+                    face_array_all[i]->set_region(
+                            nimbus::GeometricRegion(start[x], start[y], start[z],
+                                                    delta[x], delta[y], delta[z]));
+                    face_array_all[i]->Create();
+                    if (x == 0 || x == 4 || y == 0 || y == 4 || z == 0 || z == 4) {
+                        face_array_out.push_back(face_array_all[i]);
+                    } else {
+                        face_array_in.push_back(face_array_all[i]);
+                    }
+                    i++;
+                // }
+            }
+        }
+    }
+
+    // face_array test class
+    test::FaceArrayTest<float> face_array_test;
+    face_array_test.shift = nimbus::Coord(0, 0, 0);
+    face_array_test.loc_region = nimbus::GeometricRegion(1, 1, 1, scale, scale, scale);
+    face_array_test.enl_region = nimbus::GeometricRegion(-2, -2, -2, scale+6, scale+6, scale+6);
+
+    example.face_velocities_ghost_tmp = example.face_velocities_ghost;
+    ARRAY<T,FACE_INDEX<TV::dimension> > &fvg = example.face_velocities_ghost;
+    ARRAY<T,FACE_INDEX<TV::dimension> > &fvgt = example.face_velocities_ghost_tmp;
+
+    for (int x = -2; x <= scale + 3; ++x) {
+        for (int y = -2; y <= scale + 3; ++y) {
+            for (int z = -2; z <= scale + 3; ++z) {
+                TV_INT index(x, y, z);
+                fvg(1, index) = float(x) + float(y) + float(z) / 3.0;
+                fvg(2, index) = float(x) + float(y) + float(z) / 3.0 + 1.0;
+                fvg(3, index) = float(x) + float(y) + float(z) / 3.0 + 2.0;
+
+            }
+        }
+    }
+
+    for (size_t t = 0; t < 10; ++t) {
+        face_array_test.WriteFaceArray(face_array_test.enl_region, face_array_out,
+                                       &fvg);
+        face_array_test.ReadFaceArray(face_array_test.enl_region, face_array_out,
+                                      &fvgt);
+    }
 }
 //#####################################################################
 // Test
@@ -237,9 +310,10 @@ Test()
     nimbus::timer::InitializeKeys();
     nimbus::timer::InitializeTimers();
 
-    printf("Testing translator ...\n\n");
+    printf("\nTesting translator ...\n");
 
-    TestParticles();
+    // TestParticles();
+    TestFaceArray();
 
     std::string file_name = "times.txt";
     FILE* temp = fopen(file_name.c_str(), "w");

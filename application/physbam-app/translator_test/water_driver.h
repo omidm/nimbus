@@ -47,6 +47,7 @@ public:
     void Write_Substep(const std::string& title,const int substep,const int level=0);
 
     void TestParticles();
+    void TestFaceArray();
     void Test();
 };
 }

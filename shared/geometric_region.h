@@ -112,12 +112,12 @@ namespace nimbus {
                  int_dimension_t dy,
                  int_dimension_t dz);
 
-    int_dimension_t x() const;
-    int_dimension_t y() const;
-    int_dimension_t z() const;
-    int_dimension_t dx() const;
-    int_dimension_t dy() const;
-    int_dimension_t dz() const;
+    inline int_dimension_t x() const { return x_; }
+    inline int_dimension_t y() const { return y_; }
+    inline int_dimension_t z() const { return z_; }
+    inline int_dimension_t dx() const { return dx_; }
+    inline int_dimension_t dy() const { return dy_; }
+    inline int_dimension_t dz() const { return dz_; }
 
     virtual void FillInValues(const int_dimension_t* values);
     virtual void FillInValues(const GeometricRegionPBuf* msg);
