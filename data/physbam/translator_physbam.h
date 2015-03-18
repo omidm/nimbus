@@ -158,6 +158,12 @@ template <class TS> class TranslatorPhysBAM {
                 return;
             }
 
+            const int cx1 = inner.x();
+            const int cx2 = inner.x() + inner.dx();
+            const int cy1 = inner.y();
+            const int cy2 = inner.y() + inner.dy();
+            const int cz1 = inner.z();
+            const int cz2 = inner.z() + inner.dz();
             size_t read_size = read_set.size();
 
             // mark data that must be read in phase 1 and phase 2 for each
@@ -170,9 +176,9 @@ template <class TS> class TranslatorPhysBAM {
                 if (HasOverlap(overlap)) {
                     read_flag[4*i] = true;
                     // hard coded ghost width here to determine phases
-                    read_flag[4*i+X_COORD] = (dregion.dx() != 3);  // read vx in phase 1
-                    read_flag[4*i+Y_COORD] = (dregion.dy() != 3);  // read vy in phase 1
-                    read_flag[4*i+Z_COORD] = (dregion.dz() != 3);  // read vz in phase 1
+                    read_flag[4*i+X_COORD] = (dregion.x() >= cx1) && (dregion.x() < cx2);  // NOLINT, read vx in phase 1
+                    read_flag[4*i+Y_COORD] = (dregion.y() >= cy1) && (dregion.y() < cy2);  // NOLINT, read vy in phase 1
+                    read_flag[4*i+Z_COORD] = (dregion.z() >= cz1) && (dregion.z() < cz2);  // NOLINT, read vz in phase 1
                 }
             }
 
@@ -245,13 +251,6 @@ template <class TS> class TranslatorPhysBAM {
                 }  //  if read anything
             }  //  outermost for loop over entired read set
 
-            const int cx1 = inner.x();
-            const int cx2 = inner.x() + inner.dx();
-            const int cy1 = inner.y();
-            const int cy2 = inner.y() + inner.dy();
-            const int cz1 = inner.z();
-            const int cz2 = inner.z() + inner.dz();
-
             for (size_t i = 0; i < read_set.size(); ++i) {
                 // read anything in phase 1?
                 if (read_flag[4*i] &&
@@ -301,7 +300,7 @@ template <class TS> class TranslatorPhysBAM {
                                             const TV_INT destination_index(dest_x, dest_y, dest_z);  // NOLINT
                                             if (loc_x == cx1 || loc_x == cx2) {
                                                 (*fa)(dim, destination_index) += buffer[source_index];  // NOLINT
-                                                (*fa)(dim, destination_index) /= 2;
+                                                (*fa)(dim, destination_index) /= 2.0;
                                             } else {
                                                 (*fa)(dim, destination_index) = buffer[source_index];  // NOLINT
                                             }  // branch for averaging
@@ -341,7 +340,7 @@ template <class TS> class TranslatorPhysBAM {
                                             const TV_INT destination_index(dest_x, dest_y, dest_z);  // NOLINT
                                             if (loc_y == cy1 || loc_y == cy2) {
                                                 (*fa)(dim, destination_index) += buffer[source_index];  // NOLINT
-                                                (*fa)(dim, destination_index) /= 2;
+                                                (*fa)(dim, destination_index) /= 2.0;
                                             } else {
                                                 (*fa)(dim, destination_index) = buffer[source_index];  // NOLINT
                                             }  // branch for averaging
@@ -382,7 +381,7 @@ template <class TS> class TranslatorPhysBAM {
                                             const TV_INT destination_index(dest_x, dest_y, dest_z);  // NOLINT
                                             if (loc_z == cz1 || loc_z == cz2) {
                                                 (*fa)(dim, destination_index) += buffer[source_index];  // NOLINT
-                                                (*fa)(dim, destination_index) /= 2;
+                                                (*fa)(dim, destination_index) /= 2.0;
                                             } else {
                                                 (*fa)(dim, destination_index) = buffer[source_index];  // NOLINT
                                             }  // branch for averaging
@@ -429,6 +428,12 @@ template <class TS> class TranslatorPhysBAM {
                 return;
             }
 
+            const int cx1 = inner.x();
+            const int cx2 = inner.x() + inner.dx();
+            const int cy1 = inner.y();
+            const int cy2 = inner.y() + inner.dy();
+            const int cz1 = inner.z();
+            const int cz2 = inner.z() + inner.dz();
             size_t read_size = read_set.size();
 
             // mark data that must be read in phase 1 and phase 2 for each
@@ -441,9 +446,9 @@ template <class TS> class TranslatorPhysBAM {
                 if (HasOverlap(overlap)) {
                     read_flag[4*i] = true;
                     // hard coded ghost width here to determine phases
-                    read_flag[4*i+X_COORD] = (dregion.dx() != 3);  // read vx in phase 1
-                    read_flag[4*i+Y_COORD] = (dregion.dy() != 3);  // read vy in phase 1
-                    read_flag[4*i+Z_COORD] = (dregion.dz() != 3);  // read vz in phase 1
+                    read_flag[4*i+X_COORD] = (dregion.x() >= cx1) && (dregion.x() < cx2);  // NOLINT, read vx in phase 1
+                    read_flag[4*i+Y_COORD] = (dregion.y() >= cy1) && (dregion.y() < cy2);  // NOLINT, read vy in phase 1
+                    read_flag[4*i+Z_COORD] = (dregion.z() >= cz1) && (dregion.z() < cz2);  // NOLINT, read vz in phase 1
                 }
             }
 
@@ -516,13 +521,6 @@ template <class TS> class TranslatorPhysBAM {
                 }  //  if read anything
             }  //  outermost for loop over entired read set
 
-            const int cx1 = inner.x();
-            const int cx2 = inner.x() + inner.dx();
-            const int cy1 = inner.y();
-            const int cy2 = inner.y() + inner.dy();
-            const int cz1 = inner.z();
-            const int cz2 = inner.z() + inner.dz();
-
             for (size_t i = 0; i < read_set.size(); ++i) {
                 // read anything in phase 1?
                 if (read_flag[4*i] &&
@@ -545,8 +543,8 @@ template <class TS> class TranslatorPhysBAM {
                             case X_COORD: {
                                 const int_dimension_t ddy = dregion.dy();
                                 const int_dimension_t ddz = dregion.dz();
-                                assert(overlap(X_COORD) == 3);
-                                const int range_x = 3 + 1;
+                                assert(overlap(X_COORD) == 1);
+                                const int range_x = 2;
                                 const int range_y = overlap(Y_COORD);
                                 const int range_z = overlap(Z_COORD);
                                 const int mult_x = ddy * ddz;
@@ -570,9 +568,7 @@ template <class TS> class TranslatorPhysBAM {
                                             int dest_y = loc_y - shift.y;
                                             int dest_z = loc_z - shift.z;
                                             const TV_INT destination_index(dest_x, dest_y, dest_z);  // NOLINT
-                                            if (!(loc_x == cx1 || loc_x == cx2)) {
-                                                (*fa)(dim, destination_index) = buffer[source_index];  // NOLINT
-                                            }  // branch for averaging
+                                            (*fa)(dim, destination_index) = buffer[source_index];  // NOLINT
                                         }  // read z for loop
                                     }  // read y for loop
                                 }  // read x for loop
@@ -580,11 +576,11 @@ template <class TS> class TranslatorPhysBAM {
                             }
                             case Y_COORD: {
                                 const int_dimension_t ddx = dregion.dx();
-                                const int_dimension_t ddy = 3;
+                                const int_dimension_t ddy = 1;
                                 const int_dimension_t ddz = dregion.dz();
-                                assert(overlap(Y_COORD) == 3);
+                                assert(overlap(Y_COORD) == 1);
                                 const int range_x = overlap(X_COORD);
-                                const int range_y = 3 + 1;
+                                const int range_y = 2;
                                 const int range_z = overlap(Z_COORD);
                                 const int mult_x = (ddy + 1) * ddz;
                                 const int mult_y = ddz;
@@ -607,9 +603,7 @@ template <class TS> class TranslatorPhysBAM {
                                             int dest_y = loc_y - shift.y;
                                             int dest_z = loc_z - shift.z;
                                             const TV_INT destination_index(dest_x, dest_y, dest_z);  // NOLINT
-                                            if (!(loc_y == cy1 || loc_y == cy2)) {
-                                                (*fa)(dim, destination_index) = buffer[source_index];  // NOLINT
-                                            }  // branch for averaging
+                                            (*fa)(dim, destination_index) = buffer[source_index];  // NOLINT
                                         }  // read z for loop
                                     }  // read y for loop
                                 }  // read x for loop
@@ -618,11 +612,11 @@ template <class TS> class TranslatorPhysBAM {
                             case Z_COORD: {
                                 const int_dimension_t ddx = dregion.dx();
                                 const int_dimension_t ddy = dregion.dy();
-                                const int_dimension_t ddz = 3;
-                                assert(overlap(Z_COORD) == 3);
+                                const int_dimension_t ddz = 1;
+                                assert(overlap(Z_COORD) == 1);
                                 const int range_x = overlap(X_COORD);
                                 const int range_y = overlap(Y_COORD);
-                                const int range_z = 3 + 1;
+                                const int range_z = 2;
                                 const int mult_x = ddy * (ddz + 1);
                                 const int mult_y = ddz + 1;
                                 const int mult_z = 1;
@@ -645,9 +639,7 @@ template <class TS> class TranslatorPhysBAM {
                                             int dest_y = loc_y - shift.y;
                                             int dest_z = loc_z - shift.z;
                                             const TV_INT destination_index(dest_x, dest_y, dest_z);  // NOLINT
-                                            if (!(loc_z == cz1 || loc_z == cz2)) {
-                                                (*fa)(dim, destination_index) = buffer[source_index];  // NOLINT
-                                            }  // branch for averaging
+                                            (*fa)(dim, destination_index) = buffer[source_index];  // NOLINT
                                         }  // read z for loop
                                     }  // read y for loop
                                 }  // read x for loop
