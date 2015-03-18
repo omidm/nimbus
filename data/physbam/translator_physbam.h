@@ -1964,53 +1964,106 @@ template <class TS> class TranslatorPhysBAM {
             timer::StopTimer(timer::k8);
             return;
           }
-          for (size_t i = 0; i < write_set.size(); ++i) {
+          DataArray::iterator write_data =
+              const_cast<DataArray&>(write_set).begin();
+          for (; write_data != const_cast<DataArray&>(write_set).end();
+               ++write_data) {
             PhysBAMDataWithMeta* nimbus_data =
-                dynamic_cast<PhysBAMDataWithMeta*>(write_set[i]);  // NOLINT
-            // assert(nimbus_data != NULL);
-            const GeometricRegion nimbus_dregion = nimbus_data->region();
-            GeometricRegion inter_region = GeometricRegion::GetIntersection(
-                nimbus_dregion, region);
-            if (!inter_region.NoneZeroArea()) {
+                dynamic_cast<PhysBAMDataWithMeta*>(*write_data);  // NOLINT
+            assert(nimbus_data != NULL);
+            const GeometricRegion loop_region =
+                GeometricRegion::GetIntersection(nimbus_data->region(), region);
+            if (!loop_region.NoneZeroArea()) {
               continue;
             }
-            nimbus_data->ClearTempBuffer();
-            std::list<T> buffer;
-            for (int_dimension_t x = inter_region.x();
-                 x < inter_region.x() + inter_region.dx();
-                 ++x)
-              for (int_dimension_t y = inter_region.y();
-                   y < inter_region.y() + inter_region.dy();
-                   ++y)
-                for (int_dimension_t z = inter_region.z();
-                     z < inter_region.z() + inter_region.dz();
-                     ++z) {
-                  int m_index = index_data(TV_INT(
-                          x - shift.x, y - shift.y, z - shift.z));
-                  if (m_index >= 1) {
-                    nimbus_data->AddToTempBuffer(
-                        reinterpret_cast<char*>(&x),
-                        sizeof(x));
-                    nimbus_data->AddToTempBuffer(
-                        reinterpret_cast<char*>(&y),
-                        sizeof(y));
-                    nimbus_data->AddToTempBuffer(
-                        reinterpret_cast<char*>(&z),
-                        sizeof(z));
-                    buffer.push_back(data(m_index));
+
+            nimbus_data->Destroy();
+            nimbus_data->ResetMetaData();
+            nimbus_data->set_has_meta_data();
+            nimbus_data->set_meta_data_hash(static_cast<int64_t>(HASH_SEED));
+
+            timer::StartTimer(timer::k19);
+            int_dimension_t total = 0;
+            if (index_data.array.Get_Array_Pointer() == NULL) {
+              continue;
+            }
+            {
+              int* base_pointer =
+                  const_cast<int*>(index_data.array.Get_Array_Pointer())
+                  - ((index_data.domain.min_corner.x * index_data.counts.y
+                      + index_data.domain.min_corner.y) * index_data.counts.z
+                     + index_data.domain.min_corner.z);
+              const int step_x = index_data.counts.y * index_data.counts.z;
+              const int step_y = index_data.counts.z;
+              const int_dimension_t loop_x
+                  = step_x * (loop_region.x() - shift.x);
+              const int_dimension_t loop_y
+                  = step_y * (loop_region.y() - shift.y);
+              const int_dimension_t loop_z
+                  = loop_region.z() - shift.z;
+              const int_dimension_t loop_x_end
+                  = loop_x + step_x * loop_region.dx();
+              const int_dimension_t loop_y_end
+                  = loop_y + step_y * loop_region.dy();
+              const int_dimension_t loop_z_end
+                  = loop_z + loop_region.dz();
+              for (int_dimension_t x = loop_x; x < loop_x_end; x += step_x)
+                for (int_dimension_t y = loop_y; y < loop_y_end; y += step_y) {
+                  int* p = &(base_pointer[x + y + loop_z]);
+                  for (int_dimension_t z = loop_z; z < loop_z_end; ++z)
+                    if (*(p++) >= 1) {
+                      ++total;
+                    }
+                }
+            }
+            timer::StopTimer(timer::k19);
+
+            if (total == 0) {
+              continue;
+            }
+            size_t total_size = total * (sizeof(int_dimension_t)*3 + sizeof(T));
+            size_t meta_data_size = total * (sizeof(int_dimension_t)*3);
+            nimbus_data->set_buffer(new char[total_size], total_size);
+            nimbus_data->set_meta_data_size(meta_data_size);
+            int_dimension_t* meta_pointer =
+                reinterpret_cast<int_dimension_t*>(nimbus_data->buffer());
+            T* data_pointer =
+                reinterpret_cast<T*>(nimbus_data->buffer() + meta_data_size);
+
+            timer::StartTimer(timer::k20);
+            {
+              int* base_pointer =
+                  const_cast<int*>(index_data.array.Get_Array_Pointer())
+                  - ((index_data.domain.min_corner.x * index_data.counts.y
+                      + index_data.domain.min_corner.y) * index_data.counts.z
+                     + index_data.domain.min_corner.z);
+              const int step_x = index_data.counts.y * index_data.counts.z;
+              const int step_y = index_data.counts.z;
+              const int_dimension_t loop_x = loop_region.x() - shift.x;
+              const int_dimension_t loop_y = loop_region.y() - shift.y;
+              const int_dimension_t loop_z = loop_region.z() - shift.z;
+              const int_dimension_t loop_x_end = loop_x + loop_region.dx();
+              const int_dimension_t loop_y_end = loop_y + loop_region.dy();
+              const int_dimension_t loop_z_end = loop_z + loop_region.dz();
+              const int_dimension_t shift_x = shift.x;
+              const int_dimension_t shift_y = shift.y;
+              const int_dimension_t shift_z = shift.z;
+              for (int_dimension_t x = loop_x; x < loop_x_end; ++x)
+                for (int_dimension_t y = loop_y; y < loop_y_end; ++y) {
+                  const int_dimension_t offset = step_x*x + step_y*y;
+                  int* p = &(base_pointer[offset + loop_z]);
+                  for (int_dimension_t z = loop_z; z < loop_z_end; ++z) {
+                    int m_index = *(p++);
+                    if (m_index >= 1) {
+                      *(meta_pointer++) = x + shift_x;
+                      *(meta_pointer++) = y + shift_y;
+                      *(meta_pointer++) = z + shift_z;
+                      *(data_pointer++) = data(m_index);
+                    }
                   }
                 }
-            nimbus_data->MarkMetaDataInTempBuffer();
-            if (!buffer.empty()) {
-              for (typename std::list<T>::iterator iter = buffer.begin();
-                   iter != buffer.end();
-                   ++iter) {
-                T value = *iter;
-                nimbus_data->AddToTempBuffer(
-                    reinterpret_cast<char*>(&value), sizeof(value));
-              }
             }
-            nimbus_data->CommitTempBuffer();
+            timer::StopTimer(timer::k20);
           }
           if (log) {
             std::stringstream msg;
