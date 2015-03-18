@@ -127,11 +127,9 @@ template <class TS> class TranslatorPhysBAM {
                 const GeometricRegion &inner,
                 const Coord &shift,
                 const DataArray &read_set,
-                typename PhysBAM::ARRAY<T, FaceIndex>* fa,
-                typename PhysBAM::ARRAY<T, FaceIndex>& flag
-                ) {
+                typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
             timer::StartTimer(timer::k1);
-            ReadFaceArrayInner(region, inner, shift, read_set, fa, flag);
+            ReadFaceArrayInner(region, inner, shift, read_set, fa);
             timer::StopTimer(timer::k1);
         }
 
@@ -143,9 +141,7 @@ template <class TS> class TranslatorPhysBAM {
                 const GeometricRegion &inner,
                 const Coord &shift,
                 const DataArray &read_set,
-                typename PhysBAM::ARRAY<T, FaceIndex>* fa,
-                typename PhysBAM::ARRAY<T, FaceIndex>& flag
-                ) {
+                typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -161,183 +157,245 @@ template <class TS> class TranslatorPhysBAM {
                 }
                 return;
             }
-            //PhysBAM::ARRAY<T, FaceIndex> flag;
-            //flag = *fa;
-            //flag.Fill(0);
-            DataArray read_inner;
-            DataArray read_outer;
+
+            size_t read_size = read_set.size();
+
+            // mark data that must be read in phase 1 and phase 2 for each
+            // dimension
+            std::vector<bool> read_flag(4*read_size, false);
             for (size_t i = 0; i < read_set.size(); ++i) {
-                GeometricRegion r = read_set[i]->region();
-                if (inner.Covers(&r))
-                    read_inner.push_back(read_set[i]);
-                else
-                    read_outer.push_back(read_set[i]);
-            }
-            for (size_t i = 0; i < read_inner.size(); ++i) {
-                PhysBAMData *data = static_cast<PhysBAMData*>(read_inner[i]);
+                Data *data = read_set[i];
                 const GeometricRegion dregion = data->region();
                 Dimension3Vector overlap = GetOverlapSize(dregion, region);
                 if (HasOverlap(overlap)) {
+                    read_flag[4*i] = true;
+                    // hard coded ghost width here to determine phases
+                    read_flag[4*i+X_COORD] = (dregion.dx() != 3);  // read vx in phase 1
+                    read_flag[4*i+Y_COORD] = (dregion.dy() != 3);  // read vy in phase 1
+                    read_flag[4*i+Z_COORD] = (dregion.dz() != 3);  // read vz in phase 1
+                }
+            }
+
+            for (size_t i = 0; i < read_set.size(); ++i) {
+                // read anything in phase 1?
+                if (read_flag[4*i] &&
+                        (read_flag[4*i+X_COORD] || read_flag[4*i+Y_COORD] || read_flag[4*i+Z_COORD])) {  // NOLINT
+                    // setup
+                    PhysBAMData *data = static_cast<PhysBAMData *>(read_set[i]);
                     T* buffer = reinterpret_cast<T*>(data->buffer());
-                    Dimension3Vector src = GetOffset(dregion, region);
-                    Dimension3Vector dest = GetOffset(region, dregion);
-                    //  x, y and z values are stored separately due to the
-                    // difference in number of x, y and z values in face arrays
+                    const GeometricRegion dregion = data->region();
+                    const int_dimension_t ddx = dregion.dx();
+                    const int_dimension_t ddy = dregion.dy();
+                    const int_dimension_t ddz = dregion.dz();
+                    const Dimension3Vector src = GetOffset(dregion, region);
+                    const Dimension3Vector dest = GetOffset(region, dregion);
+                    const Dimension3Vector overlap = GetOverlapSize(dregion, region);
                     for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
-                        int mult_x = 1;
-                        int mult_y = dregion.dx();
-                        int mult_z = dregion.dy() * dregion.dx();
-                        int range_x = overlap(X_COORD);
-                        int range_y = overlap(Y_COORD);
-                        int range_z = overlap(Z_COORD);
-                        int src_offset = 0;
+                        if (!read_flag[4*i+dim])
+                            continue;  // read in phase 2
+                        // setup for vx/ vy/ vz
+                        int range_x, range_y, range_z;
+                        int mult_x, mult_y;
+                        int src_offset;
                         switch (dim) {
                             case X_COORD:
-                                range_x += 1;
-                                mult_y  += 1;
-                                mult_z  += dregion.dy();
+                                range_x = overlap(X_COORD) + 1;
+                                range_y = overlap(Y_COORD);
+                                range_z = overlap(Z_COORD);
+                                mult_x = ddy * ddz;
+                                mult_y = ddz;
+                                src_offset = 0;  // offset into buffer
                                 break;
                             case Y_COORD:
-                                range_y += 1;
-                                mult_z  += dregion.dx();
-                                src_offset += (dregion.dx() + 1) *
-                                    (dregion.dy()) *
-                                    (dregion.dz());
+                                range_x = overlap(X_COORD);
+                                range_y = overlap(Y_COORD) + 1;
+                                range_z = overlap(Z_COORD);
+                                mult_x = (ddy + 1) * ddz;
+                                mult_y = ddz;
+                                src_offset = (ddx + 1) * ddy * ddz;  // offset into buffer
                                 break;
                             case Z_COORD:
-                                range_z += 1;
-                                src_offset += ((dregion.dx()) *
-                                        (dregion.dy() + 1) *
-                                        (dregion.dz())) +
-                                    ((dregion.dx() + 1) *
-                                     (dregion.dy()) *
-                                     (dregion.dz()));
+                                range_x = overlap(X_COORD);
+                                range_y = overlap(Y_COORD);
+                                range_z = overlap(Z_COORD) + 1;
+                                mult_x = ddy * (ddz + 1);
+                                mult_y = ddz + 1;
+                                src_offset = (ddx + 1) * ddy * ddz +
+                                             ddx * (ddy + 1) * ddz;  // offset into buffer
                                 break;
-                        }
+                        }  // switch dim
                         for (int x = 0; x < range_x; ++x) {
                             for (int y = 0; y < range_y; ++y) {
-                                for (int z = 0; z < range_z; ++z) {
-                                    int source_x = x + src(X_COORD);
-                                    int source_y = y + src(Y_COORD);
-                                    int source_z = z + src(Z_COORD);
-                                    int source_index = source_x * mult_x +
-                                        source_y * mult_y +
-                                        source_z * mult_z;
-                                    source_index += src_offset;
-                                    int dest_x = x + dest(X_COORD) + region.x() - shift.x;
-                                    int dest_y = y + dest(Y_COORD) + region.y() - shift.y;
-                                    int dest_z = z + dest(Z_COORD) + region.z() - shift.z;
-                                    typename PhysBAM::VECTOR<int, 3>
-                                        destinationIndex(dest_x, dest_y, dest_z);
-                                    // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
-                                    (*fa)(dim, destinationIndex) = buffer[source_index];
-                                    // flag(dim, destinationIndex) = 1;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            int cx1 = inner.x();
-            int cx2 = inner.x() + inner.dx();
-            int cy1 = inner.y();
-            int cy2 = inner.y() + inner.dy();
-            int cz1 = inner.z();
-            int cz2 = inner.z() + inner.dz();
-            for (size_t i = 0; i < read_outer.size(); ++i) {
-                assert(false);
-                PhysBAMData *data = static_cast<PhysBAMData*>(read_outer[i]);
-                const GeometricRegion dregion = data->region();
-                Dimension3Vector overlap = GetOverlapSize(dregion, region);
-                if (HasOverlap(overlap)) {
+                                int source_x = x + src(X_COORD);
+                                int source_y = y + src(Y_COORD);
+                                int source_index = source_x * mult_x +
+                                                   source_y * mult_y +
+                                                   src_offset;
+                                int dest_x = x + dest(X_COORD) + region.x() - shift.x;
+                                int dest_y = y + dest(Y_COORD) + region.y() - shift.y;
+                                int dest_z = 0 + dest(Z_COORD) + region.z() - shift.z;
+                                const TV_INT destination_index(dest_x, dest_y, dest_z);
+                                memcpy(&((*fa)(dim, destination_index)),  // NOLINT
+                                       &(buffer[source_index]),
+                                       sizeof(T) * range_z);
+
+                            }  // read y for loop
+                        }  // read x for loop
+                    }  // for dim
+                }  //  if read anything
+            }  //  outermost for loop over entired read set
+
+            const int cx1 = inner.x();
+            const int cx2 = inner.x() + inner.dx();
+            const int cy1 = inner.y();
+            const int cy2 = inner.y() + inner.dy();
+            const int cz1 = inner.z();
+            const int cz2 = inner.z() + inner.dz();
+
+            for (size_t i = 0; i < read_set.size(); ++i) {
+                // read anything in phase 1?
+                if (read_flag[4*i] &&
+                        (!read_flag[4*i+X_COORD] || !read_flag[4*i+Y_COORD] || !read_flag[4*i+Z_COORD])) {  // NOLINT
+                    // setup
+                    PhysBAMData *data = static_cast<PhysBAMData *>(read_set[i]);
                     T* buffer = reinterpret_cast<T*>(data->buffer());
-                    Dimension3Vector src = GetOffset(dregion, region);
-                    Dimension3Vector dest = GetOffset(region, dregion);
-                    //  x, y and z values are stored separately due to the
-                    // difference in number of x, y and z values in face arrays
+                    const GeometricRegion dregion = data->region();
+                    const Dimension3Vector src = GetOffset(dregion, region);
+                    const Dimension3Vector dest = GetOffset(region, dregion);
+                    const Dimension3Vector overlap = GetOverlapSize(dregion, region);
                     for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
-                        int mult_x = 1;
-                        int mult_y = dregion.dx();
-                        int mult_z = dregion.dy() * dregion.dx();
-                        int range_x = overlap(X_COORD);
-                        int range_y = overlap(Y_COORD);
-                        int range_z = overlap(Z_COORD);
-                        int src_offset = 0;
+                        if (read_flag[4*i+dim])
+                            continue;  // already read in phase 1
+                        // case for vx/ vy/ vz
+                        // exapnded out for performance -- I can't figure out a
+                        // better way to handle averaging of common face values
+                        // -- Chinmayee
                         switch (dim) {
-                            case X_COORD:
-                                range_x += 1;
-                                mult_y  += 1;
-                                mult_z  += dregion.dy();
-                                break;
-                            case Y_COORD:
-                                range_y += 1;
-                                mult_z  += dregion.dx();
-                                src_offset += (dregion.dx() + 1) *
-                                    (dregion.dy()) *
-                                    (dregion.dz());
-                                break;
-                            case Z_COORD:
-                                range_z += 1;
-                                src_offset += ((dregion.dx()) *
-                                        (dregion.dy() + 1) *
-                                        (dregion.dz())) +
-                                    ((dregion.dx() + 1) *
-                                     (dregion.dy()) *
-                                     (dregion.dz()));
-                                break;
-                        }
-                        for (int z = 0; z < range_z; ++z) {
-                            for (int y = 0; y < range_y; ++y) {
+                            case X_COORD: {
+                                const int_dimension_t ddy = dregion.dy();
+                                const int_dimension_t ddz = dregion.dz();
+                                assert(overlap(X_COORD) == 3);
+                                const int range_x = 3 + 1;
+                                const int range_y = overlap(Y_COORD);
+                                const int range_z = overlap(Z_COORD);
+                                const int mult_x = ddy * ddz;
+                                const int mult_y = ddz;
+                                const int mult_z = 1;
+                                const int src_offset = 0;  // offset into buffer
                                 for (int x = 0; x < range_x; ++x) {
-                                    int source_x = x + src(X_COORD);
-                                    int source_y = y + src(Y_COORD);
-                                    int source_z = z + src(Z_COORD);
-                                    int source_index = source_x * mult_x +
-                                        source_y * mult_y +
-                                        source_z * mult_z;
-                                    source_index += src_offset;
-                                    int loc_x = x + dest(X_COORD) + region.x();
-                                    int loc_y = y + dest(Y_COORD) + region.y();
-                                    int loc_z = z + dest(Z_COORD) + region.z();
-                                    int dest_x = loc_x - shift.x;
-                                    int dest_y = loc_y - shift.y;
-                                    int dest_z = loc_z - shift.z;
-                                    typename PhysBAM::VECTOR<int, 3>
-                                        destinationIndex(dest_x, dest_y, dest_z);
-                                    // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
-                                    if ( (dim == X_COORD && (loc_x == cx1 || loc_x == cx2)) ||
-                                         (dim == Y_COORD && (loc_y == cy1 || loc_y == cy2)) ||
-                                         (dim == Z_COORD && (loc_z == cz1 || loc_z == cz2)) ) {
-                                            typename PhysBAM::VECTOR<int, 3>
-                                                destinationIndex(dest_x, dest_y, dest_z);
-                                            // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
-                                            (*fa)(dim, destinationIndex) +=
-                                                buffer[source_index];
-                                            (*fa)(dim, destinationIndex) /= 2;
-                                            flag(dim, destinationIndex) = 2;
-                                    } else {
-                                        if (flag(dim, destinationIndex) == 0) {
-                                            (*fa)(dim, destinationIndex) = buffer[source_index];
-                                            flag(dim, destinationIndex) = 1;
-                                        } else {
-                                            if ((flag(dim, destinationIndex) == 1)) {
-                                                typename PhysBAM::VECTOR<int, 3>
-                                                    destinationIndex(dest_x, dest_y, dest_z);
-                                                // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
-                                                (*fa)(dim, destinationIndex) +=
-                                                    buffer[source_index];
-                                                (*fa)(dim, destinationIndex) /= 2;
+                                    for (int y = 0; y < range_y; ++y) {
+                                        for (int z = 0; z < range_z; ++z) {
+                                            int source_x = x + src(X_COORD);
+                                            int source_y = y + src(Y_COORD);
+                                            int source_z = z + src(Y_COORD);
+                                            int source_index = source_x * mult_x +
+                                                               source_y * mult_y +
+                                                               source_z * mult_z +
+                                                               src_offset;
+                                            int loc_x = x + dest(X_COORD) + region.x();
+                                            int loc_y = y + dest(Y_COORD) + region.y();
+                                            int loc_z = z + dest(Z_COORD) + region.z();
+                                            int dest_x = loc_x - shift.x;
+                                            int dest_y = loc_y - shift.y;
+                                            int dest_z = loc_z - shift.z;
+                                            const TV_INT destination_index(dest_x, dest_y, dest_z);  // NOLINT
+                                            if (loc_x == cx1 || loc_x == cx2) {
+                                                (*fa)(dim, destination_index) += buffer[source_index];  // NOLINT
+                                                (*fa)(dim, destination_index) /= 2;
                                             } else {
-                                                assert(false);
-                                            }
-                                        }
-                                    }
-                                }
+                                                (*fa)(dim, destination_index) = buffer[source_index];  // NOLINT
+                                            }  // branch for averaging
+                                        }  // read z for loop
+                                    }  // read y for loop
+                                }  // read x for loop
+                                break;
                             }
-                        }
-                    }
-                }
-            }
+                            case Y_COORD: {
+                                const int_dimension_t ddx = dregion.dx();
+                                const int_dimension_t ddy = 3;
+                                const int_dimension_t ddz = dregion.dz();
+                                assert(overlap(Y_COORD) == 3);
+                                const int range_x = overlap(X_COORD);
+                                const int range_y = 3 + 1;
+                                const int range_z = overlap(Z_COORD);
+                                const int mult_x = (ddy + 1) * ddz;
+                                const int mult_y = ddz;
+                                const int mult_z = 1;
+                                const int src_offset = (ddx + 1) * ddy * ddz;  // offset into buffer
+                                for (int x = 0; x < range_x; ++x) {
+                                    for (int y = 0; y < range_y; ++y) {
+                                        for (int z = 0; z < range_z; ++z) {
+                                            int source_x = x + src(X_COORD);
+                                            int source_y = y + src(Y_COORD);
+                                            int source_z = z + src(Y_COORD);
+                                            int source_index = source_x * mult_x +
+                                                               source_y * mult_y +
+                                                               source_z * mult_z +
+                                                               src_offset;
+                                            int loc_x = x + dest(X_COORD) + region.x();
+                                            int loc_y = y + dest(Y_COORD) + region.y();
+                                            int loc_z = z + dest(Z_COORD) + region.z();
+                                            int dest_x = loc_x - shift.x;
+                                            int dest_y = loc_y - shift.y;
+                                            int dest_z = loc_z - shift.z;
+                                            const TV_INT destination_index(dest_x, dest_y, dest_z);  // NOLINT
+                                            if (loc_y == cy1 || loc_y == cy2) {
+                                                (*fa)(dim, destination_index) += buffer[source_index];  // NOLINT
+                                                (*fa)(dim, destination_index) /= 2;
+                                            } else {
+                                                (*fa)(dim, destination_index) = buffer[source_index];  // NOLINT
+                                            }  // branch for averaging
+                                        }  // read z for loop
+                                    }  // read y for loop
+                                }  // read x for loop
+                                break;
+                            }
+                            case Z_COORD: {
+                                const int_dimension_t ddx = dregion.dx();
+                                const int_dimension_t ddy = dregion.dy();
+                                const int_dimension_t ddz = 3;
+                                assert(overlap(Z_COORD) == 3);
+                                const int range_x = overlap(X_COORD);
+                                const int range_y = overlap(Y_COORD);
+                                const int range_z = 3 + 1;
+                                const int mult_x = ddy * (ddz + 1);
+                                const int mult_y = ddz + 1;
+                                const int mult_z = 1;
+                                const int src_offset = (ddx + 1) * ddy * ddz +
+                                                       ddx * (ddy + 1) * ddz;  // offset into buffer
+                                for (int x = 0; x < range_x; ++x) {
+                                    for (int y = 0; y < range_y; ++y) {
+                                        for (int z = 0; z < range_z; ++z) {
+                                            int source_x = x + src(X_COORD);
+                                            int source_y = y + src(Y_COORD);
+                                            int source_z = z + src(Y_COORD);
+                                            int source_index = source_x * mult_x +
+                                                               source_y * mult_y +
+                                                               source_z * mult_z +
+                                                               src_offset;
+                                            int loc_x = x + dest(X_COORD) + region.x();
+                                            int loc_y = y + dest(Y_COORD) + region.y();
+                                            int loc_z = z + dest(Z_COORD) + region.z();
+                                            int dest_x = loc_x - shift.x;
+                                            int dest_y = loc_y - shift.y;
+                                            int dest_z = loc_z - shift.z;
+                                            const TV_INT destination_index(dest_x, dest_y, dest_z);  // NOLINT
+                                            if (loc_z == cz1 || loc_z == cz2) {
+                                                (*fa)(dim, destination_index) += buffer[source_index];  // NOLINT
+                                                (*fa)(dim, destination_index) /= 2;
+                                            } else {
+                                                (*fa)(dim, destination_index) = buffer[source_index];  // NOLINT
+                                            }  // branch for averaging
+                                        }  // read z for loop
+                                    }  // read y for loop
+                                }  // read x for loop
+                                break;
+                            }
+                        }  // switch dim
+                    }  // for dim
+                }  //  if read anything
+            }  //  outermost for loop over entired read set
+
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -354,9 +412,7 @@ template <class TS> class TranslatorPhysBAM {
                 const GeometricRegion &inner,
                 const Coord &shift,
                 const DataArray &read_set,
-                typename PhysBAM::ARRAY<bool, FaceIndex>* fa,
-                typename PhysBAM::ARRAY<bool, FaceIndex>& cflag
-                ) {
+                typename PhysBAM::ARRAY<bool, FaceIndex>* fa) {
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -372,161 +428,236 @@ template <class TS> class TranslatorPhysBAM {
                 }
                 return;
             }
-            PhysBAM::ARRAY<bool, FaceIndex> flag;
-            flag = *fa;
-            flag.Fill(0);
-            DataArray read_inner;
-            DataArray read_outer;
+
+            size_t read_size = read_set.size();
+
+            // mark data that must be read in phase 1 and phase 2 for each
+            // dimension
+            std::vector<bool> read_flag(4*read_size, false);
             for (size_t i = 0; i < read_set.size(); ++i) {
-                GeometricRegion r = read_set[i]->region();
-                if (inner.Covers(&r))
-                    read_inner.push_back(read_set[i]);
-                else
-                    read_outer.push_back(read_set[i]);
-            }
-            for (size_t i = 0; i < read_outer.size(); ++i) {
-                PhysBAMData *data = static_cast<PhysBAMData*>(read_outer[i]);
+                Data *data = read_set[i];
                 const GeometricRegion dregion = data->region();
                 Dimension3Vector overlap = GetOverlapSize(dregion, region);
                 if (HasOverlap(overlap)) {
-                    bool* buffer = reinterpret_cast<bool*>(data->buffer());
-                    Dimension3Vector src = GetOffset(dregion, region);
-                    Dimension3Vector dest = GetOffset(region, dregion);
-                    //  x, y and z values are stored separately due to the
-                    // difference in number of x, y and z values in face arrays
-                    for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
-                        int mult_x = 1;
-                        int mult_y = dregion.dx();
-                        int mult_z = dregion.dy() * dregion.dx();
-                        int range_x = overlap(X_COORD);
-                        int range_y = overlap(Y_COORD);
-                        int range_z = overlap(Z_COORD);
-                        int src_offset = 0;
-                        switch (dim) {
-                            case X_COORD:
-                                range_x += 1;
-                                mult_y  += 1;
-                                mult_z  += dregion.dy();
-                                break;
-                            case Y_COORD:
-                                range_y += 1;
-                                mult_z  += dregion.dx();
-                                src_offset += (dregion.dx() + 1) *
-                                    (dregion.dy()) *
-                                    (dregion.dz());
-                                break;
-                            case Z_COORD:
-                                range_z += 1;
-                                src_offset += ((dregion.dx()) *
-                                        (dregion.dy() + 1) *
-                                        (dregion.dz())) +
-                                    ((dregion.dx() + 1) *
-                                     (dregion.dy()) *
-                                     (dregion.dz()));
-                                break;
-                        }
-                        for (int z = 0; z < range_z; ++z) {
-                            for (int y = 0; y < range_y; ++y) {
-                                for (int x = 0; x < range_x; ++x) {
-                                    int source_x = x + src(X_COORD);
-                                    int source_y = y + src(Y_COORD);
-                                    int source_z = z + src(Z_COORD);
-                                    int source_index = source_x * mult_x +
-                                        source_y * mult_y +
-                                        source_z * mult_z;
-                                    source_index += src_offset;
-                                    int loc_x = x + dest(X_COORD) + region.x();
-                                    int loc_y = y + dest(Y_COORD) + region.y();
-                                    int loc_z = z + dest(Z_COORD) + region.z();
-                                    int dest_x = loc_x - shift.x;
-                                    int dest_y = loc_y - shift.y;
-                                    int dest_z = loc_z - shift.z;
-                                    typename PhysBAM::VECTOR<int, 3>
-                                        destinationIndex(dest_x, dest_y, dest_z);
-                                    // assert(source_index < dsize / (int) sizeof(bool) && source_index >= 0); // NOLINT
-                                    (*fa)(dim, destinationIndex) = buffer[source_index];
-                                }
-                            }
-                        }
-                    }
+                    read_flag[4*i] = true;
+                    // hard coded ghost width here to determine phases
+                    read_flag[4*i+X_COORD] = (dregion.dx() != 3);  // read vx in phase 1
+                    read_flag[4*i+Y_COORD] = (dregion.dy() != 3);  // read vy in phase 1
+                    read_flag[4*i+Z_COORD] = (dregion.dz() != 3);  // read vz in phase 1
                 }
             }
-            for (size_t i = 0; i < read_inner.size(); ++i) {
-                PhysBAMData *data = static_cast<PhysBAMData*>(read_inner[i]);
-                const GeometricRegion dregion = data->region();
-                Dimension3Vector overlap = GetOverlapSize(dregion, region);
-                if (HasOverlap(overlap)) {
+
+            for (size_t i = 0; i < read_set.size(); ++i) {
+                // read anything in phase 1?
+                if (read_flag[4*i] &&
+                        (read_flag[4*i+X_COORD] || read_flag[4*i+Y_COORD] || read_flag[4*i+Z_COORD])) {  // NOLINT
+                    // setup
+                    PhysBAMData *data = static_cast<PhysBAMData *>(read_set[i]);
                     bool* buffer = reinterpret_cast<bool*>(data->buffer());
-                    Dimension3Vector src = GetOffset(dregion, region);
-                    Dimension3Vector dest = GetOffset(region, dregion);
-                    //  x, y and z values are stored separately due to the
-                    // difference in number of x, y and z values in face arrays
+                    const GeometricRegion dregion = data->region();
+                    const int_dimension_t ddx = dregion.dx();
+                    const int_dimension_t ddy = dregion.dy();
+                    const int_dimension_t ddz = dregion.dz();
+                    const Dimension3Vector src = GetOffset(dregion, region);
+                    const Dimension3Vector dest = GetOffset(region, dregion);
+                    const Dimension3Vector overlap = GetOverlapSize(dregion, region);
                     for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
-                        int mult_x = 1;
-                        int mult_y = dregion.dx();
-                        int mult_z = dregion.dy() * dregion.dx();
-                        int range_x = overlap(X_COORD);
-                        int range_y = overlap(Y_COORD);
-                        int range_z = overlap(Z_COORD);
-                        int src_offset = 0;
+                        if (!read_flag[4*i+dim])
+                            continue;  // read in phase 2
+                        // setup for vx/ vy/ vz
+                        int range_x, range_y, range_z;
+                        int mult_x, mult_y;
+                        int src_offset;
                         switch (dim) {
                             case X_COORD:
-                                range_x += 1;
-                                mult_y  += 1;
-                                mult_z  += dregion.dy();
+                                range_x = overlap(X_COORD) + 1;
+                                range_y = overlap(Y_COORD);
+                                range_z = overlap(Z_COORD);
+                                mult_x = ddy * ddz;
+                                mult_y = ddz;
+                                src_offset = 0;  // offset into buffer
                                 break;
                             case Y_COORD:
-                                range_y += 1;
-                                mult_z  += dregion.dx();
-                                src_offset += (dregion.dx() + 1) *
-                                    (dregion.dy()) *
-                                    (dregion.dz());
+                                range_x = overlap(X_COORD);
+                                range_y = overlap(Y_COORD) + 1;
+                                range_z = overlap(Z_COORD);
+                                mult_x = (ddy + 1) * ddz;
+                                mult_y = ddz;
+                                src_offset = (ddx + 1) * ddy * ddz;  // offset into buffer
                                 break;
                             case Z_COORD:
-                                range_z += 1;
-                                src_offset += ((dregion.dx()) *
-                                        (dregion.dy() + 1) *
-                                        (dregion.dz())) +
-                                    ((dregion.dx() + 1) *
-                                     (dregion.dy()) *
-                                     (dregion.dz()));
+                                range_x = overlap(X_COORD);
+                                range_y = overlap(Y_COORD);
+                                range_z = overlap(Z_COORD) + 1;
+                                mult_x = ddy * (ddz + 1);
+                                mult_y = ddz + 1;
+                                src_offset = (ddx + 1) * ddy * ddz +
+                                             ddx * (ddy + 1) * ddz;  // offset into buffer
                                 break;
-                        }
-                        for (int z = 0; z < range_z; ++z) {
+                        }  // switch dim
+                        for (int x = 0; x < range_x; ++x) {
                             for (int y = 0; y < range_y; ++y) {
+                                int source_x = x + src(X_COORD);
+                                int source_y = y + src(Y_COORD);
+                                int source_index = source_x * mult_x +
+                                                   source_y * mult_y +
+                                                   src_offset;
+                                int dest_x = x + dest(X_COORD) + region.x() - shift.x;
+                                int dest_y = y + dest(Y_COORD) + region.y() - shift.y;
+                                int dest_z = 0 + dest(Z_COORD) + region.z() - shift.z;
+                                const TV_INT destination_index(dest_x, dest_y, dest_z);
+                                memcpy(&((*fa)(dim, destination_index)),  // NOLINT
+                                       &(buffer[source_index]),
+                                       sizeof(bool) * range_z);
+
+                            }  // read y for loop
+                        }  // read x for loop
+                    }  // for dim
+                }  //  if read anything
+            }  //  outermost for loop over entired read set
+
+            const int cx1 = inner.x();
+            const int cx2 = inner.x() + inner.dx();
+            const int cy1 = inner.y();
+            const int cy2 = inner.y() + inner.dy();
+            const int cz1 = inner.z();
+            const int cz2 = inner.z() + inner.dz();
+
+            for (size_t i = 0; i < read_set.size(); ++i) {
+                // read anything in phase 1?
+                if (read_flag[4*i] &&
+                        (!read_flag[4*i+X_COORD] || !read_flag[4*i+Y_COORD] || !read_flag[4*i+Z_COORD])) {  // NOLINT
+                    // setup
+                    PhysBAMData *data = static_cast<PhysBAMData *>(read_set[i]);
+                    bool* buffer = reinterpret_cast<bool*>(data->buffer());
+                    const GeometricRegion dregion = data->region();
+                    const Dimension3Vector src = GetOffset(dregion, region);
+                    const Dimension3Vector dest = GetOffset(region, dregion);
+                    const Dimension3Vector overlap = GetOverlapSize(dregion, region);
+                    for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
+                        if (read_flag[4*i+dim])
+                            continue;  // already read in phase 1
+                        // case for vx/ vy/ vz
+                        // exapnded out for performance -- I can't figure out a
+                        // better way to handle averaging of common face values
+                        // -- Chinmayee
+                        switch (dim) {
+                            case X_COORD: {
+                                const int_dimension_t ddy = dregion.dy();
+                                const int_dimension_t ddz = dregion.dz();
+                                assert(overlap(X_COORD) == 3);
+                                const int range_x = 3 + 1;
+                                const int range_y = overlap(Y_COORD);
+                                const int range_z = overlap(Z_COORD);
+                                const int mult_x = ddy * ddz;
+                                const int mult_y = ddz;
+                                const int mult_z = 1;
+                                const int src_offset = 0;  // offset into buffer
                                 for (int x = 0; x < range_x; ++x) {
-                                    int source_x = x + src(X_COORD);
-                                    int source_y = y + src(Y_COORD);
-                                    int source_z = z + src(Z_COORD);
-                                    int source_index = source_x * mult_x +
-                                        source_y * mult_y +
-                                        source_z * mult_z;
-                                    source_index += src_offset;
-                                    int dest_x = x + dest(X_COORD) + region.x() - shift.x;
-                                    int dest_y = y + dest(Y_COORD) + region.y() - shift.y;
-                                    int dest_z = z + dest(Z_COORD) + region.z() - shift.z;
-                                    typename PhysBAM::VECTOR<int, 3>
-                                        destinationIndex(dest_x, dest_y, dest_z);
-                                    // assert(source_index < dsize / (int) sizeof(bool) && source_index >= 0); // NOLINT
-                                    if (flag(dim, destinationIndex) == 0) {
-                                        (*fa)(dim, destinationIndex) = buffer[source_index];
-                                        flag(dim, destinationIndex) = 1;
-                                    } else {
-                                        if (flag(dim, destinationIndex) == 1) {
-                                            // assert((*fa)(dim, destinationIndex)
-                                            //         == buffer[source_index]);
-                                            flag(dim, destinationIndex) = 2;
-                                        } else {
-                                            // TODO(quhang) needs a more elegant solution.
-                                            assert(false);
-                                        }
-                                    }
-                                }
+                                    for (int y = 0; y < range_y; ++y) {
+                                        for (int z = 0; z < range_z; ++z) {
+                                            int source_x = x + src(X_COORD);
+                                            int source_y = y + src(Y_COORD);
+                                            int source_z = z + src(Y_COORD);
+                                            int source_index = source_x * mult_x +
+                                                               source_y * mult_y +
+                                                               source_z * mult_z +
+                                                               src_offset;
+                                            int loc_x = x + dest(X_COORD) + region.x();
+                                            int loc_y = y + dest(Y_COORD) + region.y();
+                                            int loc_z = z + dest(Z_COORD) + region.z();
+                                            int dest_x = loc_x - shift.x;
+                                            int dest_y = loc_y - shift.y;
+                                            int dest_z = loc_z - shift.z;
+                                            const TV_INT destination_index(dest_x, dest_y, dest_z);  // NOLINT
+                                            if (!(loc_x == cx1 || loc_x == cx2)) {
+                                                (*fa)(dim, destination_index) = buffer[source_index];  // NOLINT
+                                            }  // branch for averaging
+                                        }  // read z for loop
+                                    }  // read y for loop
+                                }  // read x for loop
+                                break;
                             }
-                        }
-                    }
-                }
-            }
+                            case Y_COORD: {
+                                const int_dimension_t ddx = dregion.dx();
+                                const int_dimension_t ddy = 3;
+                                const int_dimension_t ddz = dregion.dz();
+                                assert(overlap(Y_COORD) == 3);
+                                const int range_x = overlap(X_COORD);
+                                const int range_y = 3 + 1;
+                                const int range_z = overlap(Z_COORD);
+                                const int mult_x = (ddy + 1) * ddz;
+                                const int mult_y = ddz;
+                                const int mult_z = 1;
+                                const int src_offset = (ddx + 1) * ddy * ddz;  // offset into buffer
+                                for (int x = 0; x < range_x; ++x) {
+                                    for (int y = 0; y < range_y; ++y) {
+                                        for (int z = 0; z < range_z; ++z) {
+                                            int source_x = x + src(X_COORD);
+                                            int source_y = y + src(Y_COORD);
+                                            int source_z = z + src(Y_COORD);
+                                            int source_index = source_x * mult_x +
+                                                               source_y * mult_y +
+                                                               source_z * mult_z +
+                                                               src_offset;
+                                            int loc_x = x + dest(X_COORD) + region.x();
+                                            int loc_y = y + dest(Y_COORD) + region.y();
+                                            int loc_z = z + dest(Z_COORD) + region.z();
+                                            int dest_x = loc_x - shift.x;
+                                            int dest_y = loc_y - shift.y;
+                                            int dest_z = loc_z - shift.z;
+                                            const TV_INT destination_index(dest_x, dest_y, dest_z);  // NOLINT
+                                            if (!(loc_y == cy1 || loc_y == cy2)) {
+                                                (*fa)(dim, destination_index) = buffer[source_index];  // NOLINT
+                                            }  // branch for averaging
+                                        }  // read z for loop
+                                    }  // read y for loop
+                                }  // read x for loop
+                                break;
+                            }
+                            case Z_COORD: {
+                                const int_dimension_t ddx = dregion.dx();
+                                const int_dimension_t ddy = dregion.dy();
+                                const int_dimension_t ddz = 3;
+                                assert(overlap(Z_COORD) == 3);
+                                const int range_x = overlap(X_COORD);
+                                const int range_y = overlap(Y_COORD);
+                                const int range_z = 3 + 1;
+                                const int mult_x = ddy * (ddz + 1);
+                                const int mult_y = ddz + 1;
+                                const int mult_z = 1;
+                                const int src_offset = (ddx + 1) * ddy * ddz +
+                                                       ddx * (ddy + 1) * ddz;  // offset into buffer
+                                for (int x = 0; x < range_x; ++x) {
+                                    for (int y = 0; y < range_y; ++y) {
+                                        for (int z = 0; z < range_z; ++z) {
+                                            int source_x = x + src(X_COORD);
+                                            int source_y = y + src(Y_COORD);
+                                            int source_z = z + src(Y_COORD);
+                                            int source_index = source_x * mult_x +
+                                                               source_y * mult_y +
+                                                               source_z * mult_z +
+                                                               src_offset;
+                                            int loc_x = x + dest(X_COORD) + region.x();
+                                            int loc_y = y + dest(Y_COORD) + region.y();
+                                            int loc_z = z + dest(Z_COORD) + region.z();
+                                            int dest_x = loc_x - shift.x;
+                                            int dest_y = loc_y - shift.y;
+                                            int dest_z = loc_z - shift.z;
+                                            const TV_INT destination_index(dest_x, dest_y, dest_z);  // NOLINT
+                                            if (!(loc_z == cz1 || loc_z == cz2)) {
+                                                (*fa)(dim, destination_index) = buffer[source_index];  // NOLINT
+                                            }  // branch for averaging
+                                        }  // read z for loop
+                                    }  // read y for loop
+                                }  // read x for loop
+                                break;
+                            }
+                        }  // switch dim
+                    }  // for dim
+                }  //  if read anything
+            }  //  outermost for loop over entired read set
+
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -563,6 +694,9 @@ template <class TS> class TranslatorPhysBAM {
             for (; iter != write_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
                 const GeometricRegion dregion = data->region();
+                const int_dimension_t ddx = dregion.dx();
+                const int_dimension_t ddy = dregion.dy();
+                const int_dimension_t ddz = dregion.dz();
 
                 Dimension3Vector overlap = GetOverlapSize(dregion, region);
                 if (!HasOverlap(overlap)) {continue;}
@@ -575,65 +709,61 @@ template <class TS> class TranslatorPhysBAM {
                 //  x, y and z values are stored separately due to the
                 // difference in number of x, y and z values in face arrays
                 for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
-                    int mult_x = 1;
-                    int mult_y = dregion.dx();
-                    int mult_z = dregion.dy() * dregion.dx();
-                    int range_x = overlap(X_COORD);
-                    int range_y = overlap(Y_COORD);
-                    int range_z = overlap(Z_COORD);
-                    int dst_offset = 0;
+                    // setup for vx/ vy/ vz
+                    int range_x, range_y, range_z;
+                    int mult_x, mult_y;
+                    int dst_offset;
                     switch (dim) {
                         case X_COORD:
-                            range_x += 1;
-                            mult_y  += 1;
-                            mult_z  += dregion.dy();
+                            range_x = overlap(X_COORD) + 1;
+                            range_y = overlap(Y_COORD);
+                            range_z = overlap(Z_COORD);
+                            mult_x = ddy * ddz;
+                            mult_y = ddz;
+                            dst_offset = 0;  // offset into buffer
                             break;
                         case Y_COORD:
-                            range_y += 1;
-                            mult_z  += dregion.dx();
-                            dst_offset += (dregion.dx() + 1) *
-                                (dregion.dy()) *
-                                (dregion.dz());
+                            range_x = overlap(X_COORD);
+                            range_y = overlap(Y_COORD) + 1;
+                            range_z = overlap(Z_COORD);
+                            mult_x = (ddy + 1) * ddz;
+                            mult_y = ddz;
+                            dst_offset = (ddx + 1) * ddy * ddz;  // offset into buffer
                             break;
                         case Z_COORD:
-                            range_z += 1;
-                            dst_offset += ((dregion.dx()) *
-                                    (dregion.dy() + 1) *
-                                    (dregion.dz())) +
-                                ((dregion.dx() + 1) *
-                                 (dregion.dy()) *
-                                 (dregion.dz()));
+                            range_x = overlap(X_COORD);
+                            range_y = overlap(Y_COORD);
+                            range_z = overlap(Z_COORD) + 1;
+                            mult_x = ddy * (ddz + 1);
+                            mult_y = ddz + 1;
+                            dst_offset = (ddx + 1) * ddy * ddz +
+                                         ddx * (ddy + 1) * ddz;  // offset into buffer
                             break;
                     }
-                    for (int z = 0; z < range_z; ++z) {
+                    // printf("Region %s\n", dregion.ToNetworkData().c_str());
+                    for (int x = 0; x < range_x; ++x) {
                         for (int y = 0; y < range_y; ++y) {
-                            for (int x = 0; x < range_x; ++x) {
-                                int dest_x = x + dest(X_COORD);
-                                int dest_y = y + dest(Y_COORD);
-                                int dest_z = z + dest(Z_COORD);
+                            int dest_x = x + dest(X_COORD);
+                            int dest_y = y + dest(Y_COORD);
+                            int destination_index = dest_x * mult_x +
+                                                  + dest_y * mult_y +
+                                                  + dst_offset;
+                            int source_x = x + src(X_COORD) + region.x() - shift.x;
+                            int source_y = y + src(Y_COORD) + region.y() - shift.y;
+                            int source_z = 0 + src(Z_COORD) + region.z() - shift.z;
+                            TV_INT source_index(source_x, source_y, source_z);
 
-                                int destination_index = dest_x * mult_x +
-                                    dest_y * mult_y +
-                                    dest_z * mult_z;
-                                destination_index += dst_offset;
-
-                                int source_x = x + src(X_COORD) + region.x() - shift.x;
-                                int source_y = y + src(Y_COORD) + region.y() - shift.y;
-                                int source_z = z + src(Z_COORD) + region.z() - shift.z;
-
-                                typename PhysBAM::VECTOR<int, 3>
-                                    sourceIndex(source_x, source_y, source_z);
-
-                                // The PhysBAM FACE_ARRAY object abstracts away whether
-                                // the data is stored in struct of array or array of struct
-                                // form (in practice, usually struct of arrays
-                                // assert(destination_index < dsize / (int) sizeof(T) && destination_index >= 0); // NOLINT
-                                buffer[destination_index] = (*fa)(dim, sourceIndex);
-                            }
-                        }
-                    }
-                }
-            }
+                            // The PhysBAM FACE_ARRAY object abstracts away whether
+                            // the data is stored in struct of array or array of struct
+                            // form (in practice, usually struct of arrays
+                            assert(destination_index + range_z  <= (int)data->size() / (int) sizeof(T) && destination_index >= 0);  // NOLINT
+                            memcpy(&(buffer[destination_index]),
+                                   &((*fa)(dim, source_index)),  // NOLINT
+                                   range_z * sizeof(T));
+                        }  // write for y
+                    }  // write for x
+                }  // for dim
+            }  // write set for loop
             if (log) {
                 std::stringstream msg;
                 pid_t tid = syscall(SYS_gettid);
@@ -1653,21 +1783,6 @@ template <class TS> class TranslatorPhysBAM {
 
                     for (int x = 0; x < overlap(X_COORD); ++x) {
                         for (int y = 0; y < overlap(Y_COORD); ++y) {
-                            // for (int z = 0; z < overlap(Z_COORD); ++z) {
-                            //     int source_x = x + src(X_COORD);
-                            //     int source_y = y + src(Y_COORD);
-                            //     int source_z = z + src(Z_COORD);
-                            //     int source_index =
-                            //         (source_x * (dregion.dy() * dregion.dz())) +
-                            //         (source_y * (dregion.dz())) +
-                            //         source_z;
-                            //     int dest_x = x + dest(X_COORD) + region.x() - shift.x;
-                            //     int dest_y = y + dest(Y_COORD) + region.y() - shift.y;
-                            //     int dest_z = z + dest(Z_COORD) + region.z() - shift.z;
-                            //     TV_INT destination_index(dest_x, dest_y, dest_z);
-                            //     // assert(source_index < dsize / (int) sizeof(T) && source_index >= 0); // NOLINT
-                            //     (*sa)(destination_index) = buffer[source_index];
-                            // }
                             int source_x = x + src(X_COORD);
                             int source_y = y + src(Y_COORD);
                             int source_z = 0 + src(Z_COORD);
@@ -1732,21 +1847,6 @@ template <class TS> class TranslatorPhysBAM {
 
                     for (int x = 0; x < overlap(X_COORD); ++x) {
                         for (int y = 0; y < overlap(Y_COORD); ++y) {
-                            // for (int z = 0; z < overlap(Z_COORD); ++z) {
-                            //     int dest_x = x + dest(X_COORD);
-                            //     int dest_y = y + dest(Y_COORD);
-                            //     int dest_z = z + dest(Z_COORD);
-                            //     int destination_index =
-                            //         (dest_x * (dregion.dy() * dregion.dz())) +
-                            //         (dest_y * (dregion.dz())) +
-                            //         dest_z;
-                            //     int source_x = x + src(X_COORD) + region.x() - shift.x;
-                            //     int source_y = y + src(Y_COORD) + region.y() - shift.y;
-                            //     int source_z = z + src(Z_COORD) + region.z() - shift.z;
-                            //     TV_INT source_index(source_x, source_y, source_z);
-                            //     // assert(destination_index < dsize / (int) sizeof(T) && destination_index >= 0); // NOLINT
-                            //     buffer[destination_index] = (*sa)(source_index);
-                            // }
                             int dest_x = x + dest(X_COORD);
                             int dest_y = y + dest(Y_COORD);
                             int dest_z = 0 + dest(Z_COORD);
@@ -1759,7 +1859,6 @@ template <class TS> class TranslatorPhysBAM {
                             int source_z = 0 + src(Z_COORD) + region.z() - shift.z;
                             TV_INT source_index(source_x, source_y, source_z);
                             // assert(destination_index < dsize / (int) sizeof(T) && destination_index >= 0); // NOLINT
-                            buffer[destination_index] = (*sa)(source_index);
                             memcpy(&(buffer[destination_index]),
                                    &((*sa)(source_index)),  // NOLINT
                                    overlap(Z_COORD) * sizeof(T));

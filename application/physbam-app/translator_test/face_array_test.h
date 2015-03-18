@@ -67,9 +67,7 @@ template<typename T> class FaceArrayTest {
         nimbus::int_dimension_t scale;
         void ReadFaceArray(nimbus::GeometricRegion read_region,
                            nimbus::DataArray &read_array,
-                           PhysBAMFaceArray *fa,
-                           PhysBAMFaceArray &flag
-                           );
+                           PhysBAMFaceArray *fa);
         void WriteFaceArray(nimbus::GeometricRegion write_region,
                             nimbus::DataArray &write_array,
                             PhysBAMFaceArray *fa);

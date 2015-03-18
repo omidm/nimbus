@@ -285,11 +285,10 @@ TestFaceArray()
 
 
     for (size_t t = 0; t < 10; ++t) {
-        face_array_test.WriteFaceArray(face_array_test.enl_region, face_array_in,
+         face_array_test.WriteFaceArray(face_array_test.enl_region, face_array_out,
+                                        &example.face_velocities_ghost);
+         face_array_test.ReadFaceArray(face_array_test.enl_region, face_array_out,
                                        &example.face_velocities_ghost);
-        example.face_velocities_ghost_flag.Fill(0);
-        face_array_test.ReadFaceArray(face_array_test.enl_region, face_array_in,
-                                      &example.face_velocities_ghost, example.face_velocities_ghost_flag);
     }
 }
 //#####################################################################
@@ -305,7 +304,7 @@ Test()
 
     printf("\nTesting translator ...\n");
 
-    TestParticles();
+    // TestParticles();
     TestFaceArray();
 
     std::string file_name = "times.txt";
