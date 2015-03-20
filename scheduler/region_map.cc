@@ -254,7 +254,7 @@ bool RegionMap::NotifyDownWorker(worker_id_t worker_id) {
   TableIter iter_down = table_.find(worker_id);
   if (iter_down == table_.end()) {
     dbg(DBG_ERROR, "ERROR: RegionMap: worker %lu is not defined in region map.\n", worker_id);
-    exit(-1);
+    assert(false);
     return false;
   }
 
@@ -272,7 +272,7 @@ bool RegionMap::NotifyDownWorker(worker_id_t worker_id) {
 
   if (!found_region_to_capture) {
     dbg(DBG_ERROR, "ERROR: RegionMap: could not find worker to capture worker %lu region.\n", worker_id); // NOLINT
-    exit(-1);
+    assert(false);
     return false;
   }
 
@@ -504,7 +504,7 @@ void RegionMap::SplitDimensions(size_t worker_num, size_t *num_x, size_t *num_y,
       break;
     default:
       dbg(DBG_ERROR, "ERROR: Do not know how to split!");
-      exit(-1);
+      assert(false);
   }
 }
 

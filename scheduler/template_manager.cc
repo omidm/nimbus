@@ -225,7 +225,7 @@ TemplateManager::AddComputeJobToTemplate(const std::string& template_name,
 bool TemplateManager::AddExplicitCopyJobToTemplate() {
   boost::unique_lock<boost::mutex> lock(mutex_);
   dbg(DBG_ERROR, "ERROR: explicit copy jobs from application are not supported yet!.\n");
-  exit(-1);
+  assert(false);
   return false;
 }
 

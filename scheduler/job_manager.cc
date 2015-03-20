@@ -49,7 +49,7 @@ JobManager::JobManager() {
   // Add the KERNEL job.
   if (AddKernelJobEntry() == NULL) {
     dbg(DBG_ERROR, "ERROR: could not add scheduler kernel job in job manager constructor.\n");
-    exit(-1);
+    assert(false);
   }
 
   ldo_map_p_ = NULL;
@@ -170,7 +170,7 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
       dbg(DBG_SCHED, "Filled the information for future job (id: %lu).\n", job_id);
     } else {
       dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
-      exit(-1);
+      assert(false);
       return NULL;
     }
   }
@@ -179,7 +179,7 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
     RemoveJobEntryFromJobGraph(job_id);
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
-    exit(-1);
+    assert(false);
     return NULL;
   }
 
@@ -276,7 +276,7 @@ bool JobManager::AddComplexJobEntry(ComplexJobEntry* complex_job) {
 
 JobEntry* JobManager::AddExplicitCopyJobEntry() {
   dbg(DBG_ERROR, "ERROR: explicit copy jobs from application are not supported yet!.\n");
-  exit(-1);
+  assert(false);
   return NULL;
 }
 
@@ -286,7 +286,7 @@ JobEntry* JobManager::AddKernelJobEntry() {
   if (!AddJobEntryToJobGraph(NIMBUS_KERNEL_JOB_ID, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add kernel job in job manager.\n");
-    exit(-1);
+    assert(false);
     return NULL;
   }
   job->set_done(true);
@@ -302,7 +302,7 @@ JobEntry* JobManager::AddMainJobEntry(const job_id_t& job_id) {
   if (!AddJobEntryToJobGraph(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
-    exit(-1);
+    assert(false);
     return NULL;
   }
 
@@ -310,7 +310,7 @@ JobEntry* JobManager::AddMainJobEntry(const job_id_t& job_id) {
     RemoveJobEntryFromJobGraph(job_id);
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
-    exit(-1);
+    assert(false);
     return NULL;
   }
   ReceiveMetaBeforeSetDepthVersioningDependency(job);
@@ -331,7 +331,7 @@ JobEntry* JobManager::AddCreateDataJobEntry(const job_id_t& job_id) {
   if (!AddJobEntryToJobGraph(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
-    exit(-1);
+    assert(false);
     return NULL;
   }
 
@@ -344,7 +344,7 @@ JobEntry* JobManager::AddLocalCopyJobEntry(const job_id_t& job_id) {
   if (!AddJobEntryToJobGraph(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
-    exit(-1);
+    assert(false);
     return NULL;
   }
 
@@ -357,7 +357,7 @@ JobEntry* JobManager::AddRemoteCopySendJobEntry(const job_id_t& job_id) {
   if (!AddJobEntryToJobGraph(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
-    exit(-1);
+    assert(false);
     return NULL;
   }
 
@@ -370,7 +370,7 @@ JobEntry* JobManager::AddRemoteCopyReceiveJobEntry(const job_id_t& job_id) {
   if (!AddJobEntryToJobGraph(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
-    exit(-1);
+    assert(false);
     return NULL;
   }
 
@@ -383,7 +383,7 @@ JobEntry* JobManager::AddFutureJobEntry(const job_id_t& job_id) {
   if (!AddJobEntryToJobGraph(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager as future job.\n", job_id);
-    exit(-1);
+    assert(false);
     return NULL;
   }
 
@@ -571,7 +571,7 @@ bool JobManager::ResolveJobDataVersions(JobEntry *job) {
 bool JobManager::ResolveEntireContextForJob(JobEntry *job) {
   if (!job->IsReadyForCompleteVersioning()) {
     dbg(DBG_ERROR, "ERROR: job %lu is not reaqdy for complete versioing.\n", job->job_id());
-    exit(-1);
+    assert(false);
     return false;
   }
 
@@ -580,7 +580,7 @@ bool JobManager::ResolveEntireContextForJob(JobEntry *job) {
     return true;
   } else {
     dbg(DBG_ERROR, "ERROR: could not version job %lu for entire context.\n", job->job_id());
-    exit(-1);
+    assert(false);
     return false;
   }
 }
@@ -630,7 +630,7 @@ bool JobManager::ResolveJobDataVersionsForPattern(JobEntry *job,
 bool JobManager::MemoizeVersionsForTemplate(JobEntry *job) {
   if (!job->IsReadyForCompleteVersioning()) {
     dbg(DBG_ERROR, "ERROR: job %lu is not reaqdy for complete versioing.\n", job->job_id());
-    exit(-1);
+    assert(false);
     return false;
   }
 
@@ -638,7 +638,7 @@ bool JobManager::MemoizeVersionsForTemplate(JobEntry *job) {
     return true;
   } else {
     dbg(DBG_ERROR, "ERROR: could not memoize versions for job %lu.\n", job->job_id());
-    exit(-1);
+    assert(false);
     return false;
   }
 }
@@ -687,7 +687,7 @@ bool JobManager::NotifySaveDataJobDoneForCheckpoint(checkpoint_id_t checkpoint_i
 bool JobManager::RewindFromLastCheckpoint(checkpoint_id_t *checkpoint_id) {
   if (!checkpoint_manager_.GetCheckpointToRewind(checkpoint_id)) {
     dbg(DBG_ERROR, "ERROR: could not get any checkpoint to rewind!\n");
-    exit(-1);
+    assert(false);
     return false;
   }
   dbg(DBG_ERROR, "Rewind from checkpoint %lu.\n", *checkpoint_id);
@@ -733,7 +733,7 @@ bool JobManager::RewindFromLastCheckpoint(checkpoint_id_t *checkpoint_id) {
 
       if (!AddJobEntryToJobGraph((*iter)->job_id(), job)) {
           dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) to job graph.\n", (*iter)->job_id());
-          exit(-1);
+          assert(false);
           return false;
       }
 

@@ -142,7 +142,7 @@ size_t VersionEntry::GetJobsNeedVersion(
     } else {
       dbg(DBG_ERROR, "ERROR: Version Entry: ldid %lu in read set of job %lu could not be not versioned.\n", // NOLINT
           ldid_, (*iter)->job_id());
-      exit(-1);
+      assert(false);
     }
 
     IndexIter it = index_.find(new_version);

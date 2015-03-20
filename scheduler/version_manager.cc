@@ -351,7 +351,7 @@ bool VersionManager::CreateCheckPoint(JobEntry *job) {
     } else {
       dbg(DBG_ERROR, "ERROR: Version Manager: ldid %lu is not versioned for checkpoint job %lu.\n",
           it->first, job->job_id());
-      exit(-1);
+      assert(false);
     }
 
     InsertCheckPointLdlEntry(
@@ -666,7 +666,7 @@ bool VersionManager::DefineData(
     return true;
   } else {
     dbg(DBG_ERROR, "ERROR: defining logical data id %lu, which already exist.\n", ldid);
-    exit(-1);
+    assert(false);
     return false;
   }
 }
@@ -728,7 +728,7 @@ void VersionManager::Reinitialize(const JobEntryList *list) {
       } else {
         dbg(DBG_ERROR, "ERROR: Version Manager: ldid %lu is not versioned for checkpoint job %lu.\n", // NOLINT
             it->first, (*iter)->job_id());
-        exit(-1);
+        assert(false);
       }
 
       InsertCheckPointLdlEntry(

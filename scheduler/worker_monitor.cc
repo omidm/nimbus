@@ -59,7 +59,7 @@ bool WorkerMonitor::AddWorker(worker_id_t worker_id) {
   MapIter iter = map_.find(worker_id);
   if (iter != map_.end()) {
     dbg(DBG_ERROR, "ERROR: WorkerMonitor: worker id %lu already exist!", worker_id);
-    exit(-1);
+    assert(false);
     return false;
   }
 
@@ -71,7 +71,7 @@ bool WorkerMonitor::RemoveWorker(worker_id_t worker_id) {
   MapIter iter = map_.find(worker_id);
   if (iter == map_.end()) {
     dbg(DBG_ERROR, "ERROR: WorkerMonitor: worker id %lu does not exist!", worker_id);
-    exit(-1);
+    assert(false);
     return false;
   }
 
@@ -85,7 +85,7 @@ bool WorkerMonitor::AddReadyJob(worker_id_t worker_id, job_id_t job_id) {
   MapIter iter = map_.find(worker_id);
   if (iter == map_.end()) {
     dbg(DBG_ERROR, "ERROR: WorkerMonitor: worker id %lu does not exist!", worker_id);
-    exit(-1);
+    assert(false);
     return false;
   }
 
@@ -97,7 +97,7 @@ bool WorkerMonitor::AddBlockedJob(worker_id_t worker_id, job_id_t job_id) {
   MapIter iter = map_.find(worker_id);
   if (iter == map_.end()) {
     dbg(DBG_ERROR, "ERROR: WorkerMonitor: worker id %lu does not exist!", worker_id);
-    exit(-1);
+    assert(false);
     return false;
   }
 
@@ -109,7 +109,7 @@ bool WorkerMonitor::NotifyJobDone(worker_id_t worker_id, job_id_t job_id) {
   MapIter iter = map_.find(worker_id);
   if (iter == map_.end()) {
     dbg(DBG_ERROR, "ERROR: WorkerMonitor: worker id %lu does not exist!", worker_id);
-    exit(-1);
+    assert(false);
     return false;
   }
 

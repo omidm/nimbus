@@ -132,7 +132,7 @@ void JobAssigner::JobAssignerThread() {
 
     if (!AssignJob(job)) {
       dbg(DBG_ERROR, "ERROR: JobAssigner: could not assign job %lu.\n", job->job_id());
-      exit(-1);
+      assert(false);
     }
 
     {
@@ -154,7 +154,7 @@ void JobAssigner::AssignJobs(const JobEntryList& list) {
       job = *iter;
       if (!AssignJob(job)) {
         dbg(DBG_ERROR, "ERROR: JobAssigner: could not assign job %lu.\n", job->job_id());
-        exit(-1);
+        assert(false);
       }
       job_queue_.erase(iter++);
     }
@@ -299,6 +299,9 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
     << job->template_entry()->template_name()
     << " with record key: "
     << bt->record_name() << std::endl;
+
+  std::cout << "COMPLEX: copy_num: " << bt->copy_job_num()
+            << " compute_num: " << bt->compute_job_num() << std::endl;
 
   assert(compute_job_num == job->inner_job_ids_p()->size());
 
@@ -714,7 +717,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     SchedulerWorker* worker_sender;
     if (!server_->GetSchedulerWorkerById(worker_sender, sender_id)) {
       dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", sender_id);
-      exit(-1);
+      assert(false);
     }
 
     PhysicalData target_instance;
@@ -844,7 +847,7 @@ bool JobAssigner::SaveJobContextForCheckpoint(JobEntry *job) {
         SchedulerWorker* worker;
         if (!server_->GetSchedulerWorkerById(worker, worker_id)) {
           dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", worker_id);
-          exit(-1);
+          assert(false);
         }
         SaveData(worker, ldo, &(*it), job->checkpoint_id());
       }

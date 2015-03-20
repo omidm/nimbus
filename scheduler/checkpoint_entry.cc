@@ -80,7 +80,7 @@ bool CheckpointEntry::CompleteJob(const JobEntry *job) {
   JobEntryMap::iterator it = jobs_.find(job_id);
   if (it == jobs_.end()) {
     dbg(DBG_ERROR, "ERROR: job with id %lu is not in jobs!\n", job_id);
-    exit(-1);
+    assert(false);
     return false;
   }
 
@@ -109,7 +109,7 @@ bool CheckpointEntry::NotifySaveDataJobDone(job_id_t job_id,
   Map::iterator it = map_.find(job_id);
   if (it == map_.end()) {
     dbg(DBG_ERROR, "ERROR: save job with id %lu is not in map!\n", job_id);
-    exit(-1);
+    assert(false);
     return false;
   }
 
@@ -139,14 +139,14 @@ bool CheckpointEntry::GetHandleToLoadData(logical_data_id_t ldid,
   Index::iterator iter = index_.find(ldid);
   if (iter == index_.end()) {
     dbg(DBG_ERROR, "ERROR: ldid %lu is not in index!\n", ldid);
-    exit(-1);
+    assert(false);
     return false;
   }
 
   VersionIndex::iterator it = iter->second.find(version);
   if (it == iter->second.end()) {
     dbg(DBG_ERROR, "ERROR: version %lu is not in index for ldid %lu!\n", version, ldid);
-    exit(-1);
+    assert(false);
     return false;
   }
 

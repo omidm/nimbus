@@ -340,7 +340,7 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
     default:
       dbg(DBG_ERROR, "ERROR: %s have not been implemented in ProcessSchedulerCommand yet.\n",
           cm->ToNetworkData().c_str());
-      exit(-1);
+      assert(false);
   }
 }
 
@@ -514,7 +514,7 @@ void Scheduler::WaitForAllPrepareRewindResponses() {
 void Scheduler::ProcessPrepareRewindCommand(PrepareRewindCommand* cm) {
   dbg(DBG_WARN, "WARNING: unexpected PrepareRewind command from worker %lu.\n",
       cm->worker_id().elem());
-  exit(-1);
+  assert(false);
 }
 
 void Scheduler::ProcessRespondStatCommand(RespondStatCommand* cm) {

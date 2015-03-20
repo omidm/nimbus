@@ -437,7 +437,7 @@ TemplateJobEntry* TemplateEntry::AddComputeJob(const std::string& job_name,
 
 bool TemplateEntry::AddExplicitCopyJob() {
   dbg(DBG_ERROR, "ERROR: explicit copy jobs from application are not supported yet!.\n");
-  exit(-1);
+  assert(false);
   return false;
 }
 

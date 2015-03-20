@@ -163,7 +163,7 @@ bool LoadBalancer::NotifyDownWorker(worker_id_t worker_id) {
   } else {
     dbg(DBG_ERROR, "ERROR: LoadBalancer: worker id %lu has not been registered.\n", // NOLINT
         worker_id);
-    exit(-1);
+    assert(false);
     return false;
   }
 }
