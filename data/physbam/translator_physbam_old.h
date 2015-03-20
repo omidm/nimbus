@@ -992,16 +992,16 @@ particle_buffer.id = (*id)(i);
             Dimension3Vector src  = GetOffset(inst->region(), region);
             Dimension3Vector dest = GetOffset(region, inst->region());
 
-            for (int z = 0; z < overlap(Z_COORD); z++) {
+            for (int x = 0; x < overlap(X_COORD); x++) {
               for (int y = 0; y < overlap(Y_COORD); y++) {
-                for (int x = 0; x < overlap(X_COORD); x++) {
+                for (int z = 0; z < overlap(Z_COORD); z++) {
                   int source_x = x + src(X_COORD);
                   int source_y = y + src(Y_COORD);
                   int source_z = z + src(Z_COORD);
                   int source_index =
-                      (source_z * (inst->region()->dy() * inst->region()->dx())) +
-                      (source_y * (inst->region()->dx())) +
-                      source_x;
+                      (source_x * (inst->region()->dy() * inst->region()->dz())) +
+                      (source_y * (inst->region()->dz())) +
+                      source_z;
                   int dest_x = x + dest(X_COORD) + region->x() - shift[0];
                   int dest_y = y + dest(Y_COORD) + region->y() - shift[1];
                   int dest_z = z + dest(Z_COORD) + region->z() - shift[2];
@@ -1085,16 +1085,16 @@ particle_buffer.id = (*id)(i);
             Dimension3Vector src  = GetOffset(region, inst->region());
             Dimension3Vector dest = GetOffset(inst->region(), region);
 
-            for (int z = 0; z < overlap(Z_COORD); z++) {
+            for (int x = 0; x < overlap(X_COORD); x++) {
               for (int y = 0; y < overlap(Y_COORD); y++) {
-                for (int x = 0; x < overlap(X_COORD); x++) {
+                for (int z = 0; z < overlap(Z_COORD); z++) {
                   int dest_x = x + dest(X_COORD);
                   int dest_y = y + dest(Y_COORD);
                   int dest_z = z + dest(Z_COORD);
                   int destination_index =
-                      (dest_z * (inst->region()->dy() * inst->region()->dx())) +
-                      (dest_y * (inst->region()->dx())) +
-                      dest_x;
+                      (dest_x * (inst->region()->dy() * inst->region()->dz())) +
+                      (dest_y * (inst->region()->dz())) +
+                      dest_z;
                   int source_x = x + src(X_COORD) + region->x() - shift[0];
                   int source_y = y + src(Y_COORD) + region->y() - shift[1];
                   int source_z = z + src(Z_COORD) + region->z() - shift[2];
