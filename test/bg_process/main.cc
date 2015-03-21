@@ -93,11 +93,13 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  boost::thread::attributes attrs;
+  pthread_attr_setschedpolicy(attrs.native_handle(), SCHED_RR);
 
   std::list<boost::thread*> threads_;
 
   for (size_t i = 0; i < thread_num; ++i) {
-    boost::thread *t = new boost::thread(boost::bind(Thread, array_size * 1000));
+    boost::thread *t = new boost::thread(attrs, boost::bind(Thread, array_size * 1000));
     threads_.push_back(t);
   }
 
