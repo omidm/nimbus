@@ -1,0 +1,41 @@
+How to fake straggler:
+
+sudo apt-get install cgroup-bin
+
+sudo cgcreate -g cpu:/cpulimited
+sudo cgcreate -g cpu:/lesscpulimited
+sudo cgset -r cpu.shares=114 cpulimited (9:1 so that 10% cpu usage by one of them, 1024 / 9 = 114)
+
+
+PhysBAM:
+
+sudo cgclassify -g cpu:/cpulimited pid <only one pid - repeat for all pids>
+
+assuming using c3.2Xlarge taskset is 0-7
+8 X : sudo cgexec -g cpu:lesscpulimited taskset -c 0-7 ~/cloud/src/nimbus/test/bg_process/bg_process 1 1 &
+
+normal 21seconds
+straggling 183
+
+
+
+Nimbus:
+
+Nimbus has one main proces and whole bunch of threads with PID but same PPID (the main process)  
+sudo cgclassify -g cpu:/cpulimited pid <only one pid - repeat for all pids of main process and threads>
+
+runs on c3.4Xlarge and worker is launched with tasket on -c 0-3,8-11
+8 X : sudo cgexec -g cpu:lesscpulimited taskset -c 0-3,8-11 ~/cloud/src/nimbus/test/bg_process/bg_process 1 1 &
+
+normal 25
+straggling 190
+
+But cpulimit only works on the main process
+
+cpulimit -e worker -l 80 (8x100% / 10)
+cpulimit -p <only-pid-of-main-process> -l 80
+
+Straggling 122 !? it's fast :(
+
+
+
