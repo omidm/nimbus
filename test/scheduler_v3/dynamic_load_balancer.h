@@ -48,6 +48,7 @@
 #include <list>
 #include <vector>
 #include <string>
+#include <utility>
 #include "shared/nimbus_types.h"
 #include "scheduler/job_entry.h"
 #include "scheduler/job_profile.h"
@@ -83,22 +84,34 @@ namespace nimbus {
 
   private:
     typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
+    typedef std::pair<worker_id_t, worker_id_t>  Exchange;
+    typedef std::list<Exchange>  BlackList;
 
     DynamicLoadBalancer(const DynamicLoadBalancer& other) {}
 
     Log log_;
     size_t worker_num_;
+    bool init_phase_;
     GeometricRegion global_region_;
     RegionMap region_map_;
     WorkerMap worker_map_;
     boost::recursive_mutex mutex_;
 
-    size_t counter_;
-    bool init_phase_;
+    int64_t last_global_run_time_;
+    Exchange last_exchange_;
+    BlackList black_list_;
 
     void BuildRegionMap();
 
     void UpdateRegionMap();
+
+    int64_t GetGlobalRunTime(const StatQuery *st);
+
+    bool InBlackList(worker_id_t w2, worker_id_t w1);
+
+    bool CheckPossibleFluctuation(worker_id_t w2,
+                                  worker_id_t w1,
+                                  const StatQuery *st);
   };
 
 }  // namespace nimbus

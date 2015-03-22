@@ -50,7 +50,7 @@ namespace nimbus {
 DynamicLoadBalancer::DynamicLoadBalancer() {
   worker_num_ = 0;
   init_phase_ = true;
-  counter_ = 0;
+  last_global_run_time_ = 0;
   log_.set_file_name("load_balancer_log");
   global_region_ = GeometricRegion(0, 0, 0, 0, 0, 0);
 }
@@ -194,20 +194,66 @@ bool DynamicLoadBalancer::BalanceLoad(counter_t query_id) {
     double load_imbalance = ((double)(std::abs(r1 - r2))) / ((double)(std::max(r1, r2))); // NOLINT
     if (load_imbalance >= LB_UPDATE_THRESHOLD) {
       if (r1 > r2) {
+        if (InBlackList(w2, w1)) {
+          std::cout << "\n****** LB IN BLACK LIST: "
+                    <<  w2 << " CANNOT grow into " << w1
+                    << " LIB factor :" << load_imbalance
+                    << std::endl;
+          ++w1_iter;
+          ++w2_iter;
+          continue;
+        }
+        if (CheckPossibleFluctuation(w2, w1, st)) {
+          std::cout << "\n****** LB BLACK LISTED: "
+                    <<  w2 << " CANNOT grow into " << w1
+                    << " LIB factor :" << load_imbalance
+                    << std::endl;
+          ++w1_iter;
+          ++w2_iter;
+          continue;
+        }
         if (region_map_.BalanceRegions(w2, w1)) {
           log_.log_WriteToFile(region_map_.Print());
           // Update load balancing id.
           ++load_balancing_id_;
+
+          // Remember last exchange stats
+          last_exchange_ = std::make_pair(w2, w1);
+          last_global_run_time_ = GetGlobalRunTime(st);
+
           std::cout << "\n****** LB : "
                     <<  w2 << " grows into " << w1
                     << " LIB factor :" << load_imbalance
                     << std::endl;
         }
       } else if (r2 > r1) {
+        if (InBlackList(w1, w2)) {
+          std::cout << "\n****** LB IN BLACK LIST: "
+                    <<  w1 << " CANNOT grow into " << w2
+                    << " LIB factor :" << load_imbalance
+                    << std::endl;
+          ++w1_iter;
+          ++w2_iter;
+          continue;
+        }
+        if (CheckPossibleFluctuation(w1, w2, st)) {
+          std::cout << "\n****** LB BLACK LISTED: "
+                    <<  w1 << " CANNOT grow into " << w2
+                    << " LIB factor :" << load_imbalance
+                    << std::endl;
+          ++w1_iter;
+          ++w2_iter;
+          continue;
+        }
         if (region_map_.BalanceRegions(w1, w2)) {
           log_.log_WriteToFile(region_map_.Print());
           // Update load balancing id.
           ++load_balancing_id_;
+
+          // Remember last exchange stats
+          last_exchange_ = std::make_pair(w1, w2);
+          last_global_run_time_ = GetGlobalRunTime(st);
+
           std::cout << "\n****** LB : "
                     <<  w1 << " grows into " << w2
                     << " LIB factor :" << load_imbalance
@@ -254,6 +300,42 @@ void DynamicLoadBalancer::UpdateRegionMap() {
   } else {
     // assert(false);
   }
+}
+
+int64_t DynamicLoadBalancer::GetGlobalRunTime(const StatQuery *st) {
+  int64_t global_run_time = 0;
+  WorkerMap::iterator iter = worker_map_.begin();
+  for (; iter != worker_map_.end(); ++iter) {
+    StatQuery::const_iterator it = st->find(iter->first);
+    assert(it != st->end());
+    global_run_time += it->second->run_time_;
+  }
+
+  return global_run_time;
+}
+
+bool DynamicLoadBalancer::InBlackList(worker_id_t w2, worker_id_t w1) {
+  BlackList::iterator iter = black_list_.begin();
+  for (; iter != black_list_.end(); ++iter) {
+    if ((iter->first == w2) && (iter->second == w1)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool DynamicLoadBalancer::CheckPossibleFluctuation(worker_id_t w2,
+                                                   worker_id_t w1,
+                                                   const StatQuery *st) {
+  if ((last_exchange_.first == w1) && (last_exchange_.second == w2)) {
+    if (last_global_run_time_ < GetGlobalRunTime(st)) {
+      black_list_.push_back(std::make_pair(w2, w1));
+      return true;
+    }
+  }
+
+  return false;
 }
 
 }  // namespace nimbus
