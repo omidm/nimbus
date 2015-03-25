@@ -9,6 +9,7 @@ import decimal
 import numpy as np
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
+from operator import add
 
 physbam_time = [decimal.Decimal('0'), decimal.Decimal('24'), decimal.Decimal('43'), decimal.Decimal('63'),
                 decimal.Decimal('82'), decimal.Decimal('102'), decimal.Decimal('122'), decimal.Decimal('142'),
@@ -255,5 +256,144 @@ plt.grid(True)
 plt.legend(Parts, Legends, loc='lower right', prop={'size':40})
 
 plt.show()
+plt.close()
+
+hpc_nimbus_diff = []
+adapt_nimbus_diff = []
+convg_nimbus_diff = []
+last_time = 0
+for t in nimbus_time:
+  if t < 8:
+    hpc_nimbus_diff.append(60 * float(t - last_time))
+  elif t < 28:
+    adapt_nimbus_diff.append(60 * float(t - last_time))
+  else:
+    convg_nimbus_diff.append(60 * float(t - last_time))
+
+  last_time = t
+
+
+hpc_physbam_diff = []
+adapt_physbam_diff = []
+convg_physbam_diff = []
+last_time = 0
+for t in physbam_time:
+  if t < 8:
+    hpc_physbam_diff.append(60 * float(t - last_time))
+  elif t < 28:
+    adapt_physbam_diff.append(60 * float(t - last_time))
+  else:
+    convg_physbam_diff.append(60 * float(t - last_time))
+
+  last_time = t
+
+
+nimbus_error = []
+nimbus_duration = []
+
+nimbus_error.append(np.std(hpc_nimbus_diff));
+nimbus_duration.append(np.mean(hpc_nimbus_diff));
+
+nimbus_error.append(np.std(adapt_nimbus_diff));
+nimbus_duration.append(np.mean(adapt_nimbus_diff));
+
+nimbus_error.append(np.std(convg_nimbus_diff));
+nimbus_duration.append(np.mean(convg_nimbus_diff));
+
+physbam_error = []
+physbam_duration = []
+
+physbam_error.append(np.std(hpc_physbam_diff));
+physbam_duration.append(np.mean(hpc_physbam_diff));
+
+physbam_error.append(np.std(adapt_physbam_diff));
+physbam_duration.append(np.mean(adapt_physbam_diff));
+
+physbam_error.append(np.std(convg_physbam_diff));
+physbam_duration.append(np.mean(convg_physbam_diff));
+
+
+width = .25
+N = len(nimbus_duration)
+
+Parts = []
+
+b = plt.bar(map(add, np.arange(N), [0] * N), nimbus_duration, width, yerr=nimbus_error, color='g')
+Parts.append(b[0])
+
+b = plt.bar(map(add, np.arange(N), [-width] * N), physbam_duration, width, yerr=physbam_error, color='r')
+Parts.append(b[0])
+
+plt.ylabel('Average Iteration Length (s)', size=40)
+
+xticks = ['HPC Setup', 'Straggler\nAdaptation', 'Straggler\nConverged']
+
+plt.xticks(range(0, 3), xticks, fontsize=25)
+plt.yticks(fontsize=30)
+
+
+plt.grid(True)
+plt.legend(Parts, Legends, loc='upper left', prop={'size':40})
+
+
+# plt.xlim(-1, 3)
+
+plt.show()
+plt.close()
+
+
+width = .2
+N = 3
+
+Parts = []
+
+nimbus_data = []
+
+nimbus_data.append(hpc_nimbus_diff)
+nimbus_data.append(adapt_nimbus_diff)
+nimbus_data.append(convg_nimbus_diff)
+
+
+physbam_data = []
+
+physbam_data.append(hpc_physbam_diff)
+physbam_data.append(adapt_physbam_diff)
+physbam_data.append(convg_physbam_diff)
+
+nbp = dict(linewidth=5, color='g')
+pbp = dict(linewidth=5, color='r')
+
+nwp = dict(linestyle='', color='g') 
+pwp = dict(linestyle='', color='r') 
+
+nmp = dict(linestyle='-', linewidth=5, color='g') 
+pmp = dict(linestyle='-', linewidth=5, color='r') 
+
+b = plt.boxplot(nimbus_data, widths=width, sym='', showcaps=False, positions=[1 - width, 3 - width, 5 - width], boxprops=nbp, medianprops=nmp, whiskerprops=nwp)
+Parts.append(b['boxes'][0])
+
+b = plt.boxplot(physbam_data, widths=width, sym='', showcaps=False, positions=[1 + width, 3 + width, 5 + width], boxprops=pbp, medianprops=pmp, whiskerprops=pwp)
+Parts.append(b['boxes'][0])
+
+
+xticks = ['HPC Setup', 'Straggler\nAdaptation', 'Straggler\nConverged']
+
+plt.xticks([1, 3, 5], xticks, fontsize=40)
+plt.yticks(fontsize=30)
+
+plt.grid(True)
+plt.legend(Parts, Legends, loc='upper left', prop={'size':40})
+
+
+plt.ylabel('Average Iteration Length (seconds)', size=40)
+
+plt.xlim(0, 6)
+plt.show()
+
+
+
+
+
+
 
 
