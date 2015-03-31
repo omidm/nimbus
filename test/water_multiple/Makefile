@@ -59,3 +59,9 @@ executable: $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
 
 clean: clean-files
 	\rm -f $(TARGET_WATER)
+
+clean-logs:
+	\rm -f *log*
+	\rm -f *.txt
+	\rm -rf _db_*
+
