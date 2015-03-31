@@ -106,39 +106,34 @@ void Main::Execute(Parameter params, const DataArray& da) {
   /*
    * Spawning jobs
    */
-  GetNewJobID(&job_ids, CHUNK_NUM * 3 + 1);
+  GetNewJobID(&job_ids, CHUNK_NUM + 1);
+
+  // StartTemplate("main_job");
 
   // Spawning inti jobs
   for (size_t i = 0; i < CHUNK_NUM; ++i) {
-    read.clear(); read.insert(d[i * 3]);
-    write.clear(); write.insert(d[i * 3]);
+    GeometricRegion region(i * CHUNK_SIZE, 0, 0, CHUNK_SIZE, 1, 1);
+    read.clear();
+    LoadLdoIdsInSet(&read, region, DATA_NAME, NULL);
+    write.clear();
+    LoadLdoIdsInSet(&write, region, DATA_NAME, NULL);
     before.clear();
+    StageJobAndLoadBeforeSet(&before, INIT_JOB_NAME, job_ids[i], read, write);
     SerializeParameter(&par, 0);
-    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3], read, write, before, after, par, true);
-
-    read.clear(); read.insert(d[i * 3 + 1]);
-    write.clear(); write.insert(d[i * 3 + 1]);
-    before.clear();
-    SerializeParameter(&par, BANDWIDTH);
-    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 1], read, write, before, after, par, true);
-
-    read.clear(); read.insert(d[i * 3 + 2]);
-    write.clear(); write.insert(d[i * 3 + 2]);
-    before.clear();
-    SerializeParameter(&par, CHUNK_SIZE - BANDWIDTH);
-    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 2], read, write, before, after, par, true);
+    SpawnComputeJob(INIT_JOB_NAME, job_ids[i], read, write, before, after, par, true, region);
   }
+
+  MarkEndOfStage();
 
   // Spawning loop job
   read.clear();
   write.clear();
   before.clear();
-  for (size_t j = 0; j < CHUNK_NUM * 3; ++j) {
-    before.insert(job_ids[j]);
-  }
-  after.clear();
+  StageJobAndLoadBeforeSet(&before, LOOP_JOB_NAME, job_ids[CHUNK_NUM], read, write, true);
   SerializeParameter(&par, LOOP_COUNTER);
-  SpawnComputeJob(LOOP_JOB_NAME, job_ids[CHUNK_NUM * 3], read, write, before, after, par);
+  SpawnComputeJob(LOOP_JOB_NAME, job_ids[CHUNK_NUM], read, write, before, after, par);
+
+  // EndTemplate("main_job");
 };
 
 ForLoop::ForLoop(Application* app) {
@@ -160,41 +155,43 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
   size_t loop_counter;
   LoadParameter(&params, &loop_counter);
 
-  std::string str = int2string(loop_counter);
-  application()->WriteToLog(str);
-
   if (loop_counter > LOOP_CONDITION) {
+    StartTemplate("for_loop");
+
     // Spawn the batch of jobs in each stencil
     std::vector<job_id_t> stencil_job_ids;
     GetNewJobID(&stencil_job_ids, PART_NUM);
     for (size_t i = 0; i < PART_NUM; ++i) {
       read.clear();
-      GeometricRegion r_r(i * PART_SIZE - BANDWIDTH, 0, 0,
-          PART_SIZE + 2 * BANDWIDTH, 1, 1);
-      LoadLogicalIdsInSet(this, &read, r_r, DATA_NAME, NULL);
+      GeometricRegion r_r(i * PART_SIZE - BANDWIDTH, 0, 0, PART_SIZE + 2 * BANDWIDTH, 1, 1);
+      LoadLdoIdsInSet(&read, r_r, DATA_NAME, NULL);
       write.clear();
-      GeometricRegion r_w(i * PART_SIZE, 0, 0,
-          PART_SIZE, 1, 1);
-      LoadLogicalIdsInSet(this, &write, r_w, DATA_NAME, NULL);
+      GeometricRegion r_w(i * PART_SIZE, 0, 0, PART_SIZE, 1, 1);
+      LoadLdoIdsInSet(&write, r_w, DATA_NAME, NULL);
       before.clear();
+      StageJobAndLoadBeforeSet(&before, STENCIL_JOB_NAME, stencil_job_ids[i], read, write);
       after.clear();
       SerializeParameter(&par, i);
-      SpawnComputeJob(STENCIL_JOB_NAME, stencil_job_ids[i], read, write, before, after, par, true);
+      SpawnComputeJob(STENCIL_JOB_NAME, stencil_job_ids[i], read, write, before, after, par, true, r_w); // NOLINT
     }
+
+    MarkEndOfStage();
 
     // Spawning the print jobs at the end of each loop
     std::vector<job_id_t> print_job_ids;
     GetNewJobID(&print_job_ids, PART_NUM);
     for (size_t i = 0; i < PART_NUM; ++i) {
       read.clear();
-      GeometricRegion r(i * PART_SIZE, 0, 0, PART_SIZE, 1, 1);
-      LoadLogicalIdsInSet(this, &read, r, DATA_NAME, NULL);
+      GeometricRegion region(i * PART_SIZE, 0, 0, PART_SIZE, 1, 1);
+      LoadLdoIdsInSet(&read, region, DATA_NAME, NULL);
       write.clear();
       before.clear();
-      before.insert(stencil_job_ids[i]);
+      StageJobAndLoadBeforeSet(&before, PRINT_JOB_NAME, print_job_ids[i], read, write);
       after.clear();
-      SpawnComputeJob(PRINT_JOB_NAME, print_job_ids[i], read, write, before, after, par, true);
+      SpawnComputeJob(PRINT_JOB_NAME, print_job_ids[i], read, write, before, after, par, true, region); // NOLINT
     }
+
+    MarkEndOfStage();
 
     // Spawning the next for loop job
     std::vector<job_id_t> forloop_job_id;
@@ -202,25 +199,28 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     read.clear();
     write.clear();
     before.clear();
-    for (size_t j = 0; j < PART_NUM; ++j) {
-      before.insert(print_job_ids[j]);
-    }
+    StageJobAndLoadBeforeSet(&before, LOOP_JOB_NAME, forloop_job_id[0], read, write, true);
     after.clear();
     SerializeParameter(&par, loop_counter - 1);
     SpawnComputeJob(LOOP_JOB_NAME, forloop_job_id[0], read, write, before, after, par);
+
+    EndTemplate("for_loop");
   } else {
+    StartTemplate("for_loop_end");
+
     std::vector<job_id_t> print_job_id;
     GetNewJobID(&print_job_id, 1);
 
     // Spawning final print job
     read.clear();
-    GeometricRegion r(0, 0, 0, CHUNK_SIZE * CHUNK_NUM, 1, 1);
-    LoadLogicalIdsInSet(this, &read, r, DATA_NAME, NULL);
+    GeometricRegion region(0, 0, 0, CHUNK_SIZE * CHUNK_NUM, 1, 1);
+    LoadLdoIdsInSet(&read, region, DATA_NAME, NULL);
     write.clear();
     before.clear();
     after.clear();
     SpawnComputeJob(PRINT_JOB_NAME, print_job_id[0], read, write, before, after, par, true);
 
+    EndTemplate("for_loop_end");
 
     TerminateApplication();
   }

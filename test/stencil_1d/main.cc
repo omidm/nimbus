@@ -42,6 +42,7 @@
 #include <sstream> // NOLINT
 #include "shared/nimbus.h"
 #include "../../application/stencil_1d/app.h"
+#include "worker/worker_manager.h"
 
 using namespace nimbus; // NOLINT
 
@@ -80,6 +81,8 @@ int main(int argc, char *argv[]) {
     PrintUsage();
     exit(-1);
   }
+
+  WorkerManager::across_job_parallism = 1;
 
   for (int i = 1; i < argc; i = i + 2) {
     std::string tag = argv[i];
