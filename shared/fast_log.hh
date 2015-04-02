@@ -52,6 +52,11 @@
 namespace nimbus {
 namespace timer {
 
+/* In order to add a new timer type, two places need to be editted:
+ *   (1) Add the timer as an enumeration type in "enum TimerType";
+ *   (2) Edit the "TimerName" function in "fast_log.cc" so that the logging
+ *       system can print out a useful name for the added timer type.
+ */
 enum TimerType {
   kTotal = 0,
   kExecuteComputationJob,
@@ -100,8 +105,17 @@ extern pthread_key_t counter_keys[kMaxCounter];
 
 void InitializeKeys();
 void InitializeTimers();
+
+/*
+ * Dump all the timer information to file "output", which is opened by the
+ * caller.
+ */
 void PrintTimerSummary(FILE* output = stdout);
 
+/*
+ * Start a timer whose type is "timer_type". Default "depth" value should be
+ * used normally.
+ */
 inline void StartTimer(TimerType timer_type, int depth = 1) {
   assert(depth > 0);
   void* ptr = pthread_getspecific(timer_keys[timer_type]);
@@ -118,6 +132,10 @@ inline void StartTimer(TimerType timer_type, int depth = 1) {
   record->depth += depth;
 }
 
+/*
+ * Stop a timer whose type is "timer_type". Default "depth" value should be
+ * used normally.
+ */
 inline void StopTimer(TimerType timer_type, int depth = 1) {
   assert(depth > 0);
   void* ptr = pthread_getspecific(timer_keys[timer_type]);
