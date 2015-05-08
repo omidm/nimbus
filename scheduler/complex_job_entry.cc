@@ -298,9 +298,11 @@ bool ComplexJobEntry::OMIDGetShadowJobEntryByIndex(size_t index, ShadowJobEntry*
   TemplateJobEntry* tj = template_entry_->GetJobAtIndex(index);
   IDSet<job_id_t> before_set;
 
+  // TODO(omidm): This line should always remain commented out. other wise
+  // explicit job done from controller is required.
   // HACK
-  if (!tj->sterile())
-    template_entry_->LoadBeforeSet(&before_set, index, inner_job_ids_, outer_job_ids_);
+  // if (!tj->sterile())
+  //   template_entry_->LoadBeforeSet(&before_set, index, inner_job_ids_, outer_job_ids_);
   // HACK
 
   ShadowJobEntry* sj =

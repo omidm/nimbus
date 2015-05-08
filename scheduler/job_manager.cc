@@ -943,7 +943,7 @@ void JobManager::NotifyJobDone(job_id_t job_id) {
     assert(false);
   }
 
-  if (!sterile) {
+  if (!sterile && !shadow_job) {
     Vertex<JobEntry, job_id_t>* vertex;
     if (!GetJobGraphVertex(vertex_job_id, &vertex)) {
       assert(false);
@@ -1002,6 +1002,25 @@ void JobManager::NotifyJobDone(job_id_t job_id) {
     } else {
       assert(complex_job);
       if (complex_job->AllShadowJobsDone()) {
+        std::list<job_id_t> list;
+        complex_job->GetParentJobIds(&list);
+        // For now complex job could have only one parent job, otherwise versioning goes wrong!
+        assert(list.size() == 1);
+        job_id_t parent_job_id = *(list.begin());
+
+        Vertex<JobEntry, job_id_t>* vertex;
+        if (!GetJobGraphVertex(complex_job->job_id(), &vertex)) {
+          assert(false);
+        }
+        typename Edge<JobEntry, job_id_t>::Iter it;
+        for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
+          JobEntry *j = it->second->end_vertex()->entry();
+          j->remove_assignment_dependency(parent_job_id);
+          if (j->IsReadyToAssign()) {
+            jobs_ready_to_assign_[j->job_id()] = j;
+          }
+        }
+
         complex_job->set_done(true);
         complex_jobs_.erase(complex_job->job_id());
 
