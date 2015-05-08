@@ -542,12 +542,14 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
 
   if (!id_maker_->SchedulerProducedJobID(job_id)) {
     // TODO(omidm): currently after map does not work with binding template so need flooding!
-    if (binding_memoization_active_) {
-      cm->set_final(true);
-      SchedulerWorkerList::iterator iter = server_->workers()->begin();
-      for (; iter != server_->workers()->end(); ++iter) {
-        server_->SendCommand(*iter, cm);
-      }
+    // if (binding_memoization_active_) {
+    //   cm->set_final(true);
+    //   SchedulerWorkerList::iterator iter = server_->workers()->begin();
+    //   for (; iter != server_->workers()->end(); ++iter) {
+    //     server_->SendCommand(*iter, cm);
+    //   }
+    if (false) {
+      // No need for flooding with binding templates anymore. -omidm
     } else {
       std::list<SchedulerWorker*> waiting_list;
       after_map_->GetWorkersWaitingOnJob(job_id, &waiting_list);
