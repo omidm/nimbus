@@ -112,8 +112,10 @@ void Worker::Run() {
 void Worker::WorkerCoreProcessor() {
   timer::InitializeKeys();
   timer::InitializeTimers();
-  timer::StartTimer(timer::kSumCyclesTotal,
-                    WorkerManager::across_job_parallism);
+  // Since this timer is used for idle time computation, it should start after
+  // the initial data mep generation trigered by main job is over. -omidm
+  // timer::StartTimer(timer::kSumCyclesTotal,
+  //                   WorkerManager::across_job_parallism);
   stat_blocked_job_num_ = 0;
   stat_ready_job_num_ = 0;
   stat_busy_cores_ = 0;
@@ -310,6 +312,11 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
 // its before set is satisfied.
 void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
   NotifyJobDone(cm->job_id().elem(), cm->final());
+  // If job main is over the data map creation phase is over, now start the
+  // timer that goes toward the idle time computation.  -omidm
+  if (cm->job_id().elem() == NIMBUS_KERNEL_JOB_ID + 1) {
+    timer::StartTimer(timer::kSumCyclesTotal, WorkerManager::across_job_parallism);
+  }
 }
 
 // Processes computejob command. Generates the corresponding job and pushes it

@@ -540,16 +540,24 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   assert(!IDMaker::SchedulerProducedJobID(job_id) ||
          job_id == NIMBUS_KERNEL_JOB_ID + 1);
 
-  if (!id_maker_->SchedulerProducedJobID(job_id)) {
-    // TODO(omidm): currently after map does not work with binding template so need flooding!
+  if (!id_maker_->SchedulerProducedJobID(job_id) ||
+      job_id == NIMBUS_KERNEL_JOB_ID + 1) {
+    // No need for flooding with binding templates anymore. After map still
+    // does not work with binding template, but ther is no explicit job done
+    // needed with binding templates, anymore. -omidm
     // if (binding_memoization_active_) {
     //   cm->set_final(true);
     //   SchedulerWorkerList::iterator iter = server_->workers()->begin();
     //   for (; iter != server_->workers()->end(); ++iter) {
     //     server_->SendCommand(*iter, cm);
     //   }
-    if (false) {
-      // No need for flooding with binding templates anymore. -omidm
+    // Flood job main done, so that workers starts counting idle time. -omidm
+    if (job_id == NIMBUS_KERNEL_JOB_ID + 1) {
+      cm->set_final(true);
+      SchedulerWorkerList::iterator iter = server_->workers()->begin();
+      for (; iter != server_->workers()->end(); ++iter) {
+        server_->SendCommand(*iter, cm);
+      }
     } else {
       std::list<SchedulerWorker*> waiting_list;
       after_map_->GetWorkersWaitingOnJob(job_id, &waiting_list);
