@@ -90,7 +90,14 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
     timer::StopTimer(timer::kExecuteCopyJob);
   } else {
     timer::StartTimer(timer::kExecuteComputationJob);
+    bool parent = !job->sterile();
+    if (parent) {
+      timer::StartTimer(timer::kExecuteParentJob);
+    }
     job->Execute(job->parameters(), job->data_array);
+    if (parent) {
+      timer::StopTimer(timer::kExecuteParentJob);
+    }
     timer::StopTimer(timer::kExecuteComputationJob);
   }
   dbg(DBG_WORKER, "[WORKER_THREAD] Finish executing job, name=%s, id=%lld. \n",

@@ -65,6 +65,7 @@ void JobAssigner::Initialize() {
   load_balancer_ = NULL;
   data_manager_query_cache_active_ = false;
   fault_tolerance_active_ = false;
+  log_overhead_ = NULL;
 }
 
 JobAssigner::~JobAssigner() {
@@ -104,6 +105,10 @@ void JobAssigner::set_checkpoint_id(checkpoint_id_t checkpoint_id) {
 
 void JobAssigner::set_fault_tolerance_active(bool flag) {
   fault_tolerance_active_ = flag;
+}
+
+void JobAssigner::set_log_overhead(Log *log) {
+  log_overhead_ = log;
 }
 
 void JobAssigner::Run() {
@@ -326,6 +331,8 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
   std::cout << "COMPLEX: Instantiate: "
     << job->template_entry()->template_name()
     << " " << log.timer() << std::endl;
+
+  log_overhead_->StopTimer();
 
   log.log_StartTimer();
   UpdateDataManagerByPatterns(job, bt, physical_ids);

@@ -228,18 +228,36 @@ void Scheduler::SchedulerCoreProcessor() {
   log_.log_StartTimer();
   log_assign_.log_ResetTimer();
   log_process_.log_ResetTimer();
+  log_overhead_.log_ResetTimer();
   // Main Loop of the scheduler.
   while (true) {
     RegisterPendingWorkers();
 
     QueryWorkerStats();
 
+    bool overhead = false;
+    overhead = (job_manager_->NumJobsReadyToAssign() > 0);
+
     log_process_.log_ResumeTimer();
+    if (overhead) {
+      log_overhead_.ResumeTimer();
+    }
     processed_command_num_ += ProcessQueuedSchedulerCommands();
+    if (overhead) {
+      log_overhead_.StopTimer();
+    }
     log_process_.log_StopTimer();
 
+    overhead = (job_manager_->NumJobsReadyToAssign() > 0);
+
     log_assign_.log_ResumeTimer();
+    if (overhead) {
+      log_overhead_.ResumeTimer();
+    }
     AssignReadyJobs();
+    if (overhead) {
+      log_overhead_.StopTimer();
+    }
     log_assign_.log_StopTimer();
 
     RemoveObsoleteJobEntries();
@@ -661,6 +679,10 @@ void Scheduler::TerminationProcedure() {
         new TerminateCommand(ID<exit_status_t>(terminate_application_status_));
       server_->BroadcastCommand(command);
       delete command;
+      char buff[LOG_MAX_BUFF_SIZE];
+      snprintf(buff, sizeof(buff), "%10.9lf Simulation Terminated - controller overhead: %2.5lf.",
+          Log::GetRawTime(), log_overhead_.timer());
+      log_.log_WriteToOutputStream(std::string(buff), LOG_INFO);
       exit(NIMBUS_TERMINATE_SUCCESS);
     }
   }
@@ -829,6 +851,7 @@ void Scheduler::SetupJobAssigner() {
   job_assigner_->set_thread_num(job_assigner_thread_num_);
   job_assigner_->set_data_manager_query_cache_active(data_manager_query_cache_active_);
   job_assigner_->set_fault_tolerance_active(fault_tolerance_active_);
+  job_assigner_->set_log_overhead(&log_overhead_);
   job_assigner_->Run();
 }
 

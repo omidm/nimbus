@@ -61,6 +61,7 @@ enum TimerType {
   kTotal = 0,
   kExecuteComputationJob,
   kExecuteCopyJob,
+  kExecuteParentJob,
   kAssemblingCache,
   kSumCyclesTotal,
   kSumCyclesBlock,

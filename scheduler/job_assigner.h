@@ -83,6 +83,7 @@ namespace nimbus {
     virtual void set_checkpoint_id(checkpoint_id_t checkpoint_id);
     virtual void set_data_manager_query_cache_active(bool flag);
     virtual void set_fault_tolerance_active(bool flag);
+    virtual void set_log_overhead(Log *log);
 
     virtual void AssignJobs(const JobEntryList& list);
 
@@ -96,6 +97,7 @@ namespace nimbus {
     checkpoint_id_t checkpoint_id_;
     bool data_manager_query_cache_active_;
     bool fault_tolerance_active_;
+    Log *log_overhead_;
 
     JobEntryList job_queue_;
     boost::recursive_mutex job_queue_mutex_;
