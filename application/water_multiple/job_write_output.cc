@@ -60,6 +60,7 @@ nimbus::Job* JobWriteOutput::Clone() {
 
 void JobWriteOutput::Execute(nimbus::Parameter params,
                             const nimbus::DataArray& da) {
+  nimbus::timer::StartTimer(nimbus::timer::kExecuteWriteJob);
   dbg(APP_LOG, "Executing WRITE_OUTPUT job.\n");
 
   InitConfig init_config;
@@ -101,6 +102,7 @@ void JobWriteOutput::Execute(nimbus::Parameter params,
   DestroyExampleAndDriver(example, driver);
 
   dbg(APP_LOG, "Completed executing WRITE_OUTPUT job\n");
+  nimbus::timer::StopTimer(nimbus::timer::kExecuteWriteJob);
 }
 
 }  // namespace application

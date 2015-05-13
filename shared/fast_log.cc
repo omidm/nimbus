@@ -68,6 +68,7 @@ std::string TimerName(TimerType timer_type) {
     case kExecuteComputationJob: return "kExecuteComputationJob";
     case kExecuteCopyJob: return "kExecuteCopyJob";
     case kExecuteParentJob: return "kExecuteParentJob";
+    case kExecuteWriteJob: return "kExecuteWriteJob";
     case kAssemblingCache: return "kAssemblingCache";
     case kSumCyclesTotal: return "kSumCyclesTotal";
     case kSumCyclesBlock: return "kSumCyclesBlock";
