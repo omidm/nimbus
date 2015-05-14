@@ -103,7 +103,13 @@ bool WorkerManager::ClassifyAndAddJob(Job* job) {
     result = false;
   } else {
     pthread_mutex_lock(&computation_job_queue_lock_);
-    computation_job_list_.push_back(job);
+    PRIORITY_TYPE priority = LOW_PRIORITY;
+    if (dynamic_cast<RemoteCopySendJob*>(job) ||     // NOLINT
+        dynamic_cast<RemoteCopyReceiveJob*>(job) ||  // NOLINT
+        dynamic_cast<LocalCopyJob*>(job)) {          // NOLINT
+      priority = HIGH_PRIORITY;
+    }
+    computation_job_list_.push_back(job, priority);
     ++ready_jobs_count_;
     pthread_mutex_unlock(&computation_job_queue_lock_);
     result = true;

@@ -46,6 +46,7 @@
 #include <string>
 #include "shared/high_resolution_timer.h"
 #include "shared/nimbus.h"
+#include "shared/priority_queue.h"
 #include "worker/task_thread_pool.h"
 
 namespace nimbus {
@@ -122,7 +123,8 @@ class WorkerManager {
   pthread_mutex_t scheduling_critical_section_lock_;
   // 2. The list of ready computation jobs.
   pthread_mutex_t computation_job_queue_lock_;
-  std::list<Job*> computation_job_list_;
+  // std::list<Job*> computation_job_list_;
+  PriorityQueue<Job*> computation_job_list_;
   // 3. The list of ready computation jobs.
   pthread_mutex_t auxiliary_job_queue_lock_;
   std::list<Job*> auxiliary_job_list_;
