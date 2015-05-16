@@ -115,6 +115,8 @@ class Worker {
   virtual void ProcessPrepareRewindCommand(PrepareRewindCommand* command);
   virtual void ProcessRequestStatCommand(RequestStatCommand *command);
 
+  virtual void NotifyLocalJobDone(Job* job);
+
   worker_id_t id();
   void set_id(worker_id_t id);
   void set_ip_address(std::string ip);
@@ -145,6 +147,7 @@ class Worker {
   void AddFinishHintSet(const job_id_t job_id);
   bool InFinishHintSet(const job_id_t job_id);
   WorkerJobGraph worker_job_graph_;
+  boost::recursive_mutex job_graph_mutex_;
 
   Computer host_;
   boost::thread* client_thread_;
@@ -170,7 +173,6 @@ class Worker {
   virtual void LoadSchedulerCommands();
 
   virtual void AddJobToGraph(Job* job);
-  virtual void NotifyLocalJobDone(Job* job);
   virtual void NotifyJobDone(job_id_t job_id, bool final);
   virtual void ClearAfterSet(WorkerJobVertex* vertex);
   virtual void NotifyTransmissionDone(job_id_t job_id);
