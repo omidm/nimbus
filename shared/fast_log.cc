@@ -73,6 +73,9 @@ std::string TimerName(TimerType timer_type) {
     case kSumCyclesTotal: return "kSumCyclesTotal";
     case kSumCyclesBlock: return "kSumCyclesBlock";
     case kSumCyclesRun: return "kSumCyclesRun";
+    case kCoreCommand: return "kCoreCommand";
+    case kCoreTransmission: return "kCoreTransmission";
+    case kCoreJobDone: return "kCoreJobDone";
     case kReadAppData: return "kReadAppData";
     case kWriteAppData: return "kWriteAppData";
     case kReadAppDataField: return "kReadAppDataField";

@@ -136,6 +136,7 @@ void Worker::WorkerCoreProcessor() {
     client_->ReceiveCommands(&storage, SCHEDULER_COMMAND_GROUP_QUOTA);
     SchedulerCommandList::iterator iter = storage.begin();
     for (; iter != storage.end(); ++iter) {
+      timer::StartTimer(timer::kCoreCommand);
       SchedulerCommand *comm = *iter;
       dbg(DBG_WORKER, "Receives command from scheduler: %s\n",
           comm->ToString().c_str());
@@ -145,16 +146,19 @@ void Worker::WorkerCoreProcessor() {
       process_jobs = true;
       ProcessSchedulerCommand(comm);
       delete comm;
+      timer::StopTimer(timer::kCoreCommand);
     }
     // Poll jobs that finish receiving.
     job_id_t receive_job_id;
     int quota = 10;
     while (data_exchanger_->GetReceiveEvent(&receive_job_id)) {
+      timer::StartTimer(timer::kCoreTransmission);
       dbg(DBG_WORKER_FD,
           DBG_WORKER_FD_S"Receive-job transmission is done(job #%d)\n",
           receive_job_id);
       process_jobs = true;
       NotifyTransmissionDone(receive_job_id);
+      timer::StopTimer(timer::kCoreTransmission);
       if (--quota <= 0) {
         break;
       }
@@ -163,10 +167,12 @@ void Worker::WorkerCoreProcessor() {
     worker_manager_->GetLocalJobDoneList(&local_job_done_list);
     quota = 10;
     while (!local_job_done_list.empty()) {
+      timer::StartTimer(timer::kCoreJobDone);
       Job* job = local_job_done_list.front();
       local_job_done_list.pop_front();
       process_jobs = true;
       NotifyLocalJobDone(job);
+      timer::StopTimer(timer::kCoreJobDone);
       if (--quota <= 0) {
         break;
       }
