@@ -347,7 +347,6 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
   ldo = ldo_map_->FindLogicalObject(cm->logical_data_id().elem());
   data->set_region(*(ldo->region()));
 
-  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
   data_map_.AddMapping(data->physical_id(), data);
 
   Job * job = new CreateDataJob();
