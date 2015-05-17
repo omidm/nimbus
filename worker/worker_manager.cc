@@ -151,10 +151,9 @@ bool WorkerManager::PullAuxiliaryJobs(WorkerThreadAuxiliary* worker_thread,
 }
 
 bool WorkerManager::FinishJob(Job* job) {
-  // pthread_mutex_lock(&local_job_done_list_lock_);
-  // local_job_done_list_.push_back(job);
-  // pthread_mutex_unlock(&local_job_done_list_lock_);
-  worker_->NotifyLocalJobDone(job);
+  pthread_mutex_lock(&local_job_done_list_lock_);
+  local_job_done_list_.push_back(job);
+  pthread_mutex_unlock(&local_job_done_list_lock_);
   return true;
 }
 
