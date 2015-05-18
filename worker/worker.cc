@@ -571,6 +571,8 @@ PhysicalDataMap* Worker::data_map() {
 }
 
 void Worker::AddJobToGraph(Job* job) {
+  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+
   // TODO(quhang): when a job is received.
   StatAddJob();
   assert(job != NULL);
@@ -579,8 +581,6 @@ void Worker::AddJobToGraph(Job* job) {
       DBG_WORKER_FD_S"Job(%s, #%d) is added to the local job graph.\n",
       job->name().c_str(), job_id);
   assert(job_id != DUMB_JOB_ID);
-
-  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
 
   // Add vertex for the new job.
   WorkerJobVertex* vertex = NULL;
