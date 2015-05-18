@@ -164,19 +164,19 @@ void Worker::WorkerCoreProcessor() {
       }
     }
     // Job done processing.
-    worker_manager_->GetLocalJobDoneList(&local_job_done_list);
-    quota = 10;
-    while (!local_job_done_list.empty()) {
-      timer::StartTimer(timer::kCoreJobDone);
-      Job* job = local_job_done_list.front();
-      local_job_done_list.pop_front();
-      process_jobs = true;
-      NotifyLocalJobDone(job);
-      timer::StopTimer(timer::kCoreJobDone);
-      if (--quota <= 0) {
-        break;
-      }
-    }
+    // worker_manager_->GetLocalJobDoneList(&local_job_done_list);
+    // quota = 10;
+    // while (!local_job_done_list.empty()) {
+    //   timer::StartTimer(timer::kCoreJobDone);
+    //   Job* job = local_job_done_list.front();
+    //   local_job_done_list.pop_front();
+    //   process_jobs = true;
+    //   NotifyLocalJobDone(job);
+    //   timer::StopTimer(timer::kCoreJobDone);
+    //   if (--quota <= 0) {
+    //     break;
+    //   }
+    // }
     if (!process_jobs) {
 //      typename WorkerJobVertex::Iter iter = worker_job_graph_.begin();
 //      for (; iter != worker_job_graph_.end(); ++iter) {
@@ -353,6 +353,7 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
   ldo = ldo_map_->FindLogicalObject(cm->logical_data_id().elem());
   data->set_region(*(ldo->region()));
 
+  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
   data_map_.AddMapping(data->physical_id(), data);
 
   Job * job = new CreateDataJob();
@@ -418,6 +419,8 @@ void Worker::ProcessLoadDataCommand(LoadDataCommand* cm) {
 }
 
 void Worker::ProcessPrepareRewindCommand(PrepareRewindCommand* cm) {
+  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+
   // First remove all blocked jobs.
   ClearBlockedJobs(&worker_job_graph_);
 
@@ -568,6 +571,9 @@ void Worker::AddJobToGraph(Job* job) {
       DBG_WORKER_FD_S"Job(%s, #%d) is added to the local job graph.\n",
       job->name().c_str(), job_id);
   assert(job_id != DUMB_JOB_ID);
+
+  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+
   // Add vertex for the new job.
   WorkerJobVertex* vertex = NULL;
   if (worker_job_graph_.HasVertex(job_id)) {
@@ -653,6 +659,8 @@ void Worker::AddJobToGraph(Job* job) {
 }
 
 void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
+  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+
   WorkerJobEdge::Map* outgoing_edges = vertex->outgoing_edges();
   // Deletion inside loop is dangerous.
   std::list<WorkerJobVertex*> deletion_list;
@@ -682,6 +690,30 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
 }
 
 void Worker::NotifyLocalJobDone(Job* job) {
+  {
+    boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+
+    job_id_t job_id = job->id().elem();
+    data_map_.ReleaseAccess(job_id);
+    // Job done for unknown job is not handled.
+    if (!worker_job_graph_.HasVertex(job_id)) {
+      // The job must be in the local job graph.
+      assert(false);
+      return;
+    }
+    WorkerJobVertex* vertex = NULL;
+    worker_job_graph_.GetVertex(job_id, &vertex);
+    assert(vertex->incoming_edges()->empty());
+    ClearAfterSet(vertex);
+    delete vertex->entry();
+    worker_job_graph_.RemoveVertex(job_id);
+    if (!IDMaker::SchedulerProducedJobID(job_id)) {
+      AddFinishHintSet(job_id);
+    }
+    // vertex->entry()->set_state(WorkerJobEntry::FINISH);
+    // vertex->entry()->set_job(NULL);
+  }
+
   Parameter params;
   SaveDataJob *j = dynamic_cast<SaveDataJob*>(job); // NOLINT
   if (j != NULL) {
@@ -692,25 +724,7 @@ void Worker::NotifyLocalJobDone(Job* job) {
     JobDoneCommand cm(job->id(), job->run_time(), job->wait_time(), job->max_alloc(), false);
     client_->SendCommand(&cm);
   }
-  job_id_t job_id = job->id().elem();
-  data_map_.ReleaseAccess(job_id);
-  // Job done for unknown job is not handled.
-  if (!worker_job_graph_.HasVertex(job_id)) {
-    // The job must be in the local job graph.
-    assert(false);
-    return;
-  }
-  WorkerJobVertex* vertex = NULL;
-  worker_job_graph_.GetVertex(job_id, &vertex);
-  assert(vertex->incoming_edges()->empty());
-  ClearAfterSet(vertex);
-  delete vertex->entry();
-  worker_job_graph_.RemoveVertex(job_id);
-  if (!IDMaker::SchedulerProducedJobID(job_id)) {
-    AddFinishHintSet(job_id);
-  }
-  // vertex->entry()->set_state(WorkerJobEntry::FINISH);
-  // vertex->entry()->set_job(NULL);
+
   delete job;
 }
 
@@ -721,6 +735,9 @@ void Worker::NotifyJobDone(job_id_t job_id, bool final) {
     // Jobdone command for local job is not handled.
     return;
   }
+
+  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+
   if (final) {
     // Job done for unknown job is not handled.
     if (!worker_job_graph_.HasVertex(job_id)) {
@@ -750,6 +767,8 @@ void Worker::NotifyJobDone(job_id_t job_id, bool final) {
 }
 
 void Worker::NotifyTransmissionDone(job_id_t job_id) {
+  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+
   SerializedData* ser_data = NULL;
   data_version_t version;
   WorkerJobVertex* vertex = NULL;
