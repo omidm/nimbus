@@ -121,6 +121,9 @@ void Worker::WorkerCoreProcessor() {
   stat_busy_cores_ = 0;
   stat_blocked_cores_ = 0;
   stat_idle_cores_ = WorkerManager::across_job_parallism;
+  run_timer_.set_name("kSumCyclesRun");
+  block_timer_.set_name("kSumCyclesBlock");
+  total_timer_.set_name("kSumCyclesTotal");
   std::cout << "Base Worker Core Processor" << std::endl;
   worker_manager_->worker_ = this;
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Launching worker threads.\n");
@@ -177,6 +180,7 @@ void Worker::WorkerCoreProcessor() {
     //     break;
     //   }
     // }
+
     if (!process_jobs) {
 //      typename WorkerJobVertex::Iter iter = worker_job_graph_.begin();
 //      for (; iter != worker_job_graph_.end(); ++iter) {
@@ -321,7 +325,8 @@ void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
   // If job main is over the data map creation phase is over, now start the
   // timer that goes toward the idle time computation.  -omidm
   if (cm->job_id().elem() == NIMBUS_KERNEL_JOB_ID + 1) {
-    timer::StartTimer(timer::kSumCyclesTotal, WorkerManager::across_job_parallism);
+    // timer::StartTimer(timer::kSumCyclesTotal, WorkerManager::across_job_parallism);
+    total_timer_.Start(WorkerManager::across_job_parallism);
   }
 }
 
@@ -494,6 +499,9 @@ void Worker::ProcessTerminateCommand(TerminateCommand* cm) {
   // profiler_thread_->join();
   std::string file_name = int2string(id_) + "_time_per_thread.txt";
   FILE* temp = fopen(file_name.c_str(), "w");
+  total_timer_.Print(temp);
+  block_timer_.Print(temp);
+  run_timer_.Print(temp);
   timer::PrintTimerSummary(temp);
   fclose(temp);
   exit(cm->exit_status().elem());
@@ -873,6 +881,7 @@ bool Worker::IsEmptyGraph(WorkerJobGraph* job_graph) {
 }
 
 void Worker::StatAddJob() {
+  boost::unique_lock<boost::recursive_mutex> lock(stat_mutex_);
   // printf("add %d %d %d %d %d\n",
   //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
   //        stat_blocked_job_num_, stat_ready_job_num_);
@@ -880,13 +889,15 @@ void Worker::StatAddJob() {
   if (stat_idle_cores_ != 0) {
     --stat_idle_cores_;
     ++stat_blocked_cores_;
-    timer::StartTimer(timer::kSumCyclesBlock);
+    // timer::StartTimer(timer::kSumCyclesBlock);
+    block_timer_.Start(1);
   }
   // printf("#add %d %d %d %d %d\n",
   //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
   //        stat_blocked_job_num_, stat_ready_job_num_);
 }
 void Worker::StatDispatchJob(int len) {
+  boost::unique_lock<boost::recursive_mutex> lock(stat_mutex_);
   // printf("%d dis %d %d %d %d %d\n", len,
   //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
   //        stat_blocked_job_num_, stat_ready_job_num_);
@@ -896,9 +907,11 @@ void Worker::StatDispatchJob(int len) {
     int release_cores = std::min(stat_blocked_cores_, len);
     if (release_cores > 0) {
       stat_blocked_cores_ -= release_cores;
-      timer::StopTimer(timer::kSumCyclesBlock, release_cores);
+      // timer::StopTimer(timer::kSumCyclesBlock, release_cores);
+      block_timer_.Stop(release_cores);
       stat_busy_cores_ += release_cores;
-      timer::StartTimer(timer::kSumCyclesRun, release_cores);
+      // timer::StartTimer(timer::kSumCyclesRun, release_cores);
+      run_timer_.Start(release_cores);
     }
   }
   // printf("#dis %d %d %d %d %d\n",
@@ -906,6 +919,7 @@ void Worker::StatDispatchJob(int len) {
   //        stat_blocked_job_num_, stat_ready_job_num_);
 }
 void Worker::StatEndJob(int len) {
+  boost::unique_lock<boost::recursive_mutex> lock(stat_mutex_);
   // printf("%d end %d %d %d %d %d\n", len,
   //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
   //        stat_blocked_job_num_, stat_ready_job_num_);
@@ -918,11 +932,12 @@ void Worker::StatEndJob(int len) {
   int idle_cores =
       WorkerManager::across_job_parallism - busy_cores - blocked_cores;
   if (busy_cores != stat_busy_cores_) {
-    timer::StopTimer(timer::kSumCyclesRun, stat_busy_cores_ - busy_cores);
+    // timer::StopTimer(timer::kSumCyclesRun, stat_busy_cores_ - busy_cores);
+    run_timer_.Stop(stat_busy_cores_ - busy_cores);
   }
   if (blocked_cores != stat_blocked_cores_) {
-    timer::StartTimer(timer::kSumCyclesBlock,
-                      blocked_cores - stat_blocked_cores_);
+    // timer::StartTimer(timer::kSumCyclesBlock, blocked_cores - stat_blocked_cores_);
+    block_timer_.Start(blocked_cores - stat_blocked_cores_);
   }
   stat_busy_cores_ = busy_cores;
   stat_blocked_cores_ = blocked_cores;
@@ -934,10 +949,14 @@ void Worker::StatEndJob(int len) {
 
 // The unit is in nano-second.
 void Worker::GetTimerStat(int64_t* idle, int64_t* block, int64_t* run) {
+  boost::unique_lock<boost::recursive_mutex> lock(stat_mutex_);
   static int64_t l_idle = 0, l_block = 0, l_run = 0;
-  int64_t c_block = timer::ReadTimer(timer::kSumCyclesBlock);
-  int64_t c_run = timer::ReadTimer(timer::kSumCyclesRun);
-  int64_t c_idle = timer::ReadTimer(timer::kSumCyclesTotal) - c_block - c_run;
+  // int64_t c_block = timer::ReadTimer(timer::kSumCyclesBlock);
+  int64_t c_block = block_timer_.Read();
+  // int64_t c_run = timer::ReadTimer(timer::kSumCyclesRun);
+  int64_t c_run = run_timer_.Read();
+  // int64_t c_idle = timer::ReadTimer(timer::kSumCyclesTotal) - c_block - c_run;
+  int64_t c_idle = total_timer_.Read() - c_block - c_run;
   *idle = c_idle - l_idle;
   *block = c_block - l_block;
   *run = c_run - l_run;

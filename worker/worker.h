@@ -66,6 +66,7 @@
 #include "shared/cluster.h"
 #include "shared/parser.h"
 #include "shared/high_resolution_timer.h"
+#include "shared/multi_level_timer.h"
 #include "shared/profiler.h"
 #include "shared/helpers.h"
 
@@ -190,6 +191,10 @@ class Worker {
  private:
   int stat_blocked_job_num_, stat_ready_job_num_;
   int stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_;
+  MultiLevelTimer run_timer_;
+  MultiLevelTimer block_timer_;
+  MultiLevelTimer total_timer_;
+  boost::recursive_mutex stat_mutex_;
 };
 }  // namespace nimbus
 
