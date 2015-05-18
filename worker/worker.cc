@@ -700,6 +700,7 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
 void Worker::NotifyLocalJobDone(Job* job) {
   {
     boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+    StatEndJob(1);
 
     job_id_t job_id = job->id().elem();
     data_map_.ReleaseAccess(job_id);

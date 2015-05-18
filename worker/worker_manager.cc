@@ -155,7 +155,7 @@ bool WorkerManager::FinishJob(Job* job) {
   // local_job_done_list_.push_back(job);
   // pthread_mutex_unlock(&local_job_done_list_lock_);
 
-  worker_->StatEndJob(1);
+  // worker_->StatEndJob(1);
   worker_->NotifyLocalJobDone(job);
   return true;
 }
