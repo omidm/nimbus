@@ -142,7 +142,7 @@ class Worker {
   port_t listening_port_;
 
  private:
-  static const int64_t max_hint_size_ = 10000;
+  static const uint64_t max_hint_size_ = 10000;
   boost::unordered_set<job_id_t> hint_set_;
   std::list<job_id_t> hint_queue_;
   void AddFinishHintSet(const job_id_t job_id);
@@ -187,6 +187,7 @@ class Worker {
   void StatDispatchJob(int len = 1);
   void ResolveDataArray(Job* job);
   void GetTimerStat(int64_t* idle, int64_t* block, int64_t* run);
+  void PrintTimerStat();
 
  private:
   int stat_blocked_job_num_, stat_ready_job_num_;
