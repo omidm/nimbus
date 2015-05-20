@@ -59,6 +59,7 @@ namespace nimbus {
 SchedulerServer::SchedulerServer(port_t port_no)
   : listening_port_(port_no) {
     bouncer_thread_active_ = false;
+    total_bytes_sent_ = 0;
   }
 
 SchedulerServer::~SchedulerServer() {
@@ -132,6 +133,8 @@ void SchedulerServer::SendCommand(SchedulerWorker* worker,
   std::string msg;
   msg.append((const char*)&len, sizeof(len));
   msg.append(data.c_str(), data.length());
+
+  total_bytes_sent_ += msg.size();
 
   boost::mutex::scoped_lock lock(*(worker->connection()->mutex()));
   SchedulerServerConnection* connection = worker->connection();
@@ -414,6 +417,9 @@ size_t SchedulerServer::worker_num() {
   return workers_.size();
 }
 
+uint64_t SchedulerServer::total_bytes_sent() {
+  return total_bytes_sent_;
+}
 void SchedulerServer::set_bouncer_thread_active(bool flag) {
   bouncer_thread_active_ = flag;
 }

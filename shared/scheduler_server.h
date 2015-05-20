@@ -117,6 +117,8 @@ class SchedulerServer {
 
   virtual size_t worker_num();
 
+  virtual uint64_t total_bytes_sent();
+
   virtual void set_bouncer_thread_active(bool flag);
 
   virtual void set_worker_command_table(SchedulerCommand::PrototypeTable* cmt);
@@ -136,6 +138,7 @@ class SchedulerServer {
   boost::asio::io_service* io_service_;
   tcp::acceptor* acceptor_;
   Log log_;
+  uint64_t total_bytes_sent_;
 
   /** Create server socket, set up networking and state. */
   virtual bool Initialize();

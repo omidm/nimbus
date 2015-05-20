@@ -680,8 +680,8 @@ void Scheduler::TerminationProcedure() {
       server_->BroadcastCommand(command);
       delete command;
       char buff[LOG_MAX_BUFF_SIZE];
-      snprintf(buff, sizeof(buff), "%10.9lf Simulation Terminated - controller overhead: %2.5lf.",
-          Log::GetRawTime(), log_overhead_.timer());
+      snprintf(buff, sizeof(buff), "%10.9lf Simulation Terminated - controller overhead: %2.5lf seconds - bytes sent: %4.2lf MB.", // NOLINT
+          Log::GetRawTime(), log_overhead_.timer(), static_cast<double>(server_->total_bytes_sent()) / 1e6); // NOLINT
       log_.log_WriteToOutputStream(std::string(buff), LOG_INFO);
       exit(NIMBUS_TERMINATE_SUCCESS);
     }
