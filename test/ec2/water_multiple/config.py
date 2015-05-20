@@ -46,9 +46,11 @@ OUTPUT_PATH          = 'output/'
 # Build and Run configuration
 SOURCE_NIMBUS_ROOT   = '~/cloud/src/nimbus/'
 EC2_NIMBUS_ROOT      = '~/cloud/src/nimbus/'
+# EC2_NIMBUS_ROOT      = '~/physbam/'
 REL_APPLICATION_PATH = 'application/water_multiple/Build/Release/'
-REL_SCHEDULER_PATH   = 'test/scheduler_v2/'
+REL_SCHEDULER_PATH   = 'test/scheduler_v3/'
 REL_WORKER_PATH      = 'test/water_multiple/'
+# REL_WORKER_PATH      = 'Projects/Water/'
 
 NIMBUS_LIB           = 'libnimbus.so'
 APPLICATION_LIB      = 'libwater_app.so'

@@ -43,29 +43,26 @@ args = parser.parse_args()
 #     config.EC2_LOCATION,
 #     config.INSTANCE_NUM);
 
-ip_addresses = ec2.get_ip_addresses(config.EC2_LOCATION);
+ip_addresses   = ec2.get_ip_addresses(config.EC2_LOCATION);
 
-# scheduler_ip = "54.189.87.209"
-# 
-# worker_ips = ["54.70.104.182",
-#               "54.70.223.190",
-#               "54.189.222.132",
-#               "54.190.13.143",
-#               "54.189.88.169",
-#               "54.185.113.178",
-#               "54.244.161.222",
-#               "50.112.212.215"]
+scheduler_ip   = "52.13.23.95"
+scheduler_p_ip = "10.120.66.60"
+ 
+worker_ips = list(ip_addresses["public"])
+worker_ips.remove(scheduler_ip)
 
-# worker_ips = list(ip_addresses)
-# worker_ips.remove(scheduler_ip)
+worker_p_ips = list(ip_addresses["private"])
+worker_p_ips.remove(scheduler_p_ip)
 
-# scheduler_ip = ip_addresses[0]
-# worker_ips = list(ip_addresses)
+# scheduler_ip = ip_addresses["public"][0]
+# worker_ips = list(ip_addresses["public"])
 # worker_ips.pop(0)
 
-print "scheduler IP: " + scheduler_ip
-print "Worker IPs: "
-print worker_ips
+print "scheduler IP:         " + scheduler_ip
+print "scheduler Private IP: " + scheduler_p_ip
+print "Worker IPs:           " + str(worker_ips)
+print "Worker Private IPs:   " + str(worker_p_ips)
+
 
 # utils.build_binaries(scheduler_ip);
 # utils.distribute_binaries(scheduler_ip, worker_ips);
@@ -74,7 +71,7 @@ if args.action == 'w':
   utils.test_workers(worker_ips)
  
 elif args.action == 'r':
-  utils.run_experiment(scheduler_ip, worker_ips)
+  utils.run_experiment(scheduler_ip, scheduler_ip, worker_ips, worker_ips)
 
 elif args.action == 'c':
   utils.collect_output_data(scheduler_ip, worker_ips)

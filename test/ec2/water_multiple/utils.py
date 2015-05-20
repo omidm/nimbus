@@ -77,17 +77,18 @@ def distribute_binaries(source_ip, dest_ips):
         'ubuntu@' + source_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH + config.WORKER_BINARY,
         'ubuntu@' + dest_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH])
 
-def run_experiment(scheduler_ip, worker_ips):
+def run_experiment(scheduler_ip, scheduler_p_ip, worker_ips, worker_p_ips):
 
   worker_num = len(worker_ips)
 
   run_scheduler(scheduler_ip, worker_num);
   time.sleep(10)
 
-  num = 0;
-  for ip in worker_ips:
-    num += 1
-    run_worker(scheduler_ip, ip, num);
+  idx = 0;
+  for idx in range(0, len(worker_ips)):
+    ip = worker_ips[idx]
+    p_ip = worker_p_ips[idx]
+    run_worker(scheduler_p_ip, ip, p_ip, idx+1);
 
 
 def run_scheduler(scheduler_ip, worker_num):
@@ -95,12 +96,16 @@ def run_scheduler(scheduler_ip, worker_num):
   scheduler_command =  'cd ' + config.EC2_NIMBUS_ROOT + config.REL_SCHEDULER_PATH + ';'
   scheduler_command += 'export DBG=error;'
   scheduler_command += 'sudo ' + config.EC2_NIMBUS_ROOT + 'scripts/configure_tcp.sh;'
+  scheduler_command += 'sudo sysctl -p;'
   scheduler_command += 'ulimit -c unlimited;'
   scheduler_command += './scheduler'
   scheduler_command += ' -p ' + str(config.FIRST_PORT)
   scheduler_command += ' -w ' + str(worker_num)
   scheduler_command += ' -t ' + str(config.ASSIGNER_THREAD_NUM)
   scheduler_command += ' -a ' + str(config.BATCH_ASSIGN_NUM)
+  # scheduler_command += ' --alb --lb_period 55'
+  # scheduler_command += ' --aft --ft_period 600'
+  # scheduler_command += ' --dct '
   scheduler_command += ' &> ' + config.LOG_FILE_NAME
 
   subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
@@ -111,16 +116,17 @@ def run_scheduler(scheduler_ip, worker_num):
   print '** Scheduler Launched: ' + scheduler_ip
 
 
-def run_worker(scheduler_ip, worker_ip, num):
+def run_worker(scheduler_p_ip, worker_ip, worker_p_ip, num):
   worker_command =  'cd ' + config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH + ';'
   worker_command += 'export DBG=error;'
   worker_command += 'sudo ' + config.EC2_NIMBUS_ROOT + 'scripts/configure_tcp.sh;'
+  worker_command += 'sudo sysctl -p;'
   worker_command += 'ulimit -c unlimited;'
   worker_command += './worker'
   # worker_command += 'taskset -c 0-3,8-11 ./worker'
   worker_command += ' -port ' + str(config.FIRST_PORT + num)
-  worker_command += ' -ip ' + worker_ip
-  worker_command += ' -sip ' + scheduler_ip
+  worker_command += ' -ip ' + worker_p_ip
+  worker_command += ' -sip ' + scheduler_p_ip
   worker_command += ' -sport ' + str(config.FIRST_PORT)
   worker_command += ' -port ' + str(config.FIRST_PORT + num)
   worker_command += ' -othread ' + str(config.OTHREAD_NUM)
@@ -200,7 +206,7 @@ def collect_output_data(scheduler_ip, worker_ips):
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
       'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_1,
+      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_5,
       config.OUTPUT_PATH])
 
 #  subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
@@ -261,7 +267,14 @@ def collect_output_data(scheduler_ip, worker_ips):
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
         'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        config.REL_WORKER_PATH + '*_event_fe.txt',
+        config.REL_WORKER_PATH + 'mpi*.log',
+        config.OUTPUT_PATH])
+
+    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+        config.REL_WORKER_PATH + '*_lb_log.txt',
         config.OUTPUT_PATH])
 
     subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
@@ -277,6 +290,14 @@ def collect_output_data(scheduler_ip, worker_ips):
         'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
         config.REL_WORKER_PATH + '*_time_per_thread.txt',
         config.OUTPUT_PATH])
+
+    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+        config.REL_WORKER_PATH + '*_main_timers.txt',
+        config.OUTPUT_PATH])
+
 
 #    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
 #        '-o', 'UserKnownHostsFile=/dev/null',

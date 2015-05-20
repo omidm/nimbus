@@ -69,13 +69,17 @@ def get_ip_addresses(location):
 
   ec2 = boto.ec2.connect_to_region(location)
 
-  ip_list = []
+  ip_lists = {}
+  ip_lists["public"]  = []
+  ip_lists["private"] = []
   instances = ec2.get_only_instances()
   for inst in instances:
     if inst.state == 'running':
-      ip_list.append(inst.ip_address)
-  return ip_list
+      ip_lists["public"].append(inst.ip_address)
+      ip_lists["private"].append(inst.private_ip_address)
+  return ip_lists
     
+
 
 def get_dns_names(location):
 
