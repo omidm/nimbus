@@ -118,6 +118,7 @@ class SchedulerServer {
   virtual size_t worker_num();
 
   virtual uint64_t total_bytes_sent();
+  virtual uint64_t total_bytes_received();
 
   virtual void set_bouncer_thread_active(bool flag);
 
@@ -139,6 +140,7 @@ class SchedulerServer {
   tcp::acceptor* acceptor_;
   Log log_;
   uint64_t total_bytes_sent_;
+  uint64_t total_bytes_received_;
 
   /** Create server socket, set up networking and state. */
   virtual bool Initialize();

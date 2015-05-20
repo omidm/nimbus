@@ -60,6 +60,7 @@ SchedulerServer::SchedulerServer(port_t port_no)
   : listening_port_(port_no) {
     bouncer_thread_active_ = false;
     total_bytes_sent_ = 0;
+    total_bytes_received_ = 0;
   }
 
 SchedulerServer::~SchedulerServer() {
@@ -313,6 +314,8 @@ void SchedulerServer::HandleRead(SchedulerWorker* worker,
     return;
   }
 
+  total_bytes_received_ += bytes_transferred;
+
   size_t real_length = bytes_transferred + worker->connection()->existing_bytes();
   size_t len = EnqueueCommands(worker->connection()->read_buffer(), real_length);
   assert(real_length >= len);
@@ -420,6 +423,11 @@ size_t SchedulerServer::worker_num() {
 uint64_t SchedulerServer::total_bytes_sent() {
   return total_bytes_sent_;
 }
+
+uint64_t SchedulerServer::total_bytes_received() {
+  return total_bytes_received_;
+}
+
 void SchedulerServer::set_bouncer_thread_active(bool flag) {
   bouncer_thread_active_ = flag;
 }
