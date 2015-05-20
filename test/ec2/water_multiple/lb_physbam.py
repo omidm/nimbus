@@ -64,7 +64,7 @@ first = True
 
 for line in content:
   # result = re.findall('(\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+) : ' + args.tag, line)
-  result = re.findall('DT: (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+).*', line)
+  result = re.findall('DT: (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+)$', line)
   if len(result) > 0:
     time.append(decimal.Decimal(result[0]))
     if first:
@@ -87,6 +87,8 @@ for i in range (0, len(time) - 1):
 
 print "Time: "
 print time
+print "Average duration: " + str(numpy.mean(diff))
+print "Iteration Number: " + str(len(diff))
 
 import numpy as np
 import matplotlib.mlab as mlab

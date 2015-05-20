@@ -90,6 +90,8 @@ for i in range (0, len(time) - 1):
 
 print "Time: "
 print time
+print "Average duration: " + str(numpy.mean(diff))
+print "Iteration Number: " + str(len(diff))
 
 import numpy as np
 import matplotlib.mlab as mlab
