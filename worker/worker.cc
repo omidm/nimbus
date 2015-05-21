@@ -56,6 +56,7 @@
 #include "data/physbam/physbam_data.h"
 
 #define SCHEDULER_COMMAND_GROUP_QUOTA 10
+#define RECEIVE_EVENT_BATCH_QUOTA 100000
 
 using boost::hash;
 
@@ -152,18 +153,22 @@ void Worker::WorkerCoreProcessor() {
       timer::StopTimer(timer::kCoreCommand);
     }
     // Poll jobs that finish receiving.
-    job_id_t receive_job_id;
-    int quota = 10;
-    while (data_exchanger_->GetReceiveEvent(&receive_job_id)) {
-      timer::StartTimer(timer::kCoreTransmission);
-      dbg(DBG_WORKER_FD,
-          DBG_WORKER_FD_S"Receive-job transmission is done(job #%d)\n",
-          receive_job_id);
-      process_jobs = true;
-      NotifyTransmissionDone(receive_job_id);
-      timer::StopTimer(timer::kCoreTransmission);
-      if (--quota <= 0) {
-        break;
+    {
+      boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+
+      job_id_t receive_job_id;
+      int quota = RECEIVE_EVENT_BATCH_QUOTA;
+      while (data_exchanger_->GetReceiveEvent(&receive_job_id)) {
+        timer::StartTimer(timer::kCoreTransmission);
+        dbg(DBG_WORKER_FD,
+            DBG_WORKER_FD_S"Receive-job transmission is done(job #%d)\n",
+            receive_job_id);
+        process_jobs = true;
+        NotifyTransmissionDone(receive_job_id);
+        timer::StopTimer(timer::kCoreTransmission);
+        if (--quota <= 0) {
+          break;
+        }
       }
     }
     // Job done processing.
@@ -784,8 +789,6 @@ void Worker::NotifyJobDone(job_id_t job_id, bool final) {
 }
 
 void Worker::NotifyTransmissionDone(job_id_t job_id) {
-  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
-
   SerializedData* ser_data = NULL;
   data_version_t version;
   WorkerJobVertex* vertex = NULL;
