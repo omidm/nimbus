@@ -100,6 +100,8 @@ class Scheduler {
     virtual void AddWorker(SchedulerWorker * worker) {}
     virtual SchedulerWorker* GetWorker(int workerId) {return NULL;}
 
+    virtual void PrintStats();
+
   protected:
     virtual void SchedulerCoreProcessor();
 

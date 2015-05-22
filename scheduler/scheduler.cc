@@ -858,6 +858,7 @@ void Scheduler::SetupJobAssigner() {
   job_assigner_->set_thread_num(job_assigner_thread_num_);
   job_assigner_->set_data_manager_query_cache_active(data_manager_query_cache_active_);
   job_assigner_->set_fault_tolerance_active(fault_tolerance_active_);
+  job_assigner_->set_scheduler(this);
   job_assigner_->set_log_overhead(&log_overhead_);
   job_assigner_->Run();
 }
@@ -983,5 +984,30 @@ void Scheduler::GetUserCommandThread() {
     std::cout << "you typed: " << cm << std::endl;
   }
 }
+
+void Scheduler::PrintStats() {
+  static FILE* file = fopen("controller_stats.txt", "w");
+  static uint64_t l_sent = 0, l_received = 0;
+  static double l_overhead = 0;
+  static size_t counter = 0;
+
+  uint64_t c_sent = server_->total_bytes_sent();
+  uint64_t c_received = server_->total_bytes_received();
+  double c_overhead = log_overhead_.timer();
+
+  fprintf(file, "%10.9lf %3.0lu sent(MB): %.4f received(MB): %.4f overhead(s): %.4f\n",
+      Log::GetRawTime(),
+      counter,
+      static_cast<double>(c_sent - l_sent) / 1e6,
+      static_cast<double>(c_received - l_received) / 1e6,
+      c_overhead - l_overhead);
+  fflush(file);
+
+  l_sent = c_sent;
+  l_received = c_received;
+  l_overhead = c_overhead;
+  counter++;
+}
+
 
 }  // namespace nimbus

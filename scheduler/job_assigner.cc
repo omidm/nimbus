@@ -42,6 +42,7 @@
 
 
 #include "scheduler/job_assigner.h"
+#include "scheduler/scheduler.h"
 #include "scheduler/load_balancer.h"
 
 #define LB_UPDATE_RATE 100
@@ -65,6 +66,7 @@ void JobAssigner::Initialize() {
   load_balancer_ = NULL;
   data_manager_query_cache_active_ = false;
   fault_tolerance_active_ = false;
+  scheduler_ = NULL;
   log_overhead_ = NULL;
 }
 
@@ -105,6 +107,10 @@ void JobAssigner::set_checkpoint_id(checkpoint_id_t checkpoint_id) {
 
 void JobAssigner::set_fault_tolerance_active(bool flag) {
   fault_tolerance_active_ = flag;
+}
+
+void JobAssigner::set_scheduler(Scheduler *scheduler) {
+  scheduler_ = scheduler;
 }
 
 void JobAssigner::set_log_overhead(Log *log) {
@@ -299,6 +305,10 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
   size_t copy_job_num = bt->copy_job_num();
   size_t compute_job_num = bt->compute_job_num();
 
+  if (job->template_entry()->template_name() == "loop_iteration_part_two") {
+    scheduler_->PrintStats();
+  }
+
   Log log(Log::NO_FILE);
   std::cout << "COMPLEX: Assigning: "
     << job->template_entry()->template_name()
@@ -359,6 +369,10 @@ bool JobAssigner::AssignJob(JobEntry *job) {
     std::vector<job_id_t> j;
     id_maker_->GetNewJobID(&j, 1);
     std::cout << "COPY JOBS UNTIL " << job->job_name() << " : " << j[0] << std::endl;
+  }
+
+  if (job->job_name() == "loop_iteration") {
+    scheduler_->PrintStats();
   }
 
   SchedulerWorker* worker = job->assigned_worker();
