@@ -995,7 +995,7 @@ void Scheduler::PrintStats() {
   uint64_t c_received = server_->total_bytes_received();
   double c_overhead = log_overhead_.timer();
 
-  fprintf(file, "%10.9lf %3.0lu sent(MB): %.4f received(MB): %.4f overhead(s): %.4f\n",
+  fprintf(file, "%10.9lf %3.1lu sent(MB): %.4f received(MB): %.4f overhead(s): %.4f\n",
       Log::GetRawTime(),
       counter,
       static_cast<double>(c_sent - l_sent) / 1e6,
