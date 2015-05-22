@@ -350,6 +350,17 @@ bool JobAssigner::AssignJob(JobEntry *job) {
     return AssignComplexJob(xj);
   }
 
+  if (job->job_name() == "loop_iteration" ||
+      job->job_name() == "loop_iteration_part_two" ||
+      job->job_name() == "loop_iteration_part_two_end" ||
+      job->job_name() == "projection_main" ||
+      job->job_name() == "projection_loop_iteration_end" ||
+      job->job_name() == "projection_loop_iteration" ) {
+    std::vector<job_id_t> j;
+    id_maker_->GetNewJobID(&j, 1);
+    std::cout << "COPY JOBS UNTIL " << job->job_name() << " : " << j[0] << std::endl;
+  }
+
   SchedulerWorker* worker = job->assigned_worker();
 
   job_manager_->ResolveJobDataVersions(job);
