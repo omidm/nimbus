@@ -209,13 +209,13 @@ def collect_output_data(scheduler_ip, worker_ips):
       config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_5,
       config.OUTPUT_PATH])
 
-#  subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-#      '-o', 'UserKnownHostsFile=/dev/null',
-#      '-o', 'StrictHostKeyChecking=no',
-#      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-#      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_2,
-#      config.OUTPUT_PATH])
-#
+  subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+      '-o', 'UserKnownHostsFile=/dev/null',
+      '-o', 'StrictHostKeyChecking=no',
+      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
+      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_2,
+      config.OUTPUT_PATH])
+
 #  subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
 #      '-o', 'UserKnownHostsFile=/dev/null',
 #      '-o', 'StrictHostKeyChecking=no',
@@ -339,6 +339,7 @@ def clean_output_data(scheduler_ip, worker_ips):
   scheduler_path = config.EC2_NIMBUS_ROOT + config.REL_SCHEDULER_PATH;
   scheduler_command  =  ''
   scheduler_command +=  'rm -rf ' + scheduler_path + config.LOG_FILE_NAME + ';'
+  scheduler_command +=  'rm -rf ' + scheduler_path + '*.txt;'
   scheduler_command +=  'rm -rf ' + scheduler_path + '*log*;'
   scheduler_command +=  'rm -rf ' + scheduler_path + 'core;'
 

@@ -27,6 +27,6 @@ fi
 echo -e "${Pur}Launching the workers ...${RCol}"
 for i in `seq 1 $1`;
 do
-  ./worker -sip localhost -sport 5900 -othread 1 -port 590$i &
+  ./worker -sip localhost -sport 5900 -othread 2 -port 590$i &
 done
 

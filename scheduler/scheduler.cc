@@ -989,7 +989,7 @@ void Scheduler::PrintStats() {
   static FILE* file = fopen("controller_stats.txt", "w");
   static uint64_t l_sent = 0, l_received = 0;
   static double l_overhead = 0;
-  static size_t counter = 0;
+  static size_t counter = 1;
 
   uint64_t c_sent = server_->total_bytes_sent();
   uint64_t c_received = server_->total_bytes_received();

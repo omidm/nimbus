@@ -18,8 +18,10 @@ def sum(list):
 
 def print_bar(list, max_len):
   m = max(list)
+  idx = 0;
   for element in list:
-    rod = "*"
+    idx += 1
+    rod = "{:3d} : *".format(idx)
     for i in range(0, int(max_len * element / m)):
       rod += "*"
     print rod
@@ -78,18 +80,19 @@ if (BL > 0):
   print_bar(iteration_length, BL)
 
 
-print "------------------------------------------------------------------------------"
-print "Truncated the first {:d} iteartions for the following stats:".format(TI)
-print "------------------------------------------------------------------------------"
+print "---------------------------------------------------------------"
+print "Iteration number:  {:d}".format(iter_num)
+print "** Truncated the first {:d} iteartions for the following stats:".format(TI)
+print "---------------------------------------------------------------"
 
 print "Average iteration duration | {:8.2f} (s)".format(np.mean(iteration_length[TI: iter_num]))
 print "Average overhead           | {:8.2f} (s)".format(np.mean(overhead_time[TI: iter_num]))
 print "Average bytes sent         | {:8.2f} (MB)".format(np.mean(bytes_sent[TI: iter_num]))
 print "Average bytes received     | {:8.2f} (MB)".format(np.mean(bytes_received[TI: iter_num]))
-print "------------------------------------------------------------------------------"
+print "---------------------------------------------------------------"
 
-print "\n------------------------------------------------------------------------------"
+print "---------------------------------------------------------------"
 print "Total bytes sent           | {:8.2f} (MB)".format(sum(bytes_sent))
 print "Total bytes received       | {:8.2f} (MB)".format(sum(bytes_received))
-print "------------------------------------------------------------------------------"
+print "---------------------------------------------------------------"
 

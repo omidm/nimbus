@@ -33,7 +33,7 @@ def make_nodes_file_content(ip_addresses):
   string = ""
   for ip in ip_addresses:
     print ip
-    string = string + ip + " cpu=1\n"
+    string = string + ip + " cpu=8\n"
 
   file = open(temp_file_name, 'w+')
   file.write(string)

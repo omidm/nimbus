@@ -31,10 +31,10 @@ parser.add_argument(
     default="data",
     help="output file name")
 parser.add_argument(
-    "-t", "--tag",
-    dest="tag",
-    default="assign",
-    help="tag to sum up the time for")
+    "-ti", "--truncate_index",
+    dest="truncateindex",
+    default=0,
+    help="truncate index to start the mean from there")
 
 
 args = parser.parse_args()
@@ -90,7 +90,7 @@ for i in range (0, len(time) - 1):
 
 print "Time: "
 print time
-print "Average duration: " + str(numpy.mean(diff))
+print "Average duration: " + str(numpy.mean(diff[int(args.truncateindex):len(diff)-1]))
 print "Iteration Number: " + str(len(diff))
 
 import numpy as np

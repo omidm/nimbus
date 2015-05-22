@@ -14,11 +14,12 @@ import config
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import ec2
 
-help = "action to do: "
-help += "\nw: test the workers to see if they ar awake"
-help += "\nr: run the experiment"
-help += "\nc: collect the results"
-help += "\nt: terminate and clean"
+action_help = "action to do: "
+action_help += "\nw: test the workers to see if they ar awake"
+action_help += "\nr: run the experiment"
+action_help += "\nc: collect the results"
+action_help += "\nt: terminate and clean"
+action_help += "\nk: terminate ec2 instances"
 
 parser = argparse.ArgumentParser(description='Process log files.')
 parser.add_argument(
@@ -26,7 +27,27 @@ parser.add_argument(
     dest="action",
     default='t',
     required=True,
-    help=help)
+    help=action_help)
+parser.add_argument(
+    "-cip", "--controller_ip",
+    dest="controllerip",
+    default="X.X.X.X",
+    help="controler ip")
+parser.add_argument(
+    "-cpip", "--controller_private_ip",
+    dest="controllerprivateip",
+    default="X.X.X.X",
+    help="controler private ip")
+parser.add_argument(
+    "-rc", "--random_controller",
+    dest="randomcontroller",
+    action="store_true",
+    help="if specified will pick a random controller")
+parser.add_argument(
+    "-pp", "--use_private",
+    dest="useprivate",
+    action="store_true",
+    help="if specified will use the private ips for inter node communications")
 
 args = parser.parse_args()
 
@@ -45,18 +66,23 @@ args = parser.parse_args()
 
 ip_addresses   = ec2.get_ip_addresses(config.EC2_LOCATION);
 
-scheduler_ip   = "52.13.23.95"
-scheduler_p_ip = "10.120.66.60"
- 
+if (not args.randomcontroller):
+  scheduler_ip   = args.controllerip
+  scheduler_p_ip = args.controllerprivateip
+else:
+  scheduler_ip = ip_addresses["public"][0]
+  scheduler_p_ip = ip_addresses["private"][0]
+
+
 worker_ips = list(ip_addresses["public"])
 worker_ips.remove(scheduler_ip)
 
-worker_p_ips = list(ip_addresses["private"])
-worker_p_ips.remove(scheduler_p_ip)
-
-# scheduler_ip = ip_addresses["public"][0]
-# worker_ips = list(ip_addresses["public"])
-# worker_ips.pop(0)
+if (not args.useprivate):
+  scheduler_p_ip = scheduler_ip
+  worker_p_ips = list(worker_ips)
+else:
+  worker_p_ips = list(ip_addresses["private"])
+  worker_p_ips.remove(scheduler_p_ip)
 
 print "scheduler IP:         " + scheduler_ip
 print "scheduler Private IP: " + scheduler_p_ip
@@ -71,7 +97,7 @@ if args.action == 'w':
   utils.test_workers(worker_ips)
  
 elif args.action == 'r':
-  utils.run_experiment(scheduler_ip, scheduler_ip, worker_ips, worker_ips)
+  utils.run_experiment(scheduler_ip, scheduler_p_ip, worker_ips, worker_p_ips)
 
 elif args.action == 'c':
   utils.collect_output_data(scheduler_ip, worker_ips)
@@ -80,7 +106,8 @@ elif args.action == 't':
   utils.terminate_experiment(scheduler_ip, worker_ips)
   utils.clean_output_data(scheduler_ip, worker_ips)
  
-# ec2.terminate_instances(config.EC2_LOCATION);
+elif args.action == 'k':
+  ec2.terminate_instances(config.EC2_LOCATION);
 
 else :
   print "Unknown action: " + args.action
