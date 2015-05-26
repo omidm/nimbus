@@ -39,6 +39,7 @@
   * Modified: Chinmayee Shah <chinmayee.shah@stanford.edu>
   */
 
+#include <boost/program_options.hpp>
 #include <iostream>  // NOLINT
 #include <pthread.h>
 #include <string>
@@ -67,96 +68,80 @@ void PrintUsage() {
 }
 
 int main(int argc, char *argv[]) {
-  port_t listening_port, scheduler_port;
-  std::string scheduler_ip, ip_address;
-  bool ip_address_given = false;
-  bool listening_port_given = false;
-  bool scheduler_ip_given = false;
-  bool scheduler_port_given = false;
+  namespace po = boost::program_options;
 
-  std::string log_id;
 
-  // TODO(omidm): currently not used.
-  size_t scale = 40;
-  size_t part_num = 64;
-
-  if (((argc - 1) % 2 != 0) || (argc < 3)) {
-    PrintUsage();
-    exit(-1);
-  }
+  port_t listening_port;
+  port_t controller_port;
+  std::string controller_ip;
+  std::string ip_address;
+  
   WorkerManager::across_job_parallism = 1;
-  for (int i = 1; i < argc; i = i + 2) {
-    std::string tag = argv[i];
-    std::string val = argv[i+1];
-    if (tag == "-sip") {
-      scheduler_ip = val;
-      scheduler_ip_given = true;
-    } else if (tag == "-ip") {
-      ip_address = val;
-      ip_address_given = true;
-    } else if (tag == "-sport") {
-      std::stringstream ss(val);
-      ss >> scheduler_port;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-      scheduler_port_given = true;
-    } else if (tag == "-port") {
-      log_id = val;
-      std::stringstream ss(val);
-      ss >> listening_port;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-      listening_port_given = true;
-    } else if (tag == "-s") {
-      std::stringstream ss(val);
-      ss >> scale;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-    } else if (tag == "-pn") {
-      std::stringstream ss(val);
-      ss >> part_num;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-    } else if (tag == "-ithread") {
-      std::stringstream ss(val);
-      ss >> WorkerManager::inside_job_parallism;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-    } else if (tag == "-othread") {
-      std::stringstream ss(val);
-      ss >> WorkerManager::across_job_parallism;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-    } else {
-      PrintUsage();
-      exit(-1);
-    }
+
+  uint64_t scale;  //
+
+  uint64_t part_num_x;  //
+  uint64_t part_num_y;  //
+  uint64_t part_num_z;  //
+
+  uint64_t projection_part_num_x;  //
+  uint64_t projection_part_num_y;  //
+  uint64_t projection_part_num_z;  //
+
+  uint64_t last_frame;  //
+
+  uint64_t max_projection_iterations;  //
+
+  bool global_write;
+
+
+  po::options_description desc("Options");
+  desc.add_options()
+    ("help,h", "produce help message")
+
+    // Required arguments
+    ("port,p", po::value<port_t>(&listening_port)->required(), "listening port for data exchanger") // NOLINT
+    ("cport", po::value<port_t>(&controller_port)->required(), "controller listening port") // NOLINT
+    ("cip", po::value<std::string>(&controller_ip)->required(), "controller ip address") // NOLINT
+
+    // Optinal arguments
+    ("ip", po::value<std::string>(&ip_address), "forced ip address of the worker, not known by controller") // NOLINT
+
+    ("scale,s", po::value<uint64_t>(&scale), "scale of the simulation") //NOLINT
+
+    ("ithread", po::value<uint64_t>(&WorkerManager::inside_job_parallism), "number of threads within one job") //NOLINT
+    ("othread", po::value<uint64_t>(&WorkerManager::across_job_parallism), "number of threads at worker for job execution") //NOLINT
+
+    ("gw", "activate one global write per frame");
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+
+  if (vm.count("help")) {
+    std::cout << desc << "\n";
+    return 0;
   }
 
-  if (!scheduler_ip_given || !scheduler_port_given || !listening_port_given) {
-    PrintUsage();
-    exit(-1);
+  try {
+    po::notify(vm);
   }
+  catch(std::exception& e) { // NOLINT
+    std::cerr << "ERROR: " << e.what() << "\n";
+    return -1;
+  }
+
 
   nimbus_initialize();
   std::cout << "Simple Worker is up!" << std::endl;
   application::WaterApp *app = new application::WaterApp();
-  SimpleWorker * w = new SimpleWorker(scheduler_ip, scheduler_port, listening_port, app);
-  if (ip_address_given) {
+  SimpleWorker * w = new SimpleWorker(controller_ip, controller_port, listening_port, app);
+
+  if (vm.count("ip")) {
     w->set_ip_address(ip_address);
   }
+
+
+
 
   w->Run();
 }

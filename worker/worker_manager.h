@@ -61,8 +61,8 @@ class WorkerManager {
   friend class WorkerThreadMonitor;
  public:
   // Configuration: used parallism level.
-  static int inside_job_parallism;
-  static int across_job_parallism;
+  static uint64_t inside_job_parallism;
+  static uint64_t across_job_parallism;
   // Configuration: the number of computation threads used.
   int computation_thread_num;
 

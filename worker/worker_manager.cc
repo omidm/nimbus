@@ -54,8 +54,8 @@
 
 namespace nimbus {
 
-int WorkerManager::inside_job_parallism = 0;
-int WorkerManager::across_job_parallism = 0;
+uint64_t WorkerManager::inside_job_parallism = 0;
+uint64_t WorkerManager::across_job_parallism = 0;
 
 WorkerManager::WorkerManager() {
   pthread_mutex_init(&scheduling_needed_lock_, NULL);

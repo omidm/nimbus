@@ -24,9 +24,9 @@ fi
 # ../scheduler_v1/scheduler 2  > scheduler.txt &
 # sleep 1
  
-echo -e "${Pur}Launching the workers ...${RCol}"
+echo -e "${Pur}Launching $1 workers  each with $2 threads...${RCol}"
 for i in `seq 1 $1`;
 do
-  ./worker -sip localhost -sport 5900 -othread 2 -port 590$i &
+  ./worker --cip localhost --cport 5900 --othread $2 -p 590$i &
 done
 
