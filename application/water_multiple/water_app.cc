@@ -39,6 +39,7 @@
 #include "application/water_multiple/app_data_include.h"
 #include "application/water_multiple/app_data_prototypes.h"
 #include "application/water_multiple/data_include.h"
+#include "application/water_multiple/partitions.h"
 #include "application/water_multiple/job_include.h"
 #include "application/water_multiple/reg_def.h"
 #include "application/water_multiple/water_app.h"
@@ -58,6 +59,8 @@
 
 namespace application {
 
+nimbus::PartitionHandler ph;
+
     WaterApp::WaterApp() {};
 
     /* Register data and job types and initialize constant quantities used by
@@ -74,7 +77,133 @@ namespace application {
         dbg(APP_LOG, "Loading water application\n");
 
         // Region constants
-        InitializeRegions();
+        // Old code that uses python script.
+        // InitializeRegions();
+
+        ph.AddPartitions("kRegW3",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 3, 3, 3, 1, 1, 1,
+                         nimbus::PartitionHandler::CENTRAL);
+
+        ph.AddPartitions("kRegW3",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 3, 3, 3, 1, 1, 1,
+                         nimbus::PartitionHandler::OUTER);
+
+        ph.AddPartitions("kRegW3",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 3, 3, 3, 1, 1, 1,
+                         nimbus::PartitionHandler::INNER);
+
+        ph.AddPartitions("kRegW1",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 1, 1, 1, 1, 1, 1,
+                         nimbus::PartitionHandler::CENTRAL);
+
+        ph.AddPartitions("kRegW1",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 1, 1, 1, 1, 1, 1,
+                         nimbus::PartitionHandler::OUTER);
+
+        ph.AddPartitions("kRegW1",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 1, 1, 1, 1, 1, 1,
+                         nimbus::PartitionHandler::INNER);
+
+        ph.AddPartitions("kRegW0",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 0, 0, 0, 1, 1, 1,
+                         nimbus::PartitionHandler::CENTRAL);
+
+        ph.AddPartitions("kRegY2W3",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 3, 3, 3,
+                         APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                         nimbus::PartitionHandler::CENTRAL);
+
+        ph.AddPartitions("kRegY2W3",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 3, 3, 3,
+                         APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                         nimbus::PartitionHandler::OUTER);
+
+        ph.AddPartitions("kRegY2W3",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 3, 3, 3,
+                         APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                         nimbus::PartitionHandler::INNER);
+
+        ph.AddPartitions("kRegY2W3",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 3, 3, 3,
+                         APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                         nimbus::PartitionHandler::CENTRAL_WGB);
+
+        ph.AddPartitions("kRegY2W1",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 1, 1, 1,
+                         APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                         nimbus::PartitionHandler::CENTRAL);
+
+        ph.AddPartitions("kRegY2W1",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 1, 1, 1,
+                         APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                         nimbus::PartitionHandler::OUTER);
+
+        ph.AddPartitions("kRegY2W1",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 1, 1, 1,
+                         APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                         nimbus::PartitionHandler::INNER);
+
+        ph.AddPartitions("kRegY2W1",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 1, 1, 1,
+                         APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                         nimbus::PartitionHandler::CENTRAL_WGB);
+
+        ph.AddPartitions("kRegY2W0",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 0, 0, 0,
+                         APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                         nimbus::PartitionHandler::CENTRAL);
+
+        ph.AddPartitions("kRegY2W8",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 8, 8, 8,
+                         APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                         nimbus::PartitionHandler::INNER);
+
+        ph.AddPartitions("kProjRegY2W3",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 3, 3, 3,
+                         APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                         nimbus::PartitionHandler::CENTRAL);
+
+        ph.AddPartitions("kProjRegY2W3",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 3, 3, 3,
+                         APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                         nimbus::PartitionHandler::OUTER);
+
+        ph.AddPartitions("kProjRegY2W3",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 3, 3, 3,
+                         APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                         nimbus::PartitionHandler::INNER);
+
+        ph.AddPartitions("kProjRegY2W3",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 3, 3, 3,
+                         APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                         nimbus::PartitionHandler::CENTRAL_WGB);
+
+        ph.AddPartitions("kProjRegY2W1",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 1, 1, 1,
+                         APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                         nimbus::PartitionHandler::CENTRAL);
+
+        ph.AddPartitions("kProjRegY2W1",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 1, 1, 1,
+                         APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                         nimbus::PartitionHandler::OUTER);
+
+        ph.AddPartitions("kProjRegY2W1",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 1, 1, 1,
+                         APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                         nimbus::PartitionHandler::INNER);
+
+        ph.AddPartitions("kProjRegY2W1",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 1, 1, 1,
+                         APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                         nimbus::PartitionHandler::CENTRAL_WGB);
+
+        ph.AddPartitions("kProjRegY2W0",
+                         APP_SCALE_X, APP_SCALE_Y, APP_SCALE_Z, 0, 0, 0,
+                         APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                         nimbus::PartitionHandler::CENTRAL);
+
+
 
         // PhysBAM logging and R/W
         PhysBAM::LOG::Initialize_Logging(false, false, 1<<30, true, kThreadsNum);

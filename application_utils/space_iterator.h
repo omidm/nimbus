@@ -63,6 +63,9 @@ class SpaceIterator {
 
   ~SpaceIterator();
 
+
+  static const int_dimension_t START_INDEX = 1;
+
   struct Cursor {
     int_dimension_t point_;
     int_dimension_t delta_;

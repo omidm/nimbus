@@ -42,8 +42,6 @@
 #include <assert.h>
 #include "application_utils/space_iterator.h"
 
-#define START_INDEX 1
-
 using namespace nimbus; // NOLINT
 
 

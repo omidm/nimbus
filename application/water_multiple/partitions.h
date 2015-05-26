@@ -41,6 +41,10 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PARTITIONS_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_PARTITIONS_H_
 
+#include "application_utils//partition_handler.h"
+
+extern nimbus::PartitionHandler ph;
+
 #define APP_SCALE_X 40
 #define APP_SCALE_Y 40
 #define APP_SCALE_Z 40
