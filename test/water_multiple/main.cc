@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
     ("ithread", po::value<uint64_t>(&WorkerManager::inside_job_parallism), "number of threads within one job") //NOLINT
     ("othread", po::value<uint64_t>(&WorkerManager::across_job_parallism), "number of threads at worker for job execution") //NOLINT
 
-    ("gw", "activate one global write per frame");
+    ("dgw", "deactivate one global write per frame");
 
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -138,6 +138,10 @@ int main(int argc, char *argv[]) {
 
   if (vm.count("ip")) {
     w->set_ip_address(ip_address);
+  }
+
+  if (vm.count("dgw")) {
+    app->set_global_write(false);
   }
 
 

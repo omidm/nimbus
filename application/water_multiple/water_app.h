@@ -50,6 +50,16 @@ namespace application {
             Log *translator_log;
             WaterApp();
             virtual void Load();
+
+            // set_scale(uint64_t scale);
+            void set_global_write(bool flag);
+
+            // uint64_t scale(); 
+            bool global_write();
+
+        private:
+            // uint64_t scale_;
+            bool global_write_;
     };
 
 } // namespace application

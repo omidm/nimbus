@@ -35,6 +35,7 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
+#include "application/water_multiple/parameters.h"
 #include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/app_data_include.h"
 #include "application/water_multiple/app_data_prototypes.h"
@@ -61,7 +62,17 @@ namespace application {
 
 nimbus::PartitionHandler ph;
 
-    WaterApp::WaterApp() {};
+    WaterApp::WaterApp() {
+      global_write_ = DEFAULT_GLOBAL_WRITE; 
+    }
+
+    void WaterApp::set_global_write(bool flag) {
+      global_write_ = flag;
+    }
+
+    bool WaterApp::global_write() {
+      return global_write_;
+    }
 
     /* Register data and job types and initialize constant quantities used by
      * application jobs. */
