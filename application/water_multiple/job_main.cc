@@ -46,7 +46,6 @@
 #include "application/water_multiple/job_main.h"
 #include "application/water_multiple/job_names.h"
 #include "application/water_multiple/reg_def.h"
-#include "application/water_multiple/water_app.h"
 #include "data/scratch_data_helper.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
@@ -491,9 +490,7 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
   */
 
 
-  WaterApp *app = dynamic_cast<WaterApp*>(application());
-  assert(app);
-  if (app->global_write()) {
+  if (kUseGlobalWrite) {
     read.clear();
     LoadLogicalIdsInSet(this, &read, ph.map()["kRegW3Outer"][0], APP_FACE_VEL,
                         APP_PHI, NULL);

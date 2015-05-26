@@ -20,7 +20,6 @@
 #include "application/water_multiple/data_names.h"
 #include "application/water_multiple/job_names.h"
 #include "application/water_multiple/parameters.h"
-#include "application/water_multiple/water_app.h"
 #include "application/water_multiple/projection/laplace_solver_wrapper.h"
 #include "application/water_multiple/projection/projection_helper.h"
 #include "application/water_multiple/water_driver.h"
@@ -371,10 +370,7 @@ WriteOutputSplitImpl(const nimbus::Job *job,
                      const bool set_boundary_conditions,
                      const T dt,
                      const int rank) {
-
-  application::WaterApp *app = dynamic_cast<application::WaterApp*>(job->application());
-  assert(app);
-  if (app->global_write()) {
+  if (application::kUseGlobalWrite) {
     Write_Output_Files(++output_number);
   } else {
     Write_Output_Files(++output_number, rank);

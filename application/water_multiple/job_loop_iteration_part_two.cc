@@ -43,7 +43,6 @@
 #include "application/water_multiple/data_names.h"
 #include "application/water_multiple/reg_def.h"
 #include "application/water_multiple/water_example.h"
-#include "application/water_multiple/water_app.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include "worker/job_query.h"
@@ -304,9 +303,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
     }
     MarkEndOfStage();
 
-    WaterApp *app = dynamic_cast<WaterApp*>(application());
-    assert(app);
-    if (app->global_write()) {
+    if (kUseGlobalWrite) {
       read.clear();
       LoadLdoIdsInSet(&read, ph.map()["kRegW3Outer"][0], APP_FACE_VEL,
                           APP_PHI, NULL);
