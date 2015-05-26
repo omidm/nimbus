@@ -110,7 +110,7 @@ void JobProjectionMain::SpawnJobs(
     std::string default_params_str;
     SerializeParameter(
         frame, time, dt, kPNAInt,
-        global_region, kProjRegY2W0Central[i],
+        global_region, ph.map()["kProjRegY2W0Central"][i],
         kPNAInt, &default_params_str);
     default_part_params[i].set_ser_data(SerializedData(default_params_str));
   }
@@ -137,18 +137,18 @@ void JobProjectionMain::SpawnJobs(
        index < calculate_boundary_condition_part_one_job_num;
        ++index) {
     read.clear();
-    LoadLdoIdsInSet(&read, kProjRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLdoIdsInSet(&read, kProjRegY2W1Outer[index],
+    LoadLdoIdsInSet(&read, ph.map()["kProjRegY2W3Outer"][index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLdoIdsInSet(&read, ph.map()["kProjRegY2W1Outer"][index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLdoIdsInSet(&read, kProjRegY2W0Central[index],
+    LoadLdoIdsInSet(&read, ph.map()["kProjRegY2W0Central"][index],
                         APP_U_INTERFACE, NULL);
     write.clear();
-    LoadLdoIdsInSet(&write, kProjRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLdoIdsInSet(&write, kProjRegY2W1CentralWGB[index],
+    LoadLdoIdsInSet(&write, ph.map()["kProjRegY2W3CentralWGB"][index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLdoIdsInSet(&write, ph.map()["kProjRegY2W1CentralWGB"][index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLdoIdsInSet(&write, kProjRegY2W0Central[index], APP_U_INTERFACE, NULL);
+    LoadLdoIdsInSet(&write, ph.map()["kProjRegY2W0Central"][index], APP_U_INTERFACE, NULL);
 
     before.clear();
     StageJobAndLoadBeforeSet(&before, PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
@@ -159,7 +159,7 @@ void JobProjectionMain::SpawnJobs(
                        calculate_boundary_condition_part_one_job_ids[index],
                        read, write, before, after,
                        default_part_params[index], true,
-                       kProjRegY2W3Central[index]);
+                       ph.map()["kProjRegY2W3Central"][index]);
   }
   MarkEndOfStage();
 
@@ -167,17 +167,17 @@ void JobProjectionMain::SpawnJobs(
        index < calculate_boundary_condition_part_two_job_num;
        ++index) {
     read.clear();
-    LoadLdoIdsInSet(&read, kProjRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLdoIdsInSet(&read, kProjRegY2W1Outer[index],
+    LoadLdoIdsInSet(&read, ph.map()["kProjRegY2W3Outer"][index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLdoIdsInSet(&read, ph.map()["kProjRegY2W1Outer"][index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLdoIdsInSet(&read, kProjRegY2W0Central[index], APP_U_INTERFACE, NULL);
+    LoadLdoIdsInSet(&read, ph.map()["kProjRegY2W0Central"][index], APP_U_INTERFACE, NULL);
     write.clear();
-    LoadLdoIdsInSet(&write, kProjRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLdoIdsInSet(&write, kProjRegY2W1CentralWGB[index],
+    LoadLdoIdsInSet(&write, ph.map()["kProjRegY2W3CentralWGB"][index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLdoIdsInSet(&write, ph.map()["kProjRegY2W1CentralWGB"][index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLdoIdsInSet(&write, kProjRegY2W0Central[index],
+    LoadLdoIdsInSet(&write, ph.map()["kProjRegY2W0Central"][index],
                         APP_U_INTERFACE, NULL);
 
     before.clear();
@@ -189,24 +189,24 @@ void JobProjectionMain::SpawnJobs(
                        calculate_boundary_condition_part_two_job_ids[index],
                        read, write, before, after,
                        default_part_params[index], true,
-                       kProjRegY2W3Central[index]);
+                       ph.map()["kProjRegY2W3Central"][index]);
   }
   MarkEndOfStage();
 
   // Construct matrix.
   for (int index = 0; index < construct_matrix_job_num; ++index) {
     read.clear();
-    LoadLdoIdsInSet(&read, kProjRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLdoIdsInSet(&read, kProjRegY2W1Outer[index],
+    LoadLdoIdsInSet(&read, ph.map()["kProjRegY2W3Outer"][index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLdoIdsInSet(&read, ph.map()["kProjRegY2W1Outer"][index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLdoIdsInSet(&read, kProjRegY2W0Central[index], APP_U_INTERFACE, NULL);
+    LoadLdoIdsInSet(&read, ph.map()["kProjRegY2W0Central"][index], APP_U_INTERFACE, NULL);
     write.clear();
-    LoadLdoIdsInSet(&write, kProjRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLdoIdsInSet(&write, kProjRegY2W1CentralWGB[index],
+    LoadLdoIdsInSet(&write, ph.map()["kProjRegY2W3CentralWGB"][index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLdoIdsInSet(&write, ph.map()["kProjRegY2W1CentralWGB"][index],
                         APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
-    LoadLdoIdsInSet(&write, kProjRegY2W0Central[index],
+    LoadLdoIdsInSet(&write, ph.map()["kProjRegY2W0Central"][index],
                         APP_U_INTERFACE, APP_MATRIX_A,
                         APP_VECTOR_B, APP_PROJECTION_LOCAL_TOLERANCE,
                         APP_INDEX_M2C, APP_INDEX_C2M,
@@ -222,17 +222,17 @@ void JobProjectionMain::SpawnJobs(
                        construct_matrix_job_ids[index],
                        read, write, before, after,
                        default_part_params[index], true,
-                       kProjRegY2W3Central[index]);
+                       ph.map()["kProjRegY2W3Central"][index]);
   }
   MarkEndOfStage();
 
   // Global initialize.
   read.clear();
-  LoadLdoIdsInSet(&read, kRegW0Central[0],
+  LoadLdoIdsInSet(&read, ph.map()["kRegW0Central"][0],
                       APP_PROJECTION_INTERIOR_N, APP_PROJECTION_LOCAL_TOLERANCE,
                       NULL);
   write.clear();
-  LoadLdoIdsInSet(&write, kRegW0Central[0],
+  LoadLdoIdsInSet(&write, ph.map()["kRegW0Central"][0],
                       APP_PROJECTION_GLOBAL_N,
                       APP_PROJECTION_GLOBAL_TOLERANCE,
                       APP_PROJECTION_DESIRED_ITERATIONS, NULL);
@@ -245,28 +245,28 @@ void JobProjectionMain::SpawnJobs(
                      projection_job_ids[3],
                      read, write, before, after,
                      default_params, true,
-                     kRegW3Central[0]);
+                     ph.map()["kRegW3Central"][0]);
   // Global initialize is a job that serves as a bottleneck.
   MarkEndOfStage();
 
   // Local initialize.
   for (int index = 0; index < local_initialize_job_num; ++index) {
     read.clear();
-    LoadLdoIdsInSet(&read, kProjRegY2W0Central[index],
+    LoadLdoIdsInSet(&read, ph.map()["kProjRegY2W0Central"][index],
                         APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                         APP_INDEX_M2C,
                         APP_INDEX_C2M,
                         APP_VECTOR_B,
                         APP_MATRIX_A, NULL);
-    LoadLdoIdsInSet(&read, kProjRegY2W1Outer[index], APP_PRESSURE,
+    LoadLdoIdsInSet(&read, ph.map()["kProjRegY2W1Outer"][index], APP_PRESSURE,
                         NULL);
     write.clear();
-    LoadLdoIdsInSet(&write, kProjRegY2W0Central[index],
+    LoadLdoIdsInSet(&write, ph.map()["kProjRegY2W0Central"][index],
                         APP_VECTOR_B, APP_PROJECTION_LOCAL_RESIDUAL, APP_MATRIX_C,
                         APP_VECTOR_TEMP, APP_VECTOR_Z,
                         APP_VECTOR_PRESSURE,
                         NULL);
-    LoadLdoIdsInSet(&write, kProjRegY2W1CentralWGB[index],
+    LoadLdoIdsInSet(&write, ph.map()["kProjRegY2W1CentralWGB"][index],
                         APP_VECTOR_P_META_FORMAT, NULL);
     before.clear();
     StageJobAndLoadBeforeSet(&before, PROJECTION_LOCAL_INITIALIZE,
@@ -277,13 +277,13 @@ void JobProjectionMain::SpawnJobs(
                        local_initialize_job_ids[index],
                        read, write, before, after,
                        default_part_params[index], true,
-                       kProjRegY2W3Central[index]);
+                       ph.map()["kProjRegY2W3Central"][index]);
   }
   MarkEndOfStage();
 
   // Projection loop.
   read.clear();
-  LoadLdoIdsInSet(&read, kRegW0Central[0],
+  LoadLdoIdsInSet(&read, ph.map()["kRegW0Central"][0],
                       APP_PROJECTION_INTERIOR_N,
                       APP_PROJECTION_LOCAL_RESIDUAL,
                       APP_PROJECTION_GLOBAL_TOLERANCE,
@@ -308,7 +308,7 @@ void JobProjectionMain::SpawnJobs(
                      projection_job_ids[4],
                      read, write, before, after,
                      projection_loop_iteration_params, false,
-                     kRegW3Central[0]);
+                     ph.map()["kRegW3Central"][0]);
   MarkEndOfStage();
 
   EndTemplate("projection_main");

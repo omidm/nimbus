@@ -148,17 +148,17 @@ void JobLoopIterationPartTwo::SpawnJobs(
    */
   for (int i = 0; i < extrapolate_phi_job_num; ++i) {
     read.clear();
-    LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_PHI,
+    LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][i], APP_PHI,
                         APP_FACE_VEL, NULL);
     write.clear();
     LoadLdoIdsInSet(&write,
-                        kRegY2W3CentralWGB[i], APP_PHI,
+                        ph.map()["kRegY2W3CentralWGB"][i], APP_PHI,
                         NULL);
 
     nimbus::Parameter s_extra_params;
     std::string s_extra_str;
     SerializeParameter(frame, time, dt, kPNAInt,
-                       global_region, kRegY2W3Central[i],
+                       global_region, ph.map()["kRegY2W3Central"][i],
                        kPNAInt, &s_extra_str);
     s_extra_params.set_ser_data(SerializedData(s_extra_str));
     before.clear();
@@ -168,7 +168,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
     SpawnComputeJob(EXTRAPOLATE_PHI, extrapolate_phi_job_ids[i],
                        read, write, before, after,
                        s_extra_params, true,
-                       kRegY2W3Central[i]);
+                       ph.map()["kRegY2W3Central"][i]);
   }
 
   MarkEndOfStage();
@@ -178,16 +178,16 @@ void JobLoopIterationPartTwo::SpawnJobs(
    */
   for (int i = 0; i < extrapolation_job_num; ++i) {
     read.clear();
-    LoadLdoIdsInSet(&read, kRegY2W3Outer[i],
+    LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][i],
                         APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
-    LoadLdoIdsInSet(&write, kRegY2W3Central[i],
+    LoadLdoIdsInSet(&write, ph.map()["kRegY2W3Central"][i],
                         APP_FACE_VEL, NULL);
 
     nimbus::Parameter extrapolation_params;
     std::string extrapolation_str;
     SerializeParameter(frame, time, dt, kPNAInt,
-                       global_region, kRegY2W3Central[i],
+                       global_region, ph.map()["kRegY2W3Central"][i],
                        kPNAInt, &extrapolation_str);
     extrapolation_params.set_ser_data(SerializedData(extrapolation_str));
     before.clear();
@@ -197,7 +197,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
     SpawnComputeJob(EXTRAPOLATION, extrapolation_job_ids[i],
                        read, write, before, after,
                        extrapolation_params, true,
-                       kRegY2W3Central[i]);
+                       ph.map()["kRegY2W3Central"][i]);
   }
 
   MarkEndOfStage();
@@ -216,15 +216,15 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
     for (int i = 0; i < calculate_dt_job_num; ++i) {
       read.clear();
-      LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_FACE_VEL,
+      LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL,
                           APP_PHI, NULL);
       write.clear();
-      LoadLdoIdsInSet(&write, kRegY2W3Central[i], APP_DT, NULL);
+      LoadLdoIdsInSet(&write, ph.map()["kRegY2W3Central"][i], APP_DT, NULL);
 
       nimbus::Parameter dt_params;
       std::string dt_str;
       SerializeParameter(frame, time, 0, kPNAInt,
-                         global_region, kRegY2W3Central[i],
+                         global_region, ph.map()["kRegY2W3Central"][i],
                          kPNAInt, &dt_str);
       dt_params.set_ser_data(SerializedData(dt_str));
       before.clear();
@@ -234,12 +234,12 @@ void JobLoopIterationPartTwo::SpawnJobs(
       SpawnComputeJob(CALCULATE_DT, calculate_dt_job_ids[i],
                          read, write, before, after,
                          dt_params, true,
-                         kRegY2W3Central[i]);
+                         ph.map()["kRegY2W3Central"][i]);
     }
     MarkEndOfStage();
 
     read.clear();
-    LoadLdoIdsInSet(&read, kRegW3Central[0], APP_DT, NULL);
+    LoadLdoIdsInSet(&read, ph.map()["kRegW3Central"][0], APP_DT, NULL);
     write.clear();
     nimbus::Parameter iter_params;
     std::string iter_str;
@@ -256,7 +256,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
     SpawnComputeJob(LOOP_ITERATION, job_ids[1],
                        read, write, before, after,
                        iter_params, false,
-                       kRegW3Central[0],
+                       ph.map()["kRegW3Central"][0],
                        true);
     MarkEndOfStage();
 
@@ -268,18 +268,18 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
     for (int i = 0; i < reseed_particles_job_num; ++i) {
       read.clear();
-      LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_FACE_VEL,
+      LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL,
                           APP_PHI, NULL);
-      LoadLdoIdsInSet(&read, kRegY2W1Outer[i], APP_PSI_D,
+      LoadLdoIdsInSet(&read, ph.map()["kRegY2W1Outer"][i], APP_PSI_D,
                           APP_PSI_N, NULL);
-      LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_POS_PARTICLES,
+      LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][i], APP_POS_PARTICLES,
                           APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
                           APP_NEG_REM_PARTICLES, NULL);
-      LoadLdoIdsInSet(&read, kRegY2W3CentralWGB[i], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+      LoadLdoIdsInSet(&read, ph.map()["kRegY2W3CentralWGB"][i], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
       write.clear();
-      LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[i], APP_FACE_VEL,
+      LoadLdoIdsInSet(&write, ph.map()["kRegY2W3CentralWGB"][i], APP_FACE_VEL,
                           APP_PHI, NULL);
-      LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[i], APP_POS_PARTICLES,
+      LoadLdoIdsInSet(&write, ph.map()["kRegY2W3CentralWGB"][i], APP_POS_PARTICLES,
                           APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
                           APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
                           NULL);
@@ -287,7 +287,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
       nimbus::Parameter temp_params;
       std::string temp_str;
       SerializeParameter(frame, time, dt, kPNAInt,
-                         global_region, kRegY2W3Central[i],
+                         global_region, ph.map()["kRegY2W3Central"][i],
                          kPNAInt, &temp_str);
       temp_params.set_ser_data(SerializedData(temp_str));
       before.clear();
@@ -299,20 +299,20 @@ void JobLoopIterationPartTwo::SpawnJobs(
           reseed_particles_job_ids[i],
           read, write, before, after,
           temp_params, true,
-          kRegY2W3Central[i]);
+          ph.map()["kRegY2W3Central"][i]);
     }
     MarkEndOfStage();
 
     if (kUseGlobalWrite) {
       read.clear();
-      LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_FACE_VEL,
+      LoadLdoIdsInSet(&read, ph.map()["kRegW3Outer"][0], APP_FACE_VEL,
                           APP_PHI, NULL);
-      LoadLdoIdsInSet(&read, kRegW1Outer[0], APP_PSI_D,
+      LoadLdoIdsInSet(&read, ph.map()["kRegW1Outer"][0], APP_PSI_D,
                           APP_PSI_N, NULL);
-      LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_POS_PARTICLES,
+      LoadLdoIdsInSet(&read, ph.map()["kRegW3Outer"][0], APP_POS_PARTICLES,
                           APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
                           APP_NEG_REM_PARTICLES, NULL);
-      LoadLdoIdsInSet(&read, kRegW3Central[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+      LoadLdoIdsInSet(&read, ph.map()["kRegW3Central"][0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
       write.clear();
 
       nimbus::Parameter temp_params;
@@ -330,25 +330,25 @@ void JobLoopIterationPartTwo::SpawnJobs(
                          write_output_job_ids[0],
                          read, write, before, after,
                          temp_params, true,
-                         kRegW3Central[0]);
+                         ph.map()["kRegW3Central"][0]);
       MarkEndOfStage();
     } else {
       for (int i = 0; i < write_output_job_num; ++i) {
         read.clear();
-        LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_FACE_VEL,
+        LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL,
                             APP_PHI, NULL);
-        LoadLdoIdsInSet(&read, kRegY2W1Outer[i], APP_PSI_D,
+        LoadLdoIdsInSet(&read, ph.map()["kRegY2W1Outer"][i], APP_PSI_D,
                             APP_PSI_N, NULL);
-        LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_POS_PARTICLES,
+        LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][i], APP_POS_PARTICLES,
                             APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
                             APP_NEG_REM_PARTICLES, NULL);
-        LoadLdoIdsInSet(&read, kRegY2W3CentralWGB[i], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+        LoadLdoIdsInSet(&read, ph.map()["kRegY2W3CentralWGB"][i], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
         write.clear();
 
         nimbus::Parameter temp_params;
         std::string temp_str;
         SerializeParameter(frame, time, dt, i+1,
-                           global_region, kRegY2W3Central[i],
+                           global_region, ph.map()["kRegY2W3Central"][i],
                            kPNAInt, &temp_str);
         temp_params.set_ser_data(SerializedData(temp_str));
         before.clear();
@@ -360,7 +360,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
                            write_output_job_ids[i],
                            read, write, before, after,
                            temp_params, true,
-                           kRegY2W3Central[i]);
+                           ph.map()["kRegY2W3Central"][i]);
       }
       MarkEndOfStage();
     }
@@ -385,7 +385,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
     SpawnComputeJob(LOOP_FRAME, loop_job_id[0],
                        read, write, before, after,
                        frame_params, false,
-                       kRegW3Central[0],
+                       ph.map()["kRegW3Central"][0],
                        true);
     MarkEndOfStage();
 

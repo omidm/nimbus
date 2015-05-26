@@ -219,14 +219,14 @@ namespace application {
      */
     for (int i = 0; i < update_ghost_velocities_job_num; ++i) {
       read.clear();
-      LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
+      LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, NULL);
       write.clear();
-      LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, NULL);
+      LoadLdoIdsInSet(&write, ph.map()["kRegY2W3CentralWGB"][i], APP_FACE_VEL_GHOST, NULL);
 
       nimbus::Parameter s11_params;
       std::string s11_str;
       SerializeParameter(frame, time, dt, kPNAInt,
-                         global_region, kRegY2W3Central[i],
+                         global_region, ph.map()["kRegY2W3Central"][i],
                          kPNAInt, &s11_str);
       s11_params.set_ser_data(SerializedData(s11_str));
       before.clear();
@@ -238,7 +238,7 @@ namespace application {
           update_ghost_velocities_job_ids[i],
           read, write, before, after,
           s11_params, true,
-          kRegY2W3Central[i]);
+          ph.map()["kRegY2W3Central"][i]);
     }
 
     MarkEndOfStage();
@@ -255,29 +255,29 @@ namespace application {
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
         if (step_particles_single) {
-            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
-            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, ph.map()["kRegW3Outer"][0], APP_FACE_VEL_GHOST, NULL);
+            LoadLdoIdsInSet(&read, ph.map()["kRegW3Outer"][0], APP_POS_PARTICLES,
                     APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLdoIdsInSet(&write, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, ph.map()["kRegW3Outer"][0], APP_POS_PARTICLES,
                     APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
-                               global_region, kRegW3Central[0],
+                               global_region, ph.map()["kRegW3Central"][0],
                                kPNAInt, &step_particles_str);
-            job_region = kRegW3Central[0];
+            job_region = ph.map()["kRegW3Central"][0];
         } else {
-            LoadLdoIdsInSet(&read, kRegY2W3Outer[sj], APP_FACE_VEL_GHOST, NULL);
-            LoadLdoIdsInSet(&read, kRegY2W3CentralWGB[sj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][sj], APP_FACE_VEL_GHOST, NULL);
+            LoadLdoIdsInSet(&read, ph.map()["kRegY2W3CentralWGB"][sj], APP_POS_PARTICLES,
                     APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLdoIdsInSet(&write, kRegY2W3Inner[sj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, ph.map()["kRegY2W3Inner"][sj], APP_POS_PARTICLES,
                     APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            kScratchPosParticles.GetJobScratchData(this, kRegY2W3Central[sj], &write);
-            kScratchNegParticles.GetJobScratchData(this, kRegY2W3Central[sj], &write);
-            kScratchPosRemParticles.GetJobScratchData(this, kRegY2W3Central[sj], &write);
-            kScratchNegRemParticles.GetJobScratchData(this, kRegY2W3Central[sj], &write);
+            kScratchPosParticles.GetJobScratchData(this, ph.map()["kRegY2W3Central"][sj], &write);
+            kScratchNegParticles.GetJobScratchData(this, ph.map()["kRegY2W3Central"][sj], &write);
+            kScratchPosRemParticles.GetJobScratchData(this, ph.map()["kRegY2W3Central"][sj], &write);
+            kScratchNegRemParticles.GetJobScratchData(this, ph.map()["kRegY2W3Central"][sj], &write);
             SerializeParameter(frame, time, dt, kPNAInt,
-                               global_region, kRegY2W3Central[sj],
+                               global_region, ph.map()["kRegY2W3Central"][sj],
                                kPNAInt, &step_particles_str);
-            job_region = kRegY2W3Central[sj];
+            job_region = ph.map()["kRegY2W3Central"][sj];
         }
 
         nimbus::Parameter step_particles_params;
@@ -304,7 +304,7 @@ namespace application {
         for (size_t i = 0; i < step_particles_sync_job_num; ++i) {
             std::string sync_particles_str;
             SerializeParameter(frame, time, dt, kPNAInt,
-                               global_region, kRegY2W3Central[i],
+                               global_region, ph.map()["kRegY2W3Central"][i],
                                kPNAInt, &sync_particles_str);
             nimbus::Parameter sync_particles_params;
             sync_particles_params.set_ser_data(SerializedData(sync_particles_str));
@@ -312,27 +312,27 @@ namespace application {
             // positive
             read.clear();
             write.clear();
-            kScratchPosParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
+            kScratchPosParticles.GetAllScratchData(this, ph.map()["kRegY2W3CentralWGB"][i], &read);
             kScratchPosParticles.GetMainForScratchData(this,
-                                                       kRegY2W3CentralWGB[i],
-                                                       kRegY2W3Inner[i],
+                                                       ph.map()["kRegY2W3CentralWGB"][i],
+                                                       ph.map()["kRegY2W3Inner"][i],
                                                        &write);
-            kScratchNegParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
+            kScratchNegParticles.GetAllScratchData(this, ph.map()["kRegY2W3CentralWGB"][i], &read);
             kScratchNegParticles.GetMainForScratchData(this,
-                                                       kRegY2W3CentralWGB[i],
-                                                       kRegY2W3Inner[i],
+                                                       ph.map()["kRegY2W3CentralWGB"][i],
+                                                       ph.map()["kRegY2W3Inner"][i],
                                                        &write);
-            kScratchPosRemParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
+            kScratchPosRemParticles.GetAllScratchData(this, ph.map()["kRegY2W3CentralWGB"][i], &read);
             kScratchPosRemParticles.GetMainForScratchData(this,
-                                                          kRegY2W3CentralWGB[i],
-                                                          kRegY2W3Inner[i],
+                                                          ph.map()["kRegY2W3CentralWGB"][i],
+                                                          ph.map()["kRegY2W3Inner"][i],
                                                           &write);
-            kScratchNegRemParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
+            kScratchNegRemParticles.GetAllScratchData(this, ph.map()["kRegY2W3CentralWGB"][i], &read);
             kScratchNegRemParticles.GetMainForScratchData(this,
-                                                          kRegY2W3CentralWGB[i],
-                                                          kRegY2W3Inner[i],
+                                                          ph.map()["kRegY2W3CentralWGB"][i],
+                                                          ph.map()["kRegY2W3Inner"][i],
                                                           &write);
-            LoadLdoIdsInSet(&read, kRegY2W3Inner[i],
+            LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Inner"][i],
                 APP_POS_PARTICLES, APP_NEG_PARTICLES,
                 APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
 
@@ -345,7 +345,7 @@ namespace application {
                     step_particles_sync_job_ids[i],
                     read, write, before, after,
                     sync_particles_params, true,
-                    kRegY2W3Central[i]);
+                    ph.map()["kRegY2W3Central"][i]);
         }
     }
 
@@ -367,7 +367,7 @@ namespace application {
                          read, write, before, after,
                          params,
                          true,
-                         kRegW3Central[0]);
+                         ph.map()["kRegW3Central"][0]);
       MarkEndOfStage();
     }
 
@@ -376,15 +376,15 @@ namespace application {
      */
     for (int i = 0; i < first_extrapolate_phi_job_num; ++i) {
       read.clear();
-      LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_PHI, NULL);
-      LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
+      LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][i], APP_PHI, NULL);
+      LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, NULL);
       write.clear();
-      LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[i], APP_PHI, NULL);
+      LoadLdoIdsInSet(&write, ph.map()["kRegY2W3CentralWGB"][i], APP_PHI, NULL);
 
       nimbus::Parameter s_extra_params;
       std::string s_extra_str;
       SerializeParameter(frame, time, dt, kPNAInt,
-                         global_region, kRegY2W3Central[i],
+                         global_region, ph.map()["kRegY2W3Central"][i],
                          kPNAInt, &s_extra_str);
       s_extra_params.set_ser_data(SerializedData(s_extra_str));
       before.clear();
@@ -396,7 +396,7 @@ namespace application {
           first_extrapolate_phi_job_ids[i],
           read, write, before, after,
           s_extra_params, true,
-          kRegY2W3Central[i]);
+          ph.map()["kRegY2W3Central"][i]);
     }
 
     MarkEndOfStage();
@@ -406,15 +406,15 @@ namespace application {
      */
     for(int i = 0; i < advect_phi_job_num; ++i) {
       read.clear();
-      LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, APP_PHI, NULL);
       write.clear();
-      LoadLdoIdsInSet(&write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
-      // LoadLdoIdsInSet(&write, kRegY2W3Central[i], APP_PHI, NULL);
+      LoadLdoIdsInSet(&write, ph.map()["kRegY2W3Central"][i], APP_FACE_VEL, APP_PHI, NULL);
+      // LoadLdoIdsInSet(&write, ph.map()["kRegY2W3Central"][i], APP_PHI, NULL);
 
       nimbus::Parameter s12_params;
       std::string s12_str;
       SerializeParameter(frame, time, dt, kPNAInt,
-                         global_region, kRegY2W3Central[i],
+                         global_region, ph.map()["kRegY2W3Central"][i],
                          kPNAInt, &s12_str);
       s12_params.set_ser_data(SerializedData(s12_str));
       before.clear();
@@ -426,7 +426,7 @@ namespace application {
           advect_phi_job_ids[i],
           read, write, before, after,
           s12_params, true,
-          kRegY2W3Central[i]);
+          ph.map()["kRegY2W3Central"][i]);
     }
 
     MarkEndOfStage();
@@ -437,16 +437,16 @@ namespace application {
 
     for (int i = 0; i < advect_v_job_num; ++i) {
       read.clear();
-      LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_FACE_VEL_GHOST, APP_PHI, NULL);
-      LoadLdoIdsInSet(&read, kRegY2W3Central[i], APP_FACE_VEL, NULL);
-      LoadLdoIdsInSet(&read, kRegY2W1Outer[i], APP_PSI_D, APP_PSI_N, NULL);
+      LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL_GHOST, APP_PHI, NULL);
+      LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Central"][i], APP_FACE_VEL, NULL);
+      LoadLdoIdsInSet(&read, ph.map()["kRegY2W1Outer"][i], APP_PSI_D, APP_PSI_N, NULL);
       write.clear();
-      LoadLdoIdsInSet(&write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLdoIdsInSet(&write, ph.map()["kRegY2W3Central"][i], APP_FACE_VEL, APP_PHI, NULL);
 
       nimbus::Parameter s15_params;
       std::string s15_str;
       SerializeParameter(frame, time, dt, kPNAInt,
-                         global_region, kRegY2W3Central[i],
+                         global_region, ph.map()["kRegY2W3Central"][i],
                          kPNAInt, &s15_str);
       s15_params.set_ser_data(SerializedData(s15_str));
       before.clear();
@@ -458,7 +458,7 @@ namespace application {
           advect_v_job_ids[i],
           read, write, before, after,
           s15_params, true,
-          kRegY2W3Central[i]);
+          ph.map()["kRegY2W3Central"][i]);
     }
 
     MarkEndOfStage();
@@ -476,27 +476,27 @@ namespace application {
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
         if (advect_removed_particles_single) {
-            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
+            LoadLdoIdsInSet(&read, ph.map()["kRegW3Outer"][0], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
-            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_POS_REM_PARTICLES,
+            LoadLdoIdsInSet(&read, ph.map()["kRegW3Outer"][0], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES, NULL);
-            LoadLdoIdsInSet(&write, kRegW3Outer[0], APP_POS_REM_PARTICLES,
+            LoadLdoIdsInSet(&write, ph.map()["kRegW3Outer"][0], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES,  NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
-                               global_region, kRegW3Central[0],
+                               global_region, ph.map()["kRegW3Central"][0],
                                kPNAInt, &advect_rem_particles_str);
-            job_region = kRegW3Central[0];
+            job_region = ph.map()["kRegW3Central"][0];
         } else {
-            LoadLdoIdsInSet(&read, kRegY2W3Outer[sj], APP_FACE_VEL_GHOST,
+            LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][sj], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
-            LoadLdoIdsInSet(&read, kRegY2W3CentralWGB[sj], APP_POS_REM_PARTICLES,
+            LoadLdoIdsInSet(&read, ph.map()["kRegY2W3CentralWGB"][sj], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES, NULL);
-            LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[sj], APP_POS_REM_PARTICLES,
+            LoadLdoIdsInSet(&write, ph.map()["kRegY2W3CentralWGB"][sj], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES,  NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
-                               global_region, kRegY2W3Central[sj],
+                               global_region, ph.map()["kRegY2W3Central"][sj],
                                kPNAInt, &advect_rem_particles_str);
-            job_region = kRegY2W3Central[sj];
+            job_region = ph.map()["kRegY2W3Central"][sj];
         }
 
         nimbus::Parameter advect_rem_particles_params;
@@ -532,7 +532,7 @@ namespace application {
                          read, write, before, after,
                          params,
                          true,
-                         kRegW3Central[0]);
+                         ph.map()["kRegW3Central"][0]);
       MarkEndOfStage();
     }
 
@@ -544,14 +544,14 @@ namespace application {
        */
       for (int i = 0; i < update_ghost_velocities_job_num; ++i) {
         read.clear();
-        LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
+        LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, NULL);
         write.clear();
-        LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, NULL);
+        LoadLdoIdsInSet(&write, ph.map()["kRegY2W3CentralWGB"][i], APP_FACE_VEL_GHOST, NULL);
 
         nimbus::Parameter temp_params;
         std::string temp_str;
         SerializeParameter(frame, time, dt, kPNAInt,
-                           global_region, kRegY2W3Central[i],
+                           global_region, ph.map()["kRegY2W3Central"][i],
                            kPNAInt, &temp_str);
         temp_params.set_ser_data(SerializedData(temp_str));
         before.clear();
@@ -563,7 +563,7 @@ namespace application {
                            temp_job_ids[i],
                            read, write, before, after,
                            temp_params, true,
-                           kRegY2W3Central[i]);
+                           ph.map()["kRegY2W3Central"][i]);
       }
       MarkEndOfStage();
     }
@@ -574,14 +574,14 @@ namespace application {
      */
     for (int i = 0; i < apply_forces_job_num; ++i) {
       read.clear();
-      LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_FACE_VEL, APP_FACE_VEL_GHOST, NULL);
+      LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, APP_FACE_VEL_GHOST, NULL);
       write.clear();
-      LoadLdoIdsInSet(&write, kRegY2W3Central[i], APP_FACE_VEL, NULL);
+      LoadLdoIdsInSet(&write, ph.map()["kRegY2W3Central"][i], APP_FACE_VEL, NULL);
 
       nimbus::Parameter s16_params;
       std::string s16_str;
       SerializeParameter(frame, time, dt, kPNAInt,
-                         global_region, kRegY2W3Central[i],
+                         global_region, ph.map()["kRegY2W3Central"][i],
                          kPNAInt, &s16_str);
       s16_params.set_ser_data(SerializedData(s16_str));
       before.clear();
@@ -593,7 +593,7 @@ namespace application {
           apply_forces_job_ids[i],
           read, write, before, after,
           s16_params, true,
-          kRegY2W3Central[i]);
+          ph.map()["kRegY2W3Central"][i]);
     }
 
     MarkEndOfStage();
@@ -607,14 +607,14 @@ namespace application {
        */
       for (int i = 0; i < update_ghost_velocities_job_num; ++i) {
         read.clear();
-        LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
+        LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, NULL);
         write.clear();
-        LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, NULL);
+        LoadLdoIdsInSet(&write, ph.map()["kRegY2W3CentralWGB"][i], APP_FACE_VEL_GHOST, NULL);
 
         nimbus::Parameter temp_params;
         std::string temp_str;
         SerializeParameter(frame, time, dt, kPNAInt,
-                           global_region, kRegY2W3Central[i],
+                           global_region, ph.map()["kRegY2W3Central"][i],
                            kPNAInt, &temp_str);
         temp_params.set_ser_data(SerializedData(temp_str));
         before.clear();
@@ -626,7 +626,7 @@ namespace application {
                            temp_job_ids[i],
                            read, write, before, after,
                            temp_params, true,
-                           kRegY2W3Central[i]);
+                           ph.map()["kRegY2W3Central"][i]);
       }
       MarkEndOfStage();
     }
@@ -643,29 +643,29 @@ namespace application {
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
         if (modify_levelset_single) {
-            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
+            LoadLdoIdsInSet(&read, ph.map()["kRegW3Outer"][0], APP_FACE_VEL_GHOST,
                     APP_FACE_VEL, APP_PHI, NULL);
-            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, ph.map()["kRegW3Outer"][0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLdoIdsInSet(&write, kRegW3Outer[0], APP_PHI, NULL);
-            LoadLdoIdsInSet(&write, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, ph.map()["kRegW3Outer"][0], APP_PHI, NULL);
+            LoadLdoIdsInSet(&write, ph.map()["kRegW3Outer"][0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
-                               global_region, kRegW3Central[0],
+                               global_region, ph.map()["kRegW3Central"][0],
                                kPNAInt, &modify_levelset_part_one_str);
-            job_region = kRegW3Central[0];
+            job_region = ph.map()["kRegW3Central"][0];
         } else {
-            LoadLdoIdsInSet(&read, kRegY2W3Outer[mj], APP_FACE_VEL_GHOST,
+            LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][mj], APP_FACE_VEL_GHOST,
                     APP_FACE_VEL, APP_PHI, NULL);
-            LoadLdoIdsInSet(&read, kRegY2W3Outer[mj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][mj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[mj], APP_PHI, NULL);
-            LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[mj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, ph.map()["kRegY2W3CentralWGB"][mj], APP_PHI, NULL);
+            LoadLdoIdsInSet(&write, ph.map()["kRegY2W3CentralWGB"][mj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
-                               global_region, kRegY2W3Central[mj],
+                               global_region, ph.map()["kRegY2W3Central"][mj],
                                kPNAInt, &modify_levelset_part_one_str);
-            job_region = kRegY2W3Central[mj];
+            job_region = ph.map()["kRegY2W3Central"][mj];
         }
 
         nimbus::Parameter modify_levelset_params;
@@ -697,30 +697,30 @@ namespace application {
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
         if (modify_levelset_single) {
-            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
+            LoadLdoIdsInSet(&read, ph.map()["kRegW3Outer"][0], APP_FACE_VEL_GHOST,
                     APP_FACE_VEL, APP_PHI, NULL);
-            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, ph.map()["kRegW3Outer"][0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLdoIdsInSet(&write, kRegW3Outer[0], APP_PHI, NULL);
-            LoadLdoIdsInSet(&write, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, ph.map()["kRegW3Outer"][0], APP_PHI, NULL);
+            LoadLdoIdsInSet(&write, ph.map()["kRegW3Outer"][0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
-                               global_region, kRegW3Central[0],
+                               global_region, ph.map()["kRegW3Central"][0],
                                kPNAInt, &modify_levelset_part_two_str);
-            job_region = kRegW3Central[0];
+            job_region = ph.map()["kRegW3Central"][0];
         } else {
-            LoadLdoIdsInSet(&read, kRegY2W3Outer[mj], APP_PHI, NULL);
-            LoadLdoIdsInSet(&read, kRegY2W3Outer[mj], APP_FACE_VEL_GHOST,
+            LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][mj], APP_PHI, NULL);
+            LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][mj], APP_FACE_VEL_GHOST,
                     APP_FACE_VEL, NULL);
-            LoadLdoIdsInSet(&read, kRegY2W3Outer[mj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][mj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[mj], APP_PHI, NULL);
-            LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[mj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, ph.map()["kRegY2W3CentralWGB"][mj], APP_PHI, NULL);
+            LoadLdoIdsInSet(&write, ph.map()["kRegY2W3CentralWGB"][mj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
-                               global_region, kRegY2W3Central[mj],
+                               global_region, ph.map()["kRegY2W3Central"][mj],
                                kPNAInt, &modify_levelset_part_two_str);
-            job_region = kRegY2W3Central[mj];
+            job_region = ph.map()["kRegY2W3Central"][mj];
         }
 
         nimbus::Parameter modify_levelset_params;
@@ -746,14 +746,14 @@ namespace application {
 
     for (int i = 0; i < adjust_phi_job_num; ++i) {
       read.clear();
-      LoadLdoIdsInSet(&read, kRegY2W3Outer[i], APP_PHI, NULL);
+      LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][i], APP_PHI, NULL);
       write.clear();
-      LoadLdoIdsInSet(&write, kRegY2W3Central[i], APP_PHI, NULL);
+      LoadLdoIdsInSet(&write, ph.map()["kRegY2W3Central"][i], APP_PHI, NULL);
 
       nimbus::Parameter adjust_phi_params;
       std::string adjust_phi_str;
       SerializeParameter(frame, time, dt, kPNAInt,
-                         global_region, kRegY2W3Central[i],
+                         global_region, ph.map()["kRegY2W3Central"][i],
                          kPNAInt, &adjust_phi_str);
       adjust_phi_params.set_ser_data(SerializedData(adjust_phi_str));
       before.clear();
@@ -765,7 +765,7 @@ namespace application {
           adjust_phi_job_ids[i],
           read, write, before, after,
           adjust_phi_params, true,
-          kRegY2W3Central[i]);
+          ph.map()["kRegY2W3Central"][i]);
     }
 
     MarkEndOfStage();
@@ -783,27 +783,27 @@ namespace application {
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
         if (delete_particles_single) {
-            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
+            LoadLdoIdsInSet(&read, ph.map()["kRegW3Outer"][0], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
-            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, ph.map()["kRegW3Outer"][0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLdoIdsInSet(&write, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, ph.map()["kRegW3Outer"][0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
-                               global_region, kRegW3Central[0],
+                               global_region, ph.map()["kRegW3Central"][0],
                                kPNAInt, &delete_particles_str);
-            job_region = kRegW3Central[0];
+            job_region = ph.map()["kRegW3Central"][0];
         } else {
-            LoadLdoIdsInSet(&read, kRegY2W3Outer[dj], APP_FACE_VEL_GHOST,
+            LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][dj], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
-            LoadLdoIdsInSet(&read, kRegY2W3CentralWGB[dj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, ph.map()["kRegY2W3CentralWGB"][dj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[dj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, ph.map()["kRegY2W3CentralWGB"][dj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
-                               global_region, kRegY2W3Central[dj],
+                               global_region, ph.map()["kRegY2W3Central"][dj],
                                kPNAInt, &delete_particles_str);
-            job_region = kRegY2W3Central[dj];
+            job_region = ph.map()["kRegY2W3Central"][dj];
         }
 
         nimbus::Parameter delete_particles_params;
@@ -836,27 +836,27 @@ namespace application {
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
         if (reincorporate_particles_single) {
-            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_FACE_VEL,
+            LoadLdoIdsInSet(&read, ph.map()["kRegW3Outer"][0], APP_FACE_VEL,
                     APP_PHI, NULL);
-            LoadLdoIdsInSet(&read, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, ph.map()["kRegW3Outer"][0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLdoIdsInSet(&write, kRegW3Outer[0], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, ph.map()["kRegW3Outer"][0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
-                               global_region, kRegW3Central[0],
+                               global_region, ph.map()["kRegW3Central"][0],
                                kPNAInt, &reincorporate_particles_str);
-            job_region = kRegW3Central[0];
+            job_region = ph.map()["kRegW3Central"][0];
         } else {
-            LoadLdoIdsInSet(&read, kRegY2W3Outer[rj], APP_FACE_VEL,
+            LoadLdoIdsInSet(&read, ph.map()["kRegY2W3Outer"][rj], APP_FACE_VEL,
                     APP_PHI, NULL);
-            LoadLdoIdsInSet(&read, kRegY2W3CentralWGB[rj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&read, ph.map()["kRegY2W3CentralWGB"][rj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLdoIdsInSet(&write, kRegY2W3CentralWGB[rj], APP_POS_PARTICLES,
+            LoadLdoIdsInSet(&write, ph.map()["kRegY2W3CentralWGB"][rj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame, time, dt, kPNAInt,
-                               global_region, kRegY2W3Central[rj],
+                               global_region, ph.map()["kRegY2W3Central"][rj],
                                kPNAInt, &reincorporate_particles_str);
-            job_region = kRegY2W3Central[rj];
+            job_region = ph.map()["kRegY2W3Central"][rj];
         }
 
         nimbus::Parameter reincorporate_particles_params;
@@ -913,7 +913,7 @@ namespace application {
                     read, write, before, after,
                     projection_main_params,
                     false,
-                    kRegW3Central[0]);
+                    ph.map()["kRegW3Central"][0]);
     MarkEndOfStage();
 
     EndTemplate("loop_iteration");

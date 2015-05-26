@@ -43,7 +43,9 @@
 
 #include "application_utils//partition_handler.h"
 
-extern nimbus::PartitionHandler ph;
+namespace application {
+  extern nimbus::PartitionHandler ph;
+}
 
 #define APP_SCALE_X 40
 #define APP_SCALE_Y 40
