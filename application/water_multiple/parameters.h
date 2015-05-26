@@ -49,6 +49,8 @@
 #define APP_LOG_STR "temp"
 #define TRANSLATE_STR "translate"
 
+#define DEFAULT_USE_GLOBAL_WRITE true
+
 namespace application {
 
     // simulation dimension
@@ -63,7 +65,8 @@ namespace application {
     typedef typename PhysBAM::ARRAY<T, FaceIndex> FaceArray;
 
     // application specific parameters and constants
-    const bool kUseGlobalWrite = true;
+    extern bool kUseGlobalWrite;
+
     const int kThreadsNum = 1;
     const int kScale = 40;
     const int kAppPartNum = 4;

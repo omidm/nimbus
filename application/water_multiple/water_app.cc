@@ -61,7 +61,15 @@ namespace application {
 
 nimbus::PartitionHandler ph;
 
-    WaterApp::WaterApp() {};
+bool kUseGlobalWrite;
+
+    WaterApp::WaterApp() {
+      global_write_ = DEFAULT_USE_GLOBAL_WRITE;
+    }
+
+    void WaterApp::set_global_write(bool flag) {
+      global_write_ = flag;
+    }
 
     /* Register data and job types and initialize constant quantities used by
      * application jobs. */
@@ -70,6 +78,9 @@ nimbus::PartitionHandler ph;
         //nimbus::Timer::Initialize();
         PhysBAM::Initialize_Particles();
         PhysBAM::Initialize_Read_Write_General_Structures();
+
+        // initialize application specific parameters and constants
+        kUseGlobalWrite = global_write_;
 
         // dbg_add_mode(APP_LOG_STR);
         // dbg_add_mode(TRANSLATE_STR);
