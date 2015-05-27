@@ -106,7 +106,7 @@ void JobProjectionMain::SpawnJobs(
 
   StartTemplate("projection_main");
 
-  for (int i = 0; i < kProjAppPartNum; ++i) {
+  for (uint64_t i = 0; i < kProjAppPartNum; ++i) {
     std::string default_params_str;
     SerializeParameter(
         frame, time, dt, kPNAInt,

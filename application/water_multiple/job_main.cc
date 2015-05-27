@@ -43,7 +43,6 @@
 #include "application_utils/data_definer.h"
 #include "application/water_multiple/data_names.h"
 #include "application/water_multiple/parameters.h"
-#include "application/water_multiple/partitions.h"
 #include "application/water_multiple/job_main.h"
 #include "application/water_multiple/job_names.h"
 #include "application/water_multiple/reg_def.h"
@@ -74,131 +73,131 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
 
   df.DefineData(APP_FACE_VEL,
                 kScale, kScale, kScale, 3, 3, 3,
-                APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                 false);  // No global boundary.
 
   df.DefineData(APP_FACE_VEL_GHOST,
                 kScale, kScale, kScale, 3, 3, 3,
-                APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                 true);  // Include global boundary.
 
   df.DefineData(APP_PHI,
                 kScale, kScale, kScale, 8, 8, 8,
-                APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                 true);  // Include global boundary.
 
   df.DefineData(APP_LAST_UNIQUE_PARTICLE_ID,
                 kScale, kScale, kScale, 0, 0, 0,
-                APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                 false);  // No global boundary.
 
   df.DefineData(APP_DT,
                 kScale, kScale, kScale, 0, 0, 0,
-                APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                 false);  // No global boundary.
 
   df.DefineData(APP_POS_PARTICLES,
                 kScale, kScale, kScale, 3, 3, 3,
-                APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                 true);  // Include global boundary.
 
   df.DefineScratchData(APP_POS_PARTICLES,
                        kScale, kScale, kScale, 3, 3, 3,
-                       APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                       kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                        true);  // Include global boundary.
 
   df.DefineData(APP_NEG_PARTICLES,
                 kScale, kScale, kScale, 3, 3, 3,
-                APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                 true);  // Include global boundary.
 
   df.DefineScratchData(APP_NEG_PARTICLES,
                        kScale, kScale, kScale, 3, 3, 3,
-                       APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                       kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                        true);  // Include global boundary.
 
   df.DefineData(APP_POS_REM_PARTICLES,
                 kScale, kScale, kScale, 3, 3, 3,
-                APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                 true);  // Include global boundary.
 
   df.DefineScratchData(APP_POS_REM_PARTICLES,
                        kScale, kScale, kScale, 3, 3, 3,
-                       APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                       kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                        true);  // Include global boundary.
 
   df.DefineData(APP_NEG_REM_PARTICLES,
                 kScale, kScale, kScale, 3, 3, 3,
-                APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                 true);  // Include global boundary.
 
   df.DefineScratchData(APP_NEG_REM_PARTICLES,
                        kScale, kScale, kScale, 3, 3, 3,
-                       APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                       kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                        true);  // Include global boundary.
 
   // # Group I.
   df.DefineData(APP_PSI_D,
                 kScale, kScale, kScale, 1, 1, 1,
-                APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                 true);  // Include global boundary.
 
   df.DefineData(APP_PSI_N,
                 kScale, kScale, kScale, 1, 1, 1,
-                APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                 true);  // Include global boundary.
 
   df.DefineData(APP_PRESSURE,
                 kScale, kScale, kScale, 1, 1, 1,
-                APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                 true);  // Include global boundary.
 
   df.DefineData(APP_FILLED_REGION_COLORS,
                 kScale, kScale, kScale, 1, 1, 1,
-                APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                 true);  // Include global boundary.
 
   df.DefineData(APP_DIVERGENCE,
                 kScale, kScale, kScale, 1, 1, 1,
-                APP_PART_NUM_X, APP_PART_NUM_Y, APP_PART_NUM_Z,
+                kAppPartNumX, kAppPartNumY, kAppPartNumZ,
                 true);  // Include global boundary.
 
   // # The following data partitions should be changed if you want to run projection in different granularity.
   // # Group II.
   df.DefineData(APP_MATRIX_A,
                 kScale, kScale, kScale, 0, 0, 0,
-                APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
                 false);  // No global boundary.
 
   df.DefineData(APP_VECTOR_B,
                 kScale, kScale, kScale, 0, 0, 0,
-                APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
                 false);  // No global boundary.
 
   df.DefineData(APP_INDEX_C2M,
                 kScale, kScale, kScale, 0, 0, 0,
-                APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
                 false);  // No global boundary.
 
   df.DefineData(APP_INDEX_M2C,
                 kScale, kScale, kScale, 0, 0, 0,
-                APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
                 false);  // No global boundary.
 
   df.DefineData(APP_PROJECTION_LOCAL_N,
                 kScale, kScale, kScale, 0, 0, 0,
-                APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
                 false);  // No global boundary.
 
   df.DefineData(APP_PROJECTION_INTERIOR_N,
                 kScale, kScale, kScale, 0, 0, 0,
-                APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
                 false);  // No global boundary.
 
   // # Group III.
   df.DefineData(APP_PROJECTION_LOCAL_TOLERANCE,
                 kScale, kScale, kScale, 0, 0, 0,
-                APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
                 false);  // No global boundary.
 
   df.DefineData(APP_PROJECTION_GLOBAL_TOLERANCE,
@@ -216,12 +215,12 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
   // # Group IV.
   df.DefineData(APP_PROJECTION_LOCAL_RESIDUAL,
                 kScale, kScale, kScale, 0, 0, 0,
-                APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
                 false);  // No global boundary.
 
   df.DefineData(APP_PROJECTION_LOCAL_RHO,
                 kScale, kScale, kScale, 0, 0, 0,
-                APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
                 false);  // No global boundary.
 
   df.DefineData(APP_PROJECTION_GLOBAL_RHO,
@@ -234,7 +233,7 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
 
   df.DefineData(APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA,
                 kScale, kScale, kScale, 0, 0, 0,
-                APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
                 false);  // No global boundary.
 
   df.DefineData(APP_PROJECTION_ALPHA,
@@ -247,27 +246,27 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
 
   df.DefineData(APP_MATRIX_C,
                 kScale, kScale, kScale, 0, 0, 0,
-                APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
                 false);  // No global boundary.
 
   df.DefineData(APP_VECTOR_PRESSURE,
                 kScale, kScale, kScale, 0, 0, 0,
-                APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
                 false);  // No global boundary.
 
   df.DefineData(APP_VECTOR_Z,
                 kScale, kScale, kScale, 0, 0, 0,
-                APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
                 false);  // No global boundary.
 
   df.DefineData(APP_VECTOR_P_META_FORMAT,
                 kScale, kScale, kScale, 1, 1, 1,
-                APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
                 true);  // Include global boundary.
 
   df.DefineData(APP_VECTOR_TEMP,
                 kScale, kScale, kScale, 0, 0, 0,
-                APP_PROJ_PART_NUM_X, APP_PROJ_PART_NUM_Y, APP_PROJ_PART_NUM_Z,
+                kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
                 false);  // No global boundary.
 
 

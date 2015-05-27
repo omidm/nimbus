@@ -44,6 +44,7 @@
 #include "application/water_multiple/physbam_include.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
+#include "application_utils/partition_handler.h"
 
 #define APP_LOG DBG_TEMP
 #define APP_LOG_STR "temp"
@@ -52,7 +53,18 @@
 #define DEFAULT_USE_GLOBAL_WRITE true
 #define DEFAULT_SCALE 40
 
+#define DEFAULT_APP_PART_NUM_X 2
+#define DEFAULT_APP_PART_NUM_Y 2
+#define DEFAULT_APP_PART_NUM_Z 1
+
+#define DEFAULT_APP_PROJ_PART_NUM_X 1
+#define DEFAULT_APP_PROJ_PART_NUM_Y 2
+#define DEFAULT_APP_PROJ_PART_NUM_Z 1
+
 namespace application {
+
+    // Partition Handler used by the jobs. 
+    extern nimbus::PartitionHandler ph;
 
     // simulation dimension
     const int kDimension = 3;
@@ -69,10 +81,16 @@ namespace application {
     extern bool kUseGlobalWrite;
     extern uint64_t kScale;
     extern nimbus::GeometricRegion kDefaultRegion;
+    extern uint64_t kAppPartNum;
+    extern uint64_t kAppPartNumX;
+    extern uint64_t kAppPartNumY;
+    extern uint64_t kAppPartNumZ;
+    extern uint64_t kProjAppPartNum;
+    extern uint64_t kProjAppPartNumX;
+    extern uint64_t kProjAppPartNumY;
+    extern uint64_t kProjAppPartNumZ;
 
     const int kThreadsNum = 1;
-    const int kAppPartNum = 4;
-    const int kProjAppPartNum = 2;
     const int kGhostNum = 3;
     const int kGhostW[3] = {kGhostNum, kGhostNum, kGhostNum};
     const int kPressureGhostNum = 1;

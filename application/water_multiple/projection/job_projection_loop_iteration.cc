@@ -143,7 +143,7 @@ void JobProjectionLoopIteration::Execute(
 
     std::vector<nimbus::Parameter> default_part_params;
     default_part_params.resize(kProjAppPartNum);
-    for (int i = 0; i < kProjAppPartNum; ++i) {
+    for (size_t i = 0; i < kProjAppPartNum; ++i) {
       std::string default_params_str;
       SerializeParameter(
           frame, time, dt, kPNAInt,
@@ -227,7 +227,7 @@ void JobProjectionLoopIteration::Execute(
 
     std::vector<nimbus::Parameter> default_part_params;
     default_part_params.resize(kProjAppPartNum);
-    for (int i = 0; i < kProjAppPartNum; ++i) {
+    for (size_t i = 0; i < kProjAppPartNum; ++i) {
       std::string default_params_str;
       SerializeParameter(
           frame, time, dt, kPNAInt,

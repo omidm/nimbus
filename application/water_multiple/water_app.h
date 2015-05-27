@@ -53,11 +53,22 @@ namespace application {
 
             void set_global_write(bool flag);
             void set_scale(uint64_t scale);
+            void set_part_num_x(uint64_t part_num_x);
+            void set_part_num_y(uint64_t part_num_y);
+            void set_part_num_z(uint64_t part_num_z);
+            void set_projection_part_num_x(uint64_t projection_part_num_x);
+            void set_projection_part_num_y(uint64_t projection_part_num_y);
+            void set_projection_part_num_z(uint64_t projection_part_num_z);
 
         private:
             bool global_write_;
             uint64_t scale_;
-            nimbus::GeometricRegion default_region_;
+            uint64_t part_num_x_;
+            uint64_t part_num_y_;
+            uint64_t part_num_z_;
+            uint64_t projection_part_num_x_;
+            uint64_t projection_part_num_y_;
+            uint64_t projection_part_num_z_;
     };
 
 } // namespace application

@@ -42,7 +42,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_NAMES_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_NAMES_H_
 
-#include "application/water_multiple/partitions.h"
+#include "application/water_multiple/parameters.h"
 
 #define MAIN "main"
 #define INITIALIZE "initialize"
