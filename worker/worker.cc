@@ -938,9 +938,9 @@ void Worker::StatEndJob(int len) {
   using std::min;
   stat_ready_job_num_ -= len;
   int busy_cores = min(stat_ready_job_num_,
-                       WorkerManager::across_job_parallism);
+                       static_cast<int>(WorkerManager::across_job_parallism));
   int blocked_cores = min(stat_blocked_job_num_,
-                          WorkerManager::across_job_parallism - busy_cores);
+                          static_cast<int>(WorkerManager::across_job_parallism) - busy_cores);
   int idle_cores =
       WorkerManager::across_job_parallism - busy_cores - blocked_cores;
   if (busy_cores != stat_busy_cores_) {
