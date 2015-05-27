@@ -73,6 +73,7 @@ extern AppDataVector kAppDataVectorPressure;
 extern AppDataVector kAppDataVectorZ;
 extern AppDataVector kAppDataVectorTemp;
 
+void InitializeAppDataPrototypes(nimbus::GeometricRegion kRegion);
 
 } // namespace application
 

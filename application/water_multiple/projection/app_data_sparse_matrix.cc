@@ -49,6 +49,10 @@
 
 namespace application {
 
+AppDataSparseMatrix::AppDataSparseMatrix() {
+  data_ = NULL;
+}
+
 AppDataSparseMatrix::AppDataSparseMatrix(const nimbus::GeometricRegion &global_reg,
                                      bool make_proto, const std::string& name)
     : global_region_(global_reg) {

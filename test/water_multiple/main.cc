@@ -144,6 +144,10 @@ int main(int argc, char *argv[]) {
     app->set_global_write(false);
   }
 
+  if (vm.count("scale")) {
+    app->set_scale(scale);
+  }
+
 
 
 

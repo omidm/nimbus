@@ -52,9 +52,12 @@ namespace application {
             virtual void Load();
 
             void set_global_write(bool flag);
+            void set_scale(uint64_t scale);
 
         private:
             bool global_write_;
+            uint64_t scale_;
+            nimbus::GeometricRegion default_region_;
     };
 
 } // namespace application

@@ -50,6 +50,7 @@
 #define TRANSLATE_STR "translate"
 
 #define DEFAULT_USE_GLOBAL_WRITE true
+#define DEFAULT_SCALE 40
 
 namespace application {
 
@@ -64,11 +65,12 @@ namespace application {
     typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
     typedef typename PhysBAM::ARRAY<T, FaceIndex> FaceArray;
 
-    // application specific parameters and constants
+    // application specific variables, set by WaterApp::Load() -omidm
     extern bool kUseGlobalWrite;
+    extern uint64_t kScale;
+    extern nimbus::GeometricRegion kDefaultRegion;
 
     const int kThreadsNum = 1;
-    const int kScale = 40;
     const int kAppPartNum = 4;
     const int kProjAppPartNum = 2;
     const int kGhostNum = 3;
@@ -77,8 +79,6 @@ namespace application {
     const int kLastFrame = 10;
     const int kMaxIterations = 40;
     const std::string kOutputDir = "output";
-    // follow physbam convenctions here, otherwise translator becomes messy
-    const nimbus::GeometricRegion kDefaultRegion(1, 1, 1, kScale, kScale, kScale);
 } // namespace application
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_

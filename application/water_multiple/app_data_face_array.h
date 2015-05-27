@@ -60,6 +60,7 @@ class AppDataFaceArray : public nimbus::AppVar {
         typedef typename nimbus::TranslatorPhysBAM<TS> Translator;
 
     public:
+        AppDataFaceArray();
         explicit AppDataFaceArray(const nimbus::GeometricRegion &global_reg,
                                 const int ghost_width,
                                 bool make_proto,

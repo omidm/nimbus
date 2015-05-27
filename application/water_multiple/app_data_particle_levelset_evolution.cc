@@ -51,6 +51,12 @@
 namespace application {
 
 template<class TS> AppDataParticleLevelsetEvolution<TS>::
+AppDataParticleLevelsetEvolution()
+    : AppStruct(NUM_PARTICLE_TYPES) {
+    data_ = NULL;
+}
+
+template<class TS> AppDataParticleLevelsetEvolution<TS>::
 AppDataParticleLevelsetEvolution(
         const nimbus::GeometricRegion &global_reg,
         int ghost_width,
@@ -60,6 +66,7 @@ AppDataParticleLevelsetEvolution(
       global_region_(global_reg),
       ghost_width_(ghost_width) {
     set_name(name);
+    data_ = NULL;
     if (make_proto)
         MakePrototype();
 }

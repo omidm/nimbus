@@ -52,6 +52,7 @@ namespace application {
 class AppDataRawGridArray : public nimbus::AppVar {
  public:
   typedef PhysBAM::ARRAY<int, TV_INT> DATA_TYPE;
+  AppDataRawGridArray();
   explicit AppDataRawGridArray(const nimbus::GeometricRegion& global_reg,
                              bool make_proto,
                              const std::string& name);

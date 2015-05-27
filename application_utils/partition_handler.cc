@@ -60,9 +60,9 @@ void PartitionHandler::AddPartitions(const std::string& name,
                                     int_dimension_t part_num_y,
                                     int_dimension_t part_num_z,
                                     PartitionType type) {
-  assert(size_x > (2 * bw_x));
-  assert(size_y > (2 * bw_y));
-  assert(size_z > (2 * bw_z));
+  assert((size_x / part_num_x) > (2 * bw_x));
+  assert((size_y / part_num_y) > (2 * bw_y));
+  assert((size_z / part_num_z) > (2 * bw_z));
 
   std::string key = name + GetTag(type);
   Map::iterator iter = map_.find(key);

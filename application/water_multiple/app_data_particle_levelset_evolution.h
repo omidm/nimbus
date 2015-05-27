@@ -70,6 +70,7 @@ class AppDataParticleLevelsetEvolution : public nimbus::AppStruct {
         typedef typename nimbus::TranslatorPhysBAM<TS> Translator;
 
     public:
+        AppDataParticleLevelsetEvolution();
         explicit AppDataParticleLevelsetEvolution(
                 const nimbus::GeometricRegion &global_reg,
                 int ghost_width,

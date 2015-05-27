@@ -50,11 +50,16 @@
 
 namespace application {
 
+AppDataVector::AppDataVector() {
+  data_ = NULL;
+}
+
 AppDataVector::AppDataVector(const nimbus::GeometricRegion &global_reg,
                          bool make_proto,
                          const std::string& name)
     : global_region_(global_reg) {
   set_name(name);
+  data_ = NULL;
   if (make_proto)
     MakePrototype();
 }

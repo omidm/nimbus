@@ -52,6 +52,7 @@ namespace application {
 class AppDataVector : public nimbus::AppVar {
  public:
   typedef PhysBAM::VECTOR_ND<float> DATA_TYPE;
+  AppDataVector();
   explicit AppDataVector(const nimbus::GeometricRegion& global_reg,
                        bool make_proto,
                        const std::string& name);

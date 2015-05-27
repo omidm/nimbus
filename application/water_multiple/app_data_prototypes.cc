@@ -41,45 +41,85 @@
 
 namespace application {
 
+
 // face velocities
-AppDataFaceArray<T> kAppDataFaceVel(kDefaultRegion, 0, true, "face_vel");
-AppDataFaceArray<T> kAppDataFaceVelGhost(kDefaultRegion, 3, true, "face_vel_ghost");
+AppDataFaceArray<T> kAppDataFaceVel;
+AppDataFaceArray<T> kAppDataFaceVelGhost;
 
 // psi
-AppDataFaceArray<bool> kAppDataPsiN(kDefaultRegion, 1, true, "psi_n");
-AppDataScalarArray<bool> kAppDataPsiD(kDefaultRegion, 1, true, "psi_d");
+AppDataFaceArray<bool> kAppDataPsiN;
+AppDataScalarArray<bool> kAppDataPsiD;
 
 // phi
-AppDataScalarArray<T> kAppDataPhi3(kDefaultRegion, 3, true, "phi_3");
-AppDataScalarArray<T> kAppDataPhi7(kDefaultRegion, 7, true, "phi_7");
-AppDataScalarArray<T> kAppDataPhi8(kDefaultRegion, 8, true, "phi_8");
+AppDataScalarArray<T> kAppDataPhi3;
+AppDataScalarArray<T> kAppDataPhi7;
+AppDataScalarArray<T> kAppDataPhi8;
 
 // particle levelset evolution
-AppDataParticleLevelsetEvolution<float> kAppDataPLE(kDefaultRegion, 3, true,
-                                                "particle_container");
+AppDataParticleLevelsetEvolution<float> kAppDataPLE;
 
 // pressure
-AppDataScalarArray<T> kAppDataPressure(kDefaultRegion, 1, true, "pressure");
+AppDataScalarArray<T> kAppDataPressure;
 
 // Varibales for projection.
-AppDataScalarArray<int> kAppDataColors(kDefaultRegion, 1, true,
-                                   "filled_region_colors");
-AppDataScalarArray<T> kAppDataDivergence(kDefaultRegion, 1, true, "divergence");
+AppDataScalarArray<int> kAppDataColors;
+AppDataScalarArray<T> kAppDataDivergence;
 
 // TODO(quhang): this app_data variable is questionable, because it cannot be
 // deleted if meta_p is being used.
-AppDataRawGridArray kAppDataIndexC2M(kDefaultRegion, true, "index_c2m");
-AppDataArrayM2C kAppDataArrayM2C(kDefaultRegion, true, "index_m2c");
-AppDataCompressedScalarArray<float> kAppDataMetaP(kDefaultRegion, 1, true,
-                                              "vector_p_meta_format");
+AppDataRawGridArray kAppDataIndexC2M;
+AppDataArrayM2C kAppDataArrayM2C;
+AppDataCompressedScalarArray<float> kAppDataMetaP;
 
-AppDataSparseMatrix kAppDataSparseMatrixA(kDefaultRegion, true, "matrix_c");
-AppDataSparseMatrix kAppDataSparseMatrixC(kDefaultRegion, true, "matrix_a");
+AppDataSparseMatrix kAppDataSparseMatrixA;
+AppDataSparseMatrix kAppDataSparseMatrixC;
 
 
-AppDataVector kAppDataVectorB(kDefaultRegion, true, "vector_b");
-AppDataVector kAppDataVectorPressure(kDefaultRegion, true, "vector_pressure");
-AppDataVector kAppDataVectorZ(kDefaultRegion, true, "vector_z");
-AppDataVector kAppDataVectorTemp(kDefaultRegion, true, "vector_temp");
+AppDataVector kAppDataVectorB;
+AppDataVector kAppDataVectorPressure;
+AppDataVector kAppDataVectorZ;
+AppDataVector kAppDataVectorTemp;
+
+
+void InitializeAppDataPrototypes(nimbus::GeometricRegion kRegion) {
+  // face velocities
+  kAppDataFaceVel = AppDataFaceArray<T>(kRegion, 0, true, "face_vel");
+  kAppDataFaceVelGhost = AppDataFaceArray<T>(kRegion, 3, true, "face_vel_ghost");
+  
+  // psi
+  kAppDataPsiN = AppDataFaceArray<bool>(kRegion, 1, true, "psi_n");
+  kAppDataPsiD = AppDataScalarArray<bool>(kRegion, 1, true, "psi_d");
+  
+  // phi
+  kAppDataPhi3 = AppDataScalarArray<T>(kRegion, 3, true, "phi_3");
+  kAppDataPhi7 = AppDataScalarArray<T>(kRegion, 7, true, "phi_7");
+  kAppDataPhi8 = AppDataScalarArray<T>(kRegion, 8, true, "phi_8");
+  
+  // particle levelset evolution
+  kAppDataPLE = AppDataParticleLevelsetEvolution<float>(kRegion, 3, true, "particle_container");
+  
+  // pressure
+  kAppDataPressure = AppDataScalarArray<T>(kRegion, 1, true, "pressure");
+  
+  // Varibales for projection.
+  kAppDataColors = AppDataScalarArray<int>(kRegion, 1, true, "filled_region_colors");
+  kAppDataDivergence = AppDataScalarArray<T>(kRegion, 1, true, "divergence");
+  
+  // TODO(quhang): this app_data variable is questionable, because it cannot be
+  // deleted if meta_p is being used.
+  kAppDataIndexC2M = AppDataRawGridArray(kRegion, true, "index_c2m");
+  kAppDataArrayM2C = AppDataArrayM2C(kRegion, true, "index_m2c");
+  kAppDataMetaP = AppDataCompressedScalarArray<float>(kRegion, 1, true, "vector_p_meta_format");
+  
+  kAppDataSparseMatrixA = AppDataSparseMatrix(kRegion, true, "matrix_c");
+  kAppDataSparseMatrixC = AppDataSparseMatrix(kRegion, true, "matrix_a");
+  
+  
+  kAppDataVectorB = AppDataVector(kRegion, true, "vector_b");
+  kAppDataVectorPressure = AppDataVector(kRegion, true, "vector_pressure");
+  kAppDataVectorZ = AppDataVector(kRegion, true, "vector_z");
+  kAppDataVectorTemp = AppDataVector(kRegion, true, "vector_temp");
+}
+
 } // namespace application
 

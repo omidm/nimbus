@@ -59,6 +59,7 @@ class AppDataScalarArray : public nimbus::AppVar {
         typedef typename nimbus::TranslatorPhysBAM<TS> Translator;
 
     public:
+        AppDataScalarArray();
         explicit AppDataScalarArray(const nimbus::GeometricRegion &global_reg,
                                   const int ghost_width,
                                   bool make_proto,

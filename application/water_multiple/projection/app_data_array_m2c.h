@@ -53,6 +53,7 @@ namespace application {
 class AppDataArrayM2C : public nimbus::AppVar {
  public:
   typedef PhysBAM::ARRAY<application::TV_INT> DATA_TYPE;
+  AppDataArrayM2C();
   explicit AppDataArrayM2C(const nimbus::GeometricRegion& global_reg,
                          bool make_proto,
                          const std::string& name);

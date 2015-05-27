@@ -53,6 +53,7 @@ namespace application {
 class AppDataSparseMatrix : public nimbus::AppVar {
  public:
   typedef PhysBAM::SPARSE_MATRIX_FLAT_NXN<float> DATA_TYPE;
+  AppDataSparseMatrix();
   explicit AppDataSparseMatrix(const nimbus::GeometricRegion& global_reg,
                              bool make_proto,
                              const std::string& name);

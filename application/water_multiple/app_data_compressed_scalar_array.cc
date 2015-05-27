@@ -52,6 +52,12 @@
 namespace application {
 
 template<class T> AppDataCompressedScalarArray<T>::
+AppDataCompressedScalarArray() {
+  data_ = NULL;
+  index_data_ = NULL;
+}
+
+template<class T> AppDataCompressedScalarArray<T>::
 AppDataCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
                            const int ghost_width,
                            bool make_proto,

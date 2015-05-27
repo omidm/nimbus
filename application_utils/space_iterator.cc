@@ -59,7 +59,7 @@ SpaceIterator::SpaceIterator(int size,
   assert(size_ > 0);
   assert(part_num_ > 0);
   assert((size % part_num_) == 0);
-  assert(size_ > (2 * bw_));
+  assert((size_ / part_num_) > (2 * bw_));
 }
 
 SpaceIterator::~SpaceIterator() {

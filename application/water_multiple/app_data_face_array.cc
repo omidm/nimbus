@@ -49,6 +49,11 @@
 namespace application {
 
 template<class T, class TS> AppDataFaceArray<T, TS>::
+AppDataFaceArray() {
+  data_ = NULL;
+}
+
+template<class T, class TS> AppDataFaceArray<T, TS>::
 AppDataFaceArray(const nimbus::GeometricRegion &global_reg,
                const int ghost_width,
                bool make_proto,
@@ -56,6 +61,7 @@ AppDataFaceArray(const nimbus::GeometricRegion &global_reg,
     : global_region_(global_reg),
       ghost_width_(ghost_width) {
     set_name(name);
+    data_ = NULL;
     if (make_proto)
         MakePrototype();
 }

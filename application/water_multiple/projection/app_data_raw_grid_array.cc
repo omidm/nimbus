@@ -50,10 +50,15 @@
 
 namespace application {
 
+AppDataRawGridArray::AppDataRawGridArray() {
+  data_ = NULL;
+}
+
 AppDataRawGridArray::AppDataRawGridArray(const nimbus::GeometricRegion &global_reg,
                          bool make_proto, const std::string& name)
     : global_region_(global_reg) {
   set_name(name);
+  data_ = NULL;
   if (make_proto)
     MakePrototype();
 }

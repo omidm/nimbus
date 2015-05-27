@@ -58,6 +58,7 @@ class AppDataCompressedScalarArray : public nimbus::AppVar {
   typedef typename nimbus::TranslatorPhysBAM<float> Translator;
 
  public:
+  AppDataCompressedScalarArray();
   explicit AppDataCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
                                       const int ghost_width,
                                       bool make_proto,
