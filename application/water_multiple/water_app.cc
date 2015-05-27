@@ -86,6 +86,7 @@ bool kUseGlobalWrite;
       last_frame_ = DEFAULT_LAST_FRAME;
       max_iterations_ = DEFAULT_MAX_ITERATIONS;
       global_write_ = DEFAULT_USE_GLOBAL_WRITE;
+      translator_log = NULL;
     }
 
     void WaterApp::set_scale(uint64_t scale) {
