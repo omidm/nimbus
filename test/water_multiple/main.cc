@@ -109,6 +109,13 @@ int main(int argc, char *argv[]) {
 
     ("scale,s", po::value<uint64_t>(&scale), "scale of the simulation") //NOLINT
 
+    ("pnx", po::value<uint64_t>(&part_num_x), "partition number along x") //NOLINT
+    ("pny", po::value<uint64_t>(&part_num_y), "partition number along y") //NOLINT
+    ("pnz", po::value<uint64_t>(&part_num_z), "partition number along z") //NOLINT
+    ("ppnx", po::value<uint64_t>(&projection_part_num_x), "projection partition number along x") //NOLINT
+    ("ppny", po::value<uint64_t>(&projection_part_num_y), "projection partition number along y") //NOLINT
+    ("ppnz", po::value<uint64_t>(&projection_part_num_z), "projection partition number along z") //NOLINT
+
     ("ithread", po::value<uint64_t>(&WorkerManager::inside_job_parallism), "number of threads within one job") //NOLINT
     ("othread", po::value<uint64_t>(&WorkerManager::across_job_parallism), "number of threads at worker for job execution") //NOLINT
 
@@ -140,12 +147,36 @@ int main(int argc, char *argv[]) {
     w->set_ip_address(ip_address);
   }
 
-  if (vm.count("dgw")) {
-    app->set_global_write(false);
-  }
-
   if (vm.count("scale")) {
     app->set_scale(scale);
+  }
+
+  if (vm.count("pnx")) {
+    app->set_part_num_x(part_num_x);
+  }
+
+  if (vm.count("pny")) {
+    app->set_part_num_y(part_num_y);
+  }
+
+  if (vm.count("pnz")) {
+    app->set_part_num_z(part_num_z);
+  }
+
+  if (vm.count("ppnx")) {
+    app->set_projection_part_num_x(projection_part_num_x);
+  }
+
+  if (vm.count("ppny")) {
+    app->set_projection_part_num_y(projection_part_num_y);
+  }
+
+  if (vm.count("ppnz")) {
+    app->set_projection_part_num_z(projection_part_num_z);
+  }
+
+  if (vm.count("dgw")) {
+    app->set_global_write(false);
   }
 
 
