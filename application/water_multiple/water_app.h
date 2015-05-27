@@ -51,7 +51,6 @@ namespace application {
             WaterApp();
             virtual void Load();
 
-            void set_global_write(bool flag);
             void set_scale(uint64_t scale);
             void set_part_num_x(uint64_t part_num_x);
             void set_part_num_y(uint64_t part_num_y);
@@ -59,9 +58,11 @@ namespace application {
             void set_projection_part_num_x(uint64_t projection_part_num_x);
             void set_projection_part_num_y(uint64_t projection_part_num_y);
             void set_projection_part_num_z(uint64_t projection_part_num_z);
+            void set_last_frame(uint64_t last_frame);
+            void set_max_iterations(uint64_t max_iterations);
+            void set_global_write(bool flag);
 
         private:
-            bool global_write_;
             uint64_t scale_;
             uint64_t part_num_x_;
             uint64_t part_num_y_;
@@ -69,6 +70,9 @@ namespace application {
             uint64_t projection_part_num_x_;
             uint64_t projection_part_num_y_;
             uint64_t projection_part_num_z_;
+            uint64_t last_frame_;
+            uint64_t max_iterations_;
+            bool global_write_;
     };
 
 } // namespace application

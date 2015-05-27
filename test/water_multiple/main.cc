@@ -78,21 +78,15 @@ int main(int argc, char *argv[]) {
   
   WorkerManager::across_job_parallism = 1;
 
-  uint64_t scale;  //
-
-  uint64_t part_num_x;  //
-  uint64_t part_num_y;  //
-  uint64_t part_num_z;  //
-
-  uint64_t projection_part_num_x;  //
-  uint64_t projection_part_num_y;  //
-  uint64_t projection_part_num_z;  //
-
-  uint64_t last_frame;  //
-
-  uint64_t max_projection_iterations;  //
-
-  bool global_write;
+  uint64_t scale;
+  uint64_t part_num_x;
+  uint64_t part_num_y;
+  uint64_t part_num_z;
+  uint64_t projection_part_num_x;
+  uint64_t projection_part_num_y;
+  uint64_t projection_part_num_z;
+  uint64_t last_frame;
+  uint64_t max_iterations;
 
 
   po::options_description desc("Options");
@@ -108,13 +102,14 @@ int main(int argc, char *argv[]) {
     ("ip", po::value<std::string>(&ip_address), "forced ip address of the worker, not known by controller") // NOLINT
 
     ("scale,s", po::value<uint64_t>(&scale), "scale of the simulation") //NOLINT
-
     ("pnx", po::value<uint64_t>(&part_num_x), "partition number along x") //NOLINT
     ("pny", po::value<uint64_t>(&part_num_y), "partition number along y") //NOLINT
     ("pnz", po::value<uint64_t>(&part_num_z), "partition number along z") //NOLINT
     ("ppnx", po::value<uint64_t>(&projection_part_num_x), "projection partition number along x") //NOLINT
     ("ppny", po::value<uint64_t>(&projection_part_num_y), "projection partition number along y") //NOLINT
     ("ppnz", po::value<uint64_t>(&projection_part_num_z), "projection partition number along z") //NOLINT
+    ("last_frame,e", po::value<uint64_t>(&last_frame), "last frame to compute") //NOLINT
+    ("maxi", po::value<uint64_t>(&max_iterations), "maximum projection iterations") //NOLINT
 
     ("ithread", po::value<uint64_t>(&WorkerManager::inside_job_parallism), "number of threads within one job") //NOLINT
     ("othread", po::value<uint64_t>(&WorkerManager::across_job_parallism), "number of threads at worker for job execution") //NOLINT
@@ -173,6 +168,14 @@ int main(int argc, char *argv[]) {
 
   if (vm.count("ppnz")) {
     app->set_projection_part_num_z(projection_part_num_z);
+  }
+
+  if (vm.count("last_frame")) {
+    app->set_last_frame(last_frame);
+  }
+
+  if (vm.count("maxi")) {
+    app->set_max_iterations(max_iterations);
   }
 
   if (vm.count("dgw")) {

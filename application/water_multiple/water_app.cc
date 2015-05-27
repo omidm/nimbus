@@ -71,10 +71,11 @@ uint64_t kProjAppPartNumX;
 uint64_t kProjAppPartNumY;
 uint64_t kProjAppPartNumZ;
 nimbus::GeometricRegion kDefaultRegion;
+uint64_t kLastFrame;
+uint64_t kMaxIterations;
 bool kUseGlobalWrite;
 
     WaterApp::WaterApp() {
-      global_write_ = DEFAULT_USE_GLOBAL_WRITE;
       scale_ = DEFAULT_SCALE;
       part_num_x_ = DEFAULT_APP_PART_NUM_X;
       part_num_y_ = DEFAULT_APP_PART_NUM_Y;
@@ -82,10 +83,9 @@ bool kUseGlobalWrite;
       projection_part_num_x_ = DEFAULT_APP_PROJ_PART_NUM_X;
       projection_part_num_y_ = DEFAULT_APP_PROJ_PART_NUM_Y;
       projection_part_num_z_ = DEFAULT_APP_PROJ_PART_NUM_Z;
-    }
-
-    void WaterApp::set_global_write(bool flag) {
-      global_write_ = flag;
+      last_frame_ = DEFAULT_LAST_FRAME;
+      max_iterations_ = DEFAULT_MAX_ITERATIONS;
+      global_write_ = DEFAULT_USE_GLOBAL_WRITE;
     }
 
     void WaterApp::set_scale(uint64_t scale) {
@@ -116,6 +116,18 @@ bool kUseGlobalWrite;
       projection_part_num_z_ = projection_part_num_z;
     }
 
+    void WaterApp::set_last_frame(uint64_t last_frame) {
+      last_frame_ = last_frame;
+    }
+
+    void WaterApp::set_max_iterations(uint64_t max_iterations) {
+      max_iterations_ = max_iterations;
+    }
+
+    void WaterApp::set_global_write(bool flag) {
+      global_write_ = flag;
+    }
+
     /* Register data and job types and initialize constant quantities used by
      * application jobs. */
     void WaterApp::Load() {
@@ -128,9 +140,7 @@ bool kUseGlobalWrite;
         assert((part_num_x_ % projection_part_num_x_) == 0);
         assert((part_num_y_ % projection_part_num_y_) == 0);
         assert((part_num_z_ % projection_part_num_z_) == 0);
-        kUseGlobalWrite = global_write_;
         kScale = scale_;
-        kDefaultRegion.Rebuild(1, 1, 1, scale_, scale_, scale_);
         kAppPartNumX = part_num_x_;
         kAppPartNumY = part_num_y_;
         kAppPartNumZ = part_num_z_;
@@ -139,6 +149,10 @@ bool kUseGlobalWrite;
         kProjAppPartNumY = projection_part_num_y_;
         kProjAppPartNumZ = projection_part_num_z_;
         kProjAppPartNum = projection_part_num_x_ * projection_part_num_y_ * projection_part_num_z_;
+        kDefaultRegion.Rebuild(1, 1, 1, scale_, scale_, scale_);
+        kLastFrame = last_frame_;
+        kMaxIterations = max_iterations_;
+        kUseGlobalWrite = global_write_;
 
         // Initialize the app data prototypes.
         InitializeAppDataPrototypes(kDefaultRegion);

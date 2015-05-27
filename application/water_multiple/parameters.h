@@ -50,7 +50,8 @@
 #define APP_LOG_STR "temp"
 #define TRANSLATE_STR "translate"
 
-#define DEFAULT_USE_GLOBAL_WRITE true
+
+// chnage the default variables here -omidm
 #define DEFAULT_SCALE 40
 
 #define DEFAULT_APP_PART_NUM_X 2
@@ -60,6 +61,14 @@
 #define DEFAULT_APP_PROJ_PART_NUM_X 1
 #define DEFAULT_APP_PROJ_PART_NUM_Y 2
 #define DEFAULT_APP_PROJ_PART_NUM_Z 1
+
+#define DEFAULT_LAST_FRAME 10
+
+#define DEFAULT_MAX_ITERATIONS 40
+
+#define DEFAULT_USE_GLOBAL_WRITE true
+
+
 
 namespace application {
 
@@ -78,9 +87,7 @@ namespace application {
     typedef typename PhysBAM::ARRAY<T, FaceIndex> FaceArray;
 
     // application specific variables, set by WaterApp::Load() -omidm
-    extern bool kUseGlobalWrite;
     extern uint64_t kScale;
-    extern nimbus::GeometricRegion kDefaultRegion;
     extern uint64_t kAppPartNum;
     extern uint64_t kAppPartNumX;
     extern uint64_t kAppPartNumY;
@@ -89,13 +96,16 @@ namespace application {
     extern uint64_t kProjAppPartNumX;
     extern uint64_t kProjAppPartNumY;
     extern uint64_t kProjAppPartNumZ;
+    extern nimbus::GeometricRegion kDefaultRegion;
+    extern uint64_t kLastFrame;
+    extern uint64_t kMaxIterations;
+    extern bool kUseGlobalWrite;
 
+    // constant application specific parameters.
     const int kThreadsNum = 1;
     const int kGhostNum = 3;
     const int kGhostW[3] = {kGhostNum, kGhostNum, kGhostNum};
     const int kPressureGhostNum = 1;
-    const int kLastFrame = 10;
-    const int kMaxIterations = 40;
     const std::string kOutputDir = "output";
 } // namespace application
 

@@ -74,7 +74,7 @@ namespace application {
                                params.ser_data().size());
         InitConfig init_config;
         LoadParameter(params_str, &init_config);
-        int frame = init_config.frame;
+        size_t frame = init_config.frame;
         nimbus::GeometricRegion global_region = init_config.global_region;
 
         // get time from frame
