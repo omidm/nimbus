@@ -224,33 +224,23 @@ void Scheduler::SchedulerCoreProcessor() {
   // reinit the last_query_stat_time_
   last_query_stat_time_ = (int64_t)(Log::GetRawTime());
 
-  processed_command_num_ = 0;
   log_.log_StartTimer();
-  log_assign_.log_ResetTimer();
-  log_process_.log_ResetTimer();
-  log_overhead_.log_ResetTimer();
+  processed_command_num_ = 0;
   // Main Loop of the scheduler.
   while (true) {
     RegisterPendingWorkers();
 
     QueryWorkerStats();
 
-    bool overhead = false;
-    overhead = (job_manager_->NumJobsReadyToAssign() > 0);
-
-    log_process_.log_ResumeTimer();
-    if (overhead) {
-      log_overhead_.ResumeTimer();
-    }
+    log_process_.log_StartTimer();
     processed_command_num_ += ProcessQueuedSchedulerCommands();
-    if (overhead) {
-      log_overhead_.StopTimer();
-    }
     log_process_.log_StopTimer();
 
-    overhead = (job_manager_->NumJobsReadyToAssign() > 0);
+    bool overhead = (job_manager_->NumJobsReadyToAssign() > 0);
+    if (overhead) {
+      log_overhead_.log_AddToTimer(log_process_.timer());
+    }
 
-    log_assign_.log_ResumeTimer();
     if (overhead) {
       log_overhead_.ResumeTimer();
     }
@@ -258,7 +248,6 @@ void Scheduler::SchedulerCoreProcessor() {
     if (overhead) {
       log_overhead_.StopTimer();
     }
-    log_assign_.log_StopTimer();
 
     RemoveObsoleteJobEntries();
 
@@ -266,17 +255,12 @@ void Scheduler::SchedulerCoreProcessor() {
 
     if ((log_.timer() >= 5.0) || (processed_command_num_ > 10000)) {
       log_.log_StopTimer();
-      log_assign_.log_StopTimer();
-      log_process_.log_StopTimer();
       char buff[LOG_MAX_BUFF_SIZE];
-      snprintf(buff, sizeof(buff), "%10.9lf l: %2.5lf p: %2.5lf a: %2.5lf c: %5.0lu.",
-          Log::GetRawTime(), log_.timer(), log_process_.timer(),
-          log_assign_.timer(), processed_command_num_);
+      snprintf(buff, sizeof(buff), "%10.9lf l: %2.2lf c: %5.0lu.",
+          Log::GetRawTime(), log_.timer(), processed_command_num_);
       log_.log_WriteToOutputStream(std::string(buff), LOG_INFO);
-      processed_command_num_ = 0;
       log_.log_StartTimer();
-      log_assign_.log_ResetTimer();
-      log_process_.log_ResetTimer();
+      processed_command_num_ = 0;
     }
   }
 }

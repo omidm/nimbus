@@ -63,6 +63,7 @@
 #define log_StartTimer(...) StartTimer(__VA_ARGS__)
 #define log_ResumeTimer(...) ResumeTimer(__VA_ARGS__)
 #define log_StopTimer(...) StopTimer(__VA_ARGS__)
+#define log_AddToTimer(...) AddToTimer(__VA_ARGS__)
 #else
 #define log_Print(...) none()
 #define log_PrintLine(...) none()
@@ -75,6 +76,7 @@
 #define log_StartTimer(...) none()
 #define log_ResumeTimer(...) none()
 #define log_StopTimer(...) none()
+#define log_AddToTimer(...) none()
 #endif
 
 
@@ -117,6 +119,7 @@ class Log {
     void StartTimer();
     void ResumeTimer();
     void StopTimer();
+    void AddToTimer(double elapsed);
 
     void ClearBuffer();
     void ClearLogFile();

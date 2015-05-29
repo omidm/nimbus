@@ -156,6 +156,11 @@ void Log::StopTimer() {
   timer_is_on_ = false;
 }
 
+void Log::AddToTimer(double elapsed) {
+  timer_ += elapsed;
+}
+
+
 void Log::ClearBuffer() {
   buffer_.str("");
 }
