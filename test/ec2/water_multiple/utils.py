@@ -12,71 +12,6 @@ import config
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import ec2
 
-
-def build_binaries(ip_address):
-
-# Thing you need to do first on all hosts:
-#     git pull
-#     Build PhysBAM library
-#
-# Thing you need to do on source host:
-#  In application/water_multiple:
-#     generate the data_def and region_def files
-#     update parameter.h
-#     create the make file with ccmake
-
-  command = ''
-  command += 'cd ' + config.EC2_NIMBUS_ROOT + ';'
-  command += 'make clean-hard;'
-  command += 'make;'
-  command += 'cd ' + config.REL_APPLICATION_PATH + ';'
-  command += 'make clean;'
-  command += 'make -j 12;'
-  command += 'cd -;'
-  command += 'cd ' + config.REL_WORKER_PATH + ';'
-  command += 'make clean;'
-  command += 'make -j 12;'
-  command += 'cd -;'
-  command += 'cd ' + config.REL_SCHEDULER_PATH + ';'
-  command += 'make clean;'
-  command += 'make -j 12;'
-  command += 'cd -;'
-
-  subprocess.call(['ssh', '-i', config.PRIVATE_KEY,
-      '-o', 'UserKnownHostsFile=/dev/null',
-      '-o', 'StrictHostKeyChecking=no',
-      'ubuntu@' + ip_address, command])
-
-
-def distribute_binaries(source_ip, dest_ips):
-  for dest_ip in dest_ips:
-    subprocess.call(['scp', '-i', config.PRIVATE_KEY,
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + source_ip + ':' + config.EC2_NIMBUS_ROOT + config.NIMBUS_LIB,
-        'ubuntu@' + dest_ip + ':' + config.EC2_NIMBUS_ROOT])
-
-  for dest_ip in dest_ips:
-    subprocess.call(['scp', '-i', config.PRIVATE_KEY,
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + source_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_APPLICATION_PATH + config.APPLICATION_LIB,
-        'ubuntu@' + dest_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_APPLICATION_PATH])
-
-  for dest_ip in dest_ips:
-    subprocess.call(['scp', '-i', config.PRIVATE_KEY,
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + source_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_SCHEDULER_PATH + config.SCHEDULER_BINARY,
-        'ubuntu@' + dest_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_SCHEDULER_PATH])
-
-  for dest_ip in dest_ips:
-    subprocess.call(['scp', '-i', config.PRIVATE_KEY,
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + source_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH + config.WORKER_BINARY,
-        'ubuntu@' + dest_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH])
-
 def run_experiment(scheduler_ip, scheduler_p_ip, worker_ips, worker_p_ips):
 
   worker_num = len(worker_ips)
@@ -92,6 +27,7 @@ def run_experiment(scheduler_ip, scheduler_p_ip, worker_ips, worker_p_ips):
 
 
 def run_scheduler(scheduler_ip, worker_num):
+  assert(worker_num == config.WORKER_NUM)
 
   scheduler_command =  'cd ' + config.EC2_NIMBUS_ROOT + config.REL_SCHEDULER_PATH + ';'
   scheduler_command += 'export DBG=error;'
@@ -100,13 +36,27 @@ def run_scheduler(scheduler_ip, worker_num):
   scheduler_command += 'ulimit -c unlimited;'
   scheduler_command += './scheduler'
   scheduler_command += ' -p ' + str(config.FIRST_PORT)
-  scheduler_command += ' -w ' + str(worker_num)
+  scheduler_command += ' -w ' + str(config.WORKER_NUM)
   scheduler_command += ' -t ' + str(config.ASSIGNER_THREAD_NUM)
   scheduler_command += ' -a ' + str(config.BATCH_ASSIGN_NUM)
-  # scheduler_command += ' --alb --lb_period 55'
-  # scheduler_command += ' --aft --ft_period 600'
-  # scheduler_command += ' --dct '
-  scheduler_command += ' &> ' + config.LOG_FILE_NAME
+  scheduler_command += ' -c ' + str(config.COMMAND_BATCH_SIZE)
+  if config.ACTIVATE_LB:
+    scheduler_command += ' --alb '
+  if config.ACTIVATE_FT:
+    scheduler_command += ' --aft '
+  scheduler_command += ' --lb_period ' + str(config.LB_PERIOD)
+  scheduler_command += ' --ft_period ' + str(config.FT_PERIOD)
+  if config.DEACTIVATE_CONTROLLER_TEMPLATE:
+    scheduler_command += ' --dct '
+  if config.DEACTIVATE_COMPLEX_MEMOIZATION:
+    scheduler_command += ' --dcm '
+  if config.DEACTIVATE_BINDING_MEMOIZATION:
+    scheduler_command += ' --dbm '
+  if config.DEACTIVATE_WORKER_TEMPLATE:
+    scheduler_command += ' --dwt '
+  if config.DEACTIVATE_DM_QUERY_CACHE:
+    scheduler_command += ' --dqc '
+  scheduler_command += ' &> ' + config.STD_OUT_LOG
 
   subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
@@ -122,15 +72,30 @@ def run_worker(scheduler_p_ip, worker_ip, worker_p_ip, num):
   worker_command += 'sudo ' + config.EC2_NIMBUS_ROOT + 'scripts/configure_tcp.sh;'
   worker_command += 'sudo sysctl -p;'
   worker_command += 'ulimit -c unlimited;'
-  worker_command += './worker'
-  # worker_command += 'taskset -c 0-3,8-11 ./worker'
-  worker_command += ' -port ' + str(config.FIRST_PORT + num)
-  worker_command += ' -ip ' + worker_p_ip
-  worker_command += ' -sip ' + scheduler_p_ip
-  worker_command += ' -sport ' + str(config.FIRST_PORT)
-  worker_command += ' -port ' + str(config.FIRST_PORT + num)
-  worker_command += ' -othread ' + str(config.OTHREAD_NUM)
-  worker_command += ' &> ' + str(num) + '_' + config.LOG_FILE_NAME
+  if config.RUN_WITH_TASKSET:
+    worker_command += 'taskset -c ' + config.WORKER_TASKSET + ' ./worker'
+  else:
+    worker_command += './worker'
+  worker_command += ' -s ' + str(config.SIMULATION_SCALE)
+  worker_command += ' -e ' + str(config.FRAME_NUMBER)
+  worker_command += ' --pnx ' + str(config.PART_X)
+  worker_command += ' --pny ' + str(config.PART_Y)
+  worker_command += ' --pnz ' + str(config.PART_Z)
+  worker_command += ' --ppnx ' + str(config.PROJ_PART_X)
+  worker_command += ' --ppny ' + str(config.PROJ_PART_Y)
+  worker_command += ' --ppnz ' + str(config.PROJ_PART_Z)
+  worker_command += ' --maxi ' + str(config.MAX_ITERATION)
+  worker_command += ' --ibatch ' + str(config.ITERATION_BATCH)
+  if config.WRITE_PER_PART:
+    worker_command += ' --dgw '
+  if config.NO_PROJ_BOTTLENECK:
+    worker_command += ' --dpb '
+  worker_command += ' -p ' + str(config.FIRST_PORT + num)
+  worker_command += ' --ip ' + worker_p_ip
+  worker_command += ' --cip ' + scheduler_p_ip
+  worker_command += ' --cport ' + str(config.FIRST_PORT)
+  worker_command += ' --othread ' + str(config.OTHREAD_NUM)
+  worker_command += ' &> ' + str(num) + '_' + config.STD_OUT_LOG
 
   subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
@@ -199,103 +164,59 @@ def collect_output_data(scheduler_ip, worker_ips):
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
       'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-      config.REL_SCHEDULER_PATH + config.LOG_FILE_NAME,
+      config.REL_SCHEDULER_PATH + config.STD_OUT_LOG,
       config.OUTPUT_PATH])
 
   subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
       'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_5,
+      config.REL_SCHEDULER_PATH + config.LOAD_BALANCER_LOG,
       config.OUTPUT_PATH])
 
   subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
       'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_6,
+      config.REL_SCHEDULER_PATH + config.SCHED_PER_ITER_STAT_LOG,
       config.OUTPUT_PATH])
-
-#  subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-#      '-o', 'UserKnownHostsFile=/dev/null',
-#      '-o', 'StrictHostKeyChecking=no',
-#      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-#      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_3,
-#      config.OUTPUT_PATH])
-#
-#  subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-#      '-o', 'UserKnownHostsFile=/dev/null',
-#      '-o', 'StrictHostKeyChecking=no',
-#      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-#      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_4,
-#      config.OUTPUT_PATH])
-#
-#  subprocess.call(['scp', '-r', '-i', config.PRIVATE_KEY,
-#      '-o', 'UserKnownHostsFile=/dev/null',
-#      '-o', 'StrictHostKeyChecking=no',
-#      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-#      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_5,
-#      config.OUTPUT_PATH])
-#
-#  subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-#      '-o', 'UserKnownHostsFile=/dev/null',
-#      '-o', 'StrictHostKeyChecking=no',
-#      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-#      config.REL_SCHEDULER_PATH + 'core',
-#      config.OUTPUT_PATH])
 
   num = 0
   for ip in worker_ips:
     num += 1
-#    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-#        '-o', 'UserKnownHostsFile=/dev/null',
-#        '-o', 'StrictHostKeyChecking=no',
-#        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-#        # config.REL_WORKER_PATH + str(num) + '_' + config.LOG_FILE_NAME,
-#        config.REL_WORKER_PATH  + '*_' + config.LOG_FILE_NAME,
-#        config.OUTPUT_PATH])
-#
-#    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-#        '-o', 'UserKnownHostsFile=/dev/null',
-#        '-o', 'StrictHostKeyChecking=no',
-#        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-#        # config.REL_WORKER_PATH + config.WORKER_LOG_FILE_NAME + str(config.FIRST_PORT + num),
-#        config.REL_WORKER_PATH + config.WORKER_LOG_FILE_NAME + '*',
-#        config.OUTPUT_PATH])
+    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+        config.REL_WORKER_PATH  + '*_' + config.STD_OUT_LOG,
+        config.OUTPUT_PATH])
+
+    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+        config.REL_WORKER_PATH + '*_' + config.WORKER_LB_LOG,
+        config.OUTPUT_PATH])
+
+    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+        config.REL_WORKER_PATH + '*_' + config.WORKER_FINAL_STAT_LOG,
+        config.OUTPUT_PATH])
+
+    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+        config.REL_WORKER_PATH + '*_' + config.WORKER_PER_ITER_STAT_LOG,
+        config.OUTPUT_PATH])
 
     subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
         'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
         config.REL_WORKER_PATH + 'mpi*.log',
-        config.OUTPUT_PATH])
-
-    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        config.REL_WORKER_PATH + '*_lb_log.txt',
-        config.OUTPUT_PATH])
-
-    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        config.REL_WORKER_PATH + '*_event_be.txt',
-        config.OUTPUT_PATH])
-
-    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        config.REL_WORKER_PATH + '*_time_per_thread.txt',
-        config.OUTPUT_PATH])
-
-    subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        config.REL_WORKER_PATH + '*_main_timers.txt',
         config.OUTPUT_PATH])
 
 
@@ -338,7 +259,7 @@ def collect_output_data(scheduler_ip, worker_ips):
 def clean_output_data(scheduler_ip, worker_ips):
   scheduler_path = config.EC2_NIMBUS_ROOT + config.REL_SCHEDULER_PATH;
   scheduler_command  =  ''
-  scheduler_command +=  'rm -rf ' + scheduler_path + config.LOG_FILE_NAME + ';'
+  scheduler_command +=  'rm -rf ' + scheduler_path + config.STD_OUT_LOG + ';'
   scheduler_command +=  'rm -rf ' + scheduler_path + '*.txt;'
   scheduler_command +=  'rm -rf ' + scheduler_path + '*log*;'
   scheduler_command +=  'rm -rf ' + scheduler_path + 'core;'
@@ -355,8 +276,7 @@ def clean_output_data(scheduler_ip, worker_ips):
     num += 1
     worker_path = config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH;
     worker_command  =  ''
-    worker_command +=  'rm -rf ' + worker_path + '*_' + config.LOG_FILE_NAME + ';'
-    worker_command +=  'rm -rf ' + worker_path + config.WORKER_LOG_FILE_NAME + '*;'
+    worker_command +=  'rm -rf ' + worker_path + '*_' + config.STD_OUT_LOG + ';'
     worker_command +=  'rm -rf ' + worker_path + '*.txt;'
     worker_command +=  'rm -rf ' + worker_path + '*log*;'
     worker_command +=  'rm -rf ' + worker_path + 'core;'
@@ -370,6 +290,74 @@ def clean_output_data(scheduler_ip, worker_ips):
         'ubuntu@' + ip, worker_command])
   
     print '** Worker ' + str(num) + ' Cleaned: ' + ip
+
+
+def build_binaries(ip_address):
+
+# Thing you need to do first on all hosts:
+#     git pull
+#     Build PhysBAM library
+#
+# Thing you need to do on source host:
+#  In application/water_multiple:
+#     generate the data_def and region_def files
+#     update parameter.h
+#     create the make file with ccmake
+
+  command = ''
+  command += 'cd ' + config.EC2_NIMBUS_ROOT + ';'
+  command += 'make clean-hard;'
+  command += 'make;'
+  command += 'cd ' + config.REL_APPLICATION_PATH + ';'
+  command += 'make clean;'
+  command += 'make -j 12;'
+  command += 'cd -;'
+  command += 'cd ' + config.REL_WORKER_PATH + ';'
+  command += 'make clean;'
+  command += 'make -j 12;'
+  command += 'cd -;'
+  command += 'cd ' + config.REL_SCHEDULER_PATH + ';'
+  command += 'make clean;'
+  command += 'make -j 12;'
+  command += 'cd -;'
+
+  subprocess.call(['ssh', '-i', config.PRIVATE_KEY,
+      '-o', 'UserKnownHostsFile=/dev/null',
+      '-o', 'StrictHostKeyChecking=no',
+      'ubuntu@' + ip_address, command])
+
+
+def distribute_binaries(source_ip, dest_ips):
+  for dest_ip in dest_ips:
+    subprocess.call(['scp', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + source_ip + ':' + config.EC2_NIMBUS_ROOT + config.NIMBUS_LIB,
+        'ubuntu@' + dest_ip + ':' + config.EC2_NIMBUS_ROOT])
+
+  for dest_ip in dest_ips:
+    subprocess.call(['scp', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + source_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_APPLICATION_PATH + config.APPLICATION_LIB,
+        'ubuntu@' + dest_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_APPLICATION_PATH])
+
+  for dest_ip in dest_ips:
+    subprocess.call(['scp', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + source_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_SCHEDULER_PATH + config.SCHEDULER_BINARY,
+        'ubuntu@' + dest_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_SCHEDULER_PATH])
+
+  for dest_ip in dest_ips:
+    subprocess.call(['scp', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + source_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH + config.WORKER_BINARY,
+        'ubuntu@' + dest_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH])
+
+
+
 
 # ssh -i omidm-sing-key-pair-us-west-2.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@<ip>
 
