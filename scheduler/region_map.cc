@@ -497,6 +497,11 @@ void RegionMap::SplitDimensions(size_t worker_num, size_t *num_x, size_t *num_y,
       *num_y = 2;
       *num_z = 2;
       break;
+    case 64 :
+      *num_x = 4;
+      *num_y = 4;
+      *num_z = 4;
+      break;
     case 100 :
       *num_x = 5;
       *num_y = 5;

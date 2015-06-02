@@ -306,6 +306,11 @@ void StaticLoadBalancer::SplitDimensions(size_t worker_num,
       *num_y = 2;
       *num_z = 2;
       break;
+    case 64 :
+      *num_x = 4;
+      *num_y = 4;
+      *num_z = 4;
+      break;
     case 100 :
       *num_x = 5;
       *num_y = 5;
