@@ -245,9 +245,7 @@ void Scheduler::SchedulerCoreProcessor() {
       log_overhead_.ResumeTimer();
     }
     AssignReadyJobs();
-    if (overhead) {
-      log_overhead_.StopTimer();
-    }
+    log_overhead_.StopTimer();
 
     RemoveObsoleteJobEntries();
 

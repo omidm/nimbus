@@ -284,6 +284,9 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
                                   const std::vector<job_id_t>& copy_job_ids,
                                   const std::vector<physical_data_id_t> *physical_ids,
                                   SchedulerServer *server) {
+  Log log(Log::NO_FILE);
+  log.log_StartTimer();
+
   boost::unique_lock<boost::mutex> lock(mutex_);
   assert(finalized_);
   assert(compute_job_ids.size() == compute_job_id_list_.size());
@@ -316,6 +319,11 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
       ++idx;
     }
   }
+
+  log.log_StopTimer();
+  std::cout << "COMPLEX: Instantiate Loading: "
+    << log.timer() << std::endl;
+
 
   if (established_command_template_) {
     SpawnCommandTemplateAtWorkers(parameters, server);
