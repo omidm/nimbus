@@ -79,6 +79,7 @@
 #define PROJECTION_GLOBAL_INITIALIZE "projection_global_initialize"
 #define PROJECTION_LOCAL_INITIALIZE "projection_local_initialize"
 #define PROJECTION_LOOP_ITERATION "projection_loop_iteration"
+#define PROJECTION_LOOP_BOTTLENECK "projection_loop_bottleneck"
 #define PROJECTION_STEP_ONE "projection_step_one"
 #define PROJECTION_REDUCE_RHO "projection_reduce_rho"
 #define PROJECTION_STEP_TWO "projection_step_two"

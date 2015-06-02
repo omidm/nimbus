@@ -87,6 +87,7 @@ int main(int argc, char *argv[]) {
   uint64_t projection_part_num_z;
   uint64_t last_frame;
   uint64_t max_iterations;
+  uint64_t iteration_batch;
 
 
   po::options_description desc("Options");
@@ -110,10 +111,12 @@ int main(int argc, char *argv[]) {
     ("ppnz", po::value<uint64_t>(&projection_part_num_z), "projection partition number along z") //NOLINT
     ("last_frame,e", po::value<uint64_t>(&last_frame), "last frame to compute") //NOLINT
     ("maxi", po::value<uint64_t>(&max_iterations), "maximum projection iterations") //NOLINT
+    ("ibatch", po::value<uint64_t>(&iteration_batch), "projection iteration batch") //NOLINT
 
     ("ithread", po::value<uint64_t>(&WorkerManager::inside_job_parallism), "number of threads within one job") //NOLINT
     ("othread", po::value<uint64_t>(&WorkerManager::across_job_parallism), "number of threads at worker for job execution") //NOLINT
 
+    ("dpb", "deactivate projection bottleneck job")
     ("dgw", "deactivate one global write per frame");
 
   po::variables_map vm;
@@ -176,6 +179,14 @@ int main(int argc, char *argv[]) {
 
   if (vm.count("maxi")) {
     app->set_max_iterations(max_iterations);
+  }
+
+  if (vm.count("ibatch")) {
+    app->set_iteration_batch(iteration_batch);
+  }
+
+  if (vm.count("dpb")) {
+    app->set_spawn_projection_loop_bottleneck(false);
   }
 
   if (vm.count("dgw")) {

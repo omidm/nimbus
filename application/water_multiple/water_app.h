@@ -60,6 +60,8 @@ namespace application {
             void set_projection_part_num_z(uint64_t projection_part_num_z);
             void set_last_frame(uint64_t last_frame);
             void set_max_iterations(uint64_t max_iterations);
+            void set_iteration_batch(uint64_t iteration_batch);
+            void set_spawn_projection_loop_bottleneck(bool flag);
             void set_global_write(bool flag);
 
         private:
@@ -72,6 +74,8 @@ namespace application {
             uint64_t projection_part_num_z_;
             uint64_t last_frame_;
             uint64_t max_iterations_;
+            uint64_t iteration_batch_;
+            bool spawn_projection_loop_bottleneck_;
             bool global_write_;
     };
 

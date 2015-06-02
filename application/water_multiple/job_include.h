@@ -74,6 +74,7 @@
 #include "application/water_multiple//projection/job_projection_global_initialize.h"
 #include "application/water_multiple//projection/job_projection_local_initialize.h"
 #include "application/water_multiple//projection/job_projection_loop_iteration.h"
+#include "application/water_multiple//projection/job_projection_loop_bottleneck.h"
 #include "application/water_multiple/projection/job_projection_step_one.h"
 #include "application/water_multiple/projection/job_projection_reduce_rho.h"
 #include "application/water_multiple/projection/job_projection_step_two.h"

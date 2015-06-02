@@ -65,6 +65,8 @@
 #define DEFAULT_LAST_FRAME 10
 
 #define DEFAULT_MAX_ITERATIONS 40
+#define DEFAULT_ITERATION_BATCH 1
+#define DEFAULT_SPAWN_PROJECTION_LOOP_BOTTLENECK true
 
 #define DEFAULT_USE_GLOBAL_WRITE true
 
@@ -99,6 +101,8 @@ namespace application {
     extern nimbus::GeometricRegion kDefaultRegion;
     extern uint64_t kLastFrame;
     extern uint64_t kMaxIterations;
+    extern uint64_t kIterationBatch;
+    extern bool kSpawnProjectionLoopBottleneck;
     extern bool kUseGlobalWrite;
 
     // constant application specific parameters.

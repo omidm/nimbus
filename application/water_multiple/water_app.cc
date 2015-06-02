@@ -73,6 +73,8 @@ uint64_t kProjAppPartNumZ;
 nimbus::GeometricRegion kDefaultRegion;
 uint64_t kLastFrame;
 uint64_t kMaxIterations;
+uint64_t kIterationBatch;
+bool kSpawnProjectionLoopBottleneck;
 bool kUseGlobalWrite;
 
     WaterApp::WaterApp() {
@@ -85,6 +87,9 @@ bool kUseGlobalWrite;
       projection_part_num_z_ = DEFAULT_APP_PROJ_PART_NUM_Z;
       last_frame_ = DEFAULT_LAST_FRAME;
       max_iterations_ = DEFAULT_MAX_ITERATIONS;
+      iteration_batch_ = DEFAULT_ITERATION_BATCH;
+      spawn_projection_loop_bottleneck_ =
+        DEFAULT_SPAWN_PROJECTION_LOOP_BOTTLENECK;
       global_write_ = DEFAULT_USE_GLOBAL_WRITE;
       translator_log = NULL;
     }
@@ -125,6 +130,15 @@ bool kUseGlobalWrite;
       max_iterations_ = max_iterations;
     }
 
+    void WaterApp::set_iteration_batch(uint64_t iteration_batch) {
+      iteration_batch_ = iteration_batch;
+    }
+
+    void WaterApp::set_spawn_projection_loop_bottleneck(bool flag) {
+      spawn_projection_loop_bottleneck_ = flag;
+    }
+
+
     void WaterApp::set_global_write(bool flag) {
       global_write_ = flag;
     }
@@ -153,6 +167,8 @@ bool kUseGlobalWrite;
         kDefaultRegion.Rebuild(1, 1, 1, scale_, scale_, scale_);
         kLastFrame = last_frame_;
         kMaxIterations = max_iterations_;
+        kIterationBatch = iteration_batch_;
+        kSpawnProjectionLoopBottleneck = spawn_projection_loop_bottleneck_;
         kUseGlobalWrite = global_write_;
 
         // Initialize the app data prototypes.
@@ -509,6 +525,7 @@ bool kUseGlobalWrite;
             RegisterJob(PROJECTION_LOCAL_INITIALIZE,
                         new JobProjectionLocalInitialize(this));
             RegisterJob(PROJECTION_LOOP_ITERATION, new JobProjectionLoopIteration(this));
+            RegisterJob(PROJECTION_LOOP_BOTTLENECK, new JobProjectionLoopBottleneck(this));
             RegisterJob(PROJECTION_STEP_ONE, new JobProjectionStepOne(this));
             RegisterJob(PROJECTION_REDUCE_RHO, new JobProjectionReduceRho(this));
             RegisterJob(PROJECTION_STEP_TWO, new JobProjectionStepTwo(this));
