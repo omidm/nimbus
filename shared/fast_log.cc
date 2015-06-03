@@ -177,6 +177,28 @@ void PrintTimerSummary(FILE* output) {
   pthread_mutex_unlock(&map_lock);
 }
 
+
+int64_t ReadTimerTypeSum(TimerType type) {
+  pthread_mutex_lock(&map_lock);
+  struct timespec now;
+  int64_t sum = 0;
+  clock_gettime(CLOCK_REALTIME, &now);
+  for (TimersMap::iterator iter = timers_map.begin();
+       iter != timers_map.end(); ++iter) {
+    TimerRecord* record = iter->second;
+    assert(record != NULL);
+    if (iter->first.second == type) {
+      sum += record->sum +
+             record->depth * (
+                 (now.tv_sec - record->old_timestamp.tv_sec) * 1e9
+                 + now.tv_nsec - record->old_timestamp.tv_nsec);
+    }
+  }
+  pthread_mutex_unlock(&map_lock);
+
+  return sum;
+}
+
 }  // namespace timer
 
 }  // namespace nimbus

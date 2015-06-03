@@ -118,6 +118,11 @@ void InitializeTimers();
 void PrintTimerSummary(FILE* output = stdout);
 
 /*
+ * Return the sum of all timers with the specified type
+ */
+int64_t ReadTimerTypeSum(TimerType type);
+
+/*
  * Start a timer whose type is "timer_type". Default "depth" value should be
  * used normally.
  */
