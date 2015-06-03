@@ -118,6 +118,7 @@ message SchedulerPBuf{
      SPAWN_COMMAND_TEMPLATE = 33;
      REQUEST_STAT           = 34;
      RESPOND_STAT           = 35;
+     PRINT_STAT             = 36;
   }
   required Type type = 1;
 
@@ -157,6 +158,7 @@ message SchedulerPBuf{
   optional SpawnCommandTemplatePBuf spawn_command_template = 33;
   optional RequestStatPBuf request_stat                    = 34;
   optional RespondStatPBuf respond_stat                    = 35;
+  optional PrintStatPBuf print_stat                        = 36;
 }
 
 message AddComputeJobPBuf {
@@ -382,6 +384,10 @@ message TerminatePBuf {
 }
 
 message RequestStatPBuf {
+  optional uint64 query_id     = 1;                       
+}
+
+message PrintStatPBuf {
   optional uint64 query_id     = 1;                       
 }
 

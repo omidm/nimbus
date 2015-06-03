@@ -307,6 +307,8 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
 
   if (job->template_entry()->template_name() == "loop_iteration_part_two") {
     scheduler_->PrintStats();
+    PrintStatCommand command(0);
+    server_->BroadcastCommand(&command);
   }
 
   Log log(Log::NO_FILE);
@@ -373,6 +375,8 @@ bool JobAssigner::AssignJob(JobEntry *job) {
 
   if (job->job_name() == "loop_iteration") {
     scheduler_->PrintStats();
+    PrintStatCommand command(0);
+    server_->BroadcastCommand(&command);
   }
 
   SchedulerWorker* worker = job->assigned_worker();

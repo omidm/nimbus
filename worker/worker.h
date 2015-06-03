@@ -115,6 +115,7 @@ class Worker {
   virtual void ProcessLoadDataCommand(LoadDataCommand* command);
   virtual void ProcessPrepareRewindCommand(PrepareRewindCommand* command);
   virtual void ProcessRequestStatCommand(RequestStatCommand *command);
+  virtual void ProcessPrintStatCommand(PrintStatCommand *command);
 
   virtual void NotifyLocalJobDone(Job* job);
 

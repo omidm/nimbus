@@ -293,6 +293,9 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::REQUEST_STAT:
       ProcessRequestStatCommand(reinterpret_cast<RequestStatCommand*>(cm));
       break;
+    case SchedulerCommand::PRINT_STAT:
+      ProcessPrintStatCommand(reinterpret_cast<PrintStatCommand*>(cm));
+      break;
     default:
       std::cout << "ERROR: " << cm->ToNetworkData() <<
         " have not been implemented in ProcessSchedulerCommand yet." <<
@@ -454,6 +457,9 @@ void Worker::ProcessRequestStatCommand(RequestStatCommand* cm) {
   client_->SendCommand(&command);
 }
 
+void Worker::ProcessPrintStatCommand(PrintStatCommand* cm) {
+  PrintTimerStat();
+}
 
 void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
   Job * job = new LocalCopyJob(application_);
@@ -550,6 +556,7 @@ void Worker::LoadSchedulerCommands() {
   scheduler_command_table_[SchedulerCommand::END_COMMAND_TEMPLATE] = new EndCommandTemplateCommand(); //NOLINT
   scheduler_command_table_[SchedulerCommand::SPAWN_COMMAND_TEMPLATE] = new SpawnCommandTemplateCommand(); // NOLINT
   scheduler_command_table_[SchedulerCommand::REQUEST_STAT] = new RequestStatCommand();
+  scheduler_command_table_[SchedulerCommand::PRINT_STAT] = new PrintStatCommand();
 }
 
 worker_id_t Worker::id() {
@@ -570,14 +577,6 @@ PhysicalDataMap* Worker::data_map() {
 
 void Worker::AddJobToGraph(Job* job) {
   boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
-
-  // Print periteration timer stats - omidm
-  static uint64_t calculate_dt_counter = 0;
-  if (job->name() == "Compute:calculate_dt") {
-    if ((++calculate_dt_counter) % 8 == 1) {
-      PrintTimerStat();
-    }
-  }
 
   // TODO(quhang): when a job is received.
   StatAddJob();
