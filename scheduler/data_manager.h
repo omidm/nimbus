@@ -111,6 +111,8 @@ namespace nimbus {
     const PhysicalDataList* AllInstances(LogicalDataObject* object);
     int AllInstances(LogicalDataObject* object,
                      PhysicalDataList* dest);
+    int AllInstances(LogicalDataObject* object,
+                     ConstPhysicalDataPList* dest);
     int InstancesByWorker(LogicalDataObject* object,
                           worker_id_t worker,
                           PhysicalDataList* dest);

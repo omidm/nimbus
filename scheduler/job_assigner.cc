@@ -214,7 +214,7 @@ bool JobAssigner::QueryDataManagerForPatterns(
     LogicalDataObject* ldo =
       const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(ldid));
 
-    PhysicalDataList instances;
+    ConstPhysicalDataPList instances;
     data_manager_->AllInstances(ldo, &instances);
 
     // For now we assume that binding for template does not require creating
@@ -232,13 +232,14 @@ bool JobAssigner::QueryDataManagerForPatterns(
 
       data_version_t version = pattern->version_diff_from_base_ + base_version;
 
-      PhysicalDataList::iterator pi = instances.begin();
+
+      ConstPhysicalDataPList::iterator pi = instances.begin();
       for (; pi != instances.end(); ++pi) {
-        if ((pi->worker() == pattern->worker_id_) &&
-            ((pi->version() == version) ||
+        if (((*pi)->worker() == pattern->worker_id_) &&
+            (((*pi)->version() == version) ||
              (pattern->version_type_ == BindingTemplate::WILD_CARD))) {
           found = true;
-          result->push_back(pi->id());
+          result->push_back((*pi)->id());
           instances.erase(pi);
           break;
         }

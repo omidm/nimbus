@@ -282,6 +282,22 @@ int nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object,
   }
 }
 
+int nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object,
+                                  ConstPhysicalDataPList *dest) {
+  dest->clear();
+  PhysicalObjectMapType::iterator iter = data_map_.find(object->id());
+  if (iter == data_map_.end()) {
+    return 0;
+  } else {
+    PhysicalDataList* v = iter->second;
+    PhysicalDataList::iterator it = v->begin();
+    for (; it != v->end(); ++it) {
+      dest->push_back(&(*it));
+    }
+    return v->size();
+  }
+}
+
 
 /**
  * \fn int nimbus::PhysicalObjectMap::InstancesByWorker(LogicalDataObject *object,

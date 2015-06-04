@@ -90,6 +90,9 @@ namespace nimbus {
     virtual int AllInstances(LogicalDataObject* object,
                              PhysicalDataList* dest);
 
+    virtual int AllInstances(LogicalDataObject* object,
+                             ConstPhysicalDataPList* dest);
+
     virtual int InstancesByWorker(LogicalDataObject* object,
                                   worker_id_t worker,
                                   PhysicalDataList* dest);

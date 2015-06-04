@@ -411,6 +411,11 @@ int nimbus::DataManager::AllInstances(LogicalDataObject *object,
 }
 
 
+int nimbus::DataManager::AllInstances(LogicalDataObject *object,
+                                  ConstPhysicalDataPList *dest) {
+  return physical_object_map_.AllInstances(object, dest);
+}
+
 /**
  * \fn int nimbus::DataManager::InstancesByWorker(LogicalDataObject *object,
                                           worker_id_t worker,

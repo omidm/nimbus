@@ -90,6 +90,7 @@ namespace nimbus {
   };
 
   typedef std::list<PhysicalData> PhysicalDataList;
+  typedef std::list<const PhysicalData*> ConstPhysicalDataPList;
 }  // namespace nimbus
 
 #endif  // NIMBUS_SCHEDULER_PHYSICAL_DATA_H_
