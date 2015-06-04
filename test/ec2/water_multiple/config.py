@@ -18,15 +18,19 @@
 # US West (Oregon) Region
 EC2_LOCATION                    = 'us-west-2'
 UBUNTU_AMI                      = 'ami-fa9cf1ca'
-NIMBUS_0_3_AMI                  = 'ami-69ee9559'
+NIMBUS_AMI                      = 'ami-2bb7891b'
 KEY_NAME                        = 'omidm-sing-key-pair-us-west-2'
 SECURITY_GROUP                  = 'nimbus_sg_uswest2'
-INSTANCE_TYPE                   = 'c3.2xlarge' # 't1.micro'
+CONTROLLER_INSTANCE_TYPE        = 'c3.4xlarge'
+WORKER_INSTANCE_TYPE            = 'c3.2xlarge'
+PLACEMENT                       = 'us-west-2c' # None
 PLACEMENT_GROUP                 = 'nimbus-cluster' # None
 PRIVATE_KEY                     = '/home/omidm/.ssh/' + KEY_NAME + '.pem'
+CONTROLLER_NUM                  = 1
+WORKER_NUM                      = 1
+INSTANCE_NUM                    = WORKER_NUM + CONTROLLER_NUM
 
 # controller configurations
-WORKER_NUM                      = 8
 ASSIGNER_THREAD_NUM             = 8
 BATCH_ASSIGN_NUM                = 200
 COMMAND_BATCH_SIZE              = 10000
@@ -40,8 +44,6 @@ ACTIVATE_FT                     = False
 LB_PERIOD                       = 60
 FT_PERIOD                       = 600
 FIRST_PORT                      = 5800
-SCHEDULER_NUM                   = 1
-INSTANCE_NUM                    = WORKER_NUM + SCHEDULER_NUM
 
 
 # worker/simulation configurations

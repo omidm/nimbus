@@ -137,19 +137,19 @@ def terminate_worker(worker_ip, num):
 
   print '** Worker ' + str(num) + ' Terminated: ' + worker_ip
 
-def  test_workers(worker_ips):
+def  test_nodes(node_ips):
   worker_command =  'cd ' + config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH + ';'
   worker_command += 'pwd;'
 
   num = 0;
-  for ip in worker_ips:
+  for ip in node_ips:
     num += 1;
     subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
         'ubuntu@' + ip, worker_command])
 
-    print '** Worker ' + str(num) + ' Tested: ' + ip
+    print '** Node ' + str(num) + ' Tested: ' + ip
 
 
 
