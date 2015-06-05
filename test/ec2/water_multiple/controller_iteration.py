@@ -145,13 +145,13 @@ print "*** Iteration Number         : " + str(iter_num)
 print "*** Truncated the first " + str(TI) + " iteartions for the average stats:"
 print "*** Average Iteration Length : " + str(np.mean(iteration_length[TI:iter_num-1]))
 
-print '----------------------------------------------------------------------------------------'
-print '       iter#       AC(VM)     DM Query    Temp Inst.   DM Update   (AC+DMQ+TI)   total'
+print '----------------------------------------------------------------------------------------------------'
+print '       iter#       AC(VM)     DM Query    Temp Inst.   DM Update   (AC+DMQ+TI)   total   Iter Leng'
 
 if (args.collapse):
-  print '----------------------------------------------------------------------------------------'
+  print '----------------------------------------------------------------------------------------------------'
   for i in range(0, iter_num):
-    print '    {:8.0f} {:8.2f}({:0.2f})   {:8.2f}     {:8.2f}     {:8.2f}     {:8.2f} {:8.2f}'.format(
+    print '    {:8.0f} {:8.2f}({:0.2f})   {:8.2f}     {:8.2f}     {:8.2f}     {:8.2f} {:8.2f}    {:8.2f}'.format(
         i+1,
         add_complex_job[i],
         version_manager[i],
@@ -159,7 +159,8 @@ if (args.collapse):
         template_instantiate[i],
         data_manager_update[i],
         add_complex_job[i] + data_manager_query[i] +  template_instantiate[i],
-        add_complex_job[i] + data_manager_query[i] +  template_instantiate[i] +data_manager_update[i])
+        add_complex_job[i] + data_manager_query[i] +  template_instantiate[i] +data_manager_update[i],
+        iteration_length[i])
 
 
 VM  = np.mean(version_manager[TI:iter_num])
@@ -167,10 +168,11 @@ AC  = np.mean(add_complex_job[TI:iter_num])
 DMQ = np.mean(data_manager_query[TI:iter_num])
 TIN = np.mean(template_instantiate[TI:iter_num])
 DMU = np.mean(data_manager_update[TI:iter_num])
-print '----------------------------------------------------------------------------------------'
-print 'Average: {:3.0f} {:8.2f}({:0.2f})   {:8.3f}     {:8.2f}     {:8.2f}     {:8.2f} {:8.2f}'.format(
-    iter_num - TI, AC, VM, DMQ, TIN, DMU, AC+DMQ+TIN, AC+DMQ+TIN+DMU) 
-print '----------------------------------------------------------------------------------------'
+IL = np.mean(iteration_length[TI:iter_num])
+print '----------------------------------------------------------------------------------------------------'
+print 'Average: {:3.0f} {:8.2f}({:0.2f})   {:8.2f}     {:8.2f}     {:8.2f}     {:8.2f} {:8.2f}    {:8.2f}'.format(
+    iter_num - TI, AC, VM, DMQ, TIN, DMU, AC+DMQ+TIN, AC+DMQ+TIN+DMU, IL) 
+print '----------------------------------------------------------------------------------------------------'
 
 
 
