@@ -252,7 +252,7 @@ bool VersionManager::MemoizeVersionsForTemplate(JobEntry *job) {
         diff_version = diff_version + 1;
       }
       if (diff_version > 0) {
-        tj->vmap_write_diff()->set_entry(*it, diff_version);
+        tj->vlist_write_diff()->push_back(std::make_pair(*it, diff_version));
       }
     }
   } else {
@@ -284,7 +284,7 @@ bool VersionManager::MemoizeVersionsForTemplate(JobEntry *job) {
         diff_version = diff_version + 1;
       }
       if (diff_version > 0) {
-        tj->vmap_write_diff()->set_entry(it->first, diff_version);
+        tj->vlist_write_diff()->push_back(std::make_pair(it->first, diff_version));
       }
     }
   }
@@ -302,8 +302,8 @@ bool VersionManager::InsertComplexJobInLdl(ComplexJobEntry *job) {
   ComplexJobEntry* xj = sj->complex_job();
   assert(xj == job);
 
-  VersionMap::ConstIter iter = sj->vmap_write_diff()->content_p()->begin();
-  for (; iter != sj->vmap_write_diff()->content_p()->end(); ++iter) {
+  VersionList::const_iterator iter = sj->vlist_write_diff()->begin();
+  for (; iter != sj->vlist_write_diff()->end(); ++iter) {
     data_version_t base_version;
     if (xj->vmap_read()->query_entry(iter->first, &base_version)) {
     } else if (LookUpVersion(xj, iter->first, &base_version)) {
@@ -314,13 +314,7 @@ bool VersionManager::InsertComplexJobInLdl(ComplexJobEntry *job) {
       return false;
     }
 
-    data_version_t diff_version;
-    if (sj->vmap_write_diff()->query_entry(iter->first, &diff_version)) {
-    } else {
-      dbg(DBG_ERROR, "ERROR: shadow job %lu did not have diff versioned for ldid %lu.", xj->job_id(), iter->first); //NOLINT
-      assert(false);
-      return false;
-    }
+    data_version_t diff_version = iter->second;
 
     InsertCheckPointLdlEntry(
         iter->first, xj->job_id(), base_version + diff_version, xj->job_depth());

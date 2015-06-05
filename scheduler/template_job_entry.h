@@ -87,18 +87,18 @@ class TemplateJobEntry : public JobEntry {
     virtual size_t index();
     virtual TemplateEntry* template_entry();
     virtual boost::shared_ptr<VersionMap> vmap_read_diff() const;
-    virtual boost::shared_ptr<VersionMap> vmap_write_diff() const;
+    virtual boost::shared_ptr<VersionList> vlist_write_diff() const;
 
     virtual void set_index(size_t index);
     virtual void set_template_entry(TemplateEntry* template_entry);
     virtual void set_vmap_read_diff(boost::shared_ptr<VersionMap> vmap_read_diff);
-    virtual void set_vmap_write_diff(boost::shared_ptr<VersionMap> vmap_write_diff);
+    virtual void set_vlist_write_diff(boost::shared_ptr<VersionList> vlist_write_diff);
 
   private:
     size_t index_;
     TemplateEntry* template_entry_;
     boost::shared_ptr<VersionMap> vmap_read_diff_;
-    boost::shared_ptr<VersionMap> vmap_write_diff_;
+    boost::shared_ptr<VersionList> vlist_write_diff_;
 };
 
 typedef std::vector<TemplateJobEntry*> TemplateJobEntryVector;

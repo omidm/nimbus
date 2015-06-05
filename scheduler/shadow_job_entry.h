@@ -81,7 +81,7 @@ class ShadowJobEntry : public JobEntry {
                    const IDSet<logical_data_id_t>* union_set_p,
                    const IDSet<job_id_t> before_set,
                    boost::shared_ptr<VersionMap> vmap_read_diff,
-                   boost::shared_ptr<VersionMap> vmap_write_diff,
+                   boost::shared_ptr<VersionList> vlist_write_diff,
                    const job_id_t& parent_job_id,
                    const job_id_t& future_job_id,
                    const bool& sterile,
@@ -96,7 +96,7 @@ class ShadowJobEntry : public JobEntry {
     virtual const IDSet<logical_data_id_t>* write_set_p() const;
     virtual const IDSet<logical_data_id_t>* union_set_p() const;
     virtual boost::shared_ptr<VersionMap> vmap_read_diff() const;
-    virtual boost::shared_ptr<VersionMap> vmap_write_diff() const;
+    virtual boost::shared_ptr<VersionList> vlist_write_diff() const;
     virtual TemplateJobEntry* template_job();
     virtual ComplexJobEntry* complex_job();
 
@@ -108,7 +108,7 @@ class ShadowJobEntry : public JobEntry {
     virtual void set_write_set_p(const IDSet<logical_data_id_t>* write_set_p);
     virtual void set_union_set_p(const IDSet<logical_data_id_t>* union_set_p);
     virtual void set_vmap_read_diff(boost::shared_ptr<VersionMap> vmap_read_diff);
-    virtual void set_vmap_write_diff(boost::shared_ptr<VersionMap> vmap_write_diff);
+    virtual void set_vlist_write_diff(boost::shared_ptr<VersionList> vlist_write_diff);
     virtual void set_template_job(TemplateJobEntry* template_job);
     virtual void set_complex_job(ComplexJobEntry* complex_job);
 
@@ -128,7 +128,7 @@ class ShadowJobEntry : public JobEntry {
     const IDSet<logical_data_id_t>* write_set_p_;
     const IDSet<logical_data_id_t>* union_set_p_;
     boost::shared_ptr<VersionMap> vmap_read_diff_;
-    boost::shared_ptr<VersionMap> vmap_write_diff_;
+    boost::shared_ptr<VersionList> vlist_write_diff_;
 };
 
 typedef std::list<ShadowJobEntry*> ShadowJobEntryList;

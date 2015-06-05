@@ -313,7 +313,7 @@ bool ComplexJobEntry::OMIDGetShadowJobEntryByIndex(size_t index, ShadowJobEntry*
                        tj->union_set_p(),
                        before_set,
                        tj->vmap_read_diff(),
-                       tj->vmap_write_diff(),
+                       tj->vlist_write_diff(),
                        parent_job_id_,
                        0,  // future_job_id, currently not supported - omidm
                        tj->sterile(),

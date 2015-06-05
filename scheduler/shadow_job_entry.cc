@@ -66,7 +66,7 @@ ShadowJobEntry::ShadowJobEntry(const std::string& job_name,
                                const IDSet<logical_data_id_t>* union_set_p,
                                const IDSet<job_id_t> before_set,
                                boost::shared_ptr<VersionMap> vmap_read_diff,
-                               boost::shared_ptr<VersionMap> vmap_write_diff,
+                               boost::shared_ptr<VersionList> vlist_write_diff,
                                const job_id_t& parent_job_id,
                                const job_id_t& future_job_id,
                                const bool& sterile,
@@ -82,7 +82,7 @@ ShadowJobEntry::ShadowJobEntry(const std::string& job_name,
   union_set_p_ = union_set_p;
   before_set_ = before_set;
   vmap_read_diff_ = vmap_read_diff;
-  vmap_write_diff_ = vmap_write_diff;
+  vlist_write_diff_ = vlist_write_diff;
   parent_job_id_ = parent_job_id;
   future_job_id_ = future_job_id;
   sterile_ = sterile;
@@ -123,8 +123,8 @@ boost::shared_ptr<VersionMap> ShadowJobEntry::vmap_read_diff() const {
   return vmap_read_diff_;
 }
 
-boost::shared_ptr<VersionMap> ShadowJobEntry::vmap_write_diff() const {
-  return vmap_write_diff_;
+boost::shared_ptr<VersionList> ShadowJobEntry::vlist_write_diff() const {
+  return vlist_write_diff_;
 }
 
 ComplexJobEntry* ShadowJobEntry::complex_job() {
@@ -152,8 +152,8 @@ void ShadowJobEntry::set_vmap_read_diff(boost::shared_ptr<VersionMap> vmap_read_
   vmap_read_diff_ = vmap_read_diff;
 }
 
-void ShadowJobEntry::set_vmap_write_diff(boost::shared_ptr<VersionMap> vmap_write_diff) {
-  vmap_write_diff_ = vmap_write_diff;
+void ShadowJobEntry::set_vlist_write_diff(boost::shared_ptr<VersionList> vlist_write_diff) {
+  vlist_write_diff_ = vlist_write_diff;
 }
 
 void ShadowJobEntry::set_complex_job(ComplexJobEntry* complex_job) {

@@ -51,7 +51,7 @@ TemplateJobEntry::TemplateJobEntry() {
   job_type_ = JOB_TMPL;
 
   vmap_read_diff_ = boost::shared_ptr<VersionMap>(new VersionMap());
-  vmap_write_diff_ = boost::shared_ptr<VersionMap>(new VersionMap());
+  vlist_write_diff_ = boost::shared_ptr<VersionList>(new VersionList());
 }
 
 TemplateJobEntry::TemplateJobEntry(const std::string& job_name,
@@ -80,7 +80,7 @@ TemplateJobEntry::TemplateJobEntry(const std::string& job_name,
   union_set_.insert(write_set_);
 
   vmap_read_diff_ = boost::shared_ptr<VersionMap>(new VersionMap());
-  vmap_write_diff_ = boost::shared_ptr<VersionMap>(new VersionMap());
+  vlist_write_diff_ = boost::shared_ptr<VersionList>(new VersionList());
 }
 
 TemplateJobEntry::~TemplateJobEntry() {
@@ -98,8 +98,8 @@ boost::shared_ptr<VersionMap> TemplateJobEntry::vmap_read_diff() const {
   return vmap_read_diff_;
 }
 
-boost::shared_ptr<VersionMap> TemplateJobEntry::vmap_write_diff() const {
-  return vmap_write_diff_;
+boost::shared_ptr<VersionList> TemplateJobEntry::vlist_write_diff() const {
+  return vlist_write_diff_;
 }
 
 void TemplateJobEntry::set_index(size_t index) {
@@ -114,7 +114,7 @@ void TemplateJobEntry::set_vmap_read_diff(boost::shared_ptr<VersionMap> vmap_rea
   vmap_read_diff_ = vmap_read_diff;
 }
 
-void TemplateJobEntry::set_vmap_write_diff(boost::shared_ptr<VersionMap> vmap_write_diff) {
-  vmap_write_diff_ = vmap_write_diff;
+void TemplateJobEntry::set_vlist_write_diff(boost::shared_ptr<VersionList> vlist_write_diff) {
+  vlist_write_diff_ = vlist_write_diff;
 }
 

@@ -45,10 +45,15 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_map.hpp>
 #include <map>
+#include <list>
+#include <utility>
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 
 namespace nimbus {
+
+typedef std::list<std::pair<logical_data_id_t, data_version_t> > VersionList;
+
 
 class VersionMap {
   public:
