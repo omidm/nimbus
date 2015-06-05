@@ -33,40 +33,40 @@
  */
 
  /*
-  * Version Map.
+  * Dense Version Map class. Instead of using a map, use an array and lookup
+  * with the index. Since, the assumption it that the index is dence the memory
+  * usage would be a problem. The user of the class has to make sure that the
+  * index is dense enough.
+  *
+  * NOTE: the quey result can never be NIMBUS_UNDEFINED_DATA_VERSION, so it
+  * does not work for difference version maps - only absolute version maps. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_VERSION_MAP_H_
-#define NIMBUS_SCHEDULER_VERSION_MAP_H_
+#ifndef NIMBUS_SCHEDULER_DENSE_VERSION_MAP_H_
+#define NIMBUS_SCHEDULER_DENSE_VERSION_MAP_H_
 
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
-#include <map>
-#include <list>
-#include <utility>
+#include <vector>
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
+#include "scheduler/version_map.h"
 
 namespace nimbus {
 
-typedef std::list<std::pair<logical_data_id_t, data_version_t> > VersionList;
-
-
-class VersionMap {
+class DenseVersionMap : public VersionMap {
   public:
-    // typedef std::map<logical_data_id_t, data_version_t> Map;
-    // typedef std::map<logical_data_id_t, data_version_t>::iterator Iter;
-    // typedef std::map<logical_data_id_t, data_version_t>::const_iterator ConstIter;
-    typedef boost::unordered_map<logical_data_id_t, data_version_t> Map;
-    typedef boost::unordered_map<logical_data_id_t, data_version_t>::iterator Iter;
-    typedef boost::unordered_map<logical_data_id_t, data_version_t>::const_iterator ConstIter;
+    typedef std::vector<data_version_t> List;
+    typedef std::vector<data_version_t>::iterator Iter;
+    typedef std::vector<data_version_t>::const_iterator ConstIter;
 
-    VersionMap();
-    VersionMap(const VersionMap& other);
-    virtual ~VersionMap();
+    DenseVersionMap(logical_data_id_t min_id,
+                    logical_data_id_t max_id);
+
+    DenseVersionMap(const DenseVersionMap& other);
+    virtual ~DenseVersionMap();
 
     virtual bool query_entry(logical_data_id_t l_id, data_version_t *version) const;
 
@@ -74,13 +74,15 @@ class VersionMap {
 
     virtual void Print() const;
 
-    virtual VersionMap& operator=(const VersionMap& right);
+    virtual DenseVersionMap& operator=(const DenseVersionMap& right);
 
   private:
-    Map content_;
+    logical_data_id_t min_id_;
+    logical_data_id_t max_id_;
+    List content_;
     mutable boost::recursive_mutex mutex_;
 };
 
 
 }  // namespace nimbus
-#endif  // NIMBUS_SCHEDULER_VERSION_MAP_H_
+#endif  // NIMBUS_SCHEDULER_DENSE_VERSION_MAP_H_
