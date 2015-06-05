@@ -60,6 +60,7 @@ f = open(file_name, 'r')
 
 iteration_length     = []
 version_manager      = []
+add_complex_job      = []
 data_manager_query   = []
 data_manager_update  = []
 template_instantiate = []
@@ -71,6 +72,7 @@ for line in f:
     result = re.findall('.*: (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+) Picked .* main\.', line)
     if len(result) > 0:
       version_manager.append(0)
+      add_complex_job.append(0)
       data_manager_query.append(0)
       data_manager_update.append(0)
       template_instantiate.append(0)
@@ -83,6 +85,7 @@ for line in f:
       length = decimal.Decimal(result[0]) - last_time_stamp
       iteration_length.append(length)
       version_manager.append(0)
+      add_complex_job.append(0)
       data_manager_query.append(0)
       data_manager_update.append(0)
       template_instantiate.append(0)
@@ -94,6 +97,7 @@ for line in f:
       length = decimal.Decimal(result[0]) - last_time_stamp
       iteration_length.append(length)
       version_manager.append(0)
+      add_complex_job.append(0)
       data_manager_query.append(0)
       data_manager_update.append(0)
       template_instantiate.append(0)
@@ -103,6 +107,11 @@ for line in f:
     result = re.findall('COMPLEX: VersionManager: .* (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+)$', line)
     if len(result) > 0:
       version_manager[iter_num] += decimal.Decimal(result[0])
+      continue
+  if "TEMPLATE: COMPLEX SPAWN" in line:
+    result = re.findall('TEMPLATE: COMPLEX SPAWN: .* (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+)$', line)
+    if len(result) > 0:
+      add_complex_job[iter_num] += decimal.Decimal(result[0])
       continue
   if "COMPLEX: QueryDataManager" in line:
     result = re.findall('COMPLEX: QueryDataManager: .* (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+)$', line)
@@ -121,6 +130,7 @@ for line in f:
       continue
 
 version_manager.pop(iter_num)
+add_complex_job.pop(iter_num)
 data_manager_query.pop(iter_num)
 data_manager_update.pop(iter_num)
 template_instantiate.pop(iter_num)
@@ -136,28 +146,30 @@ print "*** Truncated the first " + str(TI) + " iteartions for the average stats:
 print "*** Average Iteration Length : " + str(np.mean(iteration_length[TI:iter_num-1]))
 
 print '----------------------------------------------------------------------------------------'
-print '       iter#         VM     DM Query    Temp Inst.     DM Update   (VM+DMQ+TI)   total'
+print '       iter#       AC(VM)     DM Query    Temp Inst.   DM Update   (AC+DMQ+TI)   total'
 
 if (args.collapse):
   print '----------------------------------------------------------------------------------------'
   for i in range(0, iter_num):
-    print '    {:8.0f}   {:8.2f}     {:8.2f}     {:8.2f}       {:8.2f}     {:8.2f} {:8.2f}'.format(
+    print '    {:8.0f} {:8.2f}({:0.2f})   {:8.2f}     {:8.2f}     {:8.2f}     {:8.2f} {:8.2f}'.format(
         i+1,
+        add_complex_job[i],
         version_manager[i],
         data_manager_query[i],
         template_instantiate[i],
         data_manager_update[i],
-        version_manager[i] + data_manager_query[i] +  template_instantiate[i],
-        version_manager[i] + data_manager_query[i] +  template_instantiate[i] +data_manager_update[i])
+        add_complex_job[i] + data_manager_query[i] +  template_instantiate[i],
+        add_complex_job[i] + data_manager_query[i] +  template_instantiate[i] +data_manager_update[i])
 
 
-VM  = np.mean(version_manager[TI:iter_num-1])
-DMQ = np.mean(data_manager_query[TI:iter_num-1])
-TIN = np.mean(template_instantiate[TI:iter_num-1])
-DMU = np.mean(data_manager_update[TI:iter_num-1])
+VM  = np.mean(version_manager[TI:iter_num])
+AC  = np.mean(add_complex_job[TI:iter_num])
+DMQ = np.mean(data_manager_query[TI:iter_num])
+TIN = np.mean(template_instantiate[TI:iter_num])
+DMU = np.mean(data_manager_update[TI:iter_num])
 print '----------------------------------------------------------------------------------------'
-print 'Average: {:3.0f}   {:8.2f}     {:8.2f}     {:8.2f}       {:8.2f}     {:8.2f} {:8.2f}'.format(
-    iter_num - TI, VM, DMQ, TIN, DMU, VM+DMQ+TIN, VM+DMQ+TIN+DMU) 
+print 'Average: {:3.0f} {:8.2f}({:0.2f})   {:8.3f}     {:8.2f}     {:8.2f}     {:8.2f} {:8.2f}'.format(
+    iter_num - TI, AC, VM, DMQ, TIN, DMU, AC+DMQ+TIN, AC+DMQ+TIN+DMU) 
 print '----------------------------------------------------------------------------------------'
 
 
