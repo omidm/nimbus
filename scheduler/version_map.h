@@ -68,11 +68,8 @@ class VersionMap {
     VersionMap(const VersionMap& other);
     virtual ~VersionMap();
 
-    Map content() const;
-    const Map* content_p() const;
     bool query_entry(logical_data_id_t l_id, data_version_t *version) const;
 
-    void set_content(const Map& content);
     void set_entry(logical_data_id_t l_id, data_version_t version);
 
     void Print() const;

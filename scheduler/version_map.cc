@@ -52,16 +52,6 @@ VersionMap::VersionMap(const VersionMap& other) {
 VersionMap::~VersionMap() {
 }
 
-VersionMap::Map VersionMap::content() const {
-  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
-  return content_;
-}
-
-const VersionMap::Map* VersionMap::content_p() const {
-  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
-  return &content_;
-}
-
 bool VersionMap::query_entry(logical_data_id_t l_id, data_version_t *version) const {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   ConstIter iter;
@@ -73,11 +63,6 @@ bool VersionMap::query_entry(logical_data_id_t l_id, data_version_t *version) co
   }
 
   return false;
-}
-
-void VersionMap::set_content(const VersionMap::Map& content) {
-  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
-  content_= content;
 }
 
 void VersionMap::set_entry(logical_data_id_t l_id, data_version_t version) {

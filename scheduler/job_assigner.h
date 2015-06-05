@@ -85,6 +85,7 @@ namespace nimbus {
     virtual void set_data_manager_query_cache_active(bool flag);
     virtual void set_fault_tolerance_active(bool flag);
     virtual void set_scheduler(Scheduler *scheduler);
+    virtual void set_ldo_map_p(const LdoMap* ldo_map_p);
     virtual void set_log_overhead(Log *log);
 
     virtual void AssignJobs(const JobEntryList& list);
@@ -100,6 +101,7 @@ namespace nimbus {
     bool data_manager_query_cache_active_;
     bool fault_tolerance_active_;
     Scheduler *scheduler_;
+    const LdoMap *ldo_map_p_;
     Log *log_overhead_;
 
     JobEntryList job_queue_;

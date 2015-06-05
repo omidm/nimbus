@@ -841,6 +841,7 @@ void Scheduler::SetupJobAssigner() {
   job_assigner_->set_data_manager_query_cache_active(data_manager_query_cache_active_);
   job_assigner_->set_fault_tolerance_active(fault_tolerance_active_);
   job_assigner_->set_scheduler(this);
+  job_assigner_->set_ldo_map_p(data_manager_->ldo_map_p());
   job_assigner_->set_log_overhead(&log_overhead_);
   job_assigner_->Run();
 }

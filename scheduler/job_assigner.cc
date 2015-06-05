@@ -67,6 +67,7 @@ void JobAssigner::Initialize() {
   data_manager_query_cache_active_ = false;
   fault_tolerance_active_ = false;
   scheduler_ = NULL;
+  ldo_map_p_ = NULL;
   log_overhead_ = NULL;
 }
 
@@ -111,6 +112,10 @@ void JobAssigner::set_fault_tolerance_active(bool flag) {
 
 void JobAssigner::set_scheduler(Scheduler *scheduler) {
   scheduler_ = scheduler;
+}
+
+void JobAssigner::set_ldo_map_p(const LdoMap* ldo_map_p) {
+  ldo_map_p_ = ldo_map_p;
 }
 
 void JobAssigner::set_log_overhead(Log *log) {
@@ -866,10 +871,20 @@ bool JobAssigner::SaveJobContextForCheckpoint(JobEntry *job) {
 
   job_manager_->ResolveEntireContextForJob(job);
   job_manager_->CompleteJobForCheckpoint(job->checkpoint_id(), job);
-  VersionMap::ConstIter iter = job->vmap_read()->content_p()->begin();
-  for (; iter != job->vmap_read()->content_p()->end(); ++iter) {
+  LdoMap::const_iterator iter;
+  for (iter = ldo_map_p_->begin(); iter != ldo_map_p_->end(); ++iter) {
     logical_data_id_t ldid = iter->first;
-    data_version_t version = iter->second;
+    data_version_t version;
+    if (!job->vmap_read()->query_entry(ldid, &version)) {
+      assert(false);
+    }
+
+    // if data has never been touched, then no record of it in the system.
+    // if needed will be craeted -omidm
+    if (version == NIMBUS_INIT_DATA_VERSION) {
+      continue;
+    }
+
     LogicalDataObject* ldo =
       const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(ldid));
 
@@ -894,16 +909,17 @@ bool JobAssigner::SaveJobContextForCheckpoint(JobEntry *job) {
 
     // If you are here, you may find the version in checkpoint.
     dbg(DBG_WARN, "WARNING: looking in to checkpoint to load the data for next checkpoint!.\n");
+    std::cout << "ldid: " << ldo->variable() << " version: " << version << std::endl;
     assert(checkpoint_id_ > NIMBUS_INIT_CHECKPOINT_ID);
 
     WorkerHandleList handles;
     job_manager_->GetHandleToLoadData(checkpoint_id_, ldid, version, &handles);
 
     if (handles.size() > 0) {
-      WorkerHandleList::iterator iter = handles.begin();
-      for (; iter != handles.end(); ++iter) {
-        worker_id_t worker_id = iter->first;
-        std::string handle = iter->second;
+      WorkerHandleList::iterator it = handles.begin();
+      for (; it != handles.end(); ++it) {
+        worker_id_t worker_id = it->first;
+        std::string handle = it->second;
         SchedulerWorker* worker;
         if (!server_->GetSchedulerWorkerById(worker, worker_id)) {
           // Worker could be down so you may not find it there
