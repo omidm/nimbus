@@ -63,6 +63,7 @@ enum TimerType {
   kExecuteCopyJob,
   kExecuteParentJob,
   kExecuteWriteJob,
+  kDataExchangerLock,
   kAssemblingCache,
   kSumCyclesTotal,
   kSumCyclesBlock,

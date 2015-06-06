@@ -974,24 +974,28 @@ void Worker::PrintTimerStat() {
   boost::unique_lock<boost::recursive_mutex> lock(stat_mutex_);
   std::string file_name = int2string(id_) + "_main_timers.txt";
   static FILE* temp = fopen(file_name.c_str(), "w");
-  static int64_t l_idle = 0, l_block = 0, l_run = 0, l_pexec = 0;
+  static int64_t l_idle = 0, l_block = 0, l_run = 0, l_pexec = 0, l_dxl = 0;
   int64_t c_block = block_timer_.Read();
   int64_t c_run = run_timer_.Read();
   int64_t c_idle = total_timer_.Read() - c_block - c_run;
   int64_t c_pexec = timer::ReadTimerTypeSum(timer::kExecuteParentJob);
+  int64_t c_dxl = timer::ReadTimerTypeSum(timer::kDataExchangerLock);
   int64_t idle = c_idle - l_idle;
   int64_t block = c_block - l_block;
   int64_t run = c_run - l_run;
   int64_t pexec = c_pexec - l_pexec;
+  int64_t dxl = c_dxl - l_dxl;
   l_idle = c_idle;
   l_block = c_block;
   l_run = c_run;
   l_pexec = c_pexec;
-  fprintf(temp, "run_time: %.9f block_time: %.9f idle_time: %.9f parent_exec: %.9f\n",
+  l_dxl = c_dxl;
+  fprintf(temp, "run_time: %.9f block_time: %.9f idle_time: %.9f parent_exec: %.9f dx_lock: %.9f\n",
       static_cast<double>(run) / 1e9,
       static_cast<double>(block) / 1e9,
       static_cast<double>(idle) / 1e9,
-      static_cast<double>(pexec) / 1e9);
+      static_cast<double>(pexec) / 1e9,
+      static_cast<double>(dxl) / 1e9);
   fflush(temp);
 }
 

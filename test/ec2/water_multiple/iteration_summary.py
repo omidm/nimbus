@@ -7,12 +7,14 @@ import argparse
 
 def parse_line(line):
     items = line.split()
-    pexec = 0
+    pexec = float('nan')
+    dxl   = float('nan')
     if len(items) == 8:
       pexec = float(items[7])
-    else:
-      pexec = float('nan')
-    return float(items[1]),  float(items[3]), float(items[5]), pexec
+    elif len(items) == 10:
+      pexec = float(items[7])
+      dxl   = float(items[9])
+    return float(items[1]),  float(items[3]), float(items[5]), pexec, dxl
 
 
 ## Parse the command line arguments ##
@@ -54,6 +56,7 @@ TI = int(args.truncateindex)
 
 
 
+total_dxl_sum    = 0;
 total_parent_sum = 0;
 total_run_sum    = 0;
 total_block_sum  = 0;
@@ -62,13 +65,14 @@ total_total_sum  = 0;
 iter_nums = []
     
 print '--------------------------------------------------------------------------------------'
-print '   worker    steps        parent          run      block     idle    synch     total'
+print '   worker    steps   parent  dx_lock      run     block     idle    synch     total'
 print '--------------------------------------------------------------------------------------'
 
 for rank in range(1, N+1):
   f = open('{}/{}_main_timers.txt'.format(d, rank), 'r')
 
   iter_num   = 0
+  dxl_sum    = 0;
   parent_sum = 0;
   run_sum    = 0;
   block_sum  = 0;
@@ -78,13 +82,14 @@ for rank in range(1, N+1):
   idx = 0
   for line in f:
       idx += 1
-      run, block, idle, parent = parse_line(line)
+      run, block, idle, parent, dxl = parse_line(line)
       if (args.collapse):
-        print '          {:8.0f}      {:8.2f}     {:8.2f}   {:8.2f} {:8.2f} {:8.2f}  {:8.2f}'.format(
-            idx, parent, run/CN, block/CN, idle/CN, (block+idle)/CN, (idle+block+run)/CN)
+        print '          {:8.0f} {:8.2f} {:8.2f} {:8.2f}  {:8.2f} {:8.2f} {:8.2f}  {:8.2f}'.format(
+            idx, parent, dxl, run/CN, block/CN, idle/CN, (block+idle)/CN, (idle+block+run)/CN)
       if idx <= TI:
         continue
       iter_num  += 1
+      dxl_sum    += dxl
       parent_sum += parent
       run_sum    += run
       block_sum  += block
@@ -92,16 +97,17 @@ for rank in range(1, N+1):
       total_sum  += run + block + idle
 
   iter_nums.append(iter_num)
+  total_dxl_sum    += dxl_sum/iter_num
   total_parent_sum += parent_sum/iter_num
   total_run_sum    += run_sum/iter_num
   total_block_sum  += block_sum/iter_num
   total_idle_sum   += idle_sum/iter_num
   total_total_sum  += total_sum/iter_num
 
-  print '{:8.0f}: {:8.0f}      {:8.2f}     {:8.2f}   {:8.2f} {:8.2f} {:8.2f}  {:8.2f}'.format(
-            rank, iter_num, parent_sum/iter_num, run_sum/CN/iter_num, block_sum/CN/iter_num, idle_sum/CN/iter_num, (block_sum+idle_sum)/CN/iter_num, total_sum/CN/iter_num)
+  print '{:8.0f}: {:8.0f} {:8.2f} {:8.2f} {:8.2f}  {:8.2f} {:8.2f} {:8.2f}  {:8.2f}'.format(
+            rank, iter_num, parent_sum/iter_num, dxl_sum/iter_num, run_sum/CN/iter_num, block_sum/CN/iter_num, idle_sum/CN/iter_num, (block_sum+idle_sum)/CN/iter_num, total_sum/CN/iter_num)
 
 print '--------------------------------------------------------------------------------------'
-print ' Average: {:8.0f}      {:8.2f}     {:8.2f}   {:8.2f} {:8.2f} {:8.2f}  {:8.2f}'.format(
-    iter_nums[0], total_parent_sum, total_run_sum/N/CN, total_block_sum/N/CN, total_idle_sum/N/CN, (total_block_sum+total_idle_sum)/N/CN, total_total_sum/N/CN)
+print ' Average: {:8.0f} {:8.2f} {:8.2f} {:8.2f}  {:8.2f} {:8.2f} {:8.2f}  {:8.2f}'.format(
+    iter_nums[0], total_parent_sum, total_dxl_sum, total_run_sum/N/CN, total_block_sum/N/CN, total_idle_sum/N/CN, (total_block_sum+total_idle_sum)/N/CN, total_total_sum/N/CN)
 print '--------------------------------------------------------------------------------------'

@@ -40,6 +40,7 @@
 
 #include <sstream> // NOLINT
 #include "shared/worker_data_exchanger.h"
+#include "shared/fast_log.hh"
 
 #define _NIMBUS_NO_NETWORK_LOG
 
@@ -86,6 +87,7 @@ WorkerDataExchanger::~WorkerDataExchanger() {
 
 void WorkerDataExchanger::Run() {
   dbg(DBG_NET, "Running the worker data exchanger.\n");
+  timer::InitializeTimers();
   ListenForNewConnections();
   io_service_->run();
 }
@@ -255,7 +257,9 @@ void WorkerDataExchanger::AddSerializedData(job_id_t job_id,
       Log::GetRawTime(), job_id, ser_data->size());
   log_.log_WriteToFile(std::string(buff));
 #endif
+  timer::StartTimer(timer::kDataExchangerLock);
   boost::mutex::scoped_lock lock(data_map_mutex_);
+  timer::StopTimer(timer::kDataExchangerLock);
   assert(data_map_.find(job_id) == data_map_.end());
   data_map_[job_id] = std::make_pair(ser_data, version);
   receive_events.push_back(job_id);
