@@ -45,6 +45,10 @@
 #include "scheduler/complex_job_entry.h"
 #include "scheduler/template_entry.h"
 
+
+#define VMAP_MIN_DENSITY  .2
+
+
 using namespace nimbus; // NOLINT
 
 ComplexJobEntry::ComplexJobEntry() {
@@ -66,8 +70,24 @@ ComplexJobEntry::ComplexJobEntry(const job_id_t& job_id,
   outer_job_ids_ = outer_job_ids;
   parameters_ = parameters;
 
+  double ldid_density =
+    static_cast<double>(template_entry_->ldid_count()) /
+    (template_entry_->max_ldid() - template_entry_->min_ldid());
+
+  std::cout << "OMID: "
+            << template_entry->template_name()
+            << " density: "
+            << ldid_density << std::endl;
+
+  if (ldid_density > VMAP_MIN_DENSITY) {
   vmap_read_ = boost::shared_ptr<VersionMap>(
       new DenseVersionMap(template_entry_->min_ldid(), template_entry_->max_ldid()));
+  } else {
+    std::cout << "WARNING: did not use DenseVersionMap for "
+              << template_entry->template_name()
+              << " logical data id density was "
+              << ldid_density << std::endl;
+  }
 
   size_t idx = 0;
   std::vector<job_id_t>::const_iterator iter = inner_job_ids.begin();
