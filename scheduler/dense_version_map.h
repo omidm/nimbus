@@ -59,8 +59,6 @@ namespace nimbus {
 class DenseVersionMap : public VersionMap {
   public:
     typedef std::vector<data_version_t> List;
-    typedef std::vector<data_version_t>::iterator Iter;
-    typedef std::vector<data_version_t>::const_iterator ConstIter;
 
     DenseVersionMap(logical_data_id_t min_id,
                     logical_data_id_t max_id);
@@ -79,8 +77,7 @@ class DenseVersionMap : public VersionMap {
   private:
     logical_data_id_t min_id_;
     logical_data_id_t max_id_;
-    List content_;
-    mutable boost::recursive_mutex mutex_;
+    List list_;
 };
 
 

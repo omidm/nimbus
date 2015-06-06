@@ -76,7 +76,7 @@ class VersionMap {
 
     virtual VersionMap& operator=(const VersionMap& right);
 
-  private:
+  protected:
     Map content_;
     mutable boost::recursive_mutex mutex_;
 };

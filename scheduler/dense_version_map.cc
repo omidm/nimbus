@@ -53,10 +53,11 @@ DenseVersionMap::DenseVersionMap(logical_data_id_t min_id,
   assert(max_id >= min_id);
   min_id_ = min_id;
   max_id_ = max_id;
-  content_ = List(max_id - min_id + 1, NIMBUS_UNDEFINED_DATA_VERSION);
+  list_ = List(max_id - min_id + 1, NIMBUS_UNDEFINED_DATA_VERSION);
 }
 
 DenseVersionMap::DenseVersionMap(const DenseVersionMap& other) {
+  list_ = other.list_;
   content_ = other.content_;
   min_id_ = other.min_id_;
   max_id_ = other.max_id_;
@@ -69,48 +70,59 @@ bool DenseVersionMap::query_entry(logical_data_id_t l_id, data_version_t *versio
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
 
   if ((l_id > max_id_) || (l_id < min_id_)) {
-    assert(false);
+    ConstIter iter;
+
+    iter = content_.find(l_id);
+    if (iter != content_.end()) {
+      *version = iter->second;
+      return true;
+    }
+
+    return false;
+  } else {
+    logical_data_id_t idx = l_id - min_id_;
+    data_version_t v = list_[idx];
+    if (v != NIMBUS_UNDEFINED_DATA_VERSION) {
+      *version = v;
+      return true;
+    }
+
     return false;
   }
-
-  logical_data_id_t idx = l_id - min_id_;
-  data_version_t v = content_[idx];
-  if (v != NIMBUS_UNDEFINED_DATA_VERSION) {
-    *version = v;
-    return true;
-  }
-
-  return false;
 }
 
 void DenseVersionMap::set_entry(logical_data_id_t l_id, data_version_t version) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
 
   if ((l_id > max_id_) || (l_id < min_id_)) {
-    assert(false);
-    return;
+    content_[l_id] = version;
+  } else {
+    list_[l_id - min_id_] = version;
   }
-
-  content_[l_id - min_id_] = version;
 }
 
 void DenseVersionMap::Print() const {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
-  ConstIter iter;
 
   std::cout << "Content:\n";
   logical_data_id_t idx = 0;
-  for (; idx < content_.size(); ++idx) {
-    data_version_t v = content_[idx];
+  for (; idx < list_.size(); ++idx) {
+    data_version_t v = list_[idx];
     if (v != NIMBUS_UNDEFINED_DATA_VERSION) {
       std::cout << min_id_+idx << " -> " <<  v  << std::endl;
     }
+  }
+
+  ConstIter iter;
+  for (iter = content_.begin(); iter != content_.end(); ++iter) {
+    std::cout << iter->first << " -> " << iter->second << std::endl;
   }
 }
 
 
 DenseVersionMap& DenseVersionMap::operator=(const DenseVersionMap& right) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  list_ = right.list_;
   content_ = right.content_;
   min_id_ = right.min_id_;
   max_id_ = right.max_id_;
