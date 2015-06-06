@@ -62,6 +62,7 @@
 #include "scheduler/shadow_job_entry.h"
 #include "scheduler/template_job_entry.h"
 #include "scheduler/version_map.h"
+#include "scheduler/dense_version_map.h"
 #include "scheduler/data_manager.h"
 #include "scheduler/meta_before_set.h"
 #include "scheduler/logical_data_lineage.h"

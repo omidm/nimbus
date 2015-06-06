@@ -90,6 +90,21 @@ void TemplateEntry::set_vmap_base(boost::shared_ptr<VersionMap> vmap_base) {
   vmap_base_ = vmap_base;
 }
 
+logical_data_id_t TemplateEntry::min_ldid() const {
+  assert(finalized_);
+  return min_ldid_;
+}
+
+logical_data_id_t TemplateEntry::max_ldid() const {
+  assert(finalized_);
+  return max_ldid_;
+}
+
+size_t TemplateEntry::ldid_count() const {
+  assert(finalized_);
+  return ldid_count_;
+}
+
 bool TemplateEntry::Finalize() {
   if (finalized_) {
     dbg(DBG_WARN, "WARNING: template has been already finalized!\n");
@@ -107,8 +122,25 @@ bool TemplateEntry::Finalize() {
 
   CompleteBreadthFirstSearch();
 
+  CompleteLdidInfo();
+
   finalized_ = true;
   return true;
+}
+
+void TemplateEntry::CompleteLdidInfo() {
+  std::set<logical_data_id_t> ldids;
+  TemplateJobEntryVector::iterator iter = compute_jobs_.begin();
+  for (; iter != compute_jobs_.end(); ++iter) {
+    IDSet<logical_data_id_t>::ConstIter it;
+    for (it = (*iter)->union_set_p()->begin(); it != (*iter)->union_set_p()->end(); ++it) {
+      ldids.insert(*it);
+    }
+  }
+  assert(ldids.size() > 0);
+  ldid_count_ = ldids.size();
+  min_ldid_ = *ldids.begin();
+  max_ldid_ = *ldids.rbegin();
 }
 
 void TemplateEntry::CompleteParentJobIndices() {

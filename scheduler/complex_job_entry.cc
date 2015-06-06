@@ -66,6 +66,9 @@ ComplexJobEntry::ComplexJobEntry(const job_id_t& job_id,
   outer_job_ids_ = outer_job_ids;
   parameters_ = parameters;
 
+  vmap_read_ = boost::shared_ptr<VersionMap>(
+      new DenseVersionMap(template_entry_->min_ldid(), template_entry_->max_ldid()));
+
   size_t idx = 0;
   std::vector<job_id_t>::const_iterator iter = inner_job_ids.begin();
   for (; iter != inner_job_ids.end(); ++iter) {

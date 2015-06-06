@@ -54,6 +54,7 @@
 #include <utility>
 #include <algorithm>
 #include <map>
+#include <set>
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "shared/log.h"
@@ -77,6 +78,9 @@ class TemplateEntry {
     size_t compute_jobs_num();
     std::string template_name();
     boost::shared_ptr<VersionMap> vmap_base() const;
+    logical_data_id_t min_ldid() const;
+    logical_data_id_t max_ldid() const;
+    size_t ldid_count() const;
 
     virtual void set_vmap_base(boost::shared_ptr<VersionMap> vmap_base);
 
@@ -215,11 +219,17 @@ class TemplateEntry {
 
     boost::shared_ptr<VersionMap> vmap_base_;
 
+    logical_data_id_t min_ldid_;
+    logical_data_id_t max_ldid_;
+    size_t ldid_count_;
+
     bool AddTemplateJobEntryToJobGraph(TemplateJobEntry *job);
 
     void CompleteParentJobIndices();
 
     void CompleteBreadthFirstSearch();
+
+    void CompleteLdidInfo();
 
     std::string ProduceBindingRecordName(const JobEntry *job);
 };
