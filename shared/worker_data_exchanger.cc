@@ -266,7 +266,9 @@ void WorkerDataExchanger::AddSerializedData(job_id_t job_id,
 }
 
 bool WorkerDataExchanger::GetReceiveEvent(job_id_t* job_id) {
+  timer::StartTimer(timer::kDataExchangerLock);
   boost::mutex::scoped_lock lock(data_map_mutex_);
+  timer::StopTimer(timer::kDataExchangerLock);
   if (receive_events.empty()) {
     return false;
   } else {
@@ -277,7 +279,9 @@ bool WorkerDataExchanger::GetReceiveEvent(job_id_t* job_id) {
 }
 
 void WorkerDataExchanger::RemoveSerializedData(job_id_t job_id) {
+  timer::StartTimer(timer::kDataExchangerLock);
   boost::mutex::scoped_lock lock(data_map_mutex_);
+  timer::StopTimer(timer::kDataExchangerLock);
   data_map_.erase(job_id);
 }
 
@@ -292,7 +296,9 @@ bool WorkerDataExchanger::ReceiveSerializedData(job_id_t job_id,
       SerializedData** ser_data, data_version_t& version) {
   int available;
   {
+    timer::StartTimer(timer::kDataExchangerLock);
     boost::mutex::scoped_lock lock(data_map_mutex_);
+    timer::StopTimer(timer::kDataExchangerLock);
     available = data_map_.count(job_id);
   }
 
