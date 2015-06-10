@@ -188,9 +188,7 @@ void WorkerDataExchanger::HandleRead(WorkerDataExchangerConnection* connection,
   char* buffer = connection->read_buffer();
   if (remaining > 0) {
     timer::StartTimer(timer::kDataExchangerLock);
-  }
-  memmove(buffer, (buffer + read_len), remaining);
-  if (remaining > 0) {
+    memmove(buffer, (buffer + read_len), remaining);
     timer::StopTimer(timer::kDataExchangerLock);
   }
   connection->set_existing_bytes(remaining);
