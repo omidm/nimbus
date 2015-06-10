@@ -103,7 +103,7 @@ void WorkerDataExchanger::ListenForNewConnections() {
 }
 
 void WorkerDataExchanger::HandleAccept(WorkerDataExchangerConnection* connection,
-                                   const boost::system::error_code& error) {
+                                       const boost::system::error_code& error) {
   if (!error) {
     dbg(DBG_NET, "Worker accepted new connection.\n");
     AddReceiveConnection(connection);
@@ -137,17 +137,9 @@ void WorkerDataExchanger::AddReceiveConnection(WorkerDataExchangerConnection* co
   receive_connections_.push_back(connection);
 }
 
-/*
-void WorkerDataExchanger::AddSendConnection(worker_id_t worker_id,
-      WorkerDataExchangerConnection* connection) {
-  boost::mutex::scoped_lock lock(send_connection_mutex_);
-  send_connections_[worker_id] = connection;
-}
-*/
-
 void WorkerDataExchanger::HandleRead(WorkerDataExchangerConnection* connection,
-                                 const boost::system::error_code& error,
-                                 size_t bytes_transferred) {
+                                     const boost::system::error_code& error,
+                                     size_t bytes_transferred) {
   if (error) {
     dbg(DBG_NET|DBG_ERROR, "Error %s.\n", error.message().c_str());
     return;
@@ -212,7 +204,8 @@ void WorkerDataExchanger::HandleRead(WorkerDataExchangerConnection* connection,
 }
 
 size_t WorkerDataExchanger::ReadHeader(WorkerDataExchangerConnection* connection,
-      char* buffer, size_t size) {
+                                       char* buffer,
+                                       size_t size) {
   size_t i = 0;
   for (; i < size; i++) {
     if (buffer[i] == ';') {
@@ -235,7 +228,8 @@ size_t WorkerDataExchanger::ReadHeader(WorkerDataExchangerConnection* connection
 }
 
 size_t WorkerDataExchanger::ReadData(WorkerDataExchangerConnection* connection,
-      char* buffer, size_t size) {
+                                     char* buffer,
+                                     size_t size) {
   size_t remaining = connection->remaining_data_length();
   if (size < remaining) {
     connection->AppendData(buffer, size);
@@ -252,7 +246,8 @@ size_t WorkerDataExchanger::ReadData(WorkerDataExchangerConnection* connection,
 }
 
 void WorkerDataExchanger::AddSerializedData(job_id_t job_id,
-    SerializedData* ser_data, data_version_t version) {
+                                            SerializedData* ser_data,
+                                            data_version_t version) {
 #ifndef _NIMBUS_NO_NETWORK_LOG
   char buff[LOG_MAX_BUFF_SIZE];
   snprintf(buff, sizeof(buff), "R %10.9lf j: %5.0lu s: %5.0lu",
@@ -264,58 +259,42 @@ void WorkerDataExchanger::AddSerializedData(job_id_t job_id,
   timer::StopTimer(timer::kDataExchangerLock);
   assert(data_map_.find(job_id) == data_map_.end());
   data_map_[job_id] = std::make_pair(ser_data, version);
-  receive_events.push_back(job_id);
 }
 
-bool WorkerDataExchanger::GetReceiveEvent(job_id_t* job_id) {
+size_t WorkerDataExchanger::PullReceiveEvents(std::vector<Event> *events,
+                                             size_t max_num) {
+  events->clear();
   timer::StartTimer(timer::kDataExchangerLock);
   boost::mutex::scoped_lock lock(data_map_mutex_);
   timer::StopTimer(timer::kDataExchangerLock);
-  if (receive_events.empty()) {
-    return false;
-  } else {
-    *job_id = receive_events.front();
-    receive_events.pop_front();
-    return true;
+  size_t count = 0;
+  DataMap::iterator iter = data_map_.begin();
+  for (; (iter != data_map_.end()) && (count < max_num);) {
+    Event e;
+    e.job_id   = iter->first;
+    e.ser_data = iter->second.first;
+    e.version  = iter->second.second;
+    events->push_back(e);
+    data_map_.erase(iter++);
+    ++count;
   }
-}
 
-void WorkerDataExchanger::RemoveSerializedData(job_id_t job_id) {
-  timer::StartTimer(timer::kDataExchangerLock);
-  boost::mutex::scoped_lock lock(data_map_mutex_);
-  timer::StopTimer(timer::kDataExchangerLock);
-  data_map_.erase(job_id);
+  return count;
 }
 
 bool WorkerDataExchanger::AddContactInfo(worker_id_t worker_id,
-      std::string ip_address, port_t port_no) {
+                                         std::string ip_address,
+                                         port_t port_no) {
   boost::mutex::scoped_lock lock(address_book_mutex_);
   address_book_[worker_id] = std::make_pair(ip_address, port_no);
   return true;
 }
 
-bool WorkerDataExchanger::ReceiveSerializedData(job_id_t job_id,
-      SerializedData** ser_data, data_version_t& version) {
-  int available;
-  {
-    timer::StartTimer(timer::kDataExchangerLock);
-    boost::mutex::scoped_lock lock(data_map_mutex_);
-    timer::StopTimer(timer::kDataExchangerLock);
-    available = data_map_.count(job_id);
-  }
-
-  if (!available) {
-    return false;
-  } else {
-    *ser_data = data_map_[job_id].first;
-    version = data_map_[job_id].second;
-    RemoveSerializedData(job_id);
-    return true;
-  }
-}
 
 bool WorkerDataExchanger::SendSerializedData(job_id_t job_id,
-      worker_id_t worker_id, SerializedData& ser_data, data_version_t version) {
+                                             worker_id_t worker_id,
+                                             SerializedData& ser_data,
+                                             data_version_t version) {
   boost::shared_array<char> buf = ser_data.data_ptr();
   size_t size = ser_data.size();
   boost::mutex::scoped_lock lock1(send_connection_mutex_);
@@ -360,7 +339,8 @@ bool WorkerDataExchanger::SendSerializedData(job_id_t job_id,
 }
 
 bool WorkerDataExchanger::CreateNewSendConnection(worker_id_t worker_id,
-      std::string ip_address, port_t port_no) {
+                                                  std::string ip_address,
+                                                  port_t port_no) {
   std::cout << "Opening new worker-worker connection." << std::endl;
   tcp::resolver resolver(*io_service_);
   tcp::resolver::query query(ip_address,
@@ -387,8 +367,8 @@ bool WorkerDataExchanger::CreateNewSendConnection(worker_id_t worker_id,
 }
 
 void WorkerDataExchanger::HandleWrite(WorkerDataExchangerConnection* connection,
-                           const boost::system::error_code& error,
-                           size_t bytes_transferred) {
+                                      const boost::system::error_code& error,
+                                      size_t bytes_transferred) {
 }
 
 WorkerDataExchangerConnectionMap* WorkerDataExchanger::send_connections() {
@@ -404,100 +384,5 @@ void WorkerDataExchanger::WriteTimeDriftToLog(double drift) {
   snprintf(buff, sizeof(buff), "D %10.9lf", drift);
   log_.log_WriteToFile(std::string(buff));
 }
-
-/*
-
-bool WorkerDataExchanger::ReceiveCommands(SchedulerCommandList* storage,
-                                      uint32_t maxCommands) {
-  boost::mutex::scoped_lock(command_mutex_);
-  uint32_t pending = received_commands_.size();
-  if (pending == 0) {
-    return false;
-  } else if (pending < maxCommands) {
-    maxCommands = pending;
-  }
-  storage->clear();
-  for (uint32_t i = 0; i < maxCommands; i++) {
-    SchedulerCommand* command = received_commands_.front();
-    received_commands_.pop_front();
-    dbg(DBG_NET, "Copying command %s to user buffer.\n", command->ToNetworkData().c_str());
-    storage->push_back(command);
-  }
-  return true;
-}
-
-
-
-void WorkerDataExchanger::SendCommand(SchedulerWorker* worker,
-                                  SchedulerCommand* command) {
-  WorkerDataExchangerConnection* connection = worker->connection();
-  std::string msg = command->ToNetworkData() + ";";
-  dbg(DBG_NET, "Sending command %s.\n", msg.c_str());
-  boost::system::error_code ignored_error;
-  // Why are we IGNORING ERRORS!??!?!?
-  boost::asio::write(*(connection->socket()), boost::asio::buffer(msg),
-                     boost::asio::transfer_all(), ignored_error);
-}
-
-void WorkerDataExchanger::SendCommands(SchedulerWorker* worker,
-                                    SchedulerCommandList* commands) {
-  SchedulerCommandList::iterator iter = commands->begin();
-  for (; iter != commands->end(); ++iter) {
-    SchedulerCommand* command = *iter;
-    SendCommand(worker, command);
-  }
-}
-
-using boost::tokenizer;
-using boost::char_separator;
-
-int WorkerDataExchanger::EnqueueCommands(char* buffer, size_t size) {
-  buffer[size] = '\0';
-  dbg(DBG_NET, "Read string %s from worker.\n", buffer);
-
-  char* start_pointer = buffer;
-  for (size_t i = 0; i < size; i++) {
-    // When we find a semicolon, replace it with a string terminator \0.
-    // Then when we pass start_pointer to the constructor it will terminate.
-    if (buffer[i] == ';') {
-      buffer[i] = '\0';
-      std::string input(start_pointer);
-
-      SchedulerCommand* command;
-      if (SchedulerCommand::GenerateSchedulerCommandChild(
-          input, worker_command_set_, command)) {
-        dbg(DBG_NET, "Adding command %s to queue.\n", command->ToNetworkData().c_str());
-        boost::mutex::scoped_lock lock(command_mutex_);
-        received_commands_.push_back(command);
-      } else {
-        dbg(DBG_NET, "Ignored unknown command: %s.\n", input.c_str());
-      }
-      // Next string starts after the semicolon
-      start_pointer = buffer + i + 1;
-    }
-  }
-  // We've read this many bytes successfully into
-  // commands
-  return start_pointer - buffer;
-}
-
-
-void WorkerDataExchanger::HandleWrite(SchedulerWorker* worker,
-                                  const boost::system::error_code& error,
-                                  size_t bytes_transferred) {}
-
-
-SchedulerWorkerList* WorkerDataExchanger::workers() {
-  return &workers_;
-}
-
-void WorkerDataExchanger::set_worker_command_set(CommandSet* cms) {
-  worker_command_set_ = cms;
-}
-
-void WorkerDataExchanger::MarkWorkerDead(SchedulerWorker* worker) {
-  worker->MarkDead();
-}
-*/
 
 }  // namespace nimbus

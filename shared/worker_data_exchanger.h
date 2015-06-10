@@ -43,15 +43,17 @@
 #define NIMBUS_SHARED_WORKER_DATA_EXCHANGER_H_
 
 #include <boost/thread.hpp>
+#include <boost/unordered_map.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/tokenizer.hpp>
 #include <iostream>  // NOLINT
+#include <map>
 #include <list>
 #include <sstream>
 #include <string>
 #include <utility>
-#include <map>
+#include <vector>
 #include "shared/dbg.h"
 #include "shared/log.h"
 #include "shared/parser.h"
@@ -68,21 +70,27 @@ class WorkerDataExchanger {
   typedef std::pair<SerializedData*, data_version_t> DataMapEntry;
   typedef std::map<job_id_t, DataMapEntry> DataMap;
 
+  struct Event {
+    job_id_t job_id;
+    SerializedData *ser_data;
+    data_version_t version;
+  };
+
   explicit WorkerDataExchanger(port_t port_no);
   virtual ~WorkerDataExchanger();
 
   virtual void Run();
 
   virtual bool AddContactInfo(worker_id_t worker_id,
-      std::string ip_address, port_t port_no);
+                              std::string ip_address, port_t port_no);
 
-  virtual bool ReceiveSerializedData(job_id_t job_id,
-      SerializedData** ser_data, data_version_t& version);
+  virtual size_t PullReceiveEvents(std::vector<Event> *events,
+                                      size_t max_num);
 
-  virtual bool GetReceiveEvent(job_id_t* job_id);
-
-  virtual bool SendSerializedData(job_id_t job_id, worker_id_t worker_id,
-      SerializedData& ser_data, data_version_t version);
+  virtual bool SendSerializedData(job_id_t job_id,
+                                  worker_id_t worker_id,
+                                  SerializedData& ser_data,
+                                  data_version_t version);
 
   WorkerDataExchangerConnectionMap* send_connections();
 
@@ -95,18 +103,20 @@ class WorkerDataExchanger {
 
   Log log_;
   port_t listening_port_;
-  boost::mutex address_book_mutex_;
-  AddressBook address_book_;
-  boost::mutex data_map_mutex_;
-  DataMap data_map_;
-  std::list<job_id_t> receive_events;
-  boost::mutex send_connection_mutex_;
-  WorkerDataExchangerConnectionMap send_connections_;
-  boost::mutex receive_connection_mutex_;
-  WorkerDataExchangerConnectionList receive_connections_;
-
-  boost::asio::io_service* io_service_;
   tcp::acceptor* acceptor_;
+  boost::asio::io_service* io_service_;
+
+  AddressBook address_book_;
+  boost::mutex address_book_mutex_;
+
+  DataMap data_map_;
+  boost::mutex data_map_mutex_;
+
+  WorkerDataExchangerConnectionMap send_connections_;
+  boost::mutex send_connection_mutex_;
+
+  WorkerDataExchangerConnectionList receive_connections_;
+  boost::mutex receive_connection_mutex_;
 
   virtual void ListenForNewConnections();
 
@@ -122,23 +132,22 @@ class WorkerDataExchanger {
                            size_t bytes_transferred);
 
   virtual size_t ReadData(WorkerDataExchangerConnection* connection,
-      char* buffer, size_t size);
+                          char* buffer,
+                          size_t size);
 
   virtual size_t ReadHeader(WorkerDataExchangerConnection* connection,
-      char* buffer, size_t size);
+                            char* buffer,
+                            size_t size);
 
   virtual bool CreateNewSendConnection(worker_id_t worker_id,
-      std::string ip_address, port_t port_no);
-
-  // virtual void AddSendConnection(worker_id_t worker_id,
-  //     WorkerDataExchangerConnection* connection);
+                                       std::string ip_address,
+                                       port_t port_no);
 
   virtual void AddReceiveConnection(WorkerDataExchangerConnection* connection);
 
   virtual void AddSerializedData(job_id_t job_id,
-      SerializedData* ser_data, data_version_t version);
-
-  virtual void RemoveSerializedData(job_id_t job_id);
+                                 SerializedData* ser_data,
+                                 data_version_t version);
 };
 
 }  // namespace nimbus

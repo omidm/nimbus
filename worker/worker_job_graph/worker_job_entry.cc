@@ -44,12 +44,16 @@ WorkerJobEntry::WorkerJobEntry() {
   job_id_ = 0;
   job_ = NULL;
   state_ = INIT;
+  version_ = NIMBUS_UNDEFINED_DATA_VERSION;
+  ser_data_ = NULL;
 }
 
 WorkerJobEntry::WorkerJobEntry(const job_id_t job_id, Job* job, State state) {
   job_id_ = job_id;
   job_ = job;
   state_ = state;
+  version_ = NIMBUS_UNDEFINED_DATA_VERSION;
+  ser_data_ = NULL;
 }
 
 }  // namespace nimbus

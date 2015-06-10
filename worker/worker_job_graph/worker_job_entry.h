@@ -41,6 +41,7 @@
 
 #include <limits>
 #include "shared/nimbus_types.h"
+#include "shared/serialized_data.h"
 
 namespace nimbus {
 
@@ -50,12 +51,12 @@ class WorkerJobEntry {
  public:
   enum State {
     INIT,
-    CONTROL,  // For internal usage.
-    PENDING,  // Job not received yet.
+    CONTROL,                // For internal usage.
+    PENDING,                // Job not received yet.
     PENDING_DATA_RECEIVED,  // Job not received yet, but data received.
-    BLOCKED,  // Blocked by other jobs/IO event.
-    READY,  // Ready to run.
-    FINISH  // Finished, but has not been deleted.
+    BLOCKED,                // Blocked by other jobs/IO event.
+    READY,                  // Ready to run.
+    FINISH                  // Finished, but has not been deleted.
   };
 
   WorkerJobEntry();
@@ -65,26 +66,49 @@ class WorkerJobEntry {
   job_id_t get_job_id() {
     return job_id_;
   }
+
   Job* get_job() {
     return job_;
   }
+
   State get_state() {
     return state_;
   }
+
+  data_version_t get_version() {
+    return version_;
+  }
+
+  SerializedData* get_ser_data() {
+    return ser_data_;
+  }
+
   void set_job_id(job_id_t job_id) {
     job_id_ = job_id;
   }
+
   void set_job(Job* job) {
     job_ = job;
   }
+
   void set_state(State state) {
     state_ = state;
+  }
+
+  void set_version(data_version_t version) {
+    version_ = version;
+  }
+
+  void set_ser_data(SerializedData *ser_data) {
+    ser_data_ = ser_data;
   }
 
  private:
   job_id_t job_id_;
   Job* job_;
   State state_;
+  data_version_t version_;
+  SerializedData *ser_data_;
 };
 
 }  // namespace nimbus
