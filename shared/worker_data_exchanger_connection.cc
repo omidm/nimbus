@@ -39,6 +39,7 @@
   */
 
 #include "shared/worker_data_exchanger_connection.h"
+#include "shared/fast_log.hh"
 
 #define WORKER_DATA_BUFSIZE 4096000
 // #define WORKER_DATA_BUFSIZE 8
@@ -72,7 +73,9 @@ void WorkerDataExchangerConnection::AppendData(char* buffer, size_t size) {
     exit(-1);
     return;
   }
+  timer::StartTimer(timer::kDataExchangerLock);
   memcpy(data_cursor_, buffer, size);
+  timer::StopTimer(timer::kDataExchangerLock);
   data_cursor_ += size;
   remaining_data_length_ -= size;
 }
