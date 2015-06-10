@@ -57,9 +57,11 @@ WorkerDataExchanger::WorkerDataExchanger(port_t port_no)
   acceptor_ = new tcp::acceptor(*io_service_,
       tcp::endpoint(tcp::v4(), listening_port_));
 
+#ifndef _NIMBUS_NO_NETWORK_LOG
   std::ostringstream ss;
   ss << port_no;
   log_.set_file_name("log_wdx-" + ss.str());
+#endif
 }
 
 WorkerDataExchanger::~WorkerDataExchanger() {
