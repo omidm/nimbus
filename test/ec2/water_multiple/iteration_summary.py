@@ -109,5 +109,5 @@ for rank in range(1, N+1):
 
 print '--------------------------------------------------------------------------------------'
 print ' Average: {:8.0f} {:8.2f} {:8.2f} {:8.2f}  {:8.2f} {:8.2f} {:8.2f}  {:8.2f}'.format(
-    iter_nums[0], total_parent_sum, total_dxl_sum, total_run_sum/N/CN, total_block_sum/N/CN, total_idle_sum/N/CN, (total_block_sum+total_idle_sum)/N/CN, total_total_sum/N/CN)
+    iter_nums[0], total_parent_sum, total_dxl_sum/N, total_run_sum/N/CN, total_block_sum/N/CN, total_idle_sum/N/CN, (total_block_sum+total_idle_sum)/N/CN, total_total_sum/N/CN)
 print '--------------------------------------------------------------------------------------'

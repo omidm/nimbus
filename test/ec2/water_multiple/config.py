@@ -18,7 +18,8 @@
 # US West (Oregon) Region
 EC2_LOCATION                    = 'us-west-2'
 UBUNTU_AMI                      = 'ami-fa9cf1ca'
-NIMBUS_AMI                      = 'ami-2bb7891b'
+# NIMBUS_AMI                      = 'ami-dfcef6ef'
+NIMBUS_AMI                      = 'ami-9996aea9'
 KEY_NAME                        = 'omidm-sing-key-pair-us-west-2'
 SECURITY_GROUP                  = 'nimbus_sg_uswest2'
 CONTROLLER_INSTANCE_TYPE        = 'c3.4xlarge'
@@ -26,8 +27,8 @@ WORKER_INSTANCE_TYPE            = 'c3.2xlarge'
 PLACEMENT                       = 'us-west-2c' # None
 PLACEMENT_GROUP                 = 'nimbus-cluster' # None
 PRIVATE_KEY                     = '/home/omidm/.ssh/' + KEY_NAME + '.pem'
-CONTROLLER_NUM                  = 1
-WORKER_NUM                      = 1
+CONTROLLER_NUM                  = 0
+WORKER_NUM                      = 0
 INSTANCE_NUM                    = WORKER_NUM + CONTROLLER_NUM
 
 # controller configurations
@@ -47,13 +48,13 @@ FIRST_PORT                      = 5800
 
 
 # worker/simulation configurations
-SIMULATION_SCALE                = 512
-PART_X                          = 4
-PART_Y                          = 4
-PART_Z                          = 4
-PROJ_PART_X                     = 4
-PROJ_PART_Y                     = 4
-PROJ_PART_Z                     = 4
+SIMULATION_SCALE                = 1024
+PART_X                          = 8
+PART_Y                          = 8
+PART_Z                          = 8
+PROJ_PART_X                     = 8
+PROJ_PART_Y                     = 8
+PROJ_PART_Z                     = 8
 FRAME_NUMBER                    = 1
 OTHREAD_NUM                     = 8
 ITERATION_BATCH                 = 1
@@ -68,7 +69,7 @@ WORKER_TASKSET                  = '0-3,8-11'
 STD_OUT_LOG                     = 'ec2_log.txt'
 LOAD_BALANCER_LOG               = 'load_balancer_log'
 SCHED_PER_ITER_STAT_LOG         = 'controller_stats.txt'
-WORKER_LB_LOG                   = 'lb_log.tx'
+WORKER_LB_LOG                   = 'lb_log.txt'
 WORKER_FINAL_STAT_LOG           = 'time_per_thread.txt' 
 WORKER_PER_ITER_STAT_LOG        = 'main_timers.txt' 
 OUTPUT_PATH                     = 'output/'
