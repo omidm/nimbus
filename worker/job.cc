@@ -39,6 +39,7 @@
   */
 
 #include <time.h>
+#include "shared/fast_log.hh"
 #include "worker/job.h"
 #include "worker/application.h"
 #include "worker/app_data_manager.h"
@@ -645,7 +646,9 @@ RemoteCopyReceiveJob::~RemoteCopyReceiveJob() {
 
 void RemoteCopyReceiveJob::Execute(Parameter params, const DataArray& da) {
   AppDataManager *am = GetAppDataManager();
+  timer::StartTimer(timer::kInvalidateMappings);
   am->InvalidateMappings(da[0]);
+  timer::StopTimer(timer::kInvalidateMappings);
   Data * data_copy = NULL;
   da[0]->DeSerialize(*serialized_data_, &data_copy);
   da[0]->Copy(data_copy);

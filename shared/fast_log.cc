@@ -68,6 +68,7 @@ std::string TimerName(TimerType timer_type) {
     case kExecuteComputationJob: return "kExecuteComputationJob";
     case kExecuteCopyJob: return "kExecuteCopyJob";
     case kExecuteParentJob: return "kExecuteParentJob";
+    case kInvalidateMappings: return "kInvalidateMappings";
     case kExecuteWriteJob: return "kExecuteWriteJob";
     case kDataExchangerLock: return "kDataExchangerLock";
     case kAssemblingCache: return "kAssemblingCache";
