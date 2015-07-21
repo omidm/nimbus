@@ -63,6 +63,7 @@ enum TimerType {
   kExecuteCopyJob,
   kExecuteParentJob,
   kInvalidateMappings,
+  kClearAfterSet,
   kExecuteWriteJob,
   kDataExchangerLock,
   kAssemblingCache,
