@@ -153,6 +153,7 @@ void Worker::WorkerCoreProcessor() {
 
     // Poll receive events from data exchanger.
     {
+      timer::StartTimer(timer::kJobGraph1);
       boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
       std::vector<WorkerDataExchanger::Event> events;
       size_t count = data_exchanger_->PullReceiveEvents(&events, RECEIVE_EVENT_BATCH_QUOTA);
@@ -162,6 +163,7 @@ void Worker::WorkerCoreProcessor() {
           ProcessReceiveEvents(events);
           timer::StopTimer(timer::kCoreTransmission);
         }
+      timer::StopTimer(timer::kJobGraph1);
     }
 
     // Job done processing.
@@ -571,6 +573,7 @@ PhysicalDataMap* Worker::data_map() {
 }
 
 void Worker::AddJobToGraph(Job* job) {
+  timer::StartTimer(timer::kJobGraph2);
   boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
 
   // TODO(quhang): when a job is received.
@@ -657,6 +660,7 @@ void Worker::AddJobToGraph(Job* job) {
     vertex->entry()->set_job(NULL);
     assert(success_flag);
   }
+  timer::StopTimer(timer::kJobGraph2);
 }
 
 void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
@@ -694,6 +698,7 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
 
 void Worker::NotifyLocalJobDone(Job* job) {
   {
+    timer::StartTimer(timer::kJobGraph3);
     boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
     StatEndJob(1);
 
@@ -730,6 +735,7 @@ void Worker::NotifyLocalJobDone(Job* job) {
   }
 
   delete job;
+  timer::StopTimer(timer::kJobGraph3);
 }
 
 void Worker::NotifyJobDone(job_id_t job_id, bool final) {
@@ -740,11 +746,13 @@ void Worker::NotifyJobDone(job_id_t job_id, bool final) {
     return;
   }
 
+  timer::StartTimer(timer::kJobGraph4);
   boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
 
   if (final) {
     // Job done for unknown job is not handled.
     if (!worker_job_graph_.HasVertex(job_id)) {
+      timer::StopTimer(timer::kJobGraph4);
       return;
     }
     WorkerJobVertex* vertex = NULL;
@@ -769,6 +777,7 @@ void Worker::NotifyJobDone(job_id_t job_id, bool final) {
       AddFinishHintSet(job_id);
     }
   }
+  timer::StopTimer(timer::kJobGraph4);
 }
 
 void Worker::ProcessReceiveEvents(const std::vector<WorkerDataExchanger::Event>& events) {
@@ -969,7 +978,7 @@ void Worker::PrintTimerStat() {
   boost::unique_lock<boost::recursive_mutex> lock(stat_mutex_);
   std::string file_name = int2string(id_) + "_main_timers.txt";
   static FILE* temp = fopen(file_name.c_str(), "w");
-  static int64_t l_idle = 0, l_block = 0, l_run = 0, l_pexec = 0, l_dxl = 0, l_ivm = 0, l_cas = 0; // NOLINT
+  static int64_t l_idle = 0, l_block = 0, l_run = 0, l_pexec = 0, l_dxl = 0, l_ivm = 0, l_cas = 0, l_j1 = 0, l_j2 = 0, l_j3 = 0, l_j4 = 0; // NOLINT
   int64_t c_block = block_timer_.Read();
   int64_t c_run = run_timer_.Read();
   int64_t c_idle = total_timer_.Read() - c_block - c_run;
@@ -977,6 +986,10 @@ void Worker::PrintTimerStat() {
   int64_t c_dxl = timer::ReadTimerTypeSum(timer::kDataExchangerLock);
   int64_t c_ivm = timer::ReadTimerTypeSum(timer::kInvalidateMappings);
   int64_t c_cas = timer::ReadTimerTypeSum(timer::kClearAfterSet);
+  int64_t c_j1 = timer::ReadTimerTypeSum(timer::kJobGraph1);
+  int64_t c_j2 = timer::ReadTimerTypeSum(timer::kJobGraph2);
+  int64_t c_j3 = timer::ReadTimerTypeSum(timer::kJobGraph3);
+  int64_t c_j4 = timer::ReadTimerTypeSum(timer::kJobGraph4);
   int64_t idle = c_idle - l_idle;
   int64_t block = c_block - l_block;
   int64_t run = c_run - l_run;
@@ -984,6 +997,10 @@ void Worker::PrintTimerStat() {
   int64_t dxl = c_dxl - l_dxl;
   int64_t ivm = c_ivm - l_ivm;
   int64_t cas = c_cas - l_cas;
+  int64_t j1 = c_j1 - l_j1;
+  int64_t j2 = c_j2 - l_j2;
+  int64_t j3 = c_j3 - l_j3;
+  int64_t j4 = c_j4 - l_j4;
   l_idle = c_idle;
   l_block = c_block;
   l_run = c_run;
@@ -991,13 +1008,21 @@ void Worker::PrintTimerStat() {
   l_dxl = c_dxl;
   l_ivm = c_ivm;
   l_cas = c_cas;
-  fprintf(temp, "run_time: %.9f block_time: %.9f idle_time: %.9f parent_exec: %.9f dx_lock: %.9f inv_map: %.9f clear_as: %.9f\n", // NOLINT
+  l_j1 = c_j1;
+  l_j2 = c_j2;
+  l_j3 = c_j3;
+  l_j4 = c_j4;
+  fprintf(temp, "run_time: %.3f block_time: %.3f idle_time: %.3f parent_exec: %.3f dx_lock: %.3f inv_map: %.3f jg1: %.3f jg2: %.3f jg3: %.3f jg4: %.3f\n", // NOLINT
       static_cast<double>(run) / 1e9,
       static_cast<double>(block) / 1e9,
       static_cast<double>(idle) / 1e9,
       static_cast<double>(pexec) / 1e9,
       static_cast<double>(dxl) / 1e9,
       static_cast<double>(ivm) / 1e9,
+      static_cast<double>(j1) / 1e9,
+      static_cast<double>(j2) / 1e9,
+      static_cast<double>(j3) / 1e9,
+      static_cast<double>(j4) / 1e9,
       static_cast<double>(cas) / 1e9);
   fflush(temp);
 }
