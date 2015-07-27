@@ -294,6 +294,7 @@ class BindingTemplate {
     TemplateEntry *template_entry_;
     std::string record_name_;
     bool worker_template_active_;
+    bool mega_rcr_active_;
     // Currently we do not support future job - omidm
     JobIdPtr future_job_id_ptr_;
 
@@ -318,7 +319,10 @@ class BindingTemplate {
 
     CommandTemplateVector command_templates_;
 
-    std::map<job_id_t, ComputeJobCommandTemplate*> job_to_command_map_;
+    std::map<job_id_t, ComputeJobCommandTemplate*> compute_job_to_command_map_;
+    std::map<job_id_t, RemoteCopyReceiveCommandTemplate*> rcr_job_to_command_map_;
+
+    IDSet<job_id_t> candidate_rcr_;
 
 
     typedef boost::unordered_map<job_id_t, std::set<worker_id_t> > JobWorkerMap;

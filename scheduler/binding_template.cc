@@ -44,6 +44,8 @@
 #include "scheduler/template_entry.h"
 #include "scheduler/job_manager.h"
 
+#define MEGA_RCR_COUNT_THREASHOLD 2
+
 using namespace nimbus; // NOLINT
 
 BindingTemplate::BindingTemplate(const std::string& record_name,
@@ -56,6 +58,7 @@ BindingTemplate::BindingTemplate(const std::string& record_name,
   template_entry_ = template_entry;
   future_job_id_ptr_ = JobIdPtr(new job_id_t(0));
   worker_template_active_ = worker_template_active;
+  mega_rcr_active_ = false;
 
   std::vector<job_id_t>::const_iterator iter = compute_job_ids.begin();
   for (; iter != compute_job_ids.end(); ++iter) {
@@ -111,7 +114,135 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
   assert(!finalized_);
   assert(compute_job_id_map_.size() == template_entry_->compute_jobs_num());
   assert(compute_job_id_map_.size() == compute_job_ids.size());
-  assert(job_to_command_map_.size() == compute_job_ids.size());
+  assert(compute_job_to_command_map_.size() == compute_job_ids.size());
+
+
+  if (mega_rcr_active_) {
+    std::cout << "OMID Template: "
+              << template_entry_->template_name()
+              << " RCR num: "
+              << candidate_rcr_.size()
+              << std::endl;
+
+    // TODO(omidm): have to check for all jobs, not just compute!!
+    std::map<job_id_t, job_id_t> rcr_compute_pairs;
+    {
+      std::vector<job_id_t>::const_iterator iter = compute_job_ids.begin();
+      for (; iter != compute_job_ids.end(); ++iter) {
+        std::map<job_id_t, ComputeJobCommandTemplate*>::iterator it =
+          compute_job_to_command_map_.find(*iter);
+        assert(it != compute_job_to_command_map_.end());
+        JobIdPtrSet bs = it->second->before_set_ptr_;
+        JobIdPtrSet::iterator i = bs.begin();
+        for (; i != bs.end(); ++i) {
+          job_id_t rcr = *(*i);
+          if (candidate_rcr_.contains(rcr)) {
+            assert(rcr_compute_pairs.count(rcr) == 0);
+            rcr_compute_pairs[rcr] = *iter;
+            candidate_rcr_.remove(rcr);
+          } else if (rcr_compute_pairs.count(rcr)) {
+            rcr_compute_pairs.erase(rcr);
+          }
+        }
+      }
+    }
+
+    candidate_rcr_.clear();
+    std::map<job_id_t, job_id_t> rcr_to_mega;
+    std::map<job_id_t, job_id_t> compute_to_mega;
+    std::map<job_id_t, IDSet<job_id_t> > compute_rcr_group;
+    {
+      std::map<job_id_t, job_id_t>::iterator iter = rcr_compute_pairs.begin();
+      for (; iter != rcr_compute_pairs.end(); ++iter) {
+        compute_rcr_group[iter->second].insert(iter->first);
+      }
+      std::map<job_id_t, IDSet<job_id_t> >::iterator it = compute_rcr_group.begin();
+      for (; it != compute_rcr_group.end();) {
+        IDSet<job_id_t> pool = it->second;
+        if (pool.size() < MEGA_RCR_COUNT_THREASHOLD) {
+          compute_rcr_group.erase(it++);
+        } else {
+          assert(pool.size() > 0);
+          IDSet<job_id_t>::IDSetIter i = pool.begin();
+          job_id_t mega_job_id = *i;
+          compute_to_mega[it->first] = mega_job_id;
+          for (; i != pool.end(); ++i) {
+            candidate_rcr_.insert(*i);
+            rcr_to_mega[*i] = mega_job_id;
+          }
+          ++it;
+        }
+      }
+    }
+
+    // create the mega rcr commands
+    {
+      // TODO(omidm): complete
+    }
+
+    // fix the before set of compute jobs with mega rcr and clean the obsolete ids
+    {
+      std::map<job_id_t, IDSet<job_id_t> >::iterator iter = compute_rcr_group.begin();
+      for (; iter != compute_rcr_group.end(); ++iter) {
+        std::map<job_id_t, ComputeJobCommandTemplate*>::iterator it =
+          compute_job_to_command_map_.find(iter->first);
+        assert(it != compute_job_to_command_map_.end());
+        JobIdPtrSet bs = it->second->before_set_ptr_;
+        JobIdPtrSet::iterator i = bs.begin();
+        for (; i != bs.end();) {
+          job_id_t rcr = *(*i);
+          if (iter->second.contains(rcr)) {
+            bs.erase(i++);
+          } else {
+            ++i;
+          }
+        }
+        bs.insert(GetCopyJobIdPtr(compute_to_mega[iter->first]));
+        it->second->before_set_ptr_ = bs;
+      }
+    }
+
+    // clean up obsolete rcr and insert mega rcr in command_templates_
+    // Also set the meta_rcr_id for the sender job
+    {
+      // TODO(omidm): complete
+      IDSet<job_id_t> inserted_mega_rcr;
+      RemoteCopyReceiveCommandTemplate *rcrc;
+      CommandTemplateVector::iterator iter = command_templates_.begin();
+      for (; iter != command_templates_.end(); ++iter) {
+        CommandTemplate *ct = *iter;
+        switch (ct->type_) {
+          case COMPUTE:
+          case LC:
+            break;
+          case RCR:
+            rcrc = reinterpret_cast<RemoteCopyReceiveCommandTemplate*>(ct);
+            break;
+          case RCS:
+            break;
+          default:
+            assert(false);
+        }
+      }
+    }
+
+
+
+    {
+      std::map<job_id_t, IDSet<job_id_t> >::iterator iter = compute_rcr_group.begin();
+      for (; iter != compute_rcr_group.end(); ++iter) {
+        std::cout << "       OMID Group job_name: "
+                  << compute_job_to_command_map_[iter->first]->job_name_
+                  << " worker id: "
+                  << compute_job_to_command_map_[iter->first]->worker_id_
+                  << " RCR num: "
+                  << iter->second.size()
+                  << std::endl;
+      }
+    }
+
+    //
+  }
 
   // Set param index for the compute commands.
   {
@@ -119,8 +250,8 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
     std::vector<job_id_t>::const_iterator iter = compute_job_ids.begin();
     for (; iter != compute_job_ids.end(); ++iter) {
       std::map<job_id_t, ComputeJobCommandTemplate*>::iterator it =
-        job_to_command_map_.find(*iter);
-      assert(it != job_to_command_map_.end());
+        compute_job_to_command_map_.find(*iter);
+      assert(it != compute_job_to_command_map_.end());
       it->second->param_index_ = idx;
       ++idx;
     }
@@ -784,7 +915,7 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
                                   w_id);
 
   // Keep this mapping to set the param_index in Finalize - omidm
-  job_to_command_map_[*compute_job_id_ptr] = cm;
+  compute_job_to_command_map_[*compute_job_id_ptr] = cm;
 
   command_templates_.push_back(cm);
 
@@ -948,11 +1079,18 @@ bool BindingTemplate::AddRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* comm
     }
   }
 
+  if (before_set.size() == 0) {
+    candidate_rcr_.insert(*copy_job_id_ptr);
+  }
+
   RemoteCopyReceiveCommandTemplate *cm =
     new RemoteCopyReceiveCommandTemplate(copy_job_id_ptr,
                                          to_physical_data_id_ptr,
                                          before_set,
                                          w_id);
+
+  // Keep this mapping for mega rcr job computations.
+  rcr_job_to_command_map_[*copy_job_id_ptr] = cm;
 
   command_templates_.push_back(cm);
 
