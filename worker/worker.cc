@@ -257,6 +257,9 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::REMOTE_RECEIVE:
       ProcessRemoteCopyReceiveCommand(reinterpret_cast<RemoteCopyReceiveCommand*>(cm));
       break;
+    case SchedulerCommand::MEGA_RCR:
+      ProcessMegaRCRCommand(reinterpret_cast<MegaRCRCommand*>(cm));
+      break;
     case SchedulerCommand::LOCAL_COPY:
       ProcessLocalCopyCommand(reinterpret_cast<LocalCopyCommand*>(cm));
       break;
@@ -394,6 +397,15 @@ void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {
   write_set.insert(cm->to_physical_data_id().elem());
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
+  AddJobToGraph(job);
+}
+
+void Worker::ProcessMegaRCRCommand(MegaRCRCommand* cm) {
+  Job * job = new MegaRCRJob(application_,
+                             cm->receive_job_ids(),
+                             cm->to_physical_data_ids());
+  job->set_name("MegaRCR");
+  job->set_id(cm->job_id());
   AddJobToGraph(job);
 }
 
@@ -539,6 +551,7 @@ void Worker::LoadSchedulerCommands() {
   scheduler_command_table_[SchedulerCommand::CREATE_DATA] = new CreateDataCommand();
   scheduler_command_table_[SchedulerCommand::REMOTE_SEND] = new RemoteCopySendCommand();
   scheduler_command_table_[SchedulerCommand::REMOTE_RECEIVE] = new RemoteCopyReceiveCommand(); // NOLINT
+  scheduler_command_table_[SchedulerCommand::MEGA_RCR] = new MegaRCRCommand();
   scheduler_command_table_[SchedulerCommand::LOCAL_COPY] = new LocalCopyCommand();
   scheduler_command_table_[SchedulerCommand::LDO_ADD] = new LdoAddCommand();
   scheduler_command_table_[SchedulerCommand::LDO_REMOVE] = new LdoRemoveCommand();
@@ -1012,7 +1025,7 @@ void Worker::PrintTimerStat() {
   l_j2 = c_j2;
   l_j3 = c_j3;
   l_j4 = c_j4;
-  fprintf(temp, "run_time: %.3f block_time: %.3f idle_time: %.3f parent_exec: %.3f dx_lock: %.3f inv_map: %.3f jg1: %.3f jg2: %.3f jg3: %.3f jg4: %.3f\n", // NOLINT
+  fprintf(temp, "run_time: %.3f block_time: %.3f idle_time: %.3f parent_exec: %.3f dx_lock: %.3f inv_map: %.3f jg1: %.3f jg2: %.3f jg3: %.3f jg4: %.3f clear_as %.3f\n", // NOLINT
       static_cast<double>(run) / 1e9,
       static_cast<double>(block) / 1e9,
       static_cast<double>(idle) / 1e9,

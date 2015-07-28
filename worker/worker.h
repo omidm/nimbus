@@ -102,6 +102,7 @@ class Worker {
   virtual void ProcessCreateDataCommand(CreateDataCommand* command);
   virtual void ProcessRemoteCopySendCommand(RemoteCopySendCommand* command);
   virtual void ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* command);
+  virtual void ProcessMegaRCRCommand(MegaRCRCommand* command);
   virtual void ProcessLocalCopyCommand(LocalCopyCommand* command);
   virtual void ProcessHandshakeCommand(HandshakeCommand* command);
   virtual void ProcessJobDoneCommand(JobDoneCommand* command);
