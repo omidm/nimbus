@@ -671,6 +671,57 @@ void RemoteCopyReceiveJob::set_data_version(data_version_t version) {
   data_version_ = version;
 }
 
+MegaRCRJob::MegaRCRJob(Application *app,
+                    const std::vector<job_id_t>& receive_job_ids,
+                    const std::vector<physical_data_id_t>& to_phy_ids)
+  : receive_job_ids_(receive_job_ids),
+    to_phy_ids_(to_phy_ids) {
+  assert(receive_job_ids_.size() == to_phy_ids_.size());
+  set_application(app);
+}
+
+MegaRCRJob::~MegaRCRJob() {
+}
+
+void MegaRCRJob::Execute(Parameter params, const DataArray& da) {
+  assert(AllDataReceived());
+  AppDataManager *am = GetAppDataManager();
+  size_t idx = 0;
+  std::vector<job_id_t>::iterator iter = receive_job_ids_.begin();
+  for (; iter != receive_job_ids_.end(); ++iter, ++idx) {
+    timer::StartTimer(timer::kInvalidateMappings);
+    am->InvalidateMappings(da[idx]);
+    timer::StopTimer(timer::kInvalidateMappings);
+    Data * data_copy = NULL;
+    std::map<job_id_t, SerializedData*>::iterator it =
+      serialized_data_map_.find(*iter);
+    assert(it != serialized_data_map_.end());
+    SerializedData *ser_data = it->second;
+    da[idx]->DeSerialize(*ser_data, &data_copy);
+    da[idx]->Copy(data_copy);
+
+    data_copy->Destroy();
+    // delete ser_data->data_ptr(); // Not needed with shared pointer.
+    delete ser_data;
+  }
+}
+
+const std::vector<job_id_t>* MegaRCRJob::receive_job_ids_p() {
+  return &receive_job_ids_;
+}
+
+const std::vector<physical_data_id_t>* MegaRCRJob::to_phy_ids_p() {
+  return &to_phy_ids_;
+}
+
+void MegaRCRJob::set_serialized_data(job_id_t job_id, SerializedData* ser_data) {
+  serialized_data_map_[job_id] = ser_data;
+}
+
+bool MegaRCRJob::AllDataReceived() {
+  return serialized_data_map_.size() == receive_job_ids_.size();
+}
+
 SaveDataJob::SaveDataJob(DistributedDB *ddb, Application *app) {
   ddb_ = ddb;
   set_application(app);

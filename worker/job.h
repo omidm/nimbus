@@ -310,6 +310,31 @@ class RemoteCopyReceiveJob : public Job {
     data_version_t data_version_;
 };
 
+class MegaRCRJob : public Job {
+  public:
+    MegaRCRJob(Application *app,
+               const std::vector<job_id_t>& receive_job_ids,
+               const std::vector<physical_data_id_t>& to_phy_ids);
+    ~MegaRCRJob();
+
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job* Clone() {assert(false);}
+    virtual void Sleep() {}
+    virtual void Cancel() {}
+
+    const std::vector<job_id_t>* receive_job_ids_p();
+    const std::vector<physical_data_id_t>* to_phy_ids_p();
+
+    void set_serialized_data(job_id_t job_id, SerializedData* ser_data);
+
+    bool AllDataReceived();
+
+  private:
+    std::vector<job_id_t> receive_job_ids_;
+    std::vector<physical_data_id_t> to_phy_ids_;
+    std::map<job_id_t, SerializedData*> serialized_data_map_;
+};
+
 class SaveDataJob : public Job {
   public:
     explicit SaveDataJob(DistributedDB *ddb, Application *app);
