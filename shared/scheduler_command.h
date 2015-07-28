@@ -106,7 +106,8 @@ class SchedulerCommand {
     SPAWN_COMMAND_TEMPLATE = SchedulerPBuf_Type_SPAWN_COMMAND_TEMPLATE,
     REQUEST_STAT           = SchedulerPBuf_Type_REQUEST_STAT,
     RESPOND_STAT           = SchedulerPBuf_Type_RESPOND_STAT,
-    PRINT_STAT             = SchedulerPBuf_Type_PRINT_STAT
+    PRINT_STAT             = SchedulerPBuf_Type_PRINT_STAT,
+    MEGA_RCR               = SchedulerPBuf_Type_MEGA_RCR
   };
 
   typedef std::set<Type> TypeSet;
@@ -188,6 +189,7 @@ class SchedulerCommand {
   static const std::string REQUEST_STAT_NAME;
   static const std::string RESPOND_STAT_NAME;
   static const std::string PRINT_STAT_NAME;
+  static const std::string MEGA_RCR_NAME;
 
  private:
 };

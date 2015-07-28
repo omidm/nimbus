@@ -34,73 +34,50 @@
 
   /*
   * A remote copy operation between two workers has two jobs: the
-  * send and receive. This is the send half.
+  * send and receive. This is the receive half.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_SHARED_REMOTE_COPY_SEND_COMMAND_H_
-#define NIMBUS_SHARED_REMOTE_COPY_SEND_COMMAND_H_
+#ifndef NIMBUS_SHARED_MEGA_RCR_COMMAND_H_
+#define NIMBUS_SHARED_MEGA_RCR_COMMAND_H_
 
 
 #include <string>
+#include <vector>
 #include "shared/scheduler_command.h"
 
 namespace nimbus {
-class RemoteCopySendCommand : public SchedulerCommand {
+class MegaRCRCommand : public SchedulerCommand {
   public:
-    RemoteCopySendCommand();
-    RemoteCopySendCommand(const ID<job_id_t>& job_id,
-                          const ID<job_id_t>& receive_job_id,
-                          const ID<physical_data_id_t>& from_physical_data_id,
-                          const ID<worker_id_t>& to_worker_id,
-                          const std::string to_ip,
-                          const ID<port_t>& to_port,
-                          const IDSet<job_id_t>& before);
-    RemoteCopySendCommand(const ID<job_id_t>& job_id,
-                          const ID<job_id_t>& receive_job_id,
-                          const ID<job_id_t>& mega_rcr_job_id,
-                          const ID<physical_data_id_t>& from_physical_data_id,
-                          const ID<worker_id_t>& to_worker_id,
-                          const std::string to_ip,
-                          const ID<port_t>& to_port,
-                          const IDSet<job_id_t>& before);
-    ~RemoteCopySendCommand();
+    MegaRCRCommand();
+    MegaRCRCommand(const ID<job_id_t>& job_id,
+                   const std::vector<job_id_t>& receive_job_ids,
+                   const std::vector<physical_data_id_t>& to_physical_data_ids);
+
+    ~MegaRCRCommand();
 
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& data);
     virtual bool Parse(const SchedulerPBuf& buf);
-
     virtual std::string ToNetworkData();
     virtual std::string ToString();
     ID<job_id_t> job_id();
-    ID<job_id_t> receive_job_id();
-    ID<job_id_t> mega_rcr_job_id();
-    ID<physical_data_id_t> from_physical_data_id();
-    ID<worker_id_t> to_worker_id();
-    std::string to_ip();
-    ID<port_t> to_port();
-    IDSet<job_id_t> before_set();
-    IDSet<job_id_t>* before_set_p();
+    std::vector<job_id_t> receive_job_ids();
+    const std::vector<job_id_t>* receive_job_ids_p();
+    std::vector<physical_data_id_t> to_physical_data_ids();
+    const std::vector<physical_data_id_t>* to_physical_data_ids_p();
 
   private:
     ID<job_id_t> job_id_;
-    ID<job_id_t> receive_job_id_;
-    ID<job_id_t> mega_rcr_job_id_;
-    ID<physical_data_id_t> from_physical_data_id_;
-    ID<worker_id_t> to_worker_id_;
-    std::string to_ip_;
-    ID<port_t> to_port_;
-    IDSet<job_id_t> before_set_;
+    std::vector<job_id_t> receive_job_ids_;
+    std::vector<physical_data_id_t> to_physical_data_ids_;
 
-    bool ReadFromProtobuf(const RemoteCopySendPBuf& buf);
-    bool WriteToProtobuf(RemoteCopySendPBuf* buf);
+    bool ReadFromProtobuf(const MegaRCRPBuf& buf);
+    bool WriteToProtobuf(MegaRCRPBuf* buf);
 };
-
-
-
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_REMOTE_COPY_SEND_COMMAND_H_
+#endif  // NIMBUS_SHARED_MEGA_RCR_COMMAND_H_

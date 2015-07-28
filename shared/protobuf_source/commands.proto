@@ -119,6 +119,7 @@ message SchedulerPBuf{
      REQUEST_STAT           = 34;
      RESPOND_STAT           = 35;
      PRINT_STAT             = 36;
+     MEGA_RCR               = 37;
   }
   required Type type = 1;
 
@@ -159,6 +160,7 @@ message SchedulerPBuf{
   optional RequestStatPBuf request_stat                    = 34;
   optional RespondStatPBuf respond_stat                    = 35;
   optional PrintStatPBuf print_stat                        = 36;
+  optional MegaRCRPBuf mega_rcr                            = 37;
 }
 
 message AddComputeJobPBuf {
@@ -323,17 +325,24 @@ message CreateDataPBuf {
 message RemoteCopySendPBuf {
   optional uint64 job_id           = 1;
   optional uint64 receive_job_id   = 2;
-  optional uint64 from_physical_id = 3;
-  optional uint64 to_worker_id     = 4;
-  optional string to_ip            = 5;
-  optional uint32 to_port          = 6;
-  optional JobIDSet before_set     = 7;
+  optional uint64 mega_rcr_job_id  = 3;
+  optional uint64 from_physical_id = 4;
+  optional uint64 to_worker_id     = 5;
+  optional string to_ip            = 6;
+  optional uint32 to_port          = 7;
+  optional JobIDSet before_set     = 8;
 }
 
 message RemoteCopyReceivePBuf {
   optional uint64 job_id          = 1;
   optional uint64 physical_id     = 2;
   optional JobIDSet before_set    = 3;
+}
+
+message MegaRCRPBuf {
+  optional uint64 job_id                = 1;
+  optional JobIDVector receive_job_ids  = 2; 
+  optional PhyIDVector to_phy_ids       = 3; 
 }
 
 message LocalCopyPBuf {

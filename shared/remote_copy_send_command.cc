@@ -49,6 +49,7 @@ using boost::char_separator;
 RemoteCopySendCommand::RemoteCopySendCommand() {
   name_ = REMOTE_SEND_NAME;
   type_ = REMOTE_SEND;
+  mega_rcr_job_id_ = ID<job_id_t>(NIMBUS_KERNEL_JOB_ID);
 }
 
 RemoteCopySendCommand::RemoteCopySendCommand(const ID<job_id_t>& job_id,
@@ -65,6 +66,26 @@ RemoteCopySendCommand::RemoteCopySendCommand(const ID<job_id_t>& job_id,
     before_set_(before) {
   name_ = REMOTE_SEND_NAME;
   type_ = REMOTE_SEND;
+  mega_rcr_job_id_ = ID<job_id_t>(NIMBUS_KERNEL_JOB_ID);
+}
+
+RemoteCopySendCommand::RemoteCopySendCommand(const ID<job_id_t>& job_id,
+                                             const ID<job_id_t>& receive_job_id,
+                                             const ID<job_id_t>& mega_rcr_job_id,
+                                             const ID<physical_data_id_t>& from_physical_data_id,
+                                             const ID<worker_id_t>& to_worker_id,
+                                             const std::string to_ip, const ID<port_t>& to_port,
+                                             const IDSet<job_id_t>& before)
+  : job_id_(job_id),
+    receive_job_id_(receive_job_id),
+    mega_rcr_job_id_(mega_rcr_job_id),
+    from_physical_data_id_(from_physical_data_id),
+    to_worker_id_(to_worker_id),
+    to_ip_(to_ip), to_port_(to_port),
+    before_set_(before) {
+  name_ = REMOTE_SEND_NAME;
+  type_ = REMOTE_SEND;
+  mega_rcr_job_id_ = ID<job_id_t>(NIMBUS_KERNEL_JOB_ID);
 }
 
 RemoteCopySendCommand::~RemoteCopySendCommand() {
@@ -116,6 +137,7 @@ std::string RemoteCopySendCommand::ToString() {
   str += (name_ + ",");
   str += ("job-id:" + job_id_.ToNetworkData() + ",");
   str += ("receive-job-id:" + receive_job_id_.ToNetworkData() + ",");
+  str += ("mega-rcr-job-id:" + mega_rcr_job_id_.ToNetworkData() + ",");
   str += ("from-physical-data-id:" + from_physical_data_id_.ToNetworkData() + ",");
   str += ("to-worker-id:" + to_worker_id_.ToNetworkData() + ",");
   str += ("to-ip:" + to_ip_ + ",");
@@ -130,6 +152,10 @@ ID<job_id_t> RemoteCopySendCommand::job_id() {
 
 ID<job_id_t> RemoteCopySendCommand::receive_job_id() {
   return receive_job_id_;
+}
+
+ID<job_id_t> RemoteCopySendCommand::mega_rcr_job_id() {
+  return mega_rcr_job_id_;
 }
 
 ID<physical_data_id_t> RemoteCopySendCommand::from_physical_data_id() {
@@ -159,6 +185,7 @@ IDSet<job_id_t>* RemoteCopySendCommand::before_set_p() {
 bool RemoteCopySendCommand::ReadFromProtobuf(const RemoteCopySendPBuf& buf) {
   job_id_.set_elem(buf.job_id());
   receive_job_id_.set_elem(buf.receive_job_id());
+  mega_rcr_job_id_.set_elem(buf.mega_rcr_job_id());
   from_physical_data_id_.set_elem(buf.from_physical_id());
   to_worker_id_.set_elem(buf.to_worker_id());
   to_ip_ = buf.to_ip();
@@ -170,6 +197,7 @@ bool RemoteCopySendCommand::ReadFromProtobuf(const RemoteCopySendPBuf& buf) {
 bool RemoteCopySendCommand::WriteToProtobuf(RemoteCopySendPBuf* buf) {
   buf->set_job_id(job_id().elem());
   buf->set_receive_job_id(receive_job_id().elem());
+  buf->set_mega_rcr_job_id(mega_rcr_job_id().elem());
   buf->set_from_physical_id(from_physical_data_id().elem());
   buf->set_to_worker_id(to_worker_id().elem());
   buf->set_to_ip(to_ip());
