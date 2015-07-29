@@ -155,7 +155,7 @@ void Worker::WorkerCoreProcessor() {
     {
       timer::StartTimer(timer::kJobGraph1);
       boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
-      std::vector<WorkerDataExchanger::Event> events;
+      WorkerDataExchanger::EventList events;
       size_t count = data_exchanger_->PullReceiveEvents(&events, RECEIVE_EVENT_BATCH_QUOTA);
         if (count > 0) {
           processed_tasks = true;
@@ -211,29 +211,33 @@ void Worker::WorkerCoreProcessor() {
 void Worker::ResolveDataArray(Job* job) {
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Job(name %s, #%d) ready to run.\n",
       job->name().c_str(), job->id().elem());
+  job->data_array.clear();
   if ((dynamic_cast<CreateDataJob*>(job) != NULL)) {  // NOLINT
     assert(job->read_set().size() == 0);
     assert(job->write_set().size() == 1);
-    job->data_array.clear();
     job->data_array.push_back(
         data_map_.AcquireAccess(*job->write_set().begin(), job->id().elem(),
                                 PhysicalDataMap::INIT));
-    return;
-  }
-  job->data_array.clear();
-  IDSet<physical_data_id_t>::IDSetIter iter;
+  } else if ((dynamic_cast<MegaRCRJob*>(job) != NULL)) {  // NOLINT
+    MegaRCRJob *mega_job = reinterpret_cast<MegaRCRJob*>(job);
+    std::vector<physical_data_id_t>::const_iterator iter = mega_job->to_phy_ids_p()->begin();
+    for (; iter != mega_job->to_phy_ids_p()->end(); ++iter) {
+      job->data_array.push_back(
+          data_map_.AcquireAccess(*iter, job->id().elem(), PhysicalDataMap::WRITE));
+    }
+  } else {
+    IDSet<physical_data_id_t>::IDSetIter iter;
 
-  const IDSet<physical_data_id_t>& read = job->get_read_set();
-  for (iter = read.begin(); iter != read.end(); iter++) {
-    job->data_array.push_back(
-        data_map_.AcquireAccess(*iter, job->id().elem(),
-                                PhysicalDataMap::READ));
-  }
-  const IDSet<physical_data_id_t>& write = job->get_write_set();
-  for (iter = write.begin(); iter != write.end(); iter++) {
-    job->data_array.push_back(
-        data_map_.AcquireAccess(*iter, job->id().elem(),
-                                PhysicalDataMap::WRITE));
+    const IDSet<physical_data_id_t>& read = job->get_read_set();
+    for (iter = read.begin(); iter != read.end(); iter++) {
+      job->data_array.push_back(
+          data_map_.AcquireAccess(*iter, job->id().elem(), PhysicalDataMap::READ));
+    }
+    const IDSet<physical_data_id_t>& write = job->get_write_set();
+    for (iter = write.begin(); iter != write.end(); iter++) {
+      job->data_array.push_back(
+          data_map_.AcquireAccess(*iter, job->id().elem(), PhysicalDataMap::WRITE));
+    }
   }
 }
 
@@ -379,6 +383,7 @@ void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
   job->set_name("RemoteCopySend");
   job->set_id(cm->job_id());
   job->set_receive_job_id(cm->receive_job_id());
+  job->set_mega_rcr_job_id(cm->mega_rcr_job_id());
   job->set_to_worker_id(cm->to_worker_id());
   job->set_to_ip(cm->to_ip());
   job->set_to_port(cm->to_port());
@@ -606,8 +611,9 @@ void Worker::AddJobToGraph(Job* job) {
     assert(vertex->entry()->get_job() == NULL);
     switch (vertex->entry()->get_state()) {
       case WorkerJobEntry::PENDING: {
-        // If the job is a receive job, add a dumb edge.
-        if (dynamic_cast<RemoteCopyReceiveJob*>(job)) {  // NOLINT
+        // If the job is a (mega) receive job, add a dumb edge.
+        if (dynamic_cast<RemoteCopyReceiveJob*>(job) ||  // NOLINT
+            dynamic_cast<MegaRCRJob*>(job)) {  // NOLINT
           worker_job_graph_.AddEdge(DUMB_JOB_ID, job_id);
         }
         break;
@@ -621,6 +627,15 @@ void Worker::AddJobToGraph(Job* job) {
         receive_job->set_serialized_data(vertex->entry()->get_ser_data());
         break;
       }
+      case WorkerJobEntry::PENDING_MEGA_DATA_RECEIVED: {
+        MegaRCRJob* mega_receive_job = dynamic_cast<MegaRCRJob*>(job);  // NOLINT
+        assert(mega_receive_job != NULL);
+        mega_receive_job->set_serialized_data_map(vertex->entry()->ser_data_map());
+        if (!mega_receive_job->AllDataReceived()) {
+          worker_job_graph_.AddEdge(DUMB_JOB_ID, job_id);
+        }
+        break;
+      }
       default:
         assert(false);
     }
@@ -628,23 +643,28 @@ void Worker::AddJobToGraph(Job* job) {
     // The job is new.
     worker_job_graph_.AddVertex(job_id, new WorkerJobEntry());
     worker_job_graph_.GetVertex(job_id, &vertex);
-    if (dynamic_cast<RemoteCopyReceiveJob*>(job)) {  // NOLINT
+    if (dynamic_cast<RemoteCopyReceiveJob*>(job) ||  // NOLINT
+        dynamic_cast<MegaRCRJob*>(job)) {  // NOLINT
       worker_job_graph_.AddEdge(DUMB_JOB_ID, job_id);
     }
   }
+
   vertex->entry()->set_job_id(job_id);
   vertex->entry()->set_job(job);
   vertex->entry()->set_state(WorkerJobEntry::BLOCKED);
+
   // Add edges for the new job.
-  IDSet<job_id_t> before_set = job->before_set();
-  for (IDSet<job_id_t>::IDSetIter iter = before_set.begin();
-       iter != before_set.end();
-       ++iter) {
+  IDSet<job_id_t>::ConstIter iter = job->before_set_p()->begin();
+  for (; iter != job->before_set_p()->end(); ++iter) {
     job_id_t before_job_id = *iter;
+    // TODO(omidm): what if this is too small, controller do not support after
+    // map and before set clean up for worker template!!!
     if (InFinishHintSet(before_job_id)) {
       continue;
     }
     WorkerJobVertex* before_job_vertex = NULL;
+    // TODO(omidm): if the job is not in the job graph could we say that it was
+    // done and removed. isn't controller assigning before set before job?!!!
     if (worker_job_graph_.HasVertex(before_job_id)) {
       // The job is already known.
       worker_job_graph_.GetVertex(before_job_id, &before_job_vertex);
@@ -665,6 +685,7 @@ void Worker::AddJobToGraph(Job* job) {
       worker_job_graph_.AddEdge(before_job_vertex, vertex);
     }
   }
+
   // If the job has no dependency, it is ready.
   if (vertex->incoming_edges()->empty()) {
     vertex->entry()->set_state(WorkerJobEntry::READY);
@@ -793,56 +814,114 @@ void Worker::NotifyJobDone(job_id_t job_id, bool final) {
   timer::StopTimer(timer::kJobGraph4);
 }
 
-void Worker::ProcessReceiveEvents(const std::vector<WorkerDataExchanger::Event>& events) {
-  std::vector<WorkerDataExchanger::Event>::const_iterator iter;
-  for (iter = events.begin(); iter != events.end(); ++iter) {
-    job_id_t job_id = iter->job_id;
-    SerializedData *ser_data = iter->ser_data;
-    data_version_t version = iter->version;
+void Worker::ProcessRCREvent(const WorkerDataExchanger::Event& e) {
+  WorkerJobVertex* vertex = NULL;
+  if (worker_job_graph_.HasVertex(e.receive_job_id_)) {
+    worker_job_graph_.GetVertex(e.receive_job_id_, &vertex);
+    switch (vertex->entry()->get_state()) {
+      case WorkerJobEntry::PENDING: {
+        // The job is already in the graph and not received.
+        vertex->entry()->set_version(e.version_);
+        vertex->entry()->set_ser_data(e.ser_data_);
+        vertex->entry()->set_state(WorkerJobEntry::PENDING_DATA_RECEIVED);
+        break;
+      }
+      case WorkerJobEntry::BLOCKED: {
+        // The job is already in the graph and received.
+        assert(vertex->entry()->get_job() != NULL);
+        RemoteCopyReceiveJob* receive_job =
+            dynamic_cast<RemoteCopyReceiveJob*>(vertex->entry()->get_job());  // NOLINT
+        assert(receive_job != NULL);
+        receive_job->set_data_version(e.version_);
+        receive_job->set_serialized_data(e.ser_data_);
 
-    WorkerJobVertex* vertex = NULL;
-    if (worker_job_graph_.HasVertex(job_id)) {
-      worker_job_graph_.GetVertex(job_id, &vertex);
-      switch (vertex->entry()->get_state()) {
-        case WorkerJobEntry::PENDING: {
-          // The job is already in the graph and not received.
-          vertex->entry()->set_version(version);
-          vertex->entry()->set_ser_data(ser_data);
-          vertex->entry()->set_state(WorkerJobEntry::PENDING_DATA_RECEIVED);
-          break;
+        // Remove the dumb edge and could be ready now.
+        worker_job_graph_.RemoveEdge(DUMB_JOB_ID, e.receive_job_id_);
+        if (vertex->incoming_edges()->empty()) {
+          vertex->entry()->set_state(WorkerJobEntry::READY);
+          ResolveDataArray(receive_job);
+          int success_flag = worker_manager_->PushJob(receive_job);
+          vertex->entry()->set_job(NULL);
+          assert(success_flag);
         }
-        case WorkerJobEntry::BLOCKED: {
-          // The job is already in the graph and received.
-          assert(vertex->entry()->get_job() != NULL);
-          RemoteCopyReceiveJob* receive_job =
-              dynamic_cast<RemoteCopyReceiveJob*>(vertex->entry()->get_job());  // NOLINT
-          assert(receive_job != NULL);
-          receive_job->set_data_version(version);
-          receive_job->set_serialized_data(ser_data);
+        break;
+      }
+      default:
+        assert(false);
+    }  // End switch.
+  } else {
+    // The job is not in the graph and not received.
+    worker_job_graph_.AddVertex(e.receive_job_id_, new WorkerJobEntry());
+    worker_job_graph_.GetVertex(e.receive_job_id_, &vertex);
+    vertex->entry()->set_job_id(e.receive_job_id_);
+    vertex->entry()->set_job(NULL);
+    vertex->entry()->set_version(e.version_);
+    vertex->entry()->set_ser_data(e.ser_data_);
+    vertex->entry()->set_state(WorkerJobEntry::PENDING_DATA_RECEIVED);
+  }
+}
 
+void Worker::ProcessMegaRCREvent(const WorkerDataExchanger::Event& e) {
+  WorkerJobVertex* vertex = NULL;
+  if (worker_job_graph_.HasVertex(e.mega_rcr_job_id_)) {
+    worker_job_graph_.GetVertex(e.mega_rcr_job_id_, &vertex);
+    switch (vertex->entry()->get_state()) {
+      case WorkerJobEntry::PENDING:
+      case WorkerJobEntry::PENDING_MEGA_DATA_RECEIVED: {
+        // The job is already in the graph and not received.
+        // TODO(omidm): fis the version passing for mega RCR!
+        vertex->entry()->set_version(e.version_);
+        vertex->entry()->set_ser_data(e.receive_job_id_, e.ser_data_);
+        vertex->entry()->set_state(WorkerJobEntry::PENDING_MEGA_DATA_RECEIVED);
+        break;
+      }
+      case WorkerJobEntry::BLOCKED: {
+        // The job is already in the graph and received.
+        assert(vertex->entry()->get_job() != NULL);
+        MegaRCRJob* mega_rcr_job =
+            dynamic_cast<MegaRCRJob*>(vertex->entry()->get_job());  // NOLINT
+        assert(mega_rcr_job != NULL);
+        // TODO(omidm): fis the version passing for mega RCR!
+        // mega_rcr_job->set_data_version(e.version_);
+        mega_rcr_job->set_serialized_data(e.receive_job_id_, e.ser_data_);
+
+        if (mega_rcr_job->AllDataReceived()) {
           // Remove the dumb edge and could be ready now.
-          worker_job_graph_.RemoveEdge(DUMB_JOB_ID, job_id);
+          worker_job_graph_.RemoveEdge(DUMB_JOB_ID, e.mega_rcr_job_id_);
           if (vertex->incoming_edges()->empty()) {
             vertex->entry()->set_state(WorkerJobEntry::READY);
-            ResolveDataArray(receive_job);
-            int success_flag = worker_manager_->PushJob(receive_job);
+            ResolveDataArray(mega_rcr_job);
+            int success_flag = worker_manager_->PushJob(mega_rcr_job);
             vertex->entry()->set_job(NULL);
             assert(success_flag);
           }
-          break;
         }
-        default:
-          assert(false);
-      }  // End switch.
+        break;
+      }
+      default:
+        assert(false);
+    }  // End switch.
+  } else {
+    // The job is not in the graph and not received.
+    worker_job_graph_.AddVertex(e.mega_rcr_job_id_, new WorkerJobEntry());
+    worker_job_graph_.GetVertex(e.mega_rcr_job_id_, &vertex);
+    vertex->entry()->set_job_id(e.mega_rcr_job_id_);
+    vertex->entry()->set_job(NULL);
+    // TODO(omidm): fis the version passing for mega RCR!
+    vertex->entry()->set_version(e.version_);
+    vertex->entry()->set_ser_data(e.receive_job_id_, e.ser_data_);
+    vertex->entry()->set_state(WorkerJobEntry::PENDING_MEGA_DATA_RECEIVED);
+  }
+}
+
+
+void Worker::ProcessReceiveEvents(const WorkerDataExchanger::EventList& events) {
+  WorkerDataExchanger::EventList::const_iterator iter;
+  for (iter = events.begin(); iter != events.end(); ++iter) {
+    if (iter->mega_rcr_job_id_ == NIMBUS_KERNEL_JOB_ID) {
+      ProcessRCREvent(*iter);
     } else {
-      // The job is not in the graph and not received.
-      worker_job_graph_.AddVertex(job_id, new WorkerJobEntry());
-      worker_job_graph_.GetVertex(job_id, &vertex);
-      vertex->entry()->set_job_id(job_id);
-      vertex->entry()->set_job(NULL);
-      vertex->entry()->set_version(version);
-      vertex->entry()->set_ser_data(ser_data);
-      vertex->entry()->set_state(WorkerJobEntry::PENDING_DATA_RECEIVED);
+      ProcessMegaRCREvent(*iter);
     }
   }
 }

@@ -95,6 +95,7 @@ bool WorkerManager::ClassifyAndAddJob(Job* job) {
   if (use_auxiliary_thread_ &&
       (dynamic_cast<RemoteCopySendJob*>(job) ||  // NOLINT
       dynamic_cast<RemoteCopyReceiveJob*>(job) ||  // NOLINT
+      dynamic_cast<MegaRCRJob*>(job) ||  // NOLINT
       dynamic_cast<LocalCopyJob*>(job) ||  // NOLINT
       dynamic_cast<CreateDataJob*>(job))) {  // NOLINT
     pthread_mutex_lock(&auxiliary_job_queue_lock_);
@@ -106,6 +107,7 @@ bool WorkerManager::ClassifyAndAddJob(Job* job) {
     PRIORITY_TYPE priority = LOW_PRIORITY;
     if (dynamic_cast<RemoteCopySendJob*>(job) ||     // NOLINT
         dynamic_cast<RemoteCopyReceiveJob*>(job) ||  // NOLINT
+        dynamic_cast<MegaRCRJob*>(job) ||  // NOLINT
         dynamic_cast<LocalCopyJob*>(job)) {          // NOLINT
       priority = HIGH_PRIORITY;
     }

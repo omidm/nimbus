@@ -40,6 +40,7 @@
 #define NIMBUS_WORKER_WORKER_JOB_GRAPH_WORKER_JOB_ENTRY_H_
 
 #include <limits>
+#include <map>
 #include "shared/nimbus_types.h"
 #include "shared/serialized_data.h"
 
@@ -51,12 +52,13 @@ class WorkerJobEntry {
  public:
   enum State {
     INIT,
-    CONTROL,                // For internal usage.
-    PENDING,                // Job not received yet.
-    PENDING_DATA_RECEIVED,  // Job not received yet, but data received.
-    BLOCKED,                // Blocked by other jobs/IO event.
-    READY,                  // Ready to run.
-    FINISH                  // Finished, but has not been deleted.
+    CONTROL,                     // For internal usage.
+    PENDING,                     // Job not received yet.
+    PENDING_DATA_RECEIVED,       // RCR job not received yet, but data received.
+    PENDING_MEGA_DATA_RECEIVED,  // Mega rcr job not received yet, but data received (maybe partil)
+    BLOCKED,                     // Blocked by other jobs/IO event.
+    READY,                       // Ready to run.
+    FINISH                       // Finished, but has not been deleted.
   };
 
   WorkerJobEntry();
@@ -83,6 +85,10 @@ class WorkerJobEntry {
     return ser_data_;
   }
 
+  std::map<job_id_t, SerializedData*> ser_data_map() {
+    return ser_data_map_;
+  }
+
   void set_job_id(job_id_t job_id) {
     job_id_ = job_id;
   }
@@ -103,12 +109,17 @@ class WorkerJobEntry {
     ser_data_ = ser_data;
   }
 
+  void set_ser_data(job_id_t job_id, SerializedData *ser_data) {
+    ser_data_map_[job_id] = ser_data;
+  }
+
  private:
   job_id_t job_id_;
   Job* job_;
   State state_;
   data_version_t version_;
   SerializedData *ser_data_;
+  std::map<job_id_t, SerializedData*> ser_data_map_;
 };
 
 }  // namespace nimbus

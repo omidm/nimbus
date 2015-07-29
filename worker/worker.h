@@ -178,7 +178,9 @@ class Worker {
   virtual void AddJobToGraph(Job* job);
   virtual void NotifyJobDone(job_id_t job_id, bool final);
   virtual void ClearAfterSet(WorkerJobVertex* vertex);
-  virtual void ProcessReceiveEvents(const std::vector<WorkerDataExchanger::Event>& events);
+  virtual void ProcessReceiveEvents(const WorkerDataExchanger::EventList& events);
+  virtual void ProcessRCREvent(const WorkerDataExchanger::Event& event);
+  virtual void ProcessMegaRCREvent(const WorkerDataExchanger::Event& event);
 
   virtual void ClearBlockedJobs(WorkerJobGraph* job_graph);
   virtual bool IsEmptyGraph(WorkerJobGraph* job_graph);

@@ -53,13 +53,6 @@ class RemoteCopySendCommand : public SchedulerCommand {
     RemoteCopySendCommand();
     RemoteCopySendCommand(const ID<job_id_t>& job_id,
                           const ID<job_id_t>& receive_job_id,
-                          const ID<physical_data_id_t>& from_physical_data_id,
-                          const ID<worker_id_t>& to_worker_id,
-                          const std::string to_ip,
-                          const ID<port_t>& to_port,
-                          const IDSet<job_id_t>& before);
-    RemoteCopySendCommand(const ID<job_id_t>& job_id,
-                          const ID<job_id_t>& receive_job_id,
                           const ID<job_id_t>& mega_rcr_job_id,
                           const ID<physical_data_id_t>& from_physical_data_id,
                           const ID<worker_id_t>& to_worker_id,

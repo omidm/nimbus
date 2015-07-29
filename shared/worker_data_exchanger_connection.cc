@@ -117,12 +117,20 @@ void WorkerDataExchangerConnection::set_data_version(data_version_t version) {
   data_version_ = version;
 }
 
-job_id_t WorkerDataExchangerConnection::job_id() {
-  return job_id_;
+job_id_t WorkerDataExchangerConnection::receive_job_id() {
+  return receive_job_id_;
 }
 
-void WorkerDataExchangerConnection::set_job_id(job_id_t job_id) {
-  job_id_ = job_id;
+job_id_t WorkerDataExchangerConnection::mega_rcr_job_id() {
+  return mega_rcr_job_id_;
+}
+
+void WorkerDataExchangerConnection::set_receive_job_id(job_id_t job_id) {
+  receive_job_id_ = job_id;
+}
+
+void WorkerDataExchangerConnection::set_mega_rcr_job_id(job_id_t job_id) {
+  mega_rcr_job_id_ = job_id;
 }
 
 bool WorkerDataExchangerConnection::middle_of_header() {

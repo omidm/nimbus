@@ -54,23 +54,6 @@ RemoteCopySendCommand::RemoteCopySendCommand() {
 
 RemoteCopySendCommand::RemoteCopySendCommand(const ID<job_id_t>& job_id,
                                              const ID<job_id_t>& receive_job_id,
-                                             const ID<physical_data_id_t>& from_physical_data_id,
-                                             const ID<worker_id_t>& to_worker_id,
-                                             const std::string to_ip, const ID<port_t>& to_port,
-                                             const IDSet<job_id_t>& before)
-  : job_id_(job_id),
-    receive_job_id_(receive_job_id),
-    from_physical_data_id_(from_physical_data_id),
-    to_worker_id_(to_worker_id),
-    to_ip_(to_ip), to_port_(to_port),
-    before_set_(before) {
-  name_ = REMOTE_SEND_NAME;
-  type_ = REMOTE_SEND;
-  mega_rcr_job_id_ = ID<job_id_t>(NIMBUS_KERNEL_JOB_ID);
-}
-
-RemoteCopySendCommand::RemoteCopySendCommand(const ID<job_id_t>& job_id,
-                                             const ID<job_id_t>& receive_job_id,
                                              const ID<job_id_t>& mega_rcr_job_id,
                                              const ID<physical_data_id_t>& from_physical_data_id,
                                              const ID<worker_id_t>& to_worker_id,
@@ -85,7 +68,6 @@ RemoteCopySendCommand::RemoteCopySendCommand(const ID<job_id_t>& job_id,
     before_set_(before) {
   name_ = REMOTE_SEND_NAME;
   type_ = REMOTE_SEND;
-  mega_rcr_job_id_ = ID<job_id_t>(NIMBUS_KERNEL_JOB_ID);
 }
 
 RemoteCopySendCommand::~RemoteCopySendCommand() {

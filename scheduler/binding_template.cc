@@ -58,7 +58,7 @@ BindingTemplate::BindingTemplate(const std::string& record_name,
   template_entry_ = template_entry;
   future_job_id_ptr_ = JobIdPtr(new job_id_t(0));
   worker_template_active_ = worker_template_active;
-  mega_rcr_active_ = false;
+  mega_rcr_active_ = true;
 
   std::vector<job_id_t>::const_iterator iter = compute_job_ids.begin();
   for (; iter != compute_job_ids.end(); ++iter) {
@@ -178,6 +178,35 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
     // create the mega rcr commands
     {
       // TODO(omidm): complete
+      std::map<job_id_t, IDSet<job_id_t> >::iterator iter = compute_rcr_group.begin();
+      for (; iter != compute_rcr_group.end(); ++iter) {
+        job_id_t mega_id = compute_to_mega[iter->first];
+        JobIdPtr job_id_ptr = GetExistingCopyJobIdPtr(mega_id);
+        std::vector<JobIdPtr> rcr_job_id_ptrs;
+        std::vector<PhyIdPtr> to_physical_data_id_ptrs;
+
+        std::map<job_id_t, ComputeJobCommandTemplate*>::iterator iter_c =
+          compute_job_to_command_map_.find(iter->first);
+        assert(iter_c != compute_job_to_command_map_.end());
+        worker_id_t worker_id = iter_c->second->worker_id_;
+
+        IDSet<job_id_t> rcr_group = iter->second;
+        IDSet<job_id_t>::IDSetIter it = rcr_group.begin();
+        for (; it != rcr_group.end(); ++it) {
+          std::map<job_id_t, RemoteCopyReceiveCommandTemplate*>::iterator i =
+            rcr_job_to_command_map_.find(*it);
+          assert(i != rcr_job_to_command_map_.end());
+          assert(i->second->worker_id_ == worker_id);
+          rcr_job_id_ptrs.push_back(i->second->job_id_ptr_);
+          to_physical_data_id_ptrs.push_back(i->second->to_physical_data_id_ptr_);
+        }
+
+        mega_rcr_job_to_command_map_[mega_id] =
+          new MegaRCRCommandTemplate(job_id_ptr,
+                                     rcr_job_id_ptrs,
+                                     to_physical_data_id_ptrs,
+                                     worker_id);
+      }
     }
 
     // fix the before set of compute jobs with mega rcr and clean the obsolete ids
@@ -197,7 +226,7 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
             ++i;
           }
         }
-        bs.insert(GetCopyJobIdPtr(compute_to_mega[iter->first]));
+        bs.insert(GetExistingCopyJobIdPtr(compute_to_mega[iter->first]));
         it->second->before_set_ptr_ = bs;
       }
     }
@@ -207,18 +236,45 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
     {
       // TODO(omidm): complete
       IDSet<job_id_t> inserted_mega_rcr;
-      RemoteCopyReceiveCommandTemplate *rcrc;
-      CommandTemplateVector::iterator iter = command_templates_.begin();
-      for (; iter != command_templates_.end(); ++iter) {
+      CommandTemplateList::iterator iter = command_templates_.begin();
+      for (; iter != command_templates_.end();) {
         CommandTemplate *ct = *iter;
+        job_id_t rcr, mega_id;
+        RemoteCopySendCommandTemplate *rcsc;
+        RemoteCopyReceiveCommandTemplate *rcrc;
         switch (ct->type_) {
           case COMPUTE:
           case LC:
+            ++iter;
             break;
           case RCR:
             rcrc = reinterpret_cast<RemoteCopyReceiveCommandTemplate*>(ct);
+            rcr = *(rcrc->job_id_ptr_);
+            if (candidate_rcr_.contains(rcr)) {
+              delete rcrc;
+              mega_id = rcr_to_mega[rcr];
+              if (!inserted_mega_rcr.contains(mega_id)) {
+                *iter = mega_rcr_job_to_command_map_[mega_id];
+                inserted_mega_rcr.insert(mega_id);
+                ++iter;
+              } else {
+                command_templates_.erase(iter++);
+              }
+            } else {
+              ++iter;
+            }
             break;
           case RCS:
+            rcsc = reinterpret_cast<RemoteCopySendCommandTemplate*>(ct);
+            rcr = *(rcsc->receive_job_id_ptr_);
+            if (candidate_rcr_.contains(rcr)) {
+              mega_id = rcr_to_mega[rcr];
+              rcsc->mega_rcr_job_id_ptr_ = GetExistingCopyJobIdPtr(mega_id);
+              if (worker_template_active_) {
+                job_worker_map_[mega_id].insert(rcsc->worker_id_);
+              }
+            }
+            ++iter;
             break;
           default:
             assert(false);
@@ -377,7 +433,7 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
 
   if (worker_template_active_) {
     ComputeJobCommandTemplate *cc;
-    CommandTemplateVector::iterator iter = command_templates_.begin();
+    CommandTemplateList::iterator iter = command_templates_.begin();
     for (; iter != command_templates_.end(); ++iter) {
       CommandTemplate *ct = *iter;
       if (ct->type_ == COMPUTE) {
@@ -467,7 +523,7 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
   }
 
   ComputeJobCommandTemplate *cc;
-  CommandTemplateVector::iterator iter = command_templates_.begin();
+  CommandTemplateList::iterator iter = command_templates_.begin();
   for (; iter != command_templates_.end(); ++iter) {
     CommandTemplate *ct = *iter;
     switch (ct->type_) {
@@ -488,6 +544,10 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
       case RCR:
         SendRemoteCopyReceiveCommand(reinterpret_cast<RemoteCopyReceiveCommandTemplate*>(ct),
                                      server);
+        break;
+      case MEGA_RCR:
+        SendMegaRCRCommand(reinterpret_cast<MegaRCRCommandTemplate*>(ct),
+                           server);
         break;
       default:
         assert(false);
@@ -705,6 +765,7 @@ void BindingTemplate::SendRemoteCopySendCommand(RemoteCopySendCommandTemplate* c
                                                 SchedulerServer *server) {
   ID<job_id_t> job_id(*(command->job_id_ptr_));
   ID<job_id_t> receive_job_id(*(command->receive_job_id_ptr_));
+  ID<job_id_t> mega_rcr_job_id(*(command->mega_rcr_job_id_ptr_));
   ID<physical_data_id_t> from_data_id(*(command->from_physical_data_id_ptr_));
   ID<worker_id_t> to_worker_id(command->to_worker_id_);
   std::string to_ip = command->to_ip_;
@@ -721,6 +782,7 @@ void BindingTemplate::SendRemoteCopySendCommand(RemoteCopySendCommandTemplate* c
 
   RemoteCopySendCommand cm_s(job_id,
                              receive_job_id,
+                             mega_rcr_job_id,
                              from_data_id,
                              to_worker_id,
                              to_ip,
@@ -751,6 +813,37 @@ void BindingTemplate::SendRemoteCopyReceiveCommand(RemoteCopyReceiveCommandTempl
   RemoteCopyReceiveCommand cm_r(job_id,
                                 to_data_id,
                                 before_set);
+
+  SchedulerWorker *worker;
+  if (!server->GetSchedulerWorkerById(worker, command->worker_id_)) {
+    assert(false);
+  }
+  server->SendCommand(worker, &cm_r);
+}
+
+void BindingTemplate::SendMegaRCRCommand(MegaRCRCommandTemplate* command,
+                                         SchedulerServer *server) {
+  ID<job_id_t> job_id(*(command->job_id_ptr_));
+
+  std::vector<job_id_t> receive_job_ids;
+  {
+    JobIdPtrList::iterator it = command->rcr_job_id_ptrs_.begin();
+    for (; it != command->rcr_job_id_ptrs_.end(); ++it) {
+      receive_job_ids.push_back(*(*it));
+    }
+  }
+
+  std::vector<physical_data_id_t> to_physical_data_ids;
+  {
+    PhyIdPtrList::iterator it = command->to_physical_data_id_ptrs_.begin();
+    for (; it != command->to_physical_data_id_ptrs_.end(); ++it) {
+      to_physical_data_ids.push_back(*(*it));
+    }
+  }
+
+  MegaRCRCommand cm_r(job_id,
+                      receive_job_ids,
+                      to_physical_data_ids);
 
   SchedulerWorker *worker;
   if (!server->GetSchedulerWorkerById(worker, command->worker_id_)) {
@@ -992,6 +1085,10 @@ bool BindingTemplate::AddRemoteCopySendCommand(RemoteCopySendCommand* command,
 
   JobIdPtr receive_job_id_ptr = GetCopyJobIdPtr(command->receive_job_id().elem());
 
+  assert(command->mega_rcr_job_id().elem() == NIMBUS_KERNEL_JOB_ID);
+  static const JobIdPtr default_mega_rcr_job_id_ptr =
+    JobIdPtr(new job_id_t(NIMBUS_KERNEL_JOB_ID));
+
   if (worker_template_active_) {
     job_worker_map_[*receive_job_id_ptr].insert(w_id);
   }
@@ -1028,6 +1125,7 @@ bool BindingTemplate::AddRemoteCopySendCommand(RemoteCopySendCommand* command,
   RemoteCopySendCommandTemplate *cm =
     new RemoteCopySendCommandTemplate(copy_job_id_ptr,
                                       receive_job_id_ptr,
+                                      default_mega_rcr_job_id_ptr,
                                       from_physical_data_id_ptr,
                                       command->to_worker_id(),
                                       command->to_ip(),
@@ -1119,6 +1217,19 @@ bool BindingTemplate::GetCopyJobIdPtrIfExisted(job_id_t job_id, JobIdPtr *job_id
   }
 
   return false;
+}
+
+BindingTemplate::JobIdPtr BindingTemplate::GetExistingCopyJobIdPtr(job_id_t job_id) {
+  JobIdPtr job_id_ptr;
+
+  JobIdPtrMap::iterator iter = copy_job_id_map_.find(job_id);
+  if (iter != compute_job_id_map_.end()) {
+    job_id_ptr = iter->second;
+  } else {
+    assert(false);
+  }
+
+  return job_id_ptr;
 }
 
 BindingTemplate::JobIdPtr BindingTemplate::GetExistingComputeJobIdPtr(job_id_t job_id) {

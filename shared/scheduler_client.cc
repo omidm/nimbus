@@ -194,7 +194,11 @@ size_t SchedulerClient::EnqueueCommands(char* buffer, size_t size) {
                 case SchedulerCommand::REMOTE_RECEIVE:
                   ct->AddRemoteCopyReceiveCommand(reinterpret_cast<RemoteCopyReceiveCommand*>(command)); // NOLINT
                   break;
+                case SchedulerCommand::MEGA_RCR:
+                  ct->AddMegaRCRCommand(reinterpret_cast<MegaRCRCommand*>(command)); // NOLINT
+                  break;
                 default:
+                  assert(false);
                   break;
               }
             }

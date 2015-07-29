@@ -83,6 +83,7 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
       job->name().c_str(), job->id().elem());
   if (dynamic_cast<RemoteCopySendJob*>(job) ||  // NOLINT
       dynamic_cast<RemoteCopyReceiveJob*>(job) ||  // NOLINT
+      dynamic_cast<MegaRCRJob*>(job) ||  // NOLINT
       dynamic_cast<LocalCopyJob*>(job) ||  // NOLINT
       dynamic_cast<CreateDataJob*>(job)) {  // NOLINT
     timer::StartTimer(timer::kExecuteCopyJob);

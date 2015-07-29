@@ -487,6 +487,10 @@ IDSet<job_id_t> Job::before_set() const {
   return before_set_;
 }
 
+const IDSet<job_id_t>* Job::before_set_p() const {
+  return &before_set_;
+}
+
 IDSet<job_id_t> Job::after_set() const {
   return after_set_;
 }
@@ -595,7 +599,10 @@ void RemoteCopySendJob::Execute(Parameter params, const DataArray& da) {
   SerializedData ser_data;
   da[0]->Serialize(&ser_data);
   data_exchanger_->SendSerializedData(receive_job_id().elem(),
-      to_worker_id_.elem(), ser_data, da[0]->version());
+                                      mega_rcr_job_id().elem(),
+                                      to_worker_id_.elem(),
+                                      ser_data,
+                                      da[0]->version());
   // delete ser_data.data_ptr(); // Not needed with shared pointer.
 }
 
@@ -605,6 +612,10 @@ Job* RemoteCopySendJob::Clone() {
 
 ID<job_id_t> RemoteCopySendJob::receive_job_id() {
   return receive_job_id_;
+}
+
+ID<job_id_t> RemoteCopySendJob::mega_rcr_job_id() {
+  return mega_rcr_job_id_;
 }
 
 ID<worker_id_t> RemoteCopySendJob::to_worker_id() {
@@ -622,6 +633,10 @@ ID<port_t> RemoteCopySendJob::to_port() {
 
 void RemoteCopySendJob::set_receive_job_id(ID<job_id_t> receive_job_id) {
   receive_job_id_ = receive_job_id;
+}
+
+void RemoteCopySendJob::set_mega_rcr_job_id(ID<job_id_t> mega_rcr_job_id) {
+  mega_rcr_job_id_ = mega_rcr_job_id;
 }
 
 void RemoteCopySendJob::set_to_worker_id(ID<worker_id_t> worker_id) {
@@ -716,6 +731,10 @@ const std::vector<physical_data_id_t>* MegaRCRJob::to_phy_ids_p() {
 
 void MegaRCRJob::set_serialized_data(job_id_t job_id, SerializedData* ser_data) {
   serialized_data_map_[job_id] = ser_data;
+}
+
+void MegaRCRJob::set_serialized_data_map(const std::map<job_id_t, SerializedData*>& map) {
+  serialized_data_map_ = map;
 }
 
 bool MegaRCRJob::AllDataReceived() {

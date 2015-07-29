@@ -102,9 +102,13 @@ bool isSet(const std::string& str) {
 // ********************************************************
 
 bool ParseWorkerDataHeader(const std::string& input,
-    job_id_t& job_id, size_t& data_length, data_version_t& version) {
-  int num = 3;
+                           job_id_t& receive_job_id,
+                           job_id_t& mega_rcr_job_id,
+                           size_t& data_length,
+                           data_version_t& version) {
+  int num = 4;
   job_id_t temp_j;
+  job_id_t temp_m;
   size_t temp_d;
   data_version_t temp_v;
 
@@ -120,7 +124,7 @@ bool ParseWorkerDataHeader(const std::string& input,
     iter++;
   }
   if (iter != tokens.end()) {
-    std::cout << "ERROR: DefineDataCommand has more than "<<
+    std::cout << "ERROR: Data Exchanger Header has more than "<<
       num << " parameters." << std::endl;
     return false;
   }
@@ -129,10 +133,20 @@ bool ParseWorkerDataHeader(const std::string& input,
   std::stringstream ss_j(*iter);
   ss_j >> temp_j;
   if (ss_j.fail()) {
-    std::cout << "ERROR: wrong element for job id." << std::endl;
+    std::cout << "ERROR: wrong element for receive job id." << std::endl;
     return false;
   } else {
-    job_id = temp_j;
+    receive_job_id = temp_j;
+  }
+
+  iter++;
+  std::stringstream ss_m(*iter);
+  ss_m >> temp_m;
+  if (ss_m.fail()) {
+    std::cout << "ERROR: wrong element for mega rcr job id." << std::endl;
+    return false;
+  } else {
+    mega_rcr_job_id = temp_m;
   }
 
   iter++;

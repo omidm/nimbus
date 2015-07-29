@@ -164,7 +164,8 @@ class BindingTemplate {
       COMPUTE,
       LC,
       RCS,
-      RCR
+      RCR,
+      MEGA_RCR
     };
 
     class CommandTemplate {
@@ -175,7 +176,7 @@ class BindingTemplate {
         CommandTemplateType type_;
     };
 
-    typedef std::vector<CommandTemplate*> CommandTemplateVector;
+    typedef std::list<CommandTemplate*> CommandTemplateList;
 
     class ComputeJobCommandTemplate : public CommandTemplate {
       public:
@@ -242,6 +243,7 @@ class BindingTemplate {
       public:
         RemoteCopySendCommandTemplate(JobIdPtr job_id_ptr,
                                       JobIdPtr receive_job_id_ptr,
+                                      JobIdPtr mega_rcr_job_id_ptr,
                                       PhyIdPtr from_physical_data_id_ptr,
                                       const ID<worker_id_t>& to_worker_id,
                                       const std::string to_ip,
@@ -250,6 +252,7 @@ class BindingTemplate {
                                       const worker_id_t& worker_id)
           : job_id_ptr_(job_id_ptr),
             receive_job_id_ptr_(receive_job_id_ptr),
+            mega_rcr_job_id_ptr_(mega_rcr_job_id_ptr),
             from_physical_data_id_ptr_(from_physical_data_id_ptr),
             to_worker_id_(to_worker_id),
             to_ip_(to_ip),
@@ -261,6 +264,7 @@ class BindingTemplate {
 
         JobIdPtr job_id_ptr_;
         JobIdPtr receive_job_id_ptr_;
+        JobIdPtr mega_rcr_job_id_ptr_;
         PhyIdPtr from_physical_data_id_ptr_;
         ID<worker_id_t> to_worker_id_;
         std::string to_ip_;
@@ -288,6 +292,24 @@ class BindingTemplate {
         worker_id_t worker_id_;
     };
 
+    class MegaRCRCommandTemplate : public CommandTemplate {
+      public:
+        MegaRCRCommandTemplate(JobIdPtr job_id_ptr,
+                               const std::vector<JobIdPtr>& rcr_job_id_ptrs,
+                               const std::vector<PhyIdPtr>& to_physical_data_id_ptrs,
+                               const worker_id_t& worker_id)
+          : job_id_ptr_(job_id_ptr),
+            rcr_job_id_ptrs_(rcr_job_id_ptrs),
+            to_physical_data_id_ptrs_(to_physical_data_id_ptrs),
+            worker_id_(worker_id) {type_ = MEGA_RCR;}
+
+        ~MegaRCRCommandTemplate() {}
+
+        JobIdPtr job_id_ptr_;
+        JobIdPtrList rcr_job_id_ptrs_;
+        PhyIdPtrList to_physical_data_id_ptrs_;
+        worker_id_t worker_id_;
+    };
 
     bool finalized_;
     bool established_command_template_;
@@ -317,10 +339,11 @@ class BindingTemplate {
     JobIdPtrMap compute_job_id_map_;
     JobIdPtrList compute_job_id_list_;
 
-    CommandTemplateVector command_templates_;
+    CommandTemplateList command_templates_;
 
     std::map<job_id_t, ComputeJobCommandTemplate*> compute_job_to_command_map_;
     std::map<job_id_t, RemoteCopyReceiveCommandTemplate*> rcr_job_to_command_map_;
+    std::map<job_id_t, MegaRCRCommandTemplate*> mega_rcr_job_to_command_map_;
 
     IDSet<job_id_t> candidate_rcr_;
 
@@ -338,6 +361,7 @@ class BindingTemplate {
     mutable boost::mutex mutex_;
 
     JobIdPtr GetCopyJobIdPtr(job_id_t job_id);
+    JobIdPtr GetExistingCopyJobIdPtr(job_id_t job_id);
     bool GetCopyJobIdPtrIfExisted(job_id_t job_id, JobIdPtr *job_id_ptr);
 
     JobIdPtr GetExistingComputeJobIdPtr(job_id_t job_id);
@@ -362,6 +386,9 @@ class BindingTemplate {
 
     void SendRemoteCopySendCommand(RemoteCopySendCommandTemplate* command,
                                    SchedulerServer *server);
+
+    void SendMegaRCRCommand(MegaRCRCommandTemplate* command,
+                            SchedulerServer *server);
 
     void SendRemoteCopyReceiveCommand(RemoteCopyReceiveCommandTemplate* command,
                                       SchedulerServer *server);

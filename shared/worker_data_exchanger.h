@@ -50,10 +50,10 @@
 #include <iostream>  // NOLINT
 #include <map>
 #include <list>
+#include <vector>
 #include <sstream>
 #include <string>
 #include <utility>
-#include <vector>
 #include "shared/dbg.h"
 #include "shared/log.h"
 #include "shared/parser.h"
@@ -67,14 +67,27 @@ using boost::asio::ip::tcp;
 
 class WorkerDataExchanger {
  public:
-  typedef std::pair<SerializedData*, data_version_t> DataMapEntry;
-  typedef std::map<job_id_t, DataMapEntry> DataMap;
+  // All fields in Event should be primary types or you need to add copy
+  // constructor.
+  class Event {
+    public:
+      Event(const job_id_t& receive_job_id,
+            const job_id_t& mega_rcr_job_id,
+            const data_version_t& version,
+            SerializedData *ser_data)
+        : receive_job_id_(receive_job_id),
+          mega_rcr_job_id_(mega_rcr_job_id),
+          version_(version),
+          ser_data_(ser_data) {}
+      ~Event() {}
 
-  struct Event {
-    job_id_t job_id;
-    SerializedData *ser_data;
-    data_version_t version;
+      job_id_t receive_job_id_;
+      job_id_t mega_rcr_job_id_;
+      data_version_t version_;
+      SerializedData *ser_data_;
   };
+
+  typedef std::list<Event> EventList;
 
   explicit WorkerDataExchanger(port_t port_no);
   virtual ~WorkerDataExchanger();
@@ -84,10 +97,11 @@ class WorkerDataExchanger {
   virtual bool AddContactInfo(worker_id_t worker_id,
                               std::string ip_address, port_t port_no);
 
-  virtual size_t PullReceiveEvents(std::vector<Event> *events,
+  virtual size_t PullReceiveEvents(EventList *events,
                                       size_t max_num);
 
-  virtual bool SendSerializedData(job_id_t job_id,
+  virtual bool SendSerializedData(job_id_t receive_job_id,
+                                  job_id_t mega_rcr_job_id,
                                   worker_id_t worker_id,
                                   SerializedData& ser_data,
                                   data_version_t version);
@@ -109,8 +123,8 @@ class WorkerDataExchanger {
   AddressBook address_book_;
   boost::mutex address_book_mutex_;
 
-  DataMap data_map_;
-  boost::mutex data_map_mutex_;
+  EventList event_list_;
+  boost::mutex event_list_mutex_;
 
   WorkerDataExchangerConnectionMap send_connections_;
   boost::mutex send_connection_mutex_;
@@ -145,7 +159,8 @@ class WorkerDataExchanger {
 
   virtual void AddReceiveConnection(WorkerDataExchangerConnection* connection);
 
-  virtual void AddSerializedData(job_id_t job_id,
+  virtual void AddSerializedData(job_id_t receive_job_id,
+                                 job_id_t mega_rcr_job_id,
                                  SerializedData* ser_data,
                                  data_version_t version);
 };

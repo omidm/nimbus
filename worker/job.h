@@ -172,6 +172,7 @@ class Job {
     const IDSet<physical_data_id_t>& get_read_set() const;
     const IDSet<physical_data_id_t>& get_write_set() const;
     IDSet<job_id_t> before_set() const;
+    const IDSet<job_id_t>* before_set_p() const;
     IDSet<job_id_t> after_set() const;
     ID<job_id_t> future_job_id() const;
 
@@ -275,17 +276,20 @@ class RemoteCopySendJob : public Job {
     virtual void Cancel() {}
 
     ID<job_id_t> receive_job_id();
+    ID<job_id_t> mega_rcr_job_id();
     ID<worker_id_t> to_worker_id();
     std::string to_ip();
     ID<port_t> to_port();
 
     void set_receive_job_id(ID<job_id_t> receive_job_id);
+    void set_mega_rcr_job_id(ID<job_id_t> mega_rcr_job_id);
     void set_to_worker_id(ID<worker_id_t> worker_id);
     void set_to_ip(std::string ip);
     void set_to_port(ID<port_t> port);
 
   private:
     ID<job_id_t> receive_job_id_;
+    ID<job_id_t> mega_rcr_job_id_;
     ID<worker_id_t> to_worker_id_;
     std::string to_ip_;
     ID<port_t> to_port_;
@@ -326,6 +330,7 @@ class MegaRCRJob : public Job {
     const std::vector<physical_data_id_t>* to_phy_ids_p();
 
     void set_serialized_data(job_id_t job_id, SerializedData* ser_data);
+    void set_serialized_data_map(const std::map<job_id_t, SerializedData*>& map);
 
     bool AllDataReceived();
 

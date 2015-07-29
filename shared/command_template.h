@@ -97,6 +97,8 @@ class CommandTemplate {
 
     bool AddRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* command);
 
+    bool AddMegaRCRCommand(MegaRCRCommand* command);
+
   private:
     typedef boost::shared_ptr<job_id_t> JobIdPtr;
     typedef std::vector<JobIdPtr> JobIdPtrList;
@@ -114,7 +116,8 @@ class CommandTemplate {
       COMPUTE,
       LC,
       RCS,
-      RCR
+      RCR,
+      MEGA_RCR
     };
 
     class BaseCommandTemplate {
@@ -192,6 +195,7 @@ class CommandTemplate {
       public:
         RemoteCopySendCommandTemplate(JobIdPtr job_id_ptr,
                                       JobIdPtr receive_job_id_ptr,
+                                      JobIdPtr mega_rcr_job_id_ptr,
                                       PhyIdPtr from_physical_data_id_ptr,
                                       const ID<worker_id_t>& to_worker_id,
                                       const std::string to_ip,
@@ -200,6 +204,7 @@ class CommandTemplate {
                                       const worker_id_t& worker_id)
           : job_id_ptr_(job_id_ptr),
             receive_job_id_ptr_(receive_job_id_ptr),
+            mega_rcr_job_id_ptr_(mega_rcr_job_id_ptr),
             from_physical_data_id_ptr_(from_physical_data_id_ptr),
             to_worker_id_(to_worker_id),
             to_ip_(to_ip),
@@ -211,6 +216,7 @@ class CommandTemplate {
 
         JobIdPtr job_id_ptr_;
         JobIdPtr receive_job_id_ptr_;
+        JobIdPtr mega_rcr_job_id_ptr_;
         PhyIdPtr from_physical_data_id_ptr_;
         ID<worker_id_t> to_worker_id_;
         std::string to_ip_;
@@ -238,6 +244,24 @@ class CommandTemplate {
         worker_id_t worker_id_;
     };
 
+    class MegaRCRCommandTemplate : public BaseCommandTemplate {
+      public:
+        MegaRCRCommandTemplate(JobIdPtr job_id_ptr,
+                               const JobIdPtrList& receive_job_id_ptrs,
+                               const PhyIdPtrList& to_phy_id_ptrs,
+                               const worker_id_t& worker_id)
+          : job_id_ptr_(job_id_ptr),
+            receive_job_id_ptrs_(receive_job_id_ptrs),
+            to_phy_id_ptrs_(to_phy_id_ptrs),
+            worker_id_(worker_id) {type_ = MEGA_RCR;}
+
+        ~MegaRCRCommandTemplate() {}
+
+        JobIdPtr job_id_ptr_;
+        JobIdPtrList receive_job_id_ptrs_;
+        PhyIdPtrList to_phy_id_ptrs_;
+        worker_id_t worker_id_;
+    };
 
     bool finalized_;
     size_t compute_job_num_;
@@ -277,6 +301,9 @@ class CommandTemplate {
 
     void PushRemoteCopyReceiveCommand(RemoteCopyReceiveCommandTemplate* command,
                                       SchedulerClient *client);
+
+    void PushMegaRCRCommand(MegaRCRCommandTemplate* command,
+                            SchedulerClient *client);
 };
 }  // namespace nimbus
 #endif  // NIMBUS_SHARED_COMMAND_TEMPLATE_H_

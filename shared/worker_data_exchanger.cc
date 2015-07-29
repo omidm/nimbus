@@ -213,15 +213,17 @@ size_t WorkerDataExchanger::ReadHeader(WorkerDataExchangerConnection* connection
   size_t i = 0;
   for (; i < size; i++) {
     if (buffer[i] == ';') {
-      job_id_t job_id = 0;
+      job_id_t receive_job_id = 0;
+      job_id_t mega_rcr_job_id = 0;
       size_t data_length = 0;
       data_version_t version = 0;
       buffer[i] = '\0';
       std::string input(buffer);
-      ParseWorkerDataHeader(input, job_id, data_length, version);
+      ParseWorkerDataHeader(input, receive_job_id, mega_rcr_job_id, data_length, version);
       connection->set_middle_of_data(true);
       connection->set_middle_of_header(false);
-      connection->set_job_id(job_id);
+      connection->set_receive_job_id(receive_job_id);
+      connection->set_mega_rcr_job_id(mega_rcr_job_id);
       connection->set_data_length(data_length);
       connection->set_data_version(version);
       connection->AllocateData(data_length);
@@ -244,42 +246,44 @@ size_t WorkerDataExchanger::ReadData(WorkerDataExchangerConnection* connection,
     connection->set_middle_of_header(true);
     SerializedData* ser_data =
       new SerializedData(connection->data_ptr(), connection->data_length());
-    AddSerializedData(connection->job_id(), ser_data, connection->data_version());
+    AddSerializedData(connection->receive_job_id(),
+                      connection->mega_rcr_job_id(),
+                      ser_data,
+                      connection->data_version());
     return remaining;
   }
 }
 
-void WorkerDataExchanger::AddSerializedData(job_id_t job_id,
+void WorkerDataExchanger::AddSerializedData(job_id_t receive_job_id,
+                                            job_id_t mega_rcr_job_id,
                                             SerializedData* ser_data,
                                             data_version_t version) {
 #ifndef _NIMBUS_NO_NETWORK_LOG
   char buff[LOG_MAX_BUFF_SIZE];
   snprintf(buff, sizeof(buff), "R %10.9lf j: %5.0lu s: %5.0lu",
-      Log::GetRawTime(), job_id, ser_data->size());
+      Log::GetRawTime(), receive_job_id, ser_data->size());
   log_.log_WriteToFile(std::string(buff));
 #endif
   timer::StartTimer(timer::kDataExchangerLock);
-  boost::mutex::scoped_lock lock(data_map_mutex_);
+  boost::mutex::scoped_lock lock(event_list_mutex_);
   timer::StopTimer(timer::kDataExchangerLock);
-  assert(data_map_.find(job_id) == data_map_.end());
-  data_map_[job_id] = std::make_pair(ser_data, version);
+  event_list_.push_back(Event(receive_job_id,
+                              mega_rcr_job_id,
+                              version,
+                              ser_data));
 }
 
-size_t WorkerDataExchanger::PullReceiveEvents(std::vector<Event> *events,
+size_t WorkerDataExchanger::PullReceiveEvents(EventList *events,
                                              size_t max_num) {
   events->clear();
   timer::StartTimer(timer::kDataExchangerLock);
-  boost::mutex::scoped_lock lock(data_map_mutex_);
+  boost::mutex::scoped_lock lock(event_list_mutex_);
   timer::StopTimer(timer::kDataExchangerLock);
   size_t count = 0;
-  DataMap::iterator iter = data_map_.begin();
-  for (; (iter != data_map_.end()) && (count < max_num);) {
-    Event e;
-    e.job_id   = iter->first;
-    e.ser_data = iter->second.first;
-    e.version  = iter->second.second;
-    events->push_back(e);
-    data_map_.erase(iter++);
+  EventList::iterator iter = event_list_.begin();
+  for (; (iter != event_list_.end()) && (count < max_num);) {
+    events->push_back(*iter);
+    event_list_.erase(iter++);
     ++count;
   }
 
@@ -295,7 +299,8 @@ bool WorkerDataExchanger::AddContactInfo(worker_id_t worker_id,
 }
 
 
-bool WorkerDataExchanger::SendSerializedData(job_id_t job_id,
+bool WorkerDataExchanger::SendSerializedData(job_id_t receive_job_id,
+                                             job_id_t mega_rcr_job_id,
                                              worker_id_t worker_id,
                                              SerializedData& ser_data,
                                              data_version_t version) {
@@ -318,8 +323,11 @@ bool WorkerDataExchanger::SendSerializedData(job_id_t job_id,
 
   std::string header;
   std::ostringstream ss_j;
-  ss_j << job_id;
+  ss_j << receive_job_id;
   header += (ss_j.str() + " ");
+  std::ostringstream ss_m;
+  ss_m << mega_rcr_job_id;
+  header += (ss_m.str() + " ");
   std::ostringstream ss_s;
   ss_s << size;
   header += (ss_s.str() + " ");
