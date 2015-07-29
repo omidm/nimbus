@@ -18,8 +18,8 @@
 # US West (Oregon) Region
 EC2_LOCATION                    = 'us-west-2'
 UBUNTU_AMI                      = 'ami-fa9cf1ca'
-# NIMBUS_AMI                      = 'ami-dfcef6ef'
-NIMBUS_AMI                      = 'ami-9996aea9'
+# NIMBUS_AMI                      = 'ami-9996aea9'
+NIMBUS_AMI                      = 'ami-1f868b2f'
 KEY_NAME                        = 'omidm-sing-key-pair-us-west-2'
 SECURITY_GROUP                  = 'nimbus_sg_uswest2'
 CONTROLLER_INSTANCE_TYPE        = 'c3.4xlarge'
@@ -39,6 +39,7 @@ DEACTIVATE_CONTROLLER_TEMPLATE  = False
 DEACTIVATE_COMPLEX_MEMOIZATION  = False
 DEACTIVATE_BINDING_MEMOIZATION  = False
 DEACTIVATE_WORKER_TEMPLATE      = False
+DEACTIVATE_MEGA_RCR_JOB         = False
 DEACTIVATE_DM_QUERY_CACHE       = False
 ACTIVATE_LB                     = False
 ACTIVATE_FT                     = False

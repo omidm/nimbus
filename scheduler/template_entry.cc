@@ -48,10 +48,12 @@ using namespace nimbus; // NOLINT
 #define ACTIVE_INSTANTIATION true
 
 TemplateEntry::TemplateEntry(const std::string& template_name,
-                             bool worker_template_active) {
+                             bool worker_template_active,
+                             bool mega_rcr_job_active) {
   finalized_ = false;
   template_name_ = template_name;
   worker_template_active_ = worker_template_active;
+  mega_rcr_job_active_ = mega_rcr_job_active;
   // TODO(omidm): currently we do not support future job id in templates!
   future_job_id_ptr_ = boost::shared_ptr<job_id_t>(new job_id_t(0));
 }
@@ -604,7 +606,8 @@ bool TemplateEntry::AddBindingRecord(const ComplexJobEntry *complex_job,
   BindingTemplate* bt = new BindingTemplate(record_name,
                                             complex_job->inner_job_ids(),
                                             this,
-                                            worker_template_active_);
+                                            worker_template_active_,
+                                            mega_rcr_job_active_);
   binding_records_[record_name] = bt;
   binding_template = bt;
   return true;

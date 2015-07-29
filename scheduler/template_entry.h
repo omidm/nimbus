@@ -71,7 +71,8 @@ class JobManager;
 class TemplateEntry {
   public:
     TemplateEntry(const std::string& template_name,
-                  bool worker_template_active_);
+                  bool worker_template_active_,
+                  bool mega_rcr_job_active_);
     ~TemplateEntry();
 
     bool finalized();
@@ -200,6 +201,7 @@ class TemplateEntry {
 
     std::string template_name_;
     bool worker_template_active_;
+    bool mega_rcr_job_active_;
 
     AccessIndex access_pattern_;
     boost::mutex access_pattern_mutex_;

@@ -51,14 +51,15 @@ using namespace nimbus; // NOLINT
 BindingTemplate::BindingTemplate(const std::string& record_name,
                                  const std::vector<job_id_t>& compute_job_ids,
                                  TemplateEntry *template_entry,
-                                 bool worker_template_active) {
+                                 bool worker_template_active,
+                                 bool mega_rcr_job_active) {
   finalized_ = false;
   established_command_template_ = false;
   record_name_ = record_name;
   template_entry_ = template_entry;
   future_job_id_ptr_ = JobIdPtr(new job_id_t(0));
   worker_template_active_ = worker_template_active;
-  mega_rcr_active_ = true;
+  mega_rcr_job_active_ = mega_rcr_job_active;
 
   std::vector<job_id_t>::const_iterator iter = compute_job_ids.begin();
   for (; iter != compute_job_ids.end(); ++iter) {
@@ -117,7 +118,7 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
   assert(compute_job_to_command_map_.size() == compute_job_ids.size());
 
 
-  if (mega_rcr_active_) {
+  if (mega_rcr_job_active_) {
     std::cout << "OMID Template: "
               << template_entry_->template_name()
               << " RCR num: "

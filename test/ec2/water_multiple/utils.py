@@ -54,6 +54,8 @@ def run_scheduler(scheduler_ip, worker_num):
     scheduler_command += ' --dbm '
   if config.DEACTIVATE_WORKER_TEMPLATE:
     scheduler_command += ' --dwt '
+  if config.DEACTIVATE_MEGA_RCR_JOB:
+    scheduler_command += ' --dmr '
   if config.DEACTIVATE_DM_QUERY_CACHE:
     scheduler_command += ' --dqc '
   scheduler_command += ' &> ' + config.STD_OUT_LOG

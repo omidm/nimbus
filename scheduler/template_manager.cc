@@ -47,6 +47,7 @@ using namespace nimbus; // NOLINT
 TemplateManager::TemplateManager() {
   job_manager_ = NULL;
   worker_template_active_ = false;
+  mega_rcr_job_active_ = false;
 }
 
 TemplateManager::~TemplateManager() {
@@ -69,13 +70,17 @@ void TemplateManager::set_worker_template_active(bool flag) {
   worker_template_active_ = flag;
 }
 
+void TemplateManager::set_mega_rcr_job_active(bool flag) {
+  mega_rcr_job_active_ = flag;
+}
 
 bool TemplateManager::DetectNewTemplate(const std::string& template_name) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   TemplateMap::iterator iter = template_map_.find(template_name);
   if (iter == template_map_.end()) {
     template_map_[template_name] = new TemplateEntry(template_name,
-                                                     worker_template_active_);
+                                                     worker_template_active_,
+                                                     mega_rcr_job_active_);
   } else {
     if (!iter->second->finalized()) {
       if (iter->second->CleanPartiallyFilledTemplate()) {

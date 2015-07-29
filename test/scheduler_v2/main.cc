@@ -77,6 +77,7 @@ int main(int argc, char *argv[]) {
     ("dcm", "deactivate complex memoization")
     ("dbm", "deactivate binding memoization")
     ("dwt", "deactivate worker template")
+    ("dmr", "deactivate mega rcr job")
     ("dqc", "deactivate data manager query cache")
 
     ("alb", "activate load balancing")
@@ -134,6 +135,10 @@ int main(int argc, char *argv[]) {
 
   if (vm.count("dwt")) {
     s->set_worker_template_active(false);
+  }
+
+  if (vm.count("dmr")) {
+    s->set_mega_rcr_job_active(false);
   }
 
   if (vm.count("dqc")) {

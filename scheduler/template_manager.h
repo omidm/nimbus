@@ -67,6 +67,7 @@ class TemplateManager {
     void set_job_manager(JobManager* job_manager);
     void set_id_maker(IDMaker* id_maker);
     void set_worker_template_active(bool flag);
+    void set_mega_rcr_job_active(bool flag);
 
     bool DetectNewTemplate(const std::string& template_name);
 
@@ -107,6 +108,7 @@ class TemplateManager {
     IDMaker *id_maker_;
     JobManager *job_manager_;
     bool worker_template_active_;
+    bool mega_rcr_job_active_;
     TemplateMap template_map_;
     boost::mutex mutex_;
 };

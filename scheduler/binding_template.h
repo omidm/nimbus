@@ -72,7 +72,8 @@ class BindingTemplate {
     BindingTemplate(const std::string& record_name,
                     const std::vector<job_id_t>& compute_job_ids,
                     TemplateEntry* template_entry,
-                    bool worker_template_active);
+                    bool worker_template_active,
+                    bool mega_rcr_job_active);
 
     ~BindingTemplate();
 
@@ -316,7 +317,7 @@ class BindingTemplate {
     TemplateEntry *template_entry_;
     std::string record_name_;
     bool worker_template_active_;
-    bool mega_rcr_active_;
+    bool mega_rcr_job_active_;
     // Currently we do not support future job - omidm
     JobIdPtr future_job_id_ptr_;
 

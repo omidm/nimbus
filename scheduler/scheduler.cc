@@ -51,6 +51,7 @@ namespace nimbus {
 #define DEFAULT_COMPLEX_MEMOIZATION_ACTIVE true
 #define DEFAULT_BINDING_MEMOIZATION_ACTIVE true
 #define DEFAULT_WORKER_TEMPLATE_ACTIVE true
+#define DEFAULT_MEGA_RCR_JOB_ACTIVE true
 #define DEFAULT_DATA_MANAGER_QUERY_CACHE_ACTIVE true
 
 #define DEFAULT_LOAD_BALANCING_ACTIVE false
@@ -90,6 +91,7 @@ Scheduler::Scheduler(port_t port) {
   complex_memoization_active_ = DEFAULT_COMPLEX_MEMOIZATION_ACTIVE;
   binding_memoization_active_ = DEFAULT_BINDING_MEMOIZATION_ACTIVE;
   worker_template_active_ = DEFAULT_WORKER_TEMPLATE_ACTIVE;
+  mega_rcr_job_active_ = DEFAULT_MEGA_RCR_JOB_ACTIVE;
   data_manager_query_cache_active_ = DEFAULT_DATA_MANAGER_QUERY_CACHE_ACTIVE;
 
   load_balancing_active_ = DEFAULT_LOAD_BALANCING_ACTIVE;
@@ -168,6 +170,10 @@ void Scheduler::set_binding_memoization_active(bool flag) {
 
 void Scheduler::set_worker_template_active(bool flag) {
   worker_template_active_ = flag;
+}
+
+void Scheduler::set_mega_rcr_job_active(bool flag) {
+  mega_rcr_job_active_ = flag;
 }
 
 void Scheduler::set_data_manager_query_cache_active(bool flag) {
@@ -821,6 +827,7 @@ void Scheduler::SetupTemplateManager() {
   template_manager_->set_job_manager(job_manager_);
   template_manager_->set_id_maker(id_maker_);
   template_manager_->set_worker_template_active(worker_template_active_);
+  template_manager_->set_mega_rcr_job_active(mega_rcr_job_active_);
 }
 
 void Scheduler::SetupLoadBalancer() {
