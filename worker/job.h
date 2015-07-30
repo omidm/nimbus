@@ -322,7 +322,7 @@ class MegaRCRJob : public Job {
     ~MegaRCRJob();
 
     virtual void Execute(Parameter params, const DataArray& da);
-    virtual Job* Clone() {assert(false);}
+    virtual Job* Clone() {assert(false); return NULL;}
     virtual void Sleep() {}
     virtual void Cancel() {}
 
