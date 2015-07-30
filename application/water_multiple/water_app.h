@@ -64,6 +64,10 @@ namespace application {
             void set_spawn_projection_loop_bottleneck(bool flag);
             void set_global_write(bool flag);
 
+            uint64_t projection_part_num_x() {return projection_part_num_x_;}
+            uint64_t projection_part_num_y() {return projection_part_num_y_;}
+            uint64_t projection_part_num_z() {return projection_part_num_z_;}
+
         private:
             uint64_t scale_;
             uint64_t part_num_x_;
