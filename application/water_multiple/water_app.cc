@@ -92,6 +92,7 @@ bool kUseGlobalWrite;
         DEFAULT_SPAWN_PROJECTION_LOOP_BOTTLENECK;
       global_write_ = DEFAULT_USE_GLOBAL_WRITE;
       translator_log = NULL;
+      smart_projection_ = DEFAULT_PROJECTION_SMART; 
     }
 
     void WaterApp::set_scale(uint64_t scale) {
@@ -141,6 +142,10 @@ bool kUseGlobalWrite;
 
     void WaterApp::set_global_write(bool flag) {
       global_write_ = flag;
+    }
+
+    void WaterApp::set_smart_projection(uint64_t level) {
+      smart_projection_ = level;
     }
 
     /* Register data and job types and initialize constant quantities used by

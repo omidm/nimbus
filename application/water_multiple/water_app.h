@@ -63,10 +63,12 @@ namespace application {
             void set_iteration_batch(uint64_t iteration_batch);
             void set_spawn_projection_loop_bottleneck(bool flag);
             void set_global_write(bool flag);
+            void set_smart_projection(uint64_t level);
 
             uint64_t projection_part_num_x() {return projection_part_num_x_;}
             uint64_t projection_part_num_y() {return projection_part_num_y_;}
             uint64_t projection_part_num_z() {return projection_part_num_z_;}
+            uint64_t smart_projection() {return smart_projection_;}
 
         private:
             uint64_t scale_;
@@ -79,6 +81,7 @@ namespace application {
             uint64_t last_frame_;
             uint64_t max_iterations_;
             uint64_t iteration_batch_;
+            uint64_t smart_projection_;
             bool spawn_projection_loop_bottleneck_;
             bool global_write_;
     };

@@ -53,20 +53,6 @@
 #include "worker/worker_manager.h"
 
 
-void PrintUsage() {
-  std::cout << "ERROR: wrong arguments\n";
-  std::cout << "Usage:\n";
-  std::cout << "./worker\n";
-  std::cout << "REQUIRED ARGUMENTS:\n";
-  std::cout << "\t-sip [scheduler ip] -sport [scheduler port] -port [listening port]\n";
-  std::cout << "OPTIONIAL:\n";
-  std::cout << "\t-ip [ip address]\n";
-  std::cout << "\t-s [loop counter]\n";
-  std::cout << "\t-pn [part num]\n";
-  std::cout << "\t-ithread [threading inside a job]\n";
-  std::cout << "\t-othread [threading across jobs]\n";
-}
-
 int main(int argc, char *argv[]) {
   namespace po = boost::program_options;
 
@@ -88,6 +74,7 @@ int main(int argc, char *argv[]) {
   uint64_t last_frame;
   uint64_t max_iterations;
   uint64_t iteration_batch;
+  uint64_t smart_projection_level;
 
 
   po::options_description desc("Options");
@@ -112,6 +99,7 @@ int main(int argc, char *argv[]) {
     ("last_frame,e", po::value<uint64_t>(&last_frame), "last frame to compute") //NOLINT
     ("maxi", po::value<uint64_t>(&max_iterations), "maximum projection iterations") //NOLINT
     ("ibatch", po::value<uint64_t>(&iteration_batch), "projection iteration batch") //NOLINT
+    ("psl", po::value<uint64_t>(&smart_projection_level), "smart projection level") //NOLINT
 
     ("ithread", po::value<uint64_t>(&WorkerManager::inside_job_parallism), "number of threads within one job") //NOLINT
     ("othread", po::value<uint64_t>(&WorkerManager::across_job_parallism), "number of threads at worker for job execution") //NOLINT
@@ -175,6 +163,10 @@ int main(int argc, char *argv[]) {
 
   if (vm.count("last_frame")) {
     app->set_last_frame(last_frame);
+  }
+
+  if (vm.count("psl")) {
+    app->set_smart_projection(smart_projection_level);
   }
 
   if (vm.count("maxi")) {
