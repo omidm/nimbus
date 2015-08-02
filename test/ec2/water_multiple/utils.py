@@ -87,6 +87,7 @@ def run_worker(scheduler_p_ip, worker_ip, worker_p_ip, num):
   worker_command += ' --ppny ' + str(config.PROJ_PART_Y)
   worker_command += ' --ppnz ' + str(config.PROJ_PART_Z)
   worker_command += ' --maxi ' + str(config.MAX_ITERATION)
+  worker_command += ' --psl ' + str(config.PROJECTION_SMART_LEVEL)
   worker_command += ' --ibatch ' + str(config.ITERATION_BATCH)
   if config.WRITE_PER_PART:
     worker_command += ' --dgw '

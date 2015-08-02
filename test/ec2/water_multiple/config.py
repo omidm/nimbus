@@ -19,7 +19,7 @@
 EC2_LOCATION                    = 'us-west-2'
 UBUNTU_AMI                      = 'ami-fa9cf1ca'
 # NIMBUS_AMI                      = 'ami-9996aea9'
-NIMBUS_AMI                      = 'ami-1f868b2f'
+NIMBUS_AMI                      = 'ami-37202e07'
 KEY_NAME                        = 'omidm-sing-key-pair-us-west-2'
 SECURITY_GROUP                  = 'nimbus_sg_uswest2'
 CONTROLLER_INSTANCE_TYPE        = 'c3.4xlarge'
@@ -60,6 +60,7 @@ FRAME_NUMBER                    = 1
 OTHREAD_NUM                     = 8
 ITERATION_BATCH                 = 1
 MAX_ITERATION                   = 100
+PROJECTION_SMART_LEVEL          = 0
 NO_PROJ_BOTTLENECK              = False
 WRITE_PER_PART                  = True
 RUN_WITH_TASKSET                = False
