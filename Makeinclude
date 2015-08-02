@@ -22,16 +22,18 @@ endif
 # LDIR is needed for rpath directives for dynamic loading
 LDIR = ${NIMBUS_ROOT}
 
+# Set the compiler
 CPP = g++
+
 # Flags for all cpp invocations
 CFLAGS = -Wall -g -O3
-# CFLAGS += -pg # flags for profiling with gprof
-# CFLAGS += -fno-omit-frame-pointer -ggdb -pg # flags for profiling with perf
-# CFLAGS += -D_NIMBUS_NO_DBG # flaf to remove dbg statements
-# CFLAGS += -D_NIMBUS_NO_LOG # flaf to remove log statements
-# CFLAGS += -DNDEBUG
-# CFLAGS  += -DN_APP_CACHE # use application cache or not
-CFLAGS  += -DV_APP_CACHE # application data manager frees inner physical object memory
+# CFLAGS += -pg                                 # flags for profiling with gprof
+# CFLAGS += -fno-omit-frame-pointer -ggdb -pg   # flags for profiling with perf
+# CFLAGS += -D_NIMBUS_NO_DBG                    # flag to remove dbg statements
+# CFLAGS += -D_NIMBUS_NO_LOG                    # flag to remove log statements
+# CFLAGS += -DNDEBUG                            # flag for production compilation
+# CFLAGS += -DN_APP_CACHE                       # flag to disable application cache
+CFLAGS  += -DV_APP_CACHE                        # falg to use application data manager that frees inner physical object memory asd
 
 # For reasons I do not understand need to disable two-level loading namespace
 # optimizations under Darwin -pal
@@ -40,19 +42,19 @@ ifdef OS_DARWIN
 endif
 
 # -I params for all cpp invocations
-IFLAGS   = -I/opt/local/include # Include MacPorts includes
-IFLAGS  += -I/usr/local/include # Include protocol buffer headers
-IFLAGS  += -I${NIMBUS_ROOT}/leveldb/include # Include leveldb includes
-IFLAGS  += -I${NIMBUS_ROOT}
+IFLAGS   = -I/opt/local/include                 # Include MacPorts includes
+IFLAGS  += -I/usr/local/include                 # Include boost and protocol buffer headers
+IFLAGS  += -I${NIMBUS_ROOT}/leveldb/include     # Include leveldb headers
+IFLAGS  += -I${NIMBUS_ROOT}                     # Include nimbus headers
 
 # -l params for linking invocation
 LFLAGS   =                                      
 
 # -L params for linking invocation
-LDFLAGS += -L/opt/local/lib # Link with MacPorts libraries
-LDFLAGS += -L/usr/local/lib # Link with protocol buffer libraries
-LDFLAGS += -L${NIMBUS_ROOT}/leveldb/ # Link with Leveldb library
-LDFLAGS += -L${NIMBUS_ROOT}/ # Link with Nimbus libraries
+LDFLAGS += -L/opt/local/lib                      # Link with MacPorts libraries
+LDFLAGS += -L/usr/local/lib                      # Link with boost and protocol buffer libraries
+LDFLAGS += -L${NIMBUS_ROOT}/leveldb/             # Link with Leveldb library
+LDFLAGS += -L${NIMBUS_ROOT}/                     # Link with Nimbus library
 
 # -rpath tells executable where to look for libraries; without it executables
 # do not find Nimbus libraries. -pal
@@ -60,7 +62,6 @@ LDFLAGS += -Wl,-rpath ${NIMBUS_ROOT}
 LDFLAGS += -Wl,-rpath ${NIMBUS_ROOT}/leveldb
 
 # Checking rules
-
 NIMBUS_CCLINT = ${NIMBUS_ROOT}/tools/cpplint.py
 NIMBUS_FILENAMES = ${NIMBUS_ROOT}/tools/cppfiles.sh
 
@@ -85,6 +86,7 @@ $(CHECKDIR):
 
 check: fcheck lint
 
+# General clean directives
 clean-files:
 	\rm -f *.o *~ \#* 
 	\rm -Rf $(CHECKDIR)
