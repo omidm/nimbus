@@ -46,10 +46,15 @@ Nimbus Installation Dependencies - Linux
   1. You have to run the commands with "sudo" permissions so that the scripts
      could put the header files and libraries in the right directory.
 
-  2. You have to update the known libraries to the system:
+  2. If you already installed the protobuf through apt-get, there could be link
+     errors. You need to remove the package:
+     $ sudo apt-get remove --auto-remove libprotoc-dev
+     $ sudo apt-get remove --auto-remove protobuf-compiler
+
+  3. You have to update the known libraries to the system:
       $ sudo ldconfig
 
-  3. For PhysBAM related applications you need old compiler g++-4.5.
+  4. For PhysBAM related applications you need old compiler g++-4.5.
      However, Ubuntu 12.04's default g++-4.6 works well too. 
      
      ** EC2 base Ubuntu 12.04 AMI: ami-fa9cf1ca
