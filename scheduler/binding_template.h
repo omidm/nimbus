@@ -175,6 +175,8 @@ class BindingTemplate {
         ~CommandTemplate() {}
 
         CommandTemplateType type_;
+        JobIdPtr job_id_ptr_;
+        JobIdPtrSet before_set_ptr_;
     };
 
     typedef std::list<CommandTemplate*> CommandTemplateList;
@@ -192,23 +194,23 @@ class BindingTemplate {
                                   const GeometricRegion& region,
                                   const worker_id_t& worker_id)
           : job_name_(job_name),
-            job_id_ptr_(job_id_ptr),
             read_set_ptr_(read_set_ptr),
             write_set_ptr_(write_set_ptr),
-            before_set_ptr_(before_set_ptr),
             after_set_ptr_(after_set_ptr),
             future_job_id_ptr_(future_job_id_ptr),
             sterile_(sterile),
             region_(region),
-            worker_id_(worker_id) {type_ = COMPUTE;}
+            worker_id_(worker_id) {
+              type_ = COMPUTE;
+              job_id_ptr_ = job_id_ptr;
+              before_set_ptr_ = before_set_ptr;
+            }
 
         ~ComputeJobCommandTemplate() {}
 
         std::string job_name_;
-        JobIdPtr job_id_ptr_;
         PhyIdPtrSet read_set_ptr_;
         PhyIdPtrSet write_set_ptr_;
-        JobIdPtrSet before_set_ptr_;
         JobIdPtrSet after_set_ptr_;
         JobIdPtr future_job_id_ptr_;
         bool sterile_;
@@ -224,18 +226,18 @@ class BindingTemplate {
                                  PhyIdPtr to_physical_data_id_ptr,
                                  const JobIdPtrSet& before_set_ptr,
                                  const worker_id_t& worker_id)
-          : job_id_ptr_(job_id_ptr),
-            from_physical_data_id_ptr_(from_physical_data_id_ptr),
+          : from_physical_data_id_ptr_(from_physical_data_id_ptr),
             to_physical_data_id_ptr_(to_physical_data_id_ptr),
-            before_set_ptr_(before_set_ptr),
-            worker_id_(worker_id) {type_ = LC;}
+            worker_id_(worker_id) {
+              type_ = LC;
+              job_id_ptr_ = job_id_ptr;
+              before_set_ptr_ = before_set_ptr;
+            }
 
         ~LocalCopyCommandTemplate() {}
 
-        JobIdPtr job_id_ptr_;
         PhyIdPtr from_physical_data_id_ptr_;
         PhyIdPtr to_physical_data_id_ptr_;
-        JobIdPtrSet before_set_ptr_;
         worker_id_t worker_id_;
     };
 
@@ -251,26 +253,26 @@ class BindingTemplate {
                                       const ID<port_t>& to_port,
                                       const JobIdPtrSet& before_set_ptr,
                                       const worker_id_t& worker_id)
-          : job_id_ptr_(job_id_ptr),
-            receive_job_id_ptr_(receive_job_id_ptr),
+          : receive_job_id_ptr_(receive_job_id_ptr),
             mega_rcr_job_id_ptr_(mega_rcr_job_id_ptr),
             from_physical_data_id_ptr_(from_physical_data_id_ptr),
             to_worker_id_(to_worker_id),
             to_ip_(to_ip),
             to_port_(to_port),
-            before_set_ptr_(before_set_ptr),
-            worker_id_(worker_id) {type_ = RCS;}
+            worker_id_(worker_id) {
+              type_ = RCS;
+              job_id_ptr_ = job_id_ptr;
+              before_set_ptr_ = before_set_ptr;
+            }
 
         ~RemoteCopySendCommandTemplate() {}
 
-        JobIdPtr job_id_ptr_;
         JobIdPtr receive_job_id_ptr_;
         JobIdPtr mega_rcr_job_id_ptr_;
         PhyIdPtr from_physical_data_id_ptr_;
         ID<worker_id_t> to_worker_id_;
         std::string to_ip_;
         ID<port_t> to_port_;
-        JobIdPtrSet before_set_ptr_;
         worker_id_t worker_id_;
     };
 
@@ -280,16 +282,16 @@ class BindingTemplate {
                                          PhyIdPtr to_physical_data_id_ptr,
                                          const JobIdPtrSet& before_set_ptr,
                                          const worker_id_t& worker_id)
-          : job_id_ptr_(job_id_ptr),
-            to_physical_data_id_ptr_(to_physical_data_id_ptr),
-            before_set_ptr_(before_set_ptr),
-            worker_id_(worker_id) {type_ = RCR;}
+          : to_physical_data_id_ptr_(to_physical_data_id_ptr),
+            worker_id_(worker_id) {
+              type_ = RCR;
+              job_id_ptr_ = job_id_ptr;
+              before_set_ptr_ = before_set_ptr;
+            }
 
         ~RemoteCopyReceiveCommandTemplate() {}
 
-        JobIdPtr job_id_ptr_;
         PhyIdPtr to_physical_data_id_ptr_;
-        JobIdPtrSet before_set_ptr_;
         worker_id_t worker_id_;
     };
 
@@ -299,14 +301,15 @@ class BindingTemplate {
                                const std::vector<JobIdPtr>& rcr_job_id_ptrs,
                                const std::vector<PhyIdPtr>& to_physical_data_id_ptrs,
                                const worker_id_t& worker_id)
-          : job_id_ptr_(job_id_ptr),
-            rcr_job_id_ptrs_(rcr_job_id_ptrs),
+          : rcr_job_id_ptrs_(rcr_job_id_ptrs),
             to_physical_data_id_ptrs_(to_physical_data_id_ptrs),
-            worker_id_(worker_id) {type_ = MEGA_RCR;}
+            worker_id_(worker_id) {
+              type_ = MEGA_RCR;
+              job_id_ptr_ = job_id_ptr;
+            }
 
         ~MegaRCRCommandTemplate() {}
 
-        JobIdPtr job_id_ptr_;
         JobIdPtrList rcr_job_id_ptrs_;
         PhyIdPtrList to_physical_data_id_ptrs_;
         worker_id_t worker_id_;
@@ -343,6 +346,8 @@ class BindingTemplate {
     CommandTemplateList command_templates_;
 
     std::map<job_id_t, ComputeJobCommandTemplate*> compute_job_to_command_map_;
+    std::map<job_id_t, LocalCopyCommandTemplate*> lc_job_to_command_map_;
+    std::map<job_id_t, RemoteCopySendCommandTemplate*> rcs_job_to_command_map_;
     std::map<job_id_t, RemoteCopyReceiveCommandTemplate*> rcr_job_to_command_map_;
     std::map<job_id_t, MegaRCRCommandTemplate*> mega_rcr_job_to_command_map_;
 
