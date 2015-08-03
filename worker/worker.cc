@@ -1110,14 +1110,14 @@ void Worker::PrintTimerStat() {
   l_j2 = c_j2;
   l_j3 = c_j3;
   l_j4 = c_j4;
-  fprintf(temp, "run_time: %.3f copy_time: %.3f rcr_copy: %.3f block_time: %.3f idle_time: %.3f parent_exec: %.3f dx_lock: %.3f inv_map: %.3f jg1: %.3f jg2: %.3f jg3: %.3f jg4: %.3f clear_as %.3f\n", // NOLINT
+  fprintf(temp, "run_time: %.3f block_time: %.3f idle_time: %.3f parent_exec: %.3f dx_lock: %.3f copy_time: %.3f rcr_copy: %.3f inv_map: %.3f jg1: %.3f jg2: %.3f jg3: %.3f jg4: %.3f clear_as %.3f\n", // NOLINT
       static_cast<double>(run) / 1e9,
-      static_cast<double>(copy) / 1e9,
-      static_cast<double>(rcrx) / 1e9,
       static_cast<double>(block) / 1e9,
       static_cast<double>(idle) / 1e9,
       static_cast<double>(pexec) / 1e9,
       static_cast<double>(dxl) / 1e9,
+      static_cast<double>(copy) / 1e9,
+      static_cast<double>(rcrx) / 1e9,
       static_cast<double>(ivm) / 1e9,
       static_cast<double>(j1) / 1e9,
       static_cast<double>(j2) / 1e9,
