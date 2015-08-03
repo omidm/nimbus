@@ -14,6 +14,8 @@ SET(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE)
 
 #You should set CC and CXX environment variables for CMake 
 #to find a compiler on UNIX systems
+SET(CMAKE_C_COMPILER gcc-4.5)
+SET(CMAKE_CXX_COMPILER g++-4.5)
 
 #Set a release build type if nothing is defined
 IF(NOT WIN32)

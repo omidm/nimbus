@@ -18,11 +18,13 @@ ifeq ($(findstring Linux, $(shell uname)), Linux)
 endif
 endif
 
+# Configuration file for non-default compiler values (CPP)
 
 # LDIR is needed for rpath directives for dynamic loading
 LDIR = ${NIMBUS_ROOT}
 
-CPP = g++
+CPP  = g++-4.5
+
 # Flags for all cpp invocations
 CFLAGS = -Wall -g -O3
 # CFLAGS += -pg # flags for profiling with gprof
