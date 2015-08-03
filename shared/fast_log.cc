@@ -70,6 +70,7 @@ std::string TimerName(TimerType timer_type) {
     case kExecuteParentJob: return "kExecuteParentJob";
     case kInvalidateMappings: return "kInvalidateMappings";
     case kClearAfterSet: return "kClearAfterSet";
+    case kRCRCopy: return "kRCRCopy";
     case kJobGraph1: return "kJobGraph1";
     case kJobGraph2: return "kJobGraph2";
     case kJobGraph3: return "kJobGraph3";

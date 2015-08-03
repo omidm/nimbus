@@ -64,6 +64,7 @@ enum TimerType {
   kExecuteParentJob,
   kInvalidateMappings,
   kClearAfterSet,
+  kRCRCopy,
   kJobGraph1,
   kJobGraph2,
   kJobGraph3,

@@ -1070,10 +1070,12 @@ void Worker::PrintTimerStat() {
   boost::unique_lock<boost::recursive_mutex> lock(stat_mutex_);
   std::string file_name = int2string(id_) + "_main_timers.txt";
   static FILE* temp = fopen(file_name.c_str(), "w");
-  static int64_t l_idle = 0, l_block = 0, l_run = 0, l_pexec = 0, l_dxl = 0, l_ivm = 0, l_cas = 0, l_j1 = 0, l_j2 = 0, l_j3 = 0, l_j4 = 0; // NOLINT
+  static int64_t l_idle = 0, l_block = 0, l_run = 0, l_copy = 0, l_rcrx = 0, l_pexec = 0, l_dxl = 0, l_ivm = 0, l_cas = 0, l_j1 = 0, l_j2 = 0, l_j3 = 0, l_j4 = 0; // NOLINT
   int64_t c_block = block_timer_.Read();
   int64_t c_run = run_timer_.Read();
   int64_t c_idle = total_timer_.Read() - c_block - c_run;
+  int64_t c_copy = timer::ReadTimerTypeSum(timer::kExecuteCopyJob);
+  int64_t c_rcrx = timer::ReadTimerTypeSum(timer::kRCRCopy);
   int64_t c_pexec = timer::ReadTimerTypeSum(timer::kExecuteParentJob);
   int64_t c_dxl = timer::ReadTimerTypeSum(timer::kDataExchangerLock);
   int64_t c_ivm = timer::ReadTimerTypeSum(timer::kInvalidateMappings);
@@ -1085,6 +1087,8 @@ void Worker::PrintTimerStat() {
   int64_t idle = c_idle - l_idle;
   int64_t block = c_block - l_block;
   int64_t run = c_run - l_run;
+  int64_t copy = c_copy - l_copy;
+  int64_t rcrx = c_rcrx - l_rcrx;
   int64_t pexec = c_pexec - l_pexec;
   int64_t dxl = c_dxl - l_dxl;
   int64_t ivm = c_ivm - l_ivm;
@@ -1096,6 +1100,8 @@ void Worker::PrintTimerStat() {
   l_idle = c_idle;
   l_block = c_block;
   l_run = c_run;
+  l_copy = c_copy;
+  l_rcrx = c_rcrx;
   l_pexec = c_pexec;
   l_dxl = c_dxl;
   l_ivm = c_ivm;
@@ -1104,8 +1110,10 @@ void Worker::PrintTimerStat() {
   l_j2 = c_j2;
   l_j3 = c_j3;
   l_j4 = c_j4;
-  fprintf(temp, "run_time: %.3f block_time: %.3f idle_time: %.3f parent_exec: %.3f dx_lock: %.3f inv_map: %.3f jg1: %.3f jg2: %.3f jg3: %.3f jg4: %.3f clear_as %.3f\n", // NOLINT
+  fprintf(temp, "run_time: %.3f copy_time: %.3f rcr_copy: %.3f block_time: %.3f idle_time: %.3f parent_exec: %.3f dx_lock: %.3f inv_map: %.3f jg1: %.3f jg2: %.3f jg3: %.3f jg4: %.3f clear_as %.3f\n", // NOLINT
       static_cast<double>(run) / 1e9,
+      static_cast<double>(copy) / 1e9,
+      static_cast<double>(rcrx) / 1e9,
       static_cast<double>(block) / 1e9,
       static_cast<double>(idle) / 1e9,
       static_cast<double>(pexec) / 1e9,

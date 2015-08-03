@@ -666,10 +666,12 @@ void RemoteCopyReceiveJob::Execute(Parameter params, const DataArray& da) {
   timer::StopTimer(timer::kInvalidateMappings);
   Data * data_copy = NULL;
   da[0]->DeSerialize(*serialized_data_, &data_copy);
+  timer::StartTimer(timer::kRCRCopy);
   da[0]->Copy(data_copy);
   da[0]->set_version(data_version_);
 
   data_copy->Destroy();
+  timer::StopTimer(timer::kRCRCopy);
   // delete serialized_data_->data_ptr(); // Not needed with shared pointer.
   delete serialized_data_;
 }
