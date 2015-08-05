@@ -19,11 +19,12 @@ endif
 endif
 
 # Configuration file for non-default compiler values (CPP)
+-include ${NIMBUS_ROOT}/Makeconfig
 
 # LDIR is needed for rpath directives for dynamic loading
 LDIR = ${NIMBUS_ROOT}
 
-CPP  = g++-4.5
+CPP ?= g++
 
 # Flags for all cpp invocations
 CFLAGS = -Wall -g -O3
