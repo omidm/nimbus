@@ -27,7 +27,7 @@ fi
 echo -e "${Pur}Launching $1 workers  each with $2 threads...${RCol}"
 for i in `seq 1 $1`;
 do
-  # ./worker --cip localhost --cport 5900 --othread $2 -p 590$i --pnx 4 --pny 4 --pnz 4 --ppnx 4 --ppny 4 --ppnz 4 -s 80 -e 4&
-  ./worker --cip localhost --cport 5900 --othread $2 -p 590$i & 
+  # ./worker --cip localhost --cport 5900 --othread $2 -p 590$i --pnx 4 --pny 4 --pnz 4 --ppnx 4 --ppny 4 --ppnz 4 -s 80 --psl 0 -e 4 &
+  ./worker --cip localhost --cport 5900 --othread $2 -p 590$i --psl 0 & 
 done
 

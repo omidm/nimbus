@@ -14,6 +14,9 @@ def parse_line(line):
     elif len(items) == 10:
       pexec = float(items[7])
       dxl   = float(items[9])
+    elif len(items) == 12:
+      pexec = float(items[11])
+      dxl   = float(items[9])
     return float(items[1]),  float(items[3]), float(items[5]), pexec, dxl
 
 
