@@ -1,0 +1,41 @@
+------------------------------------------------------------------------------
+Author:	omidm@stanford.edy (Omid Mashayekhi)
+------------------------------------------------------------------------------
+
+This is a worker intended to run the logistic regression application.
+
+------------------------------------------------------------------------------
+Build instructions:
+------------------------------------------------------------------------------
+
+1. Build Nimbus: issue make in the nimbus/ folder.
+2. Build application: issue make in application/logistic_regression/.
+3. Build worker: issue make in this folder.
+
+Alternatively, you could skip 2 and 3, and only issue "make all" in this folder
+
+------------------------------------------------------------------------------
+Run/ Usage:
+------------------------------------------------------------------------------
+
+1. Start scheduler.
+2. Start the worker in this directory.
+
+Options:
+  -h [ --help ]                produce help message
+REQUIRED ARGUMENTS:
+  -p [ --port ] arg            listening port for data exchanger
+  --cport arg                  controller listening port
+  --cip arg                    controller ip address
+OPTIONIAL ARGUMENTS:
+  --ip arg                     forced ip address of the worker, not known by controller
+  -d [ --dimension ] arg (=10) dimension of the sample vectors
+  -i [ --iteration ] arg (=10) number of iterations
+  --pn arg (=10)               number of partitions
+  -s [ --size ] arg (=10)      data size in MB
+  --othread arg                number of threads at worker for job execution
+
+------------------------------------------------------------------------------
+Notes:
+------------------------------------------------------------------------------
+

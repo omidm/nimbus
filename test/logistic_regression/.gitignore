@@ -1,0 +1,4 @@
+worker
+output*
+*.txt
+_db*

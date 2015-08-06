@@ -1,3 +1,4 @@
 *log*
 *.dot
 *.pdf
+!logistic_regression

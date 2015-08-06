@@ -1,0 +1,17 @@
+package data_msgs;
+
+message  VectorMsg{
+  repeated float elems       = 1;
+}
+
+message  SampleMsg{
+  optional float label       = 1;
+  repeated float elems       = 2;
+}
+
+message SampleBatchMsg{
+  repeated SampleMsg samples = 2;
+}
+
+
+
