@@ -14,6 +14,7 @@ SET(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE)
 
 #You should set CC and CXX environment variables for CMake 
 #to find a compiler on UNIX systems
+INCLUDE("./compiler_config.cmake" OPTIONAL)
 
 #Set a release build type if nothing is defined
 IF(NOT WIN32)
