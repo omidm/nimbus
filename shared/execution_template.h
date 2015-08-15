@@ -54,6 +54,7 @@
 #include <algorithm>
 #include "shared/nimbus_types.h"
 #include "shared/scheduler_command_include.h"
+#include "shared/worker_data_exchanger.h"
 #include "shared/dbg.h"
 #include "shared/log.h"
 #include "worker/job.h"
@@ -96,11 +97,16 @@ class ExecutionTemplate {
     bool AddLocalCopyJobTemplate(LocalCopyCommand* command,
                                  Application *app);
 
-    bool AddRemoteCopySendJobTemplate(RemoteCopySendCommand* command);
+    bool AddRemoteCopySendJobTemplate(RemoteCopySendCommand* command,
+                                      Application *app,
+                                      WorkerDataExchanger *dx);
 
-    bool AddRemoteCopyReceiveJobTemplate(RemoteCopyReceiveCommand* command);
 
-    bool AddMegaRCRJobTemplate(MegaRCRCommand* command);
+    bool AddRemoteCopyReceiveJobTemplate(RemoteCopyReceiveCommand* command,
+                                         Application *app);
+
+    bool AddMegaRCRJobTemplate(MegaRCRCommand* command,
+                               Application *app);
 
   private:
     typedef boost::shared_ptr<job_id_t> JobIdPtr;
@@ -206,80 +212,85 @@ class ExecutionTemplate {
 
     class RemoteCopySendJobTemplate : public BaseJobTemplate {
       public:
-        RemoteCopySendJobTemplate(JobIdPtr job_id_ptr,
-                                      JobIdPtr receive_job_id_ptr,
-                                      JobIdPtr mega_rcr_job_id_ptr,
-                                      PhyIdPtr from_physical_data_id_ptr,
-                                      const ID<worker_id_t>& to_worker_id,
-                                      const std::string to_ip,
-                                      const ID<port_t>& to_port,
-                                      const JobIdPtrSet& before_set_ptr,
-                                      const worker_id_t& worker_id)
-          : job_id_ptr_(job_id_ptr),
+        RemoteCopySendJobTemplate(RemoteCopySendJob *job,
+                                  JobIdPtr job_id_ptr,
+                                  JobIdPtr receive_job_id_ptr,
+                                  JobIdPtr mega_rcr_job_id_ptr,
+                                  PhyIdPtr from_physical_data_id_ptr,
+                                  const IDSet<job_id_t>& before_set)
+          : job_(job),
+            job_id_ptr_(job_id_ptr),
             receive_job_id_ptr_(receive_job_id_ptr),
             mega_rcr_job_id_ptr_(mega_rcr_job_id_ptr),
-            from_physical_data_id_ptr_(from_physical_data_id_ptr),
-            to_worker_id_(to_worker_id),
-            to_ip_(to_ip),
-            to_port_(to_port),
-            before_set_ptr_(before_set_ptr),
-            worker_id_(worker_id) {type_ = RCS;}
+            from_physical_data_id_ptr_(from_physical_data_id_ptr) {
+              type_ = RCS;
+              before_set_ = before_set;
+              before_set_count_ = before_set.size();
+              dependency_counter_ = before_set.size();
+            }
 
         ~RemoteCopySendJobTemplate() {}
 
+        RemoteCopySendJob *job_;
         JobIdPtr job_id_ptr_;
         JobIdPtr receive_job_id_ptr_;
         JobIdPtr mega_rcr_job_id_ptr_;
         PhyIdPtr from_physical_data_id_ptr_;
-        ID<worker_id_t> to_worker_id_;
-        std::string to_ip_;
-        ID<port_t> to_port_;
-        JobIdPtrSet before_set_ptr_;
-        worker_id_t worker_id_;
 
-        virtual void Refresh(const std::vector<Parameter> & paramerts) {}
+        virtual void Refresh(const std::vector<Parameter> & paramerts);
     };
 
     class RemoteCopyReceiveJobTemplate : public BaseJobTemplate {
       public:
-        RemoteCopyReceiveJobTemplate(JobIdPtr job_id_ptr,
-                                         PhyIdPtr to_physical_data_id_ptr,
-                                         const JobIdPtrSet& before_set_ptr,
-                                         const worker_id_t& worker_id)
-          : job_id_ptr_(job_id_ptr),
-            to_physical_data_id_ptr_(to_physical_data_id_ptr),
-            before_set_ptr_(before_set_ptr),
-            worker_id_(worker_id) {type_ = RCR;}
+        RemoteCopyReceiveJobTemplate(RemoteCopyReceiveJob *job,
+                                     JobIdPtr job_id_ptr,
+                                     PhyIdPtr to_physical_data_id_ptr,
+                                     const IDSet<job_id_t>& before_set)
+          : job_(job),
+            job_id_ptr_(job_id_ptr),
+            to_physical_data_id_ptr_(to_physical_data_id_ptr) {
+              type_ = RCR;
+              before_set_ = before_set;
+              before_set_count_ = before_set.size();
+              // +1 for data delivery
+              dependency_counter_ = before_set.size() + 1;
+            }
 
         ~RemoteCopyReceiveJobTemplate() {}
 
+        RemoteCopyReceiveJob *job_;
         JobIdPtr job_id_ptr_;
         PhyIdPtr to_physical_data_id_ptr_;
-        JobIdPtrSet before_set_ptr_;
-        worker_id_t worker_id_;
 
-        virtual void Refresh(const std::vector<Parameter> & paramerts) {}
+        virtual void Refresh(const std::vector<Parameter> & paramerts);
     };
 
     class MegaRCRJobTemplate : public BaseJobTemplate {
       public:
-        MegaRCRJobTemplate(JobIdPtr job_id_ptr,
-                               const JobIdPtrList& receive_job_id_ptrs,
-                               const PhyIdPtrList& to_phy_id_ptrs,
-                               const worker_id_t& worker_id)
-          : job_id_ptr_(job_id_ptr),
+        MegaRCRJobTemplate(MegaRCRJob *job,
+                           JobIdPtr job_id_ptr,
+                           const JobIdPtrList& receive_job_id_ptrs,
+                           const PhyIdPtrList& to_phy_id_ptrs,
+                           const IDSet<job_id_t>& before_set)
+          : job_(job),
+            job_id_ptr_(job_id_ptr),
             receive_job_id_ptrs_(receive_job_id_ptrs),
-            to_phy_id_ptrs_(to_phy_id_ptrs),
-            worker_id_(worker_id) {type_ = MEGA_RCR;}
+            to_phy_id_ptrs_(to_phy_id_ptrs) {
+              type_ = MEGA_RCR;
+              before_set_ = before_set;
+              before_set_count_ = before_set.size();
+              // + receive_job_id_ptrs.size() for data delivery
+              dependency_counter_ = before_set_count_ + receive_job_id_ptrs.size();
+            }
 
         ~MegaRCRJobTemplate() {}
 
+        MegaRCRJob *job_;
         JobIdPtr job_id_ptr_;
         JobIdPtrList receive_job_id_ptrs_;
         PhyIdPtrList to_phy_id_ptrs_;
-        worker_id_t worker_id_;
 
-        virtual void Refresh(const std::vector<Parameter> & paramerts) {}
+        virtual void Refresh(const std::vector<Parameter> & paramerts);
     };
 
     bool finalized_;

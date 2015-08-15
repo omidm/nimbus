@@ -184,7 +184,6 @@ bool ExecutionTemplate::MarkJobDone(const job_id_t& shadow_job_id,
 
 bool ExecutionTemplate::AddComputeJobTemplate(ComputeJobCommand* cm,
                                               Application *app) {
-  std::string job_name = cm->job_name();
   job_id_t job_id = cm->job_id().elem();
   Job* job = app->CloneJob(cm->job_name());
   job->set_name("Compute:" + cm->job_name());
@@ -228,20 +227,6 @@ bool ExecutionTemplate::AddComputeJobTemplate(ComputeJobCommand* cm,
   job_templates_[job_id] = jt;
 
   return true;
-}
-
-
-void ExecutionTemplate::BaseJobTemplate::RemoveDependences(JobTemplateVector *ready_list) {
-  ready_list->clear();
-
-  JobTemplateVector::iterator iter = after_set_job_templates_.begin();
-  for (; iter != after_set_job_templates_.end(); ++iter) {
-    assert((*iter)->dependency_counter_ > 0);
-    --(*iter)->dependency_counter_;
-    if ((*iter)->dependency_counter_ == 0) {
-      ready_list->push_back(*iter);
-    }
-  }
 }
 
 void ExecutionTemplate::ComputeJobTemplate::Refresh(
@@ -312,6 +297,9 @@ void ExecutionTemplate::LocalCopyJobTemplate::Refresh(
     const std::vector<Parameter>& parameters) {
   job_->set_id(ID<job_id_t>(*job_id_ptr_));
 
+  assert(dependency_counter_ == 0);
+  dependency_counter_ = before_set_count_;
+
   IDSet<physical_data_id_t> read_set;
   read_set.insert(*from_physical_data_id_ptr_);
   job_->set_read_set(read_set);
@@ -321,95 +309,140 @@ void ExecutionTemplate::LocalCopyJobTemplate::Refresh(
   job_->set_write_set(write_set);
 }
 
+bool ExecutionTemplate::AddRemoteCopySendJobTemplate(RemoteCopySendCommand* cm,
+                                                     Application *app,
+                                                     WorkerDataExchanger *dx) {
+  job_id_t job_id = cm->job_id().elem();
+
+  RemoteCopySendJob * job = new RemoteCopySendJob(dx, app);
+  dx->AddContactInfo(cm->to_worker_id().elem(),
+                     cm->to_ip(),
+                     cm->to_port().elem());
+  job->set_name("RemoteCopySend");
+  job->set_to_worker_id(cm->to_worker_id());
+  job->set_to_ip(cm->to_ip());
+  job->set_to_port(cm->to_port());
+  // job->set_shadow_id(job_id);
+  // job->set_execution_template(this);
+  // job->set_shadow_receive_job_id(cm->receive_job_id());
 
 
-bool ExecutionTemplate::AddRemoteCopySendJobTemplate(RemoteCopySendCommand* command) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   assert(!finalized_);
-  job_id_t job_id = command->job_id().elem();
+
   JobIdPtr copy_job_id_ptr = GetExistingInnerJobIdPtr(job_id);
 
-  JobIdPtr receive_job_id_ptr = GetExistingInnerJobIdPtr(command->receive_job_id().elem());
+  JobIdPtr receive_job_id_ptr = GetExistingInnerJobIdPtr(cm->receive_job_id().elem());
 
   static const JobIdPtr default_mega_rcr_job_id_ptr =
     JobIdPtr(new job_id_t(NIMBUS_KERNEL_JOB_ID));
 
   JobIdPtr mega_rcr_job_id_ptr;
-  if (command->mega_rcr_job_id().elem() == NIMBUS_KERNEL_JOB_ID) {
+  if (cm->mega_rcr_job_id().elem() == NIMBUS_KERNEL_JOB_ID) {
     mega_rcr_job_id_ptr = default_mega_rcr_job_id_ptr;
   } else {
-    mega_rcr_job_id_ptr = GetExistingInnerJobIdPtr(command->mega_rcr_job_id().elem());
+    mega_rcr_job_id_ptr = GetExistingInnerJobIdPtr(cm->mega_rcr_job_id().elem());
   }
 
   PhyIdPtr from_physical_data_id_ptr =
-    GetExistingPhyIdPtr(command->from_physical_data_id().elem());
+    GetExistingPhyIdPtr(cm->from_physical_data_id().elem());
 
   JobIdPtrSet before_set;
   {
-    IDSet<job_id_t>::IDSetIter iter = command->before_set_p()->begin();
-    for (; iter != command->before_set_p()->end(); ++iter) {
+    IDSet<job_id_t>::IDSetIter iter = cm->before_set_p()->begin();
+    for (; iter != cm->before_set_p()->end(); ++iter) {
       JobIdPtr job_id_ptr = GetExistingInnerJobIdPtr(*iter);
       before_set.insert(job_id_ptr);
     }
   }
 
-  RemoteCopySendJobTemplate *cm =
-    new RemoteCopySendJobTemplate(copy_job_id_ptr,
-                                      receive_job_id_ptr,
-                                      mega_rcr_job_id_ptr,
-                                      from_physical_data_id_ptr,
-                                      command->to_worker_id(),
-                                      command->to_ip(),
-                                      command->to_port(),
-                                      before_set,
-                                      0);
+  RemoteCopySendJobTemplate *jt =
+    new RemoteCopySendJobTemplate(job,
+                                  copy_job_id_ptr,
+                                  receive_job_id_ptr,
+                                  mega_rcr_job_id_ptr,
+                                  from_physical_data_id_ptr,
+                                  cm->before_set());
 
   ++copy_job_num_;
-  job_templates_[job_id] = cm;
+  job_templates_[job_id] = jt;
 
   return true;
 }
 
-bool ExecutionTemplate::AddRemoteCopyReceiveJobTemplate(RemoteCopyReceiveCommand* command) {
+void ExecutionTemplate::RemoteCopySendJobTemplate::Refresh(
+    const std::vector<Parameter>& parameters) {
+  job_->set_id(ID<job_id_t>(*job_id_ptr_));
+  job_->set_receive_job_id(ID<job_id_t>(*receive_job_id_ptr_));
+  job_->set_mega_rcr_job_id(ID<job_id_t>(*mega_rcr_job_id_ptr_));
+
+  assert(dependency_counter_ == 0);
+  dependency_counter_ = before_set_count_;
+
+  IDSet<physical_data_id_t> read_set;
+  read_set.insert(*from_physical_data_id_ptr_);
+  job_->set_read_set(read_set);
+}
+
+bool ExecutionTemplate::AddRemoteCopyReceiveJobTemplate(RemoteCopyReceiveCommand* cm,
+                                                        Application *app) {
+  job_id_t job_id = cm->job_id().elem();
+  RemoteCopyReceiveJob * job = new RemoteCopyReceiveJob(app);
+  job->set_name("RemoteCopyReceive");
+  job->set_id(cm->job_id());
+  // job->set_shadow_id(job_id);
+  // job->set_execution_template(this);
+
   boost::unique_lock<boost::mutex> lock(mutex_);
   assert(!finalized_);
-  job_id_t job_id = command->job_id().elem();
+
   JobIdPtr copy_job_id_ptr = GetExistingInnerJobIdPtr(job_id);
 
   PhyIdPtr to_physical_data_id_ptr =
-    GetExistingPhyIdPtr(command->to_physical_data_id().elem());
+    GetExistingPhyIdPtr(cm->to_physical_data_id().elem());
 
-  JobIdPtrSet before_set;
-  {
-    IDSet<job_id_t>::IDSetIter iter = command->before_set_p()->begin();
-    for (; iter != command->before_set_p()->end(); ++iter) {
-      JobIdPtr job_id_ptr = GetExistingInnerJobIdPtr(*iter);
-      before_set.insert(job_id_ptr);
-    }
-  }
-
-  RemoteCopyReceiveJobTemplate *cm =
-    new RemoteCopyReceiveJobTemplate(copy_job_id_ptr,
-                                         to_physical_data_id_ptr,
-                                         before_set,
-                                         0);
+  RemoteCopyReceiveJobTemplate *jt =
+    new RemoteCopyReceiveJobTemplate(job,
+                                     copy_job_id_ptr,
+                                     to_physical_data_id_ptr,
+                                     cm->before_set());
 
   ++copy_job_num_;
-  job_templates_[job_id] = cm;
+  job_templates_[job_id] = jt;
 
   return true;
 }
 
-bool ExecutionTemplate::AddMegaRCRJobTemplate(MegaRCRCommand* command) {
+void ExecutionTemplate::RemoteCopyReceiveJobTemplate::Refresh(
+    const std::vector<Parameter>& parameters) {
+  job_->set_id(ID<job_id_t>(*job_id_ptr_));
+
+  assert(dependency_counter_ == 0);
+  // +1 for data delivery
+  dependency_counter_ = before_set_count_ + 1;
+
+  IDSet<physical_data_id_t> write_set;
+  write_set.insert(*to_physical_data_id_ptr_);
+  job_->set_write_set(write_set);
+}
+
+bool ExecutionTemplate::AddMegaRCRJobTemplate(MegaRCRCommand* cm,
+                                              Application *app) {
+  job_id_t job_id = cm->job_id().elem();
+  MegaRCRJob *job = new MegaRCRJob(app);
+  job->set_name("MegaRCR");
+  // job->set_shadow_id(job_id);
+  // job->set_execution_template(this);
+
   boost::unique_lock<boost::mutex> lock(mutex_);
   assert(!finalized_);
-  job_id_t job_id = command->job_id().elem();
+
   JobIdPtr copy_job_id_ptr = GetExistingInnerJobIdPtr(job_id);
 
   JobIdPtrList receive_job_id_ptrs;
   {
-    std::vector<job_id_t>::const_iterator iter = command->receive_job_ids_p()->begin();
-    for (; iter != command->receive_job_ids_p()->end(); ++iter) {
+    std::vector<job_id_t>::const_iterator iter = cm->receive_job_ids_p()->begin();
+    for (; iter != cm->receive_job_ids_p()->end(); ++iter) {
       JobIdPtr job_id_ptr = GetExistingInnerJobIdPtr(*iter);
       receive_job_id_ptrs.push_back(job_id_ptr);
     }
@@ -418,24 +451,54 @@ bool ExecutionTemplate::AddMegaRCRJobTemplate(MegaRCRCommand* command) {
   PhyIdPtrList to_phy_id_ptrs;
   {
     std::vector<physical_data_id_t>::const_iterator iter =
-      command->to_physical_data_ids_p()->begin();
-    for (; iter != command->to_physical_data_ids_p()->end(); ++iter) {
+      cm->to_physical_data_ids_p()->begin();
+    for (; iter != cm->to_physical_data_ids_p()->end(); ++iter) {
       PhyIdPtr phy_id_ptr = GetExistingPhyIdPtr(*iter);
       to_phy_id_ptrs.push_back(phy_id_ptr);
     }
   }
 
+  IDSet<job_id_t> empty_before_set;
 
-  MegaRCRJobTemplate *cm =
-    new MegaRCRJobTemplate(copy_job_id_ptr,
-                               receive_job_id_ptrs,
-                               to_phy_id_ptrs,
-                               0);
+  MegaRCRJobTemplate *jt =
+    new MegaRCRJobTemplate(job,
+                           copy_job_id_ptr,
+                           receive_job_id_ptrs,
+                           to_phy_id_ptrs,
+                           empty_before_set);
 
-  copy_job_num_ += command->receive_job_ids_p()->size();
-  job_templates_[job_id] = cm;
+  copy_job_num_ += cm->receive_job_ids_p()->size();
+  job_templates_[job_id] = jt;
 
   return true;
+}
+
+void ExecutionTemplate::MegaRCRJobTemplate::Refresh(
+    const std::vector<Parameter>& parameters) {
+  job_->set_id(ID<job_id_t>(*job_id_ptr_));
+
+  assert(dependency_counter_ == 0);
+  // + receive_job_id_ptrs_.size() for data delivery
+  dependency_counter_ = before_set_count_ + receive_job_id_ptrs_.size();
+  job_->clear_serialized_data_map();
+
+  std::vector<job_id_t> receive_job_ids;
+  {
+    JobIdPtrList::iterator it = receive_job_id_ptrs_.begin();
+    for (; it != receive_job_id_ptrs_.end(); ++it) {
+      receive_job_ids.push_back(*(*it));
+    }
+  }
+  job_->set_receive_job_ids(receive_job_ids);
+
+  std::vector<physical_data_id_t> to_phy_ids;
+  {
+    PhyIdPtrList::iterator it = to_phy_id_ptrs_.begin();
+    for (; it != to_phy_id_ptrs_.end(); ++it) {
+      to_phy_ids.push_back(*(*it));
+    }
+  }
+  job_->set_to_phy_ids(to_phy_ids);
 }
 
 ExecutionTemplate::JobIdPtr ExecutionTemplate::GetExistingInnerJobIdPtr(job_id_t job_id) {
@@ -463,5 +526,22 @@ ExecutionTemplate::PhyIdPtr ExecutionTemplate::GetExistingPhyIdPtr(physical_data
 
   return phy_id_ptr;
 }
+
+void ExecutionTemplate::BaseJobTemplate::RemoveDependences(JobTemplateVector *ready_list) {
+  ready_list->clear();
+
+  JobTemplateVector::iterator iter = after_set_job_templates_.begin();
+  for (; iter != after_set_job_templates_.end(); ++iter) {
+    assert((*iter)->dependency_counter_ > 0);
+    --(*iter)->dependency_counter_;
+    if ((*iter)->dependency_counter_ == 0) {
+      ready_list->push_back(*iter);
+    }
+  }
+}
+
+
+
+
 
 

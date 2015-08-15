@@ -316,6 +316,7 @@ class RemoteCopyReceiveJob : public Job {
 
 class MegaRCRJob : public Job {
   public:
+    explicit MegaRCRJob(Application *app);
     MegaRCRJob(Application *app,
                const std::vector<job_id_t>& receive_job_ids,
                const std::vector<physical_data_id_t>& to_phy_ids);
@@ -329,8 +330,11 @@ class MegaRCRJob : public Job {
     const std::vector<job_id_t>* receive_job_ids_p();
     const std::vector<physical_data_id_t>* to_phy_ids_p();
 
+    void set_receive_job_ids(const std::vector<job_id_t>& receive_job_ids);
+    void set_to_phy_ids(const std::vector<physical_data_id_t>& to_phy_ids);
     void set_serialized_data(job_id_t job_id, SerializedData* ser_data);
     void set_serialized_data_map(const std::map<job_id_t, SerializedData*>& map);
+    void clear_serialized_data_map();
 
     bool AllDataReceived();
 

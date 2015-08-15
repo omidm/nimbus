@@ -688,6 +688,10 @@ void RemoteCopyReceiveJob::set_data_version(data_version_t version) {
   data_version_ = version;
 }
 
+MegaRCRJob::MegaRCRJob(Application *app) {
+  set_application(app);
+}
+
 MegaRCRJob::MegaRCRJob(Application *app,
                     const std::vector<job_id_t>& receive_job_ids,
                     const std::vector<physical_data_id_t>& to_phy_ids)
@@ -731,12 +735,24 @@ const std::vector<physical_data_id_t>* MegaRCRJob::to_phy_ids_p() {
   return &to_phy_ids_;
 }
 
+void MegaRCRJob::set_receive_job_ids(const std::vector<job_id_t>& receive_job_ids) {
+  receive_job_ids_ = receive_job_ids;
+}
+
+void MegaRCRJob::set_to_phy_ids(const std::vector<physical_data_id_t>& to_phy_ids) {
+  to_phy_ids_ = to_phy_ids;
+}
+
 void MegaRCRJob::set_serialized_data(job_id_t job_id, SerializedData* ser_data) {
   serialized_data_map_[job_id] = ser_data;
 }
 
 void MegaRCRJob::set_serialized_data_map(const std::map<job_id_t, SerializedData*>& map) {
   serialized_data_map_ = map;
+}
+
+void MegaRCRJob::clear_serialized_data_map() {
+  serialized_data_map_.clear();
 }
 
 bool MegaRCRJob::AllDataReceived() {
