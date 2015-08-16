@@ -155,8 +155,8 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
   assert(inner_job_ids.size() == inner_job_id_list_.size());
   assert(outer_job_ids.size() == outer_job_id_list_.size());
   assert(physical_ids.size() == phy_id_list_.size());
-  assert(job_done_counter_ == 0);
-  assert(seed_job_templates_.size() > 0);
+  // assert(job_done_counter_ == 0);
+  // assert(seed_job_templates_.size() > 0);
 
   template_generation_id_ = template_generation_id;
   job_done_counter_ = copy_job_num_ + compute_job_num_;
@@ -265,7 +265,7 @@ void ExecutionTemplate::ProcessReceiveEvent(const WorkerDataExchanger::Event& e,
     iter = job_templates_.find(e.receive_job_id_);
     assert(iter != job_templates_.end());
     JobTemplate *jt = iter->second;
-    RemoteCopyReceiveJob *rcr = reinterpret_cast<RemoteCopyReceiveJob*>(jt->job_); // NOLINT
+    RemoteCopyReceiveJob *rcr = dynamic_cast<RemoteCopyReceiveJob*>(jt->job_); // NOLINT
     assert(rcr != NULL);
     rcr->set_data_version(e.version_);
     rcr->set_serialized_data(e.ser_data_);
@@ -273,13 +273,14 @@ void ExecutionTemplate::ProcessReceiveEvent(const WorkerDataExchanger::Event& e,
     assert(jt->dependency_counter_ > 0);
     --(jt->dependency_counter_);
     if (jt->dependency_counter_ == 0) {
+      jt->Refresh(parameters_, template_generation_id_);
       ready_jobs->push_back(rcr);
     }
   } else {
     iter = job_templates_.find(e.mega_rcr_job_id_);
     assert(iter != job_templates_.end());
     JobTemplate *jt = iter->second;
-    MegaRCRJob *mrcr = reinterpret_cast<MegaRCRJob*>(jt->job_); // NOLINT
+    MegaRCRJob *mrcr = dynamic_cast<MegaRCRJob*>(jt->job_); // NOLINT
     assert(mrcr != NULL);
     // TODO(omidm): fix the version setting for mega rcr job.
     mrcr->set_serialized_data(e.receive_job_id_, e.ser_data_);
@@ -287,6 +288,7 @@ void ExecutionTemplate::ProcessReceiveEvent(const WorkerDataExchanger::Event& e,
     assert(jt->dependency_counter_ > 0);
     --(jt->dependency_counter_);
     if (jt->dependency_counter_ == 0) {
+      jt->Refresh(parameters_, template_generation_id_);
       ready_jobs->push_back(mrcr);
     }
   }

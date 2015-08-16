@@ -1063,14 +1063,34 @@ void Worker::ProcessMegaRCREvent(const WorkerDataExchanger::Event& e) {
 
 
 void Worker::ProcessReceiveEvents(const WorkerDataExchanger::EventList& events) {
+  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+  JobList ready_jobs;
   WorkerDataExchanger::EventList::const_iterator iter;
   for (iter = events.begin(); iter != events.end(); ++iter) {
-    if (iter->mega_rcr_job_id_ == NIMBUS_KERNEL_JOB_ID) {
-      ProcessRCREvent(*iter);
+    template_id_t tgi = iter->template_generation_id_;
+    if (tgi != NIMBUS_INVALID_TEMPLATE_ID) {
+      std::map<template_id_t, ExecutionTemplate*>::iterator it =
+        active_execution_templates_.find(tgi);
+      if (it != active_execution_templates_.end()) {
+        it->second->ProcessReceiveEvent(*iter, &ready_jobs, true);
+      } else {
+        pending_events_[tgi].push_back(*iter);
+      }
     } else {
-      ProcessMegaRCREvent(*iter);
+      if (iter->mega_rcr_job_id_ == NIMBUS_KERNEL_JOB_ID) {
+        ProcessRCREvent(*iter);
+      } else {
+        ProcessMegaRCREvent(*iter);
+      }
     }
   }
+
+  JobList::iterator i = ready_jobs.begin();
+  for (; i != ready_jobs.end(); ++i) {
+    ResolveDataArray(*i);
+  }
+  bool success_flag = worker_manager_->PushJobList(&ready_jobs);
+  assert(success_flag);
 }
 
 
