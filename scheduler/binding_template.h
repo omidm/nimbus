@@ -89,6 +89,7 @@ class BindingTemplate {
                      const std::vector<Parameter>& parameters,
                      const std::vector<job_id_t>& copy_job_ids,
                      const std::vector<physical_data_id_t> *physical_ids,
+                     const template_id_t& template_generation_id,
                      SchedulerServer *server);
 
     enum VERSION_TYPE {
@@ -381,7 +382,8 @@ class BindingTemplate {
     void SendCommandTemplateFinalizeToWorkers(SchedulerServer *server);
 
     void SpawnCommandTemplateAtWorkers(const std::vector<Parameter>& parameters,
-                                       SchedulerServer *server);
+                                       SchedulerServer *server,
+                                       const template_id_t& template_generation_id);
 
     void SendComputeJobCommand(ComputeJobCommandTemplate* command,
                                const Parameter& parameter,

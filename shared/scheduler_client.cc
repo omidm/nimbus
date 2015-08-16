@@ -163,49 +163,55 @@ size_t SchedulerClient::EnqueueCommands(char* buffer, size_t size) {
       if (SchedulerCommand::GenerateSchedulerCommandChild(input,
                                                           scheduler_command_table_,
                                                           command)) {
-        switch (command->type()) {
-          case SchedulerCommand::START_COMMAND_TEMPLATE:
-            HandleStartCommandTemplateCommand(
-                reinterpret_cast<StartCommandTemplateCommand*>(command));
-            break;
-          case SchedulerCommand::END_COMMAND_TEMPLATE:
-            HandleEndCommandTemplateCommand(
-                reinterpret_cast<EndCommandTemplateCommand*>(command));
-            break;
-          case SchedulerCommand::SPAWN_COMMAND_TEMPLATE:
-            HandleSpawnCommandTemplateCommand(
-                reinterpret_cast<SpawnCommandTemplateCommand*>(command));
-            break;
-          default:
-            if (filling_template_) {
-              TemplateMap::iterator iter = template_map_.find(template_name_in_progress_);
-              assert(iter != template_map_.end());
-              CommandTemplate *ct = iter->second;
-              switch (command->type()) {
-                case SchedulerCommand::EXECUTE_COMPUTE:
-                  ct->AddComputeJobCommand(reinterpret_cast<ComputeJobCommand*>(command));
-                  break;
-                case SchedulerCommand::LOCAL_COPY:
-                  ct->AddLocalCopyCommand(reinterpret_cast<LocalCopyCommand*>(command));
-                  break;
-                case SchedulerCommand::REMOTE_SEND:
-                  ct->AddRemoteCopySendCommand(reinterpret_cast<RemoteCopySendCommand*>(command));
-                  break;
-                case SchedulerCommand::REMOTE_RECEIVE:
-                  ct->AddRemoteCopyReceiveCommand(reinterpret_cast<RemoteCopyReceiveCommand*>(command)); // NOLINT
-                  break;
-                case SchedulerCommand::MEGA_RCR:
-                  ct->AddMegaRCRCommand(reinterpret_cast<MegaRCRCommand*>(command)); // NOLINT
-                  break;
-                default:
-                  assert(false);
-                  break;
+        if (true) {
+          dbg(DBG_NET, "Enqueueing command %s.\n", command->ToString().c_str());
+          boost::mutex::scoped_lock lock(command_queue_mutex_);
+          received_commands_.push_back(command);
+        } else {
+          switch (command->type()) {
+            case SchedulerCommand::START_COMMAND_TEMPLATE:
+              HandleStartCommandTemplateCommand(
+                  reinterpret_cast<StartCommandTemplateCommand*>(command));
+              break;
+            case SchedulerCommand::END_COMMAND_TEMPLATE:
+              HandleEndCommandTemplateCommand(
+                  reinterpret_cast<EndCommandTemplateCommand*>(command));
+              break;
+            case SchedulerCommand::SPAWN_COMMAND_TEMPLATE:
+              HandleSpawnCommandTemplateCommand(
+                  reinterpret_cast<SpawnCommandTemplateCommand*>(command));
+              break;
+            default:
+              if (filling_template_) {
+                TemplateMap::iterator iter = template_map_.find(template_name_in_progress_);
+                assert(iter != template_map_.end());
+                CommandTemplate *ct = iter->second;
+                switch (command->type()) {
+                  case SchedulerCommand::EXECUTE_COMPUTE:
+                    ct->AddComputeJobCommand(reinterpret_cast<ComputeJobCommand*>(command));
+                    break;
+                  case SchedulerCommand::LOCAL_COPY:
+                    ct->AddLocalCopyCommand(reinterpret_cast<LocalCopyCommand*>(command));
+                    break;
+                  case SchedulerCommand::REMOTE_SEND:
+                    ct->AddRemoteCopySendCommand(reinterpret_cast<RemoteCopySendCommand*>(command));
+                    break;
+                  case SchedulerCommand::REMOTE_RECEIVE:
+                    ct->AddRemoteCopyReceiveCommand(reinterpret_cast<RemoteCopyReceiveCommand*>(command)); // NOLINT
+                    break;
+                  case SchedulerCommand::MEGA_RCR:
+                    ct->AddMegaRCRCommand(reinterpret_cast<MegaRCRCommand*>(command)); // NOLINT
+                    break;
+                  default:
+                    assert(false);
+                    break;
+                }
               }
-            }
-            dbg(DBG_NET, "Enqueueing command %s.\n", command->ToString().c_str());
-            boost::mutex::scoped_lock lock(command_queue_mutex_);
-            received_commands_.push_back(command);
-            break;
+              dbg(DBG_NET, "Enqueueing command %s.\n", command->ToString().c_str());
+              boost::mutex::scoped_lock lock(command_queue_mutex_);
+              received_commands_.push_back(command);
+              break;
+          }
         }
       } else {
         dbg(DBG_NET, "Ignored unknown command: %s.\n", input.c_str());

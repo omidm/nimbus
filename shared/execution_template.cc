@@ -109,6 +109,12 @@ std::string ExecutionTemplate::execution_template_name() {
   return execution_template_name_;
 }
 
+template_id_t ExecutionTemplate::template_generation_id() {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  return template_generation_id_;
+}
+
+
 bool ExecutionTemplate::Finalize() {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   assert(!finalized_);
@@ -149,7 +155,6 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
   assert(inner_job_ids.size() == inner_job_id_list_.size());
   assert(outer_job_ids.size() == outer_job_id_list_.size());
   assert(physical_ids.size() == phy_id_list_.size());
-  assert(template_generation_id_ == NIMBUS_INIT_TEMPLATE_ID);
   assert(job_done_counter_ == 0);
   assert(seed_job_templates_.size() > 0);
 
@@ -238,7 +243,7 @@ bool ExecutionTemplate::MarkJobDone(const job_id_t& shadow_job_id,
   assert(job_done_counter_ > 0);
   --job_done_counter_;
   if (job_done_counter_ == 0) {
-    template_generation_id_ = NIMBUS_INIT_TEMPLATE_ID;
+    return true;
   }
 
   return false;
@@ -297,8 +302,8 @@ bool ExecutionTemplate::AddComputeJobTemplate(ComputeJobCommand* cm,
   job->set_name("Compute:" + cm->job_name());
   job->set_sterile(cm->sterile());
   job->set_region(cm->region());
-  // job->set_shadow_id(job_id);
-  // job->set_execution_template(this);
+  job->set_shadow_job_id(job_id);
+  job->set_execution_template(this);
 
   JobIdPtr compute_job_id_ptr = GetExistingInnerJobIdPtr(job_id);
 
@@ -340,6 +345,8 @@ void ExecutionTemplate::ComputeJobTemplate::Refresh(
   job_->set_id(ID<job_id_t>(*job_id_ptr_));
   job_->set_future_job_id(ID<job_id_t>(*future_job_id_ptr_));
 
+  job_->clear_template_variables();
+
   IDSet<physical_data_id_t> read_set, write_set;
 
   {
@@ -372,8 +379,8 @@ bool ExecutionTemplate::AddLocalCopyJobTemplate(LocalCopyCommand* cm,
   job_id_t job_id = cm->job_id().elem();
   LocalCopyJob * job = new LocalCopyJob(app);
   job->set_name("LocalCopy");
-  // job->set_shadow_id(job_id);
-  // job->set_execution_template(this);
+  job->set_shadow_job_id(job_id);
+  job->set_execution_template(this);
 
   JobIdPtr copy_job_id_ptr = GetExistingInnerJobIdPtr(job_id);
 
@@ -427,8 +434,8 @@ bool ExecutionTemplate::AddRemoteCopySendJobTemplate(RemoteCopySendCommand* cm,
   job->set_to_port(cm->to_port());
   job->set_receive_job_id(cm->receive_job_id());
   job->set_mega_rcr_job_id(cm->mega_rcr_job_id());
-  // job->set_shadow_id(job_id);
-  // job->set_execution_template(this);
+  job->set_shadow_job_id(job_id);
+  job->set_execution_template(this);
 
   JobIdPtr copy_job_id_ptr = GetExistingInnerJobIdPtr(job_id);
 
@@ -494,8 +501,8 @@ bool ExecutionTemplate::AddRemoteCopyReceiveJobTemplate(RemoteCopyReceiveCommand
   RemoteCopyReceiveJob * job = new RemoteCopyReceiveJob(app);
   job->set_name("RemoteCopyReceive");
   job->set_id(cm->job_id());
-  // job->set_shadow_id(job_id);
-  // job->set_execution_template(this);
+  job->set_shadow_job_id(job_id);
+  job->set_execution_template(this);
 
   JobIdPtr copy_job_id_ptr = GetExistingInnerJobIdPtr(job_id);
 
@@ -533,8 +540,8 @@ bool ExecutionTemplate::AddMegaRCRJobTemplate(MegaRCRCommand* cm,
   MegaRCRJob *job = new MegaRCRJob(app);
   job->set_name("MegaRCR");
   job->set_receive_job_ids(cm->receive_job_ids());
-  // job->set_shadow_id(job_id);
-  // job->set_execution_template(this);
+  job->set_shadow_job_id(job_id);
+  job->set_execution_template(this);
 
   JobIdPtr copy_job_id_ptr = GetExistingInnerJobIdPtr(job_id);
 

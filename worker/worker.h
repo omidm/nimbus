@@ -68,6 +68,7 @@
 #include "shared/high_resolution_timer.h"
 #include "shared/multi_level_timer.h"
 #include "shared/profiler.h"
+#include "shared/execution_template.h"
 #include "shared/helpers.h"
 
 namespace nimbus {
@@ -117,6 +118,9 @@ class Worker {
   virtual void ProcessPrepareRewindCommand(PrepareRewindCommand* command);
   virtual void ProcessRequestStatCommand(RequestStatCommand *command);
   virtual void ProcessPrintStatCommand(PrintStatCommand *command);
+  virtual void ProcessStartCommandTemplateCommand(StartCommandTemplateCommand* command);
+  virtual void ProcessEndCommandTemplateCommand(EndCommandTemplateCommand* command);
+  virtual void ProcessSpawnCommandTemplateCommand(SpawnCommandTemplateCommand* command);
 
   virtual void NotifyLocalJobDone(Job* job);
 
@@ -168,6 +172,14 @@ class Worker {
   WorkerManager* worker_manager_;
   HighResolutionTimer timer_;
   Profiler profiler_;
+
+  typedef std::map<template_id_t, WorkerDataExchanger::EventList> EventMap;
+
+  bool filling_execution_template_;
+  std::string execution_template_in_progress_;
+  std::map<std::string, ExecutionTemplate*> execution_templates_;
+  std::map<template_id_t, ExecutionTemplate*> active_execution_templates_;
+  EventMap pending_events_;
 
   virtual void SetupSchedulerInterface();
 

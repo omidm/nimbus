@@ -54,12 +54,14 @@ SpawnCommandTemplateCommand::SpawnCommandTemplateCommand(const std::string& comm
                                                    const std::vector<job_id_t>& inner_job_ids,
                                                    const std::vector<job_id_t>& outer_job_ids,
                                                    const std::vector<Parameter>& parameters,
-                                                   const std::vector<physical_data_id_t>& phy_ids)
+                                                   const std::vector<physical_data_id_t>& phy_ids,
+                                                   const template_id_t& template_generation_id)
   : command_template_name_(command_template_name),
     inner_job_ids_(inner_job_ids),
     outer_job_ids_(outer_job_ids),
     parameters_(parameters),
-    phy_ids_(phy_ids) {
+    phy_ids_(phy_ids),
+    template_generation_id_(template_generation_id) {
   name_ = SPAWN_COMMAND_TEMPLATE_NAME;
   type_ = SPAWN_COMMAND_TEMPLATE;
 }
@@ -137,6 +139,10 @@ std::vector<job_id_t> SpawnCommandTemplateCommand::phy_ids() {
   return phy_ids_;
 }
 
+template_id_t SpawnCommandTemplateCommand::template_generation_id() {
+  return template_generation_id_;
+}
+
 bool SpawnCommandTemplateCommand::ReadFromProtobuf(const SpawnCommandTemplatePBuf& buf) {
   command_template_name_ = buf.command_template_name();
 
@@ -176,6 +182,8 @@ bool SpawnCommandTemplateCommand::ReadFromProtobuf(const SpawnCommandTemplatePBu
     }
   }
 
+  template_generation_id_ = buf.template_generation_id();
+
   return true;
 }
 
@@ -213,6 +221,8 @@ bool SpawnCommandTemplateCommand::WriteToProtobuf(SpawnCommandTemplatePBuf* buf)
       b->Add(*it);
     }
   }
+
+  buf->set_template_generation_id(template_generation_id_);
 
   return true;
 }

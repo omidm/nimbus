@@ -82,6 +82,7 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     worker_manager_ = new WorkerManager();
     ddb_ = new DistributedDB();
     DUMB_JOB_ID = std::numeric_limits<job_id_t>::max();
+    filling_execution_template_ = false;
     worker_job_graph_.AddVertex(
         DUMB_JOB_ID,
         new WorkerJobEntry(
@@ -300,6 +301,15 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::PRINT_STAT:
       ProcessPrintStatCommand(reinterpret_cast<PrintStatCommand*>(cm));
       break;
+    case SchedulerCommand::START_COMMAND_TEMPLATE:
+      ProcessStartCommandTemplateCommand(reinterpret_cast<StartCommandTemplateCommand*>(cm));
+      break;
+    case SchedulerCommand::END_COMMAND_TEMPLATE:
+      ProcessEndCommandTemplateCommand(reinterpret_cast<EndCommandTemplateCommand*>(cm));
+      break;
+    case SchedulerCommand::SPAWN_COMMAND_TEMPLATE:
+      ProcessSpawnCommandTemplateCommand(reinterpret_cast<SpawnCommandTemplateCommand*>(cm));
+      break;
     default:
       std::cout << "ERROR: " << cm->ToNetworkData() <<
         " have not been implemented in ProcessSchedulerCommand yet." <<
@@ -349,6 +359,14 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
   job->set_sterile(cm->sterile());
   job->set_region(cm->region());
   job->set_parameters(cm->params());
+
+  if (filling_execution_template_) {
+    std::map<std::string, ExecutionTemplate*>::iterator iter =
+      execution_templates_.find(execution_template_in_progress_);
+    assert(iter != execution_templates_.end());
+    iter->second->AddComputeJobTemplate(cm, application_);
+  }
+
   AddJobToGraph(job);
 }
 
@@ -391,6 +409,14 @@ void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
   read_set.insert(cm->from_physical_data_id().elem());
   job->set_read_set(read_set);
   job->set_before_set(cm->before_set());
+
+  if (filling_execution_template_) {
+    std::map<std::string, ExecutionTemplate*>::iterator iter =
+      execution_templates_.find(execution_template_in_progress_);
+    assert(iter != execution_templates_.end());
+    iter->second->AddRemoteCopySendJobTemplate(cm, application_, data_exchanger_);
+  }
+
   AddJobToGraph(job);
 }
 
@@ -402,6 +428,14 @@ void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {
   write_set.insert(cm->to_physical_data_id().elem());
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
+
+  if (filling_execution_template_) {
+    std::map<std::string, ExecutionTemplate*>::iterator iter =
+      execution_templates_.find(execution_template_in_progress_);
+    assert(iter != execution_templates_.end());
+    iter->second->AddRemoteCopyReceiveJobTemplate(cm, application_);
+  }
+
   AddJobToGraph(job);
 }
 
@@ -411,6 +445,14 @@ void Worker::ProcessMegaRCRCommand(MegaRCRCommand* cm) {
                              cm->to_physical_data_ids());
   job->set_name("MegaRCR");
   job->set_id(cm->job_id());
+
+  if (filling_execution_template_) {
+    std::map<std::string, ExecutionTemplate*>::iterator iter =
+      execution_templates_.find(execution_template_in_progress_);
+    assert(iter != execution_templates_.end());
+    iter->second->AddMegaRCRJobTemplate(cm, application_);
+  }
+
   AddJobToGraph(job);
 }
 
@@ -486,6 +528,14 @@ void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
   write_set.insert(cm->to_physical_data_id().elem());
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
+
+  if (filling_execution_template_) {
+    std::map<std::string, ExecutionTemplate*>::iterator iter =
+      execution_templates_.find(execution_template_in_progress_);
+    assert(iter != execution_templates_.end());
+    iter->second->AddLocalCopyJobTemplate(cm, application_);
+  }
+
   AddJobToGraph(job);
 }
 
@@ -527,6 +577,77 @@ void Worker::ProcessTerminateCommand(TerminateCommand* cm) {
 
 void Worker::ProcessDefinedTemplateCommand(DefinedTemplateCommand* cm) {
   application_->DefinedTemplate(cm->job_graph_name());
+}
+
+
+void Worker::ProcessStartCommandTemplateCommand(StartCommandTemplateCommand* command) {
+  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+  assert(!filling_execution_template_);
+  std::string key = command->command_template_name();
+  std::map<std::string, ExecutionTemplate*>::iterator iter =
+    execution_templates_.find(key);
+  assert(iter == execution_templates_.end());
+  execution_templates_[key] =
+    new ExecutionTemplate(key,
+                          command->inner_job_ids(),
+                          command->outer_job_ids(),
+                          command->phy_ids());
+
+  execution_template_in_progress_ = key;
+  filling_execution_template_ = true;
+}
+
+void Worker::ProcessEndCommandTemplateCommand(EndCommandTemplateCommand* command) {
+  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+  assert(filling_execution_template_);
+  std::string key = command->command_template_name();
+  std::map<std::string, ExecutionTemplate*>::iterator iter =
+    execution_templates_.find(key);
+  assert(iter != execution_templates_.end());
+  iter->second->Finalize();
+
+  filling_execution_template_ = false;
+}
+
+void Worker::ProcessSpawnCommandTemplateCommand(SpawnCommandTemplateCommand* command) {
+  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+
+  std::string key = command->command_template_name();
+  std::map<std::string, ExecutionTemplate*>::iterator iter =
+    execution_templates_.find(key);
+  assert(iter != execution_templates_.end());
+
+  JobList ready_jobs;
+  template_id_t tgi = command->template_generation_id();
+  EventMap::iterator it = pending_events_.find(tgi);
+  if (it != pending_events_.end()) {
+    iter->second->Instantiate(command->inner_job_ids(),
+                              command->outer_job_ids(),
+                              command->parameters(),
+                              command->phy_ids(),
+                              it->second,
+                              tgi,
+                              &ready_jobs);
+    pending_events_.erase(it);
+  } else {
+    WorkerDataExchanger::EventList empty_pending_events;
+    iter->second->Instantiate(command->inner_job_ids(),
+                              command->outer_job_ids(),
+                              command->parameters(),
+                              command->phy_ids(),
+                              empty_pending_events,
+                              tgi,
+                              &ready_jobs);
+  }
+
+  active_execution_templates_[tgi] = iter->second;
+
+  JobList::iterator i = ready_jobs.begin();
+  for (; i != ready_jobs.end(); ++i) {
+    ResolveDataArray(*i);
+  }
+  bool success_flag = worker_manager_->PushJobList(&ready_jobs);
+  assert(success_flag);
 }
 
 
@@ -731,6 +852,7 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
 }
 
 void Worker::NotifyLocalJobDone(Job* job) {
+  bool template_job = false;
   {
     timer::StartTimer(timer::kJobGraph3);
     boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
@@ -738,23 +860,45 @@ void Worker::NotifyLocalJobDone(Job* job) {
 
     job_id_t job_id = job->id().elem();
     data_map_.ReleaseAccess(job_id);
-    // Job done for unknown job is not handled.
-    if (!worker_job_graph_.HasVertex(job_id)) {
-      // The job must be in the local job graph.
-      assert(false);
-      return;
+    job_id_t shadow_job_id = job->shadow_job_id();
+    if (shadow_job_id != NIMBUS_KERNEL_JOB_ID) {
+      template_job = true;
+      ExecutionTemplate *et = job->execution_template();
+      assert(et);
+      JobList ready_jobs;
+      if (et->MarkJobDone(shadow_job_id, &ready_jobs, false)) {
+        assert(ready_jobs.size() == 0);
+        std::map<template_id_t, ExecutionTemplate*>::iterator iter =
+          active_execution_templates_.find(et->template_generation_id());
+        assert(iter != active_execution_templates_.end());
+        active_execution_templates_.erase(iter);
+      } else {
+        JobList::iterator iter = ready_jobs.begin();
+        for (; iter != ready_jobs.end(); ++iter) {
+          ResolveDataArray(*iter);
+        }
+        bool success_flag = worker_manager_->PushJobList(&ready_jobs);
+        assert(success_flag);
+      }
+    } else {
+      // Job done for unknown job is not handled.
+      if (!worker_job_graph_.HasVertex(job_id)) {
+        // The job must be in the local job graph.
+        assert(false);
+        return;
+      }
+      WorkerJobVertex* vertex = NULL;
+      worker_job_graph_.GetVertex(job_id, &vertex);
+      assert(vertex->incoming_edges()->empty());
+      ClearAfterSet(vertex);
+      delete vertex->entry();
+      worker_job_graph_.RemoveVertex(job_id);
+      if (!IDMaker::SchedulerProducedJobID(job_id)) {
+        AddFinishHintSet(job_id);
+      }
+      // vertex->entry()->set_state(WorkerJobEntry::FINISH);
+      // vertex->entry()->set_job(NULL);
     }
-    WorkerJobVertex* vertex = NULL;
-    worker_job_graph_.GetVertex(job_id, &vertex);
-    assert(vertex->incoming_edges()->empty());
-    ClearAfterSet(vertex);
-    delete vertex->entry();
-    worker_job_graph_.RemoveVertex(job_id);
-    if (!IDMaker::SchedulerProducedJobID(job_id)) {
-      AddFinishHintSet(job_id);
-    }
-    // vertex->entry()->set_state(WorkerJobEntry::FINISH);
-    // vertex->entry()->set_job(NULL);
   }
 
   Parameter params;
@@ -768,7 +912,10 @@ void Worker::NotifyLocalJobDone(Job* job) {
     client_->SendCommand(&cm);
   }
 
-  delete job;
+  if  (!template_job) {
+    delete job;
+  }
+
   timer::StopTimer(timer::kJobGraph3);
 }
 

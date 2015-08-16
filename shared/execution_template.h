@@ -78,6 +78,7 @@ class ExecutionTemplate {
     size_t copy_job_num();
     size_t compute_job_num();
     std::string execution_template_name();
+    template_id_t template_generation_id();
 
 
     bool Finalize();

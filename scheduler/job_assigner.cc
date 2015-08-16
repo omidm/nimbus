@@ -58,6 +58,7 @@ JobAssigner::JobAssigner() {
 void JobAssigner::Initialize() {
   thread_num_ = 0;
   checkpoint_id_ = NIMBUS_INIT_CHECKPOINT_ID;
+  template_generation_id_ = NIMBUS_INIT_TEMPLATE_ID;
   pending_assignment_ = 0;
   server_ = NULL;
   id_maker_ = NULL;
@@ -344,6 +345,7 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
                   job->parameters(),
                   copy_job_ids,
                   physical_ids,
+                  ++template_generation_id_,
                   server_);
   log.log_StopTimer();
   std::cout << "COMPLEX: Instantiate: "
