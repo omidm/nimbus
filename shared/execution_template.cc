@@ -125,7 +125,7 @@ bool ExecutionTemplate::Finalize() {
   for (; iter != job_templates_.end(); ++iter) {
     JobTemplate *jt = iter->second;
     job_templates_list_.push_back(jt);
-    if (jt->before_set_.size() == 0) {
+    if (jt->dependency_num_ == 0) {
       seed_job_templates_.push_back(jt);
       continue;
     }
