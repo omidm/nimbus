@@ -61,6 +61,9 @@
 #define NIMBUS_SCHEDULER_ID (worker_id_t)(0)
 #define NIMBUS_KERNEL_JOB_ID (job_id_t)(0)
 
+#define NIMBUS_INVALID_TEMPLATE_ID (template_id_t)(0)
+#define NIMBUS_INIT_TEMPLATE_ID (template_id_t)(1)
+
 #define JOB_ID_BATCH (job_id_t)(10000000000)
 #define LOGICAL_DATA_ID_BATCH (logical_data_id_t)(10000000000)
 #define PHYSICAL_DATA_ID_BATCH (physical_data_id_t)(10000000000)
@@ -91,6 +94,7 @@ namespace nimbus {
   typedef uint64_t logical_data_id_t;
   typedef uint64_t job_id_t;
   typedef uint64_t checkpoint_id_t;
+  typedef uint64_t template_id_t;
   typedef uint64_t load_balancing_id_t;
   typedef uint64_t command_id_t;
   typedef uint64_t partition_id_t;

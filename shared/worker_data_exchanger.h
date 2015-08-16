@@ -85,6 +85,7 @@ class WorkerDataExchanger {
       job_id_t mega_rcr_job_id_;
       data_version_t version_;
       SerializedData *ser_data_;
+      template_id_t template_generation_id_;
   };
 
   typedef std::list<Event> EventList;

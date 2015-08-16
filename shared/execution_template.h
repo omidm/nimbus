@@ -86,10 +86,17 @@ class ExecutionTemplate {
                      const std::vector<job_id_t>& outer_job_ids,
                      const std::vector<Parameter>& parameters,
                      const std::vector<physical_data_id_t>& physical_ids,
-                     JobList *seed_jobs);
+                     const WorkerDataExchanger::EventList& pending_events,
+                     const template_id_t& template_generation_id,
+                     JobList *ready_jobs);
 
     bool MarkJobDone(const job_id_t& shadow_job_id,
-                     JobList *ready_jobs);
+                     JobList *ready_jobs,
+                     bool append);
+
+    void ProcessReceiveEvent(const WorkerDataExchanger::Event& event,
+                             JobList *ready_jobs,
+                             bool append);
 
     bool AddComputeJobTemplate(ComputeJobCommand* command,
                                Application *app);
@@ -129,27 +136,37 @@ class ExecutionTemplate {
       MEGA_RCR
     };
 
-    class BaseJobTemplate;
-    typedef std::vector<BaseJobTemplate*> JobTemplateVector;
-    typedef boost::unordered_map<job_id_t, BaseJobTemplate*> JobTemplateMap;
+    class JobTemplate;
+    typedef std::vector<JobTemplate*> JobTemplateVector;
+    typedef boost::unordered_map<job_id_t, JobTemplate*> JobTemplateMap;
 
-    class BaseJobTemplate {
+    class JobTemplate {
       public:
-        BaseJobTemplate() {type_ = BASE;}
-        ~BaseJobTemplate() {}
+        JobTemplate(Job *job,
+                    JobIdPtr job_id_ptr,
+                    const IDSet<job_id_t>& before_set)
+        : job_(job),
+          job_id_ptr_(job_id_ptr),
+          before_set_(before_set) {
+          type_ = BASE;
+          dependency_counter_ = 0;
+        }
+        ~JobTemplate() {}
 
+        Job *job_;
+        JobIdPtr job_id_ptr_;
         JobTemplateType type_;
         IDSet<job_id_t> before_set_;
-        size_t before_set_count_;
+        size_t dependency_num_;
         size_t dependency_counter_;
         JobTemplateVector after_set_job_templates_;
 
-        void RemoveDependences(JobTemplateVector *ready_list);
+        void ClearAfterSet(JobTemplateVector *ready_list);
 
         virtual void Refresh(const std::vector<Parameter>& paramerts) = 0;
     };
 
-    class ComputeJobTemplate : public BaseJobTemplate {
+    class ComputeJobTemplate : public JobTemplate {
       public:
         ComputeJobTemplate(Job *job,
                            JobIdPtr job_id_ptr,
@@ -158,22 +175,17 @@ class ExecutionTemplate {
                            const IDSet<job_id_t>& before_set,
                            JobIdPtr future_job_id_ptr,
                            const size_t& param_index)
-          : job_(job),
-            job_id_ptr_(job_id_ptr),
+          : JobTemplate(job, job_id_ptr, before_set),
             read_set_ptr_(read_set_ptr),
             write_set_ptr_(write_set_ptr),
             future_job_id_ptr_(future_job_id_ptr),
             param_index_(param_index) {
               type_ = COMPUTE;
-              before_set_ = before_set;
-              before_set_count_ = before_set.size();
-              dependency_counter_ = before_set.size();
+              dependency_num_ = before_set.size();
             }
 
         ~ComputeJobTemplate() {}
 
-        Job *job_;
-        JobIdPtr job_id_ptr_;
         PhyIdPtrSet read_set_ptr_;
         PhyIdPtrSet write_set_ptr_;
         JobIdPtr future_job_id_ptr_;
@@ -182,27 +194,22 @@ class ExecutionTemplate {
         virtual void Refresh(const std::vector<Parameter> & paramerts);
     };
 
-    class LocalCopyJobTemplate : public BaseJobTemplate {
+    class LocalCopyJobTemplate : public JobTemplate {
       public:
         LocalCopyJobTemplate(LocalCopyJob *job,
                              JobIdPtr job_id_ptr,
                              PhyIdPtr from_physical_data_id_ptr,
                              PhyIdPtr to_physical_data_id_ptr,
                              const IDSet<job_id_t>& before_set)
-          : job_(job),
-            job_id_ptr_(job_id_ptr),
+          : JobTemplate(job, job_id_ptr, before_set),
             from_physical_data_id_ptr_(from_physical_data_id_ptr),
             to_physical_data_id_ptr_(to_physical_data_id_ptr) {
               type_ = LC;
-              before_set_ = before_set;
-              before_set_count_ = before_set.size();
-              dependency_counter_ = before_set.size();
+              dependency_num_ = before_set.size();
             }
 
         ~LocalCopyJobTemplate() {}
 
-        LocalCopyJob *job_;
-        JobIdPtr job_id_ptr_;
         PhyIdPtr from_physical_data_id_ptr_;
         PhyIdPtr to_physical_data_id_ptr_;
 
@@ -210,93 +217,80 @@ class ExecutionTemplate {
     };
 
 
-    class RemoteCopySendJobTemplate : public BaseJobTemplate {
+    class RemoteCopySendJobTemplate : public JobTemplate {
       public:
         RemoteCopySendJobTemplate(RemoteCopySendJob *job,
                                   JobIdPtr job_id_ptr,
-                                  JobIdPtr receive_job_id_ptr,
-                                  JobIdPtr mega_rcr_job_id_ptr,
+                                  // JobIdPtr receive_job_id_ptr,
+                                  // JobIdPtr mega_rcr_job_id_ptr,
                                   PhyIdPtr from_physical_data_id_ptr,
                                   const IDSet<job_id_t>& before_set)
-          : job_(job),
-            job_id_ptr_(job_id_ptr),
-            receive_job_id_ptr_(receive_job_id_ptr),
-            mega_rcr_job_id_ptr_(mega_rcr_job_id_ptr),
+          : JobTemplate(job, job_id_ptr, before_set),
+            // receive_job_id_ptr_(receive_job_id_ptr),
+            // mega_rcr_job_id_ptr_(mega_rcr_job_id_ptr),
             from_physical_data_id_ptr_(from_physical_data_id_ptr) {
               type_ = RCS;
-              before_set_ = before_set;
-              before_set_count_ = before_set.size();
-              dependency_counter_ = before_set.size();
+              dependency_num_ = before_set.size();
             }
 
         ~RemoteCopySendJobTemplate() {}
 
-        RemoteCopySendJob *job_;
-        JobIdPtr job_id_ptr_;
-        JobIdPtr receive_job_id_ptr_;
-        JobIdPtr mega_rcr_job_id_ptr_;
+        // JobIdPtr receive_job_id_ptr_;
+        // JobIdPtr mega_rcr_job_id_ptr_;
         PhyIdPtr from_physical_data_id_ptr_;
 
         virtual void Refresh(const std::vector<Parameter> & paramerts);
     };
 
-    class RemoteCopyReceiveJobTemplate : public BaseJobTemplate {
+    class RemoteCopyReceiveJobTemplate : public JobTemplate {
       public:
         RemoteCopyReceiveJobTemplate(RemoteCopyReceiveJob *job,
                                      JobIdPtr job_id_ptr,
                                      PhyIdPtr to_physical_data_id_ptr,
                                      const IDSet<job_id_t>& before_set)
-          : job_(job),
-            job_id_ptr_(job_id_ptr),
+          : JobTemplate(job, job_id_ptr, before_set),
             to_physical_data_id_ptr_(to_physical_data_id_ptr) {
               type_ = RCR;
-              before_set_ = before_set;
-              before_set_count_ = before_set.size();
               // +1 for data delivery
-              dependency_counter_ = before_set.size() + 1;
+              dependency_num_ = before_set.size() + 1;
             }
 
         ~RemoteCopyReceiveJobTemplate() {}
 
-        RemoteCopyReceiveJob *job_;
-        JobIdPtr job_id_ptr_;
         PhyIdPtr to_physical_data_id_ptr_;
 
         virtual void Refresh(const std::vector<Parameter> & paramerts);
     };
 
-    class MegaRCRJobTemplate : public BaseJobTemplate {
+    class MegaRCRJobTemplate : public JobTemplate {
       public:
         MegaRCRJobTemplate(MegaRCRJob *job,
                            JobIdPtr job_id_ptr,
-                           const JobIdPtrList& receive_job_id_ptrs,
+                           // const JobIdPtrList& receive_job_id_ptrs,
                            const PhyIdPtrList& to_phy_id_ptrs,
                            const IDSet<job_id_t>& before_set)
-          : job_(job),
-            job_id_ptr_(job_id_ptr),
-            receive_job_id_ptrs_(receive_job_id_ptrs),
+          : JobTemplate(job, job_id_ptr, before_set),
+            // receive_job_id_ptrs_(receive_job_id_ptrs),
             to_phy_id_ptrs_(to_phy_id_ptrs) {
               type_ = MEGA_RCR;
-              before_set_ = before_set;
-              before_set_count_ = before_set.size();
               // + receive_job_id_ptrs.size() for data delivery
-              dependency_counter_ = before_set_count_ + receive_job_id_ptrs.size();
+              dependency_num_ = before_set.size() + to_phy_id_ptrs.size();
             }
 
         ~MegaRCRJobTemplate() {}
 
-        MegaRCRJob *job_;
-        JobIdPtr job_id_ptr_;
-        JobIdPtrList receive_job_id_ptrs_;
+        // JobIdPtrList receive_job_id_ptrs_;
         PhyIdPtrList to_phy_id_ptrs_;
 
         virtual void Refresh(const std::vector<Parameter> & paramerts);
     };
 
     bool finalized_;
-    size_t compute_job_num_;
     size_t copy_job_num_;
+    size_t compute_job_num_;
+    size_t job_done_counter_;
     std::string execution_template_name_;
+    template_id_t template_generation_id_;
     // Currently we do not support future job - omidm
     JobIdPtr future_job_id_ptr_;
 
@@ -310,8 +304,12 @@ class ExecutionTemplate {
     JobIdPtrList outer_job_id_list_;
 
     JobTemplateMap job_templates_;
+    JobTemplateVector job_templates_list_;
 
-    mutable boost::mutex mutex_;
+    JobTemplateVector seed_job_templates_;
+    std::vector<Parameter> parameters_;
+
+    mutable boost::recursive_mutex mutex_;
 
 
     JobIdPtr GetExistingInnerJobIdPtr(job_id_t job_id);
