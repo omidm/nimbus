@@ -163,7 +163,8 @@ class ExecutionTemplate {
 
         void ClearAfterSet(JobTemplateVector *ready_list);
 
-        virtual void Refresh(const std::vector<Parameter>& paramerts) = 0;
+        virtual void Refresh(const std::vector<Parameter>& paramerts,
+                             const template_id_t& template_generation_id) = 0;
     };
 
     class ComputeJobTemplate : public JobTemplate {
@@ -191,7 +192,8 @@ class ExecutionTemplate {
         JobIdPtr future_job_id_ptr_;
         size_t param_index_;
 
-        virtual void Refresh(const std::vector<Parameter> & paramerts);
+        virtual void Refresh(const std::vector<Parameter> & paramerts,
+                             const template_id_t& template_generation_id);
     };
 
     class LocalCopyJobTemplate : public JobTemplate {
@@ -213,7 +215,8 @@ class ExecutionTemplate {
         PhyIdPtr from_physical_data_id_ptr_;
         PhyIdPtr to_physical_data_id_ptr_;
 
-        virtual void Refresh(const std::vector<Parameter> & paramerts);
+        virtual void Refresh(const std::vector<Parameter> & paramerts,
+                             const template_id_t& template_generation_id);
     };
 
 
@@ -239,7 +242,8 @@ class ExecutionTemplate {
         // JobIdPtr mega_rcr_job_id_ptr_;
         PhyIdPtr from_physical_data_id_ptr_;
 
-        virtual void Refresh(const std::vector<Parameter> & paramerts);
+        virtual void Refresh(const std::vector<Parameter> & paramerts,
+                             const template_id_t& template_generation_id);
     };
 
     class RemoteCopyReceiveJobTemplate : public JobTemplate {
@@ -259,7 +263,8 @@ class ExecutionTemplate {
 
         PhyIdPtr to_physical_data_id_ptr_;
 
-        virtual void Refresh(const std::vector<Parameter> & paramerts);
+        virtual void Refresh(const std::vector<Parameter> & paramerts,
+                             const template_id_t& template_generation_id);
     };
 
     class MegaRCRJobTemplate : public JobTemplate {
@@ -282,7 +287,8 @@ class ExecutionTemplate {
         // JobIdPtrList receive_job_id_ptrs_;
         PhyIdPtrList to_phy_id_ptrs_;
 
-        virtual void Refresh(const std::vector<Parameter> & paramerts);
+        virtual void Refresh(const std::vector<Parameter> & paramerts,
+                             const template_id_t& template_generation_id);
     };
 
     bool finalized_;

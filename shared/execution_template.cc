@@ -151,6 +151,7 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
   assert(physical_ids.size() == phy_id_list_.size());
   assert(template_generation_id_ == NIMBUS_INIT_TEMPLATE_ID);
   assert(job_done_counter_ == 0);
+  assert(seed_job_templates_.size() > 0);
 
   template_generation_id_ = template_generation_id;
   job_done_counter_ = copy_job_num_ + compute_job_num_;
@@ -198,7 +199,7 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
     JobTemplateVector::iterator iter = seed_job_templates_.begin();
     for (; iter != seed_job_templates_.end(); ++iter) {
       JobTemplate *jt = *iter;
-      jt->Refresh(parameters_);
+      jt->Refresh(parameters_, template_generation_id_);
       ready_jobs->push_back((jt->job_));
     }
   }
@@ -230,7 +231,7 @@ bool ExecutionTemplate::MarkJobDone(const job_id_t& shadow_job_id,
   JobTemplateVector::iterator iter = ready_list.begin();
   for (; iter != ready_list.end(); ++iter) {
     JobTemplate *jt = *iter;
-    jt->Refresh(parameters_);
+    jt->Refresh(parameters_, template_generation_id_);
     ready_jobs->push_back((jt->job_));
   }
 
@@ -334,7 +335,8 @@ bool ExecutionTemplate::AddComputeJobTemplate(ComputeJobCommand* cm,
 }
 
 void ExecutionTemplate::ComputeJobTemplate::Refresh(
-    const std::vector<Parameter>& parameters) {
+    const std::vector<Parameter>& parameters,
+    const template_id_t& template_generation_id) {
   job_->set_id(ID<job_id_t>(*job_id_ptr_));
   job_->set_future_job_id(ID<job_id_t>(*future_job_id_ptr_));
 
@@ -395,7 +397,8 @@ bool ExecutionTemplate::AddLocalCopyJobTemplate(LocalCopyCommand* cm,
 }
 
 void ExecutionTemplate::LocalCopyJobTemplate::Refresh(
-    const std::vector<Parameter>& parameters) {
+    const std::vector<Parameter>& parameters,
+    const template_id_t& template_generation_id) {
   job_->set_id(ID<job_id_t>(*job_id_ptr_));
 
   IDSet<physical_data_id_t> read_set;
@@ -468,12 +471,14 @@ bool ExecutionTemplate::AddRemoteCopySendJobTemplate(RemoteCopySendCommand* cm,
 }
 
 void ExecutionTemplate::RemoteCopySendJobTemplate::Refresh(
-    const std::vector<Parameter>& parameters) {
+    const std::vector<Parameter>& parameters,
+    const template_id_t& template_generation_id) {
   RemoteCopySendJob *rcs = reinterpret_cast<RemoteCopySendJob*>(job_);
   assert(rcs);
   rcs->set_id(ID<job_id_t>(*job_id_ptr_));
   // rcs->set_receive_job_id(ID<job_id_t>(*receive_job_id_ptr_));
   // rcs->set_mega_rcr_job_id(ID<job_id_t>(*mega_rcr_job_id_ptr_));
+  rcs->set_template_generation_id(template_generation_id);
 
   IDSet<physical_data_id_t> read_set;
   read_set.insert(*from_physical_data_id_ptr_);
@@ -510,7 +515,8 @@ bool ExecutionTemplate::AddRemoteCopyReceiveJobTemplate(RemoteCopyReceiveCommand
 }
 
 void ExecutionTemplate::RemoteCopyReceiveJobTemplate::Refresh(
-    const std::vector<Parameter>& parameters) {
+    const std::vector<Parameter>& parameters,
+    const template_id_t& template_generation_id) {
   job_->set_id(ID<job_id_t>(*job_id_ptr_));
 
   IDSet<physical_data_id_t> write_set;
@@ -567,7 +573,8 @@ bool ExecutionTemplate::AddMegaRCRJobTemplate(MegaRCRCommand* cm,
 }
 
 void ExecutionTemplate::MegaRCRJobTemplate::Refresh(
-    const std::vector<Parameter>& parameters) {
+    const std::vector<Parameter>& parameters,
+    const template_id_t& template_generation_id) {
   MegaRCRJob *mrcr = reinterpret_cast<MegaRCRJob*>(job_); // NOLINT
   assert(mrcr);
 

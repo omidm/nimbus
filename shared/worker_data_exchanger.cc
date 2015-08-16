@@ -216,16 +216,18 @@ size_t WorkerDataExchanger::ReadHeader(WorkerDataExchangerConnection* connection
       job_id_t receive_job_id = 0;
       job_id_t mega_rcr_job_id = 0;
       size_t data_length = 0;
+      template_id_t template_generation_id = 0;
       data_version_t version = 0;
       buffer[i] = '\0';
       std::string input(buffer);
-      ParseWorkerDataHeader(input, receive_job_id, mega_rcr_job_id, data_length, version);
+      ParseWorkerDataHeader(input, receive_job_id, mega_rcr_job_id, data_length, version, template_generation_id); // NOLINT
       connection->set_middle_of_data(true);
       connection->set_middle_of_header(false);
       connection->set_receive_job_id(receive_job_id);
       connection->set_mega_rcr_job_id(mega_rcr_job_id);
       connection->set_data_length(data_length);
       connection->set_data_version(version);
+      connection->set_template_generation_id(template_generation_id);
       connection->AllocateData(data_length);
       return (i + 1);
     }
@@ -249,7 +251,8 @@ size_t WorkerDataExchanger::ReadData(WorkerDataExchangerConnection* connection,
     AddSerializedData(connection->receive_job_id(),
                       connection->mega_rcr_job_id(),
                       ser_data,
-                      connection->data_version());
+                      connection->data_version(),
+                      connection->template_generation_id());
     return remaining;
   }
 }
@@ -257,7 +260,8 @@ size_t WorkerDataExchanger::ReadData(WorkerDataExchangerConnection* connection,
 void WorkerDataExchanger::AddSerializedData(job_id_t receive_job_id,
                                             job_id_t mega_rcr_job_id,
                                             SerializedData* ser_data,
-                                            data_version_t version) {
+                                            data_version_t version,
+                                            template_id_t template_generation_id) {
 #ifndef _NIMBUS_NO_NETWORK_LOG
   char buff[LOG_MAX_BUFF_SIZE];
   snprintf(buff, sizeof(buff), "R %10.9lf j: %5.0lu s: %5.0lu",
@@ -270,7 +274,8 @@ void WorkerDataExchanger::AddSerializedData(job_id_t receive_job_id,
   event_list_.push_back(Event(receive_job_id,
                               mega_rcr_job_id,
                               version,
-                              ser_data));
+                              ser_data,
+                              template_generation_id));
 }
 
 size_t WorkerDataExchanger::PullReceiveEvents(EventList *events,
@@ -303,7 +308,8 @@ bool WorkerDataExchanger::SendSerializedData(job_id_t receive_job_id,
                                              job_id_t mega_rcr_job_id,
                                              worker_id_t worker_id,
                                              SerializedData& ser_data,
-                                             data_version_t version) {
+                                             data_version_t version,
+                                             template_id_t template_generation_id) {
   boost::shared_array<char> buf = ser_data.data_ptr();
   size_t size = ser_data.size();
   boost::mutex::scoped_lock lock1(send_connection_mutex_);
@@ -333,7 +339,10 @@ bool WorkerDataExchanger::SendSerializedData(job_id_t receive_job_id,
   header += (ss_s.str() + " ");
   std::ostringstream ss_v;
   ss_v << version;
-  header += (ss_v.str() + ";");
+  header += (ss_v.str() + " ");
+  std::ostringstream ss_t;
+  ss_t << template_generation_id;
+  header += (ss_t.str() + ";");
 
 #ifndef _NIMBUS_NO_NETWORK_LOG
   char buff[LOG_MAX_BUFF_SIZE];

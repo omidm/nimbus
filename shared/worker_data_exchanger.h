@@ -74,11 +74,13 @@ class WorkerDataExchanger {
       Event(const job_id_t& receive_job_id,
             const job_id_t& mega_rcr_job_id,
             const data_version_t& version,
-            SerializedData *ser_data)
+            SerializedData *ser_data,
+            const template_id_t& template_generation_id)
         : receive_job_id_(receive_job_id),
           mega_rcr_job_id_(mega_rcr_job_id),
           version_(version),
-          ser_data_(ser_data) {}
+          ser_data_(ser_data),
+          template_generation_id_(template_generation_id) {}
       ~Event() {}
 
       job_id_t receive_job_id_;
@@ -105,7 +107,8 @@ class WorkerDataExchanger {
                                   job_id_t mega_rcr_job_id,
                                   worker_id_t worker_id,
                                   SerializedData& ser_data,
-                                  data_version_t version);
+                                  data_version_t version,
+                                  template_id_t template_generation_id);
 
   WorkerDataExchangerConnectionMap* send_connections();
 
@@ -163,7 +166,8 @@ class WorkerDataExchanger {
   virtual void AddSerializedData(job_id_t receive_job_id,
                                  job_id_t mega_rcr_job_id,
                                  SerializedData* ser_data,
-                                 data_version_t version);
+                                 data_version_t version,
+                                 template_id_t template_generation_id);
 };
 
 }  // namespace nimbus

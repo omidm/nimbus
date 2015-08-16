@@ -286,6 +286,7 @@ class RemoteCopySendJob : public Job {
     void set_to_worker_id(ID<worker_id_t> worker_id);
     void set_to_ip(std::string ip);
     void set_to_port(ID<port_t> port);
+    void set_template_generation_id(template_id_t id);
 
   private:
     ID<job_id_t> receive_job_id_;
@@ -294,6 +295,7 @@ class RemoteCopySendJob : public Job {
     std::string to_ip_;
     ID<port_t> to_port_;
     WorkerDataExchanger* data_exchanger_;
+    template_id_t template_generation_id_;
 };
 
 class RemoteCopyReceiveJob : public Job {

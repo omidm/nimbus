@@ -587,6 +587,7 @@ StaticConfigManager* Job::GetStaticConfigManager() const {
 RemoteCopySendJob::RemoteCopySendJob(WorkerDataExchanger* da, Application *app) {
   data_exchanger_ = da;
   set_application(app);
+  template_generation_id_ = NIMBUS_INVALID_TEMPLATE_ID;
 }
 
 RemoteCopySendJob::~RemoteCopySendJob() {
@@ -602,7 +603,8 @@ void RemoteCopySendJob::Execute(Parameter params, const DataArray& da) {
                                       mega_rcr_job_id().elem(),
                                       to_worker_id_.elem(),
                                       ser_data,
-                                      da[0]->version());
+                                      da[0]->version(),
+                                      template_generation_id_);
   // delete ser_data.data_ptr(); // Not needed with shared pointer.
 }
 
@@ -651,6 +653,9 @@ void RemoteCopySendJob::set_to_port(ID<port_t> port) {
   to_port_ = port;
 }
 
+void RemoteCopySendJob::set_template_generation_id(template_id_t id) {
+  template_generation_id_ = id;
+}
 
 RemoteCopyReceiveJob::RemoteCopyReceiveJob(Application *app) {
   set_application(app);

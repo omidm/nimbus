@@ -125,12 +125,21 @@ job_id_t WorkerDataExchangerConnection::mega_rcr_job_id() {
   return mega_rcr_job_id_;
 }
 
+template_id_t WorkerDataExchangerConnection::template_generation_id() {
+  return template_generation_id_;
+}
+
 void WorkerDataExchangerConnection::set_receive_job_id(job_id_t job_id) {
   receive_job_id_ = job_id;
 }
 
 void WorkerDataExchangerConnection::set_mega_rcr_job_id(job_id_t job_id) {
   mega_rcr_job_id_ = job_id;
+}
+
+void WorkerDataExchangerConnection::set_template_generation_id(
+    template_id_t template_generation_id) {
+  template_generation_id_ = template_generation_id;
 }
 
 bool WorkerDataExchangerConnection::middle_of_header() {
