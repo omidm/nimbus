@@ -278,7 +278,7 @@ Stencil::Stencil(Application* app) {
 };
 
 Job * Stencil::Clone() {
-  std::cout << "Cloning init job!\n";
+  std::cout << "Cloning stencil job!\n";
   return new Stencil(application());
 };
 

@@ -45,6 +45,7 @@
 #include "worker/physical_data_instance.h"
 #include "shared/nimbus.h"
 
+#define INIT_JOB_NAME "init"
 #define LOOP_JOB_NAME "for_loop"
 #define GRADIENT_JOB_NAME "gradient"
 #define REDUCE_JOB_NAME "reduce"
@@ -54,6 +55,13 @@ using namespace nimbus; // NOLINT
 class Main : public Job {
   public:
     explicit Main(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
+
+class Init : public Job {
+  public:
+    explicit Init(Application *app);
     virtual void Execute(Parameter params, const DataArray& da);
     virtual Job * Clone();
 };

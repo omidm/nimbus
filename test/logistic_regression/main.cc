@@ -48,7 +48,7 @@
 #define DEFAULT_DIMENSION 10
 #define DEFAULT_ITERATION_NUM 10
 #define DEFAULT_PARTITION_NUM 10
-#define DEFAULT_DATA_SIZE_MB 10
+#define DEFAULT_SAMPLE_NUM_M 1
 using namespace nimbus; // NOLINT
 
 int main(int argc, char *argv[]) {
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
   size_t dimension;
   size_t iteration_num;
   size_t partition_num;
-  size_t data_size_mb;
+  size_t sample_num_m;
 
   WorkerManager::across_job_parallism = 1;
 
@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
     ("dimension,d", po::value<std::size_t>(&dimension)->default_value(DEFAULT_DIMENSION), "dimension of the sample vectors") // NOLINT
     ("iteration,i", po::value<std::size_t>(&iteration_num)->default_value(DEFAULT_ITERATION_NUM), "number of iterations") // NOLINT
     ("pn", po::value<std::size_t>(&partition_num)->default_value(DEFAULT_PARTITION_NUM), "number of partitions") // NOLINT
-    ("size,s", po::value<std::size_t>(&data_size_mb)->default_value(DEFAULT_DATA_SIZE_MB), "data size in MB") // NOLINT
+    ("sn", po::value<std::size_t>(&sample_num_m)->default_value(DEFAULT_SAMPLE_NUM_M), "number of samples in Million") // NOLINT
     ("othread", po::value<uint64_t>(&WorkerManager::across_job_parallism), "number of threads at worker for job execution"); //NOLINT
 
   po::variables_map vm;
@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
   LogisticRegression *app = new LogisticRegression(dimension,
                                                    iteration_num,
                                                    partition_num,
-                                                   data_size_mb);
+                                                   sample_num_m);
 
   Worker * w = new Worker(controller_ip, controller_port, listening_port, app);
 
@@ -114,7 +114,4 @@ int main(int argc, char *argv[]) {
 
   w->Run();
 }
-
-
-
 

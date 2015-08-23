@@ -55,14 +55,14 @@ bool LoadParameter(Parameter *parameter, size_t *value);
 
 bool SerializeParameter(Parameter *parameter, size_t value);
 
-float VectorDotProduct(const std::vector<float>* vec1,
-                       const std::vector<float>* vec2);
+double VectorDotProduct(const std::vector<double>* vec1,
+                        const std::vector<double>* vec2);
 
-void VrctorScale(std::vector<float>* vec,
-                 const float& scale);
+void VrctorScale(std::vector<double>* vec,
+                 const double& scale);
 
-void VectorAddWithScale(std::vector<float>* acc,
-                        const std::vector<float>* add,
-                        const float& scale);
+void VectorAddWithScale(std::vector<double>* acc,
+                        const std::vector<double>* add,
+                        const double& scale);
 
 #endif  // NIMBUS_APPLICATION_LOGISTIC_REGRESSION_UTILS_H_

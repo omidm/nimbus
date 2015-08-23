@@ -16,7 +16,7 @@ Whi='\x1B[0;37m';
 
 if [ "$1" = t ]
 then
-killall -v worker
+killall -v scheduler
 exit
 fi
 
@@ -27,9 +27,9 @@ fi
 echo -e "${Gre}export DBG=errors...${RCol}"
 export DBG=error
 
-echo -e "${Pur}Launching $1 workers  each with $2 threads...${RCol}"
+echo -e "${Pur}Launching scheduler  waiting for $1 workers ...${RCol}"
 for i in `seq 1 $1`;
 do
-  ./worker --cip localhost --cport 5900 --othread $2 -p 590$i -i 20 --sn 1 --pn 10 &
+  ./scheduler  -p 5900 -w $1
 done
 

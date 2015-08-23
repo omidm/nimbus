@@ -62,26 +62,26 @@ bool SerializeParameter(Parameter *parameter, size_t value) {
   return true;
 }
 
-float VectorDotProduct(const std::vector<float>* vec1,
-                       const std::vector<float>* vec2) {
+double VectorDotProduct(const std::vector<double>* vec1,
+                        const std::vector<double>* vec2) {
   assert(vec1->size() == vec2->size());
-  float result = 0;
+  double result = 0;
   for (size_t i = 0; i < vec1->size(); ++i) {
     result += vec1->operator[](i) * vec2->operator[](i);
   }
   return result;
 }
 
-void VrctorScale(std::vector<float>* vec,
-                 const float& scale) {
+void VrctorScale(std::vector<double>* vec,
+                 const double& scale) {
   for (size_t i = 0; i < vec->size(); ++i) {
     vec->operator[](i) *= vec->operator[](i) * scale;
   }
 }
 
-void VectorAddWithScale(std::vector<float>* acc,
-                        const std::vector<float>* add,
-                        const float& scale) {
+void VectorAddWithScale(std::vector<double>* acc,
+                        const std::vector<double>* add,
+                        const double& scale) {
   assert(acc->size() == add->size());
   for (size_t i = 0; i < acc->size(); ++i) {
     acc->operator[](i) += add->operator[](i) * scale;

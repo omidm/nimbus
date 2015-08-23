@@ -45,18 +45,17 @@
 LogisticRegression::LogisticRegression(const size_t& dimension,
                                        const size_t& iteration_num,
                                        const size_t& partition_num,
-                                       const size_t& data_size_mb)
+                                       const size_t& sample_num_m)
   : dimension_(dimension),
     iteration_num_(iteration_num),
     partition_num_(partition_num),
-    data_size_mb_(data_size_mb) {
-      // TODO(omidm): overflow?!!!
+    sample_num_m_(sample_num_m) {
       assert(sizeof(size_t) == 8); // NOLINT
-      size_t data_size_mb_per_partition = data_size_mb / partition_num;
-      size_t sample_size_b = (dimension + 1) * sizeof(float); // NOLINT
-      sample_num_per_partition_ = (data_size_mb_per_partition * 1e6) / sample_size_b;
-      // sample_num_per_partition_ = 10;
-      std::cout << "****OMID: " << sample_num_per_partition_ << std::endl;
+      assert(sizeof(double) == 8); // NOLINT
+      assert(((sample_num_m * size_t(1e6)) % partition_num) == 0);
+      sample_num_per_partition_ = (sample_num_m * 1e6) / partition_num;
+      std::cout << "**** number of partitions:        " << partition_num_ << std::endl;
+      std::cout << "**** sample number per partition: " << sample_num_per_partition_ << std::endl;
 }
 
 LogisticRegression::~LogisticRegression() {
@@ -75,8 +74,8 @@ size_t LogisticRegression::partition_num() {
   return partition_num_;
 }
 
-size_t LogisticRegression::data_size_mb() {
-  return data_size_mb_;
+size_t LogisticRegression::sample_num_m() {
+  return sample_num_m_;
 }
 
 size_t LogisticRegression::sample_num_per_partition() {
@@ -85,6 +84,7 @@ size_t LogisticRegression::sample_num_per_partition() {
 
 void LogisticRegression::Load() {
   RegisterJob(NIMBUS_MAIN_JOB_NAME, new Main(this));
+  RegisterJob(INIT_JOB_NAME, new Init(this));
   RegisterJob(LOOP_JOB_NAME, new ForLoop(this));
   RegisterJob(GRADIENT_JOB_NAME, new Gradient(this));
   RegisterJob(REDUCE_JOB_NAME, new Reduce(this));

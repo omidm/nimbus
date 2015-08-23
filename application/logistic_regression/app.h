@@ -55,21 +55,21 @@ class LogisticRegression : public Application {
     LogisticRegression(const size_t& dimension_,
                        const size_t& iteration_num,
                        const size_t& partition_num,
-                       const size_t& data_size_mb);
+                       const size_t& sample_num_m);
     ~LogisticRegression();
     virtual void Load();
 
     virtual size_t dimension();
     virtual size_t iteration_num();
     virtual size_t partition_num();
-    virtual size_t data_size_mb();
+    virtual size_t sample_num_m();
     virtual size_t sample_num_per_partition();
 
   private:
     size_t dimension_;
     size_t iteration_num_;
     size_t partition_num_;
-    size_t data_size_mb_;
+    size_t sample_num_m_;
     size_t sample_num_per_partition_;
 };
 
