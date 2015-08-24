@@ -155,7 +155,7 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
   assert(inner_job_ids.size() == inner_job_id_list_.size());
   assert(outer_job_ids.size() == outer_job_id_list_.size());
   assert(physical_ids.size() == phy_id_list_.size());
-  // assert(job_done_counter_ == 0);
+  assert(job_done_counter_ == 0);
   // assert(seed_job_templates_.size() > 0);
 
   template_generation_id_ = template_generation_id;
@@ -575,7 +575,7 @@ bool ExecutionTemplate::AddMegaRCRJobTemplate(MegaRCRCommand* cm,
                            to_phy_id_ptrs,
                            empty_before_set);
 
-  copy_job_num_ += cm->receive_job_ids_p()->size();
+  ++copy_job_num_;
   job_templates_[job_id] = jt;
 
   return true;
