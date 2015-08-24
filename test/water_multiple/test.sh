@@ -24,10 +24,13 @@ fi
 # ../scheduler_v1/scheduler 2  > scheduler.txt &
 # sleep 1
  
+echo -e "${Gre}export DBG=errors...${RCol}"
+export DBG=error
+
 echo -e "${Pur}Launching $1 workers  each with $2 threads...${RCol}"
 for i in `seq 1 $1`;
 do
-  # ./worker --cip localhost --cport 5900 --othread $2 -p 590$i --pnx 4 --pny 4 --pnz 4 --ppnx 4 --ppny 4 --ppnz 4 -s 80 --psl 0 -e 4 &
-  ./worker --cip localhost --cport 5900 --othread $2 -p 590$i --psl 0 & 
+  ./worker --cip localhost --cport 5900 --othread $2 -p 590$i --pnx 4 --pny 4 --pnz 4 --ppnx 4 --ppny 4 --ppnz 4 -s 80 --psl 0 -e 4 &
+  # ./worker --cip localhost --cport 5900 --othread $2 -p 590$i --psl 0 & 
 done
 

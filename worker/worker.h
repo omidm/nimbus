@@ -52,6 +52,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm>
 #include "worker/data.h"
 #include "worker/job.h"
 #include "worker/application.h"
@@ -198,16 +199,16 @@ class Worker {
   virtual bool IsEmptyGraph(WorkerJobGraph* job_graph);
 
  public:
-  void StatAddJob();
-  void StatEndJob(int len);
-  void StatDispatchJob(int len = 1);
+  void StatAddJob(size_t num);
+  void StatEndJob(size_t num);
+  void StatDispatchJob(size_t num);
   void ResolveDataArray(Job* job);
   void GetTimerStat(int64_t* idle, int64_t* block, int64_t* run);
   void PrintTimerStat();
 
  private:
-  int stat_blocked_job_num_, stat_ready_job_num_;
-  int stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_;
+  size_t stat_blocked_job_num_, stat_ready_job_num_;
+  size_t stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_;
   MultiLevelTimer run_timer_;
   MultiLevelTimer block_timer_;
   MultiLevelTimer total_timer_;

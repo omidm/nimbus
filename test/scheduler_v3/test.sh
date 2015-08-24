@@ -28,8 +28,5 @@ echo -e "${Gre}export DBG=errors...${RCol}"
 export DBG=error
 
 echo -e "${Pur}Launching scheduler  waiting for $1 workers ...${RCol}"
-for i in `seq 1 $1`;
-do
-  ./scheduler  -p 5900 -w $1
-done
+./scheduler  -p 5900 -w $1
 

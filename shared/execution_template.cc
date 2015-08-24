@@ -92,6 +92,12 @@ bool ExecutionTemplate::finalized() {
   return finalized_;
 }
 
+size_t ExecutionTemplate::job_num() {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  assert(finalized_);
+  return copy_job_num_ + compute_job_num_;
+}
+
 size_t ExecutionTemplate::copy_job_num() {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   assert(finalized_);

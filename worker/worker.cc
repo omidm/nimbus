@@ -481,6 +481,7 @@ void Worker::ProcessLoadDataCommand(LoadDataCommand* cm) {
 }
 
 void Worker::ProcessPrepareRewindCommand(PrepareRewindCommand* cm) {
+  // TODO(omidm): fix this function, adopt to execution template!
   boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
 
   // First remove all blocked jobs.
@@ -489,6 +490,7 @@ void Worker::ProcessPrepareRewindCommand(PrepareRewindCommand* cm) {
   // Wait untill all runing jobs finish.
   while (!IsEmptyGraph(&worker_job_graph_)) {
     JobList local_job_done_list;
+    // TODO(omidm): you should not call this function, remove!
     worker_manager_->GetLocalJobDoneList(&local_job_done_list);
     bool new_done = false;
     while (!local_job_done_list.empty()) {
@@ -617,28 +619,31 @@ void Worker::ProcessSpawnCommandTemplateCommand(SpawnCommandTemplateCommand* com
     execution_templates_.find(key);
   assert(iter != execution_templates_.end());
 
+  ExecutionTemplate *et = iter->second;
   JobList ready_jobs;
   template_id_t tgi = command->template_generation_id();
   EventMap::iterator it = pending_events_.find(tgi);
   if (it != pending_events_.end()) {
-    iter->second->Instantiate(command->inner_job_ids(),
-                              command->outer_job_ids(),
-                              command->parameters(),
-                              command->phy_ids(),
-                              it->second,
-                              tgi,
-                              &ready_jobs);
+    et->Instantiate(command->inner_job_ids(),
+                    command->outer_job_ids(),
+                    command->parameters(),
+                    command->phy_ids(),
+                    it->second,
+                    tgi,
+                    &ready_jobs);
     pending_events_.erase(it);
   } else {
     WorkerDataExchanger::EventList empty_pending_events;
-    iter->second->Instantiate(command->inner_job_ids(),
-                              command->outer_job_ids(),
-                              command->parameters(),
-                              command->phy_ids(),
-                              empty_pending_events,
-                              tgi,
-                              &ready_jobs);
+    et->Instantiate(command->inner_job_ids(),
+                    command->outer_job_ids(),
+                    command->parameters(),
+                    command->phy_ids(),
+                    empty_pending_events,
+                    tgi,
+                    &ready_jobs);
   }
+
+  StatAddJob(et->job_num());
 
   active_execution_templates_[tgi] = iter->second;
 
@@ -716,7 +721,7 @@ void Worker::AddJobToGraph(Job* job) {
   boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
 
   // TODO(quhang): when a job is received.
-  StatAddJob();
+  StatAddJob(1);
   assert(job != NULL);
   job_id_t job_id = job->id().elem();
   dbg(DBG_WORKER_FD,
@@ -1147,31 +1152,34 @@ bool Worker::IsEmptyGraph(WorkerJobGraph* job_graph) {
   return true;
 }
 
-void Worker::StatAddJob() {
+void Worker::StatAddJob(size_t num) {
   boost::unique_lock<boost::recursive_mutex> lock(stat_mutex_);
   // printf("add %d %d %d %d %d\n",
   //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
   //        stat_blocked_job_num_, stat_ready_job_num_);
-  ++stat_blocked_job_num_;
-  if (stat_idle_cores_ != 0) {
-    --stat_idle_cores_;
-    ++stat_blocked_cores_;
-    // timer::StartTimer(timer::kSumCyclesBlock);
-    block_timer_.Start(1);
+  assert((stat_idle_cores_ >= 0) && (num >= 0));
+  stat_blocked_job_num_ += num;
+  size_t diff = std::min(stat_idle_cores_, num);
+  if (diff > 0) {
+    stat_idle_cores_ -= diff;
+    stat_blocked_cores_ += diff;
+    // timer::StartTimer(timer::kSumCyclesBlock, diff);
+    block_timer_.Start(diff);
   }
   // printf("#add %d %d %d %d %d\n",
   //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
   //        stat_blocked_job_num_, stat_ready_job_num_);
 }
-void Worker::StatDispatchJob(int len) {
+void Worker::StatDispatchJob(size_t num) {
   boost::unique_lock<boost::recursive_mutex> lock(stat_mutex_);
-  // printf("%d dis %d %d %d %d %d\n", len,
+  // printf("%d dis %d %d %d %d %d\n", num,
   //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
   //        stat_blocked_job_num_, stat_ready_job_num_);
-  stat_blocked_job_num_ -= len;
-  stat_ready_job_num_ += len;
+  assert(stat_blocked_job_num_ >= num);
+  stat_blocked_job_num_ -= num;
+  stat_ready_job_num_ += num;
   if (stat_blocked_cores_ > 0) {
-    int release_cores = std::min(stat_blocked_cores_, len);
+    size_t release_cores = std::min(stat_blocked_cores_, num);
     if (release_cores > 0) {
       stat_blocked_cores_ -= release_cores;
       // timer::StopTimer(timer::kSumCyclesBlock, release_cores);
@@ -1185,18 +1193,19 @@ void Worker::StatDispatchJob(int len) {
   //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
   //        stat_blocked_job_num_, stat_ready_job_num_);
 }
-void Worker::StatEndJob(int len) {
+void Worker::StatEndJob(size_t num) {
   boost::unique_lock<boost::recursive_mutex> lock(stat_mutex_);
-  // printf("%d end %d %d %d %d %d\n", len,
+  // printf("%d end %d %d %d %d %d\n", num,
   //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
   //        stat_blocked_job_num_, stat_ready_job_num_);
-  using std::min;
-  stat_ready_job_num_ -= len;
-  int busy_cores = min(stat_ready_job_num_,
-                       static_cast<int>(WorkerManager::across_job_parallism));
-  int blocked_cores = min(stat_blocked_job_num_,
-                          static_cast<int>(WorkerManager::across_job_parallism) - busy_cores);
-  int idle_cores =
+  stat_ready_job_num_ -= num;
+  size_t busy_cores =
+    std::min(stat_ready_job_num_,
+             static_cast<size_t>(WorkerManager::across_job_parallism));
+  size_t blocked_cores =
+    std::min(stat_blocked_job_num_,
+             static_cast<size_t>(WorkerManager::across_job_parallism) - busy_cores);
+  size_t idle_cores =
       WorkerManager::across_job_parallism - busy_cores - blocked_cores;
   if (busy_cores != stat_busy_cores_) {
     // timer::StopTimer(timer::kSumCyclesRun, stat_busy_cores_ - busy_cores);
