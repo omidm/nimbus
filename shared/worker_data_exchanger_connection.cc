@@ -54,11 +54,13 @@ WorkerDataExchangerConnection::WorkerDataExchangerConnection(tcp::socket* sock)
   existing_bytes_ = 0;
   middle_of_data_ = false;
   middle_of_header_ = true;
+  mutex_ = new boost::mutex();
 }
 
 WorkerDataExchangerConnection::~WorkerDataExchangerConnection() {
   delete read_buffer_;
   delete socket_;
+  delete mutex_;
 }
 
 void WorkerDataExchangerConnection::AllocateData(size_t size) {
@@ -144,6 +146,10 @@ void WorkerDataExchangerConnection::set_template_generation_id(
 
 bool WorkerDataExchangerConnection::middle_of_header() {
   return middle_of_header_;
+}
+
+boost::mutex* WorkerDataExchangerConnection::mutex() {
+  return mutex_;
 }
 
 void WorkerDataExchangerConnection::set_middle_of_header(bool flag) {

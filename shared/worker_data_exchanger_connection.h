@@ -79,6 +79,7 @@ class WorkerDataExchangerConnection {
   size_t remaining_data_length();
   bool middle_of_data();
   bool middle_of_header();
+  virtual boost::mutex* mutex();
 
   void set_receive_job_id(job_id_t job_id);
   void set_mega_rcr_job_id(job_id_t job_id);
@@ -103,6 +104,7 @@ class WorkerDataExchangerConnection {
   size_t remaining_data_length_;
   bool middle_of_data_;
   bool middle_of_header_;
+  boost::mutex* mutex_;
 };
 
 typedef std::list<WorkerDataExchangerConnection*>

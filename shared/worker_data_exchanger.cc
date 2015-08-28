@@ -46,6 +46,7 @@
 
 #define DATA_EXCHANGER_TCP_SEND_BUF_SIZE 10485760  // 10MB
 #define DATA_EXCHANGER_TCP_RECEIVE_BUF_SIZE 10485760  // 10MB
+#define MAX_HEADER_SIZE 100
 
 using boost::asio::ip::tcp;
 
@@ -216,11 +217,17 @@ size_t WorkerDataExchanger::ReadHeader(WorkerDataExchangerConnection* connection
       job_id_t receive_job_id = 0;
       job_id_t mega_rcr_job_id = 0;
       size_t data_length = 0;
-      template_id_t template_generation_id = 0;
       data_version_t version = 0;
-      buffer[i] = '\0';
-      std::string input(buffer);
-      ParseWorkerDataHeader(input, receive_job_id, mega_rcr_job_id, data_length, version, template_generation_id); // NOLINT
+      template_id_t template_generation_id = 0;
+
+      char *next;
+      receive_job_id = strtoll(buffer, &next, 10);
+      mega_rcr_job_id = strtoll(next, &next, 10);
+      data_length = strtoll(next, &next, 10);
+      version = strtoll(next, &next, 10);
+      template_generation_id = strtoll(next, &next, 10);
+      assert((*next) == ';');
+
       connection->set_middle_of_data(true);
       connection->set_middle_of_header(false);
       connection->set_receive_job_id(receive_job_id);
@@ -312,37 +319,40 @@ bool WorkerDataExchanger::SendSerializedData(job_id_t receive_job_id,
                                              template_id_t template_generation_id) {
   boost::shared_array<char> buf = ser_data.data_ptr();
   size_t size = ser_data.size();
-  boost::mutex::scoped_lock lock1(send_connection_mutex_);
-  boost::mutex::scoped_lock lock2(address_book_mutex_);
-  if (send_connections_.count(worker_id) == 0) {
-    if (address_book_.count(worker_id) == 0) {
-      std::cout << "ERROR: could not find the address info of the worker id: " <<
-        worker_id << std::endl;
-      return false;
+
+  char header[MAX_HEADER_SIZE];
+  int header_size = snprintf(header, MAX_HEADER_SIZE, "%lu %lu %lu %lu %lu;",
+                             receive_job_id,
+                             mega_rcr_job_id,
+                             size,
+                             version,
+                             template_generation_id);
+  if (header_size >= MAX_HEADER_SIZE || header_size < 0) {
+    dbg(DBG_ERROR, "ERROR: failed building the header %d.\n", header_size); // NOLINT
+    assert(false);
+  }
+
+
+  WorkerDataExchangerConnection* connection = NULL;
+  {
+    boost::mutex::scoped_lock lock1(send_connection_mutex_);
+    boost::mutex::scoped_lock lock2(address_book_mutex_);
+    WorkerDataExchangerConnectionMap::iterator iter =
+      send_connections_.find(worker_id);
+    if (iter == send_connections_.end()) {
+      if (address_book_.count(worker_id) == 0) {
+        dbg(DBG_ERROR, "ERROR: could not find the address info of the worker id: %lu.\n", worker_id); //NOLINT
+        assert(false);
+      } else {
+        std::pair<std::string, port_t> add = address_book_[worker_id];
+        CreateNewSendConnection(worker_id, add.first, add.second);
+      }
+      connection = send_connections_[worker_id];
     } else {
-      std::pair<std::string, port_t> add = address_book_[worker_id];
-      CreateNewSendConnection(worker_id, add.first, add.second);
+      connection = iter->second;
     }
   }
-  WorkerDataExchangerConnection* connection = send_connections_[worker_id];
-  boost::system::error_code ignored_error;
 
-  std::string header;
-  std::ostringstream ss_j;
-  ss_j << receive_job_id;
-  header += (ss_j.str() + " ");
-  std::ostringstream ss_m;
-  ss_m << mega_rcr_job_id;
-  header += (ss_m.str() + " ");
-  std::ostringstream ss_s;
-  ss_s << size;
-  header += (ss_s.str() + " ");
-  std::ostringstream ss_v;
-  ss_v << version;
-  header += (ss_v.str() + " ");
-  std::ostringstream ss_t;
-  ss_t << template_generation_id;
-  header += (ss_t.str() + ";");
 
 #ifndef _NIMBUS_NO_NETWORK_LOG
   char buff[LOG_MAX_BUFF_SIZE];
@@ -351,11 +361,16 @@ bool WorkerDataExchanger::SendSerializedData(job_id_t receive_job_id,
   log_.log_WriteToFile(std::string(buff));
 #endif
 
-  boost::asio::write(*(connection->socket()), boost::asio::buffer(header),
+  {
+    boost::mutex::scoped_lock lock(*(connection->mutex()));
+    boost::system::error_code ignored_error;
+    boost::asio::write(*(connection->socket()),
+        boost::asio::buffer(header, header_size),
+        boost::asio::transfer_all(), ignored_error);
+    boost::asio::write(*(connection->socket()),
+        boost::asio::buffer(buf.get(), size),
       boost::asio::transfer_all(), ignored_error);
-  boost::asio::write(*(connection->socket()),
-      boost::asio::buffer(buf.get(), size),
-      boost::asio::transfer_all(), ignored_error);
+  }
   return true;
 }
 
