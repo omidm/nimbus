@@ -44,9 +44,11 @@
 
 #define _NIMBUS_NO_NETWORK_LOG
 
+#define MAX_THREAD_NUM 8
+#define MAX_HEADER_SIZE 100
+
 #define DATA_EXCHANGER_TCP_SEND_BUF_SIZE 10485760  // 10MB
 #define DATA_EXCHANGER_TCP_RECEIVE_BUF_SIZE 10485760  // 10MB
-#define MAX_HEADER_SIZE 100
 
 using boost::asio::ip::tcp;
 
@@ -57,6 +59,7 @@ WorkerDataExchanger::WorkerDataExchanger(port_t port_no)
   io_service_ = new boost::asio::io_service();
   acceptor_ = new tcp::acceptor(*io_service_,
       tcp::endpoint(tcp::v4(), listening_port_));
+  assert(MAX_THRTEAD_NUM >= 1);
 
 #ifndef _NIMBUS_NO_NETWORK_LOG
   std::ostringstream ss;
@@ -88,11 +91,14 @@ WorkerDataExchanger::~WorkerDataExchanger() {
   delete io_service_;
 }
 
+void WorkerDataExchanger::ThreadEntry() {
+  timer::InitializeTimers();
+  io_service_->run();
+}
+
 void WorkerDataExchanger::Run() {
   dbg(DBG_NET, "Running the worker data exchanger.\n");
-  timer::InitializeTimers();
   ListenForNewConnections();
-  io_service_->run();
 }
 
 void WorkerDataExchanger::ListenForNewConnections() {
@@ -103,6 +109,12 @@ void WorkerDataExchanger::ListenForNewConnections() {
   acceptor_->async_accept(*connection->socket(),
       boost::bind(&WorkerDataExchanger::HandleAccept,
         this, connection, boost::asio::placeholders::error));
+  if (threads_.size() < MAX_THREAD_NUM) {
+    boost::thread *t = new boost::thread(
+        boost::bind(&WorkerDataExchanger::ThreadEntry, this));
+    threads_.push_back(t);
+  }
+  assert(threads_.size() >= 1);
 }
 
 void WorkerDataExchanger::HandleAccept(WorkerDataExchangerConnection* connection,

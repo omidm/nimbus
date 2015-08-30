@@ -96,6 +96,7 @@ class WorkerDataExchanger {
   virtual ~WorkerDataExchanger();
 
   virtual void Run();
+  virtual void ThreadEntry();
 
   virtual bool AddContactInfo(worker_id_t worker_id,
                               std::string ip_address, port_t port_no);
@@ -123,6 +124,8 @@ class WorkerDataExchanger {
   port_t listening_port_;
   tcp::acceptor* acceptor_;
   boost::asio::io_service* io_service_;
+
+  std::vector<boost::thread*> threads_;
 
   AddressBook address_book_;
   boost::mutex address_book_mutex_;

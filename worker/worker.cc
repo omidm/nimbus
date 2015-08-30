@@ -100,6 +100,8 @@ Worker::~Worker() {
 
 void Worker::Run() {
   std::cout << "Running the Worker" << std::endl;
+  timer::InitializeKeys();
+  timer::InitializeTimers();
 
   SetupSchedulerInterface();
 
@@ -112,8 +114,6 @@ void Worker::Run() {
 }
 
 void Worker::WorkerCoreProcessor() {
-  timer::InitializeKeys();
-  timer::InitializeTimers();
   // timer::StartTimer(timer::kSumCyclesTotal, WorkerManager::across_job_parallism);
   total_timer_.Start(WorkerManager::across_job_parallism);
 
@@ -658,8 +658,7 @@ void Worker::ProcessSpawnCommandTemplateCommand(SpawnCommandTemplateCommand* com
 
 void Worker::SetupDataExchangerInterface() {
   data_exchanger_ = new WorkerDataExchanger(listening_port_);
-  data_exchanger_thread_ = new boost::thread(
-      boost::bind(&WorkerDataExchanger::Run, data_exchanger_));
+  data_exchanger_->Run();
 }
 
 void Worker::SetupSchedulerInterface() {
