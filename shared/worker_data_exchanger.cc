@@ -59,7 +59,7 @@ WorkerDataExchanger::WorkerDataExchanger(port_t port_no)
   io_service_ = new boost::asio::io_service();
   acceptor_ = new tcp::acceptor(*io_service_,
       tcp::endpoint(tcp::v4(), listening_port_));
-  assert(MAX_THRTEAD_NUM >= 1);
+  assert(MAX_THREAD_NUM >= 1);
 
 #ifndef _NIMBUS_NO_NETWORK_LOG
   std::ostringstream ss;
