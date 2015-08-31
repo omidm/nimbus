@@ -115,6 +115,10 @@ class WorkerDataExchanger {
 
   WorkerDataExchangerConnectionList* receive_connections();
 
+  void set_receive_event_mutex(boost::recursive_mutex *mutex);
+
+  void set_receive_event_cond(boost::condition_variable_any *cond);
+
   void WriteTimeDriftToLog(double drift);
 
  private:
@@ -131,7 +135,9 @@ class WorkerDataExchanger {
   boost::mutex address_book_mutex_;
 
   EventList event_list_;
-  boost::mutex event_list_mutex_;
+  boost::recursive_mutex *receive_event_mutex_;
+  boost::condition_variable_any *receive_event_cond_;
+
 
   WorkerDataExchangerConnectionMap send_connections_;
   boost::mutex send_connection_mutex_;

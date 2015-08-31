@@ -96,26 +96,49 @@ Worker::~Worker() {
   worker_job_graph_.RemoveVertex(DUMB_JOB_ID);
   delete worker_manager_;
   delete ddb_;
+  delete receive_event_mutex_;
+  delete receive_event_cond_;
+  delete command_processor_mutex_;
+  delete command_processor_cond_;
 }
 
 void Worker::Run() {
   std::cout << "Running the Worker" << std::endl;
-  timer::InitializeKeys();
-  timer::InitializeTimers();
 
-  SetupSchedulerInterface();
+  CreateModules();
 
-  ldo_map_ = new WorkerLdoMap();
-  application_->Start(client_, &id_maker_, ldo_map_);
+  SetupTimers();
+  SetupApplication();
+  SetupWorkerManager();
+  SetupSchedulerClient();
+  SetupWorkerDataExchanger();
 
-  SetupDataExchangerInterface();
+  // SetupCommandProcessor();
+  command_processor_thread_ = new boost::thread(
+      boost::bind(&Worker::SetupCommandProcessor, this));
+
+  // SetupReceiveEventProcessor();
+  receive_event_thread_ = new boost::thread(
+      boost::bind(&Worker::SetupReceiveEventProcessor, this));
 
   WorkerCoreProcessor();
 }
 
-void Worker::WorkerCoreProcessor() {
-  // timer::StartTimer(timer::kSumCyclesTotal, WorkerManager::across_job_parallism);
-  total_timer_.Start(WorkerManager::across_job_parallism);
+
+void Worker::CreateModules() {
+  id_maker_ = new IDMaker();
+  ldo_map_ = new WorkerLdoMap();
+  client_ = new SchedulerClient(scheduler_ip_, scheduler_port_);
+  data_exchanger_ = new WorkerDataExchanger(listening_port_);
+  receive_event_mutex_ = new boost::recursive_mutex();
+  receive_event_cond_ = new boost::condition_variable_any();
+  command_processor_mutex_ = new boost::recursive_mutex();
+  command_processor_cond_ = new boost::condition_variable_any();
+}
+
+void Worker::SetupTimers() {
+  timer::InitializeKeys();
+  timer::InitializeTimers();
 
   stat_blocked_job_num_ = 0;
   stat_ready_job_num_ = 0;
@@ -125,12 +148,100 @@ void Worker::WorkerCoreProcessor() {
   run_timer_.set_name("kSumCyclesRun");
   block_timer_.set_name("kSumCyclesBlock");
   total_timer_.set_name("kSumCyclesTotal");
-  std::cout << "Base Worker Core Processor" << std::endl;
+
+  // timer::StartTimer(timer::kSumCyclesTotal, WorkerManager::across_job_parallism);
+  total_timer_.Start(WorkerManager::across_job_parallism);
+}
+
+void Worker::SetupApplication() {
+  application_->Start(client_, id_maker_, ldo_map_);
+}
+
+void Worker::SetupWorkerManager() {
   worker_manager_->worker_ = this;
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Launching worker threads.\n");
   worker_manager_->StartWorkerThreads();
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Finishes launching worker threads.\n");
   worker_manager_->TriggerScheduling();
+}
+
+void Worker::SetupSchedulerClient() {
+  LoadSchedulerCommands();
+  client_->set_command_processor_mutex(command_processor_mutex_);
+  client_->set_command_processor_cond(command_processor_cond_);
+  client_->set_scheduler_command_table(&scheduler_command_table_);
+  client_thread_ = new boost::thread(
+      boost::bind(&SchedulerClient::Run, client_));
+}
+
+void Worker::SetupWorkerDataExchanger() {
+  data_exchanger_->set_receive_event_mutex(receive_event_mutex_);
+  data_exchanger_->set_receive_event_cond(receive_event_cond_);
+  data_exchanger_->Run();
+}
+
+void Worker::SetupCommandProcessor() {
+  timer::InitializeTimers();
+  RunCommandProcessor();
+}
+
+void Worker::RunCommandProcessor() {
+  while (true) {
+    SchedulerCommandList storage;
+    {
+      boost::unique_lock<boost::recursive_mutex> lock(*command_processor_mutex_);
+
+      while (!client_->ReceiveCommands(&storage, SCHEDULER_COMMAND_GROUP_QUOTA)) {
+        command_processor_cond_->wait(lock);
+      }
+    }
+
+    SchedulerCommandList::iterator iter = storage.begin();
+    for (; iter != storage.end(); ++iter) {
+      timer::StartTimer(timer::kCoreCommand);
+      SchedulerCommand *comm = *iter;
+      dbg(DBG_WORKER, "Receives command from scheduler: %s\n",
+          comm->ToString().c_str());
+      dbg(DBG_WORKER_FD,
+          DBG_WORKER_FD_S"Scheduler command arrives(%s).\n",
+          comm->name().c_str());
+      ProcessSchedulerCommand(comm);
+      delete comm;
+      timer::StopTimer(timer::kCoreCommand);
+    }
+  }
+}
+
+void Worker::SetupReceiveEventProcessor() {
+  timer::InitializeTimers();
+  RunReceiveEventProcessor();
+}
+
+void Worker::RunReceiveEventProcessor() {
+  while (true) {
+    WorkerDataExchanger::EventList events;
+    {
+      boost::unique_lock<boost::recursive_mutex> lock(*receive_event_mutex_);
+
+      while (data_exchanger_->PullReceiveEvents(&events, RECEIVE_EVENT_BATCH_QUOTA) == 0) {
+        receive_event_cond_->wait(lock);
+      }
+    }
+    timer::StartTimer(timer::kJobGraph1);
+    boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+    timer::StartTimer(timer::kCoreTransmission);
+    ProcessReceiveEvents(events);
+    timer::StopTimer(timer::kCoreTransmission);
+    timer::StopTimer(timer::kJobGraph1);
+  }
+}
+
+void Worker::WorkerCoreProcessor() {
+  std::cout << "Base Worker Core Processor" << std::endl;
+
+  receive_event_thread_->join();
+
+  assert(false);
 
   while (true) {
     bool processed_tasks = false;
@@ -333,7 +444,7 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
     ip_address_ = cm->ip();
   }
   id_ = cm->worker_id().elem();
-  id_maker_.Initialize(id_);
+  id_maker_->Initialize(id_);
   ddb_->Initialize(ip_address_, id_);
 
   std::string wstr = int2string(id_);
@@ -655,23 +766,6 @@ void Worker::ProcessSpawnCommandTemplateCommand(SpawnCommandTemplateCommand* com
   assert(success_flag);
 }
 
-
-void Worker::SetupDataExchangerInterface() {
-  data_exchanger_ = new WorkerDataExchanger(listening_port_);
-  data_exchanger_->Run();
-}
-
-void Worker::SetupSchedulerInterface() {
-  LoadSchedulerCommands();
-  client_ = new SchedulerClient(scheduler_ip_, scheduler_port_);
-  client_->set_scheduler_command_table(&scheduler_command_table_);
-  // client_->Run();
-  client_thread_ = new boost::thread(
-      boost::bind(&SchedulerClient::Run, client_));
-
-  // profiler_thread_ = new boost::thread(
-  //     boost::bind(&Profiler::Run, &profiler_, client_, id_));
-}
 
 void Worker::LoadSchedulerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT

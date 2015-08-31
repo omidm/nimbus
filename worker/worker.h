@@ -96,6 +96,19 @@ class Worker {
   virtual ~Worker();
 
   virtual void Run();
+  virtual void CreateModules();
+  virtual void SetupTimers();
+  virtual void SetupApplication();
+  virtual void SetupWorkerManager();
+  virtual void SetupSchedulerClient();
+  virtual void SetupWorkerDataExchanger();
+
+  virtual void SetupCommandProcessor();
+  virtual void RunCommandProcessor();
+
+  virtual void SetupReceiveEventProcessor();
+  virtual void RunReceiveEventProcessor();
+
   virtual void WorkerCoreProcessor();
 
   // virtual void ExecuteJob(Job* job);
@@ -140,7 +153,7 @@ class Worker {
   WorkerDataExchanger* data_exchanger_;
   DistributedDB *ddb_;
   WorkerLdoMap* ldo_map_;
-  IDMaker id_maker_;
+  IDMaker *id_maker_;
   SchedulerCommand::PrototypeTable scheduler_command_table_;
   worker_id_t id_;
   std::string ip_address_;
@@ -157,9 +170,17 @@ class Worker {
   WorkerJobGraph worker_job_graph_;
   boost::recursive_mutex job_graph_mutex_;
 
+  boost::recursive_mutex *receive_event_mutex_;
+  boost::condition_variable_any *receive_event_cond_;
+
+  boost::recursive_mutex *command_processor_mutex_;
+  boost::condition_variable_any *command_processor_cond_;
+
   Computer host_;
   boost::thread* client_thread_;
   boost::thread* profiler_thread_;
+  boost::thread* command_processor_thread_;
+  boost::thread* receive_event_thread_;
   // TODO(quhang) a strong assumption is made that the data map is never changed
   // during the runtime. Indeed, for now, it is only changed at the very
   // beginning of the simulation, so it keeps the same during the simulation,
@@ -180,10 +201,6 @@ class Worker {
   std::map<std::string, ExecutionTemplate*> execution_templates_;
   std::map<template_id_t, ExecutionTemplate*> active_execution_templates_;
   EventMap pending_events_;
-
-  virtual void SetupSchedulerInterface();
-
-  virtual void SetupDataExchangerInterface();
 
   virtual void LoadSchedulerCommands();
 

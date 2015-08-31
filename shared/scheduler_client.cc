@@ -93,7 +93,7 @@ bool SchedulerClient::Initialize() {
 bool SchedulerClient::ReceiveCommands(SchedulerCommandList* storage,
                                       size_t maxCommands) {
   storage->clear();
-  boost::mutex::scoped_lock lock(command_queue_mutex_);
+  boost::unique_lock<boost::recursive_mutex> lock(*command_processor_mutex_);
   uint32_t pending = received_commands_.size();
   if (pending == 0) {
     return false;
@@ -165,8 +165,9 @@ size_t SchedulerClient::EnqueueCommands(char* buffer, size_t size) {
                                                           command)) {
         if (true) {
           dbg(DBG_NET, "Enqueueing command %s.\n", command->ToString().c_str());
-          boost::mutex::scoped_lock lock(command_queue_mutex_);
+          boost::unique_lock<boost::recursive_mutex> lock(*command_processor_mutex_);
           received_commands_.push_back(command);
+          command_processor_cond_->notify_all();
         } else {
           switch (command->type()) {
             case SchedulerCommand::START_COMMAND_TEMPLATE:
@@ -208,8 +209,9 @@ size_t SchedulerClient::EnqueueCommands(char* buffer, size_t size) {
                 }
               }
               dbg(DBG_NET, "Enqueueing command %s.\n", command->ToString().c_str());
-              boost::mutex::scoped_lock lock(command_queue_mutex_);
+              boost::unique_lock<boost::recursive_mutex> lock(*command_processor_mutex_);
               received_commands_.push_back(command);
+              command_processor_cond_->notify_all();
               break;
           }
         }
@@ -407,9 +409,18 @@ SchedulerClient::set_scheduler_command_table(SchedulerCommand::PrototypeTable* c
   scheduler_command_table_ = cmt;
 }
 
+void SchedulerClient::set_command_processor_mutex(boost::recursive_mutex *mutex) {
+  command_processor_mutex_ = mutex;
+}
+
+void SchedulerClient::set_command_processor_cond(boost::condition_variable_any *cond) {
+  command_processor_cond_ = cond;
+}
+
 void SchedulerClient::PushCommandToTheQueue(SchedulerCommand *command) {
-  boost::mutex::scoped_lock lock(command_queue_mutex_);
+  boost::unique_lock<boost::recursive_mutex> lock(*command_processor_mutex_);
   received_commands_.push_back(command);
+  command_processor_cond_->notify_all();
 }
 
 }  // namespace nimbus

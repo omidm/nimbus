@@ -91,6 +91,14 @@ WorkerDataExchanger::~WorkerDataExchanger() {
   delete io_service_;
 }
 
+void WorkerDataExchanger::set_receive_event_mutex(boost::recursive_mutex *mutex) {
+  receive_event_mutex_ = mutex;
+}
+
+void WorkerDataExchanger::set_receive_event_cond(boost::condition_variable_any *cond) {
+  receive_event_cond_ = cond;
+}
+
 void WorkerDataExchanger::ThreadEntry() {
   timer::InitializeTimers();
   io_service_->run();
@@ -288,20 +296,21 @@ void WorkerDataExchanger::AddSerializedData(job_id_t receive_job_id,
   log_.log_WriteToFile(std::string(buff));
 #endif
   timer::StartTimer(timer::kDataExchangerLock);
-  boost::mutex::scoped_lock lock(event_list_mutex_);
+  boost::unique_lock<boost::recursive_mutex> lock(*receive_event_mutex_);
   timer::StopTimer(timer::kDataExchangerLock);
   event_list_.push_back(Event(receive_job_id,
                               mega_rcr_job_id,
                               version,
                               ser_data,
                               template_generation_id));
+  receive_event_cond_->notify_all();
 }
 
 size_t WorkerDataExchanger::PullReceiveEvents(EventList *events,
                                              size_t max_num) {
   events->clear();
   timer::StartTimer(timer::kDataExchangerLock);
-  boost::mutex::scoped_lock lock(event_list_mutex_);
+  boost::unique_lock<boost::recursive_mutex> lock(*receive_event_mutex_);
   timer::StopTimer(timer::kDataExchangerLock);
   size_t count = 0;
   EventList::iterator iter = event_list_.begin();
