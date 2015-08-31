@@ -26,10 +26,10 @@ CONTROLLER_INSTANCE_TYPE        = 'm3.2xlarge'
 WORKER_INSTANCE_TYPE            = 'm3.2xlarge'
 PLACEMENT                       = 'us-west-2c' # None
 # PLACEMENT_GROUP               = 'nimbus-cluster' # None
-PLACEMENT_GROUP                 = None
+PLACEMENT_GROUP                 = '*'
 PRIVATE_KEY                     = '/home/omidm/.ssh/' + KEY_NAME + '.pem'
-CONTROLLER_NUM                  = 1
-WORKER_NUM                      = 25
+CONTROLLER_NUM                  = 0
+WORKER_NUM                      = 0
 INSTANCE_NUM                    = WORKER_NUM + CONTROLLER_NUM
 
 # controller configurations
