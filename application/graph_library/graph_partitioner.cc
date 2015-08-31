@@ -229,7 +229,7 @@ void GraphPartitioner::DetermineLogicalObjects() {
  * partition, and an edges file containing ids of edges, and source node and
  * destination node ids.
  */
-void GraphPartitioner::SaveGraphInEachPartition(std::string dir_name) {
+void GraphPartitioner::SaveGraphInEachPartition(std::string dir_name) const {
   boost::filesystem::create_directories(dir_name);
   assert(boost::filesystem::is_directory(dir_name));
   for (size_t p = 0; p < num_partitions_; ++p) {
@@ -255,7 +255,9 @@ void GraphPartitioner::SaveGraphInEachPartition(std::string dir_name) {
 }
 
 /*
- * Outputs 4 files per partition:
+ * Outputs number of node partitions and edge logical objects in directory
+ * common, and a list of logical objects that each partition reads/ writes.
+ * Additionally, outputs 3 files per partition:
  *  - a node_lo file containing node ids in the node logical object
  *  (should be the same as nodes file in SaveGraphInEachPartition)
  *  - an edge_read file containing ids of edge logical objects the partition
@@ -263,40 +265,85 @@ void GraphPartitioner::SaveGraphInEachPartition(std::string dir_name) {
  *  - an edge_write file containing ids of edge logical objects the partition
  *  writes, each logical object id followed by ids of edges it contains
  */
-void GraphPartitioner::SaveLogicalObjects(std::string dir_name) {
+void GraphPartitioner::SaveLogicalObjects(std::string dir_name) const {
   boost::filesystem::create_directories(dir_name);
   assert(boost::filesystem::is_directory(dir_name));
+  {
+    boost::filesystem::create_directories(SSTR(dir_name << "/common"));
+    // partitions
+    std::string num_partitions_fname = SSTR(dir_name << "/common/num_partitions");
+    std::ofstream num_partitions_file;
+    num_partitions_file.open(num_partitions_fname.c_str());
+    num_partitions_file << num_partitions_;
+    num_partitions_file.close();
+    // number of edge logical objects
+    std::string num_edge_los_fname = SSTR(dir_name << "/common/num_edge_los");
+    std::ofstream num_edge_los_file;
+    num_edge_los_file.open(num_edge_los_fname.c_str());
+    num_edge_los_file << num_edge_logical_objects_;
+    num_edge_los_file.close();
+    // edge read set
+    std::string edge_rs_fname = SSTR(dir_name << "/common/edge_read_sets");
+    std::ofstream edge_rs_file;
+    edge_rs_file.open(edge_rs_fname.c_str());
+    for (size_t p = 0; p < num_partitions_; ++p) {
+      std::set<size_t> *edge_read = edge_lo_read_[p];
+      edge_rs_file << p << " : " << edge_read->size() << " : ";
+      for (std::set<size_t>::iterator e = edge_read->begin();
+           e != edge_read->end(); ++e) {
+        edge_rs_file << (*e) << " ";
+      }
+      edge_rs_file << "\n";
+    }
+    // edge write set
+    std::string edge_ws_fname = SSTR(dir_name << "/common/edge_write_sets");
+    std::ofstream edge_ws_file;
+    edge_ws_file.open(edge_ws_fname.c_str());
+    for (size_t p = 0; p < num_partitions_; ++p) {
+      std::set<size_t> *edge_write = edge_lo_write_[p];
+      edge_ws_file << p << " : " << edge_write->size() << " : ";
+      for (std::set<size_t>::iterator e = edge_write->begin();
+           e != edge_write->end(); ++e) {
+        edge_ws_file << (*e) << " ";
+      }
+      edge_ws_file << "\n";
+    }
+  }
   for (size_t p = 0; p < num_partitions_; ++p) {
     std::cout << "Saving logical objects to partition " << p << "\n";
     boost::filesystem::create_directories(SSTR(dir_name << "/" << p));
     std::string node_lo_fname    = SSTR(dir_name << "/" << p << "/node_lo");
-    std::string edge_read_fname  = SSTR(dir_name << "/" << p << "/edge_read");
-    std::string edge_write_fname = SSTR(dir_name << "/" << p << "/edge_write");
+    std::string edge_read_fname  = SSTR(dir_name << "/" << p << "/edge_read_sets");
+    std::string edge_write_fname = SSTR(dir_name << "/" << p << "/edge_write_sets");
     std::ofstream edge_read_file, edge_write_file, node_lo_file, edge_lo_file;
+    // node logical object contents
     node_lo_file.open(node_lo_fname.c_str());
     std::vector<size_t> *node_lo = node_logical_objects_[p];
+    node_lo_file << p << " : " << node_lo->size() << " : ";
     for (size_t n = 0; n < node_lo->size(); ++n) {
       node_lo_file << node_lo->at(n) << " ";
     }
     node_lo_file.close();
+    // edge read set ids and contents
     edge_read_file.open(edge_read_fname.c_str());
     std::set<size_t> *edge_lor = edge_lo_read_[p];
     for (std::set<size_t>::iterator l = edge_lor->begin();
          l != edge_lor->end(); ++l) {
       std::vector<size_t> *edge_lo = edge_logical_objects_[(*l)];
-      edge_read_file << (*l) << " : ";
+      edge_read_file << (*l) << " : " << edge_lo->size() << " : ";
       for (size_t e = 0; e < edge_lo->size(); ++e) {
         edge_read_file << edge_lo->at(e) << " ";
       }
       edge_read_file << "\n";
     }
     edge_read_file.close();
+    // edge write set ids and contents
     edge_write_file.open(edge_write_fname.c_str());
     std::set<size_t> *edge_low = edge_lo_write_[p];
     for (std::set<size_t>::iterator l = edge_low->begin();
          l != edge_low->end(); ++l) {
       std::vector<size_t> *edge_lo = edge_logical_objects_[(*l)];
-      edge_write_file << (*l) << " : ";
+      edge_write_file << (*l) << " : " << edge_lo->size() << ":";
       for (size_t e = 0; e < edge_lo->size(); ++e) {
         edge_write_file << edge_lo->at(e) << " ";
       }
@@ -304,5 +351,6 @@ void GraphPartitioner::SaveLogicalObjects(std::string dir_name) {
     }
     edge_write_file.close();
   }
-}  // class GraphPartitioner
+}
+
 }  // namespace nimbus

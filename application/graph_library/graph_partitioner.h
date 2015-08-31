@@ -81,9 +81,9 @@ class GraphPartitioner {
     // read & write sets
     void DetermineLogicalObjects();
     // save graph over each partition -- for reconstruction purposes
-    void SaveGraphInEachPartition(std::string dir_name);
+    void SaveGraphInEachPartition(std::string dir_name) const;
     // save logical objects for each partition
-    void SaveLogicalObjects(std::string dir_name);
+    void SaveLogicalObjects(std::string dir_name) const;
 };  // class GraphPartitioner
 
 }  // namespace nimbus
