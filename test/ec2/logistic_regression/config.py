@@ -22,14 +22,14 @@ UBUNTU_AMI                      = 'ami-fa9cf1ca'
 NIMBUS_AMI                      = 'ami-37202e07'
 KEY_NAME                        = 'omidm-sing-key-pair-us-west-2'
 SECURITY_GROUP                  = 'nimbus_sg_uswest2'
-CONTROLLER_INSTANCE_TYPE        = 'c3.4xlarge'
-WORKER_INSTANCE_TYPE            = 'm1.xlarge'
+CONTROLLER_INSTANCE_TYPE        = 'm3.2xlarge'
+WORKER_INSTANCE_TYPE            = 'm3.2xlarge'
 PLACEMENT                       = 'us-west-2c' # None
 # PLACEMENT_GROUP               = 'nimbus-cluster' # None
-PLACEMENT_GROUP                 = '*'
+PLACEMENT_GROUP                 = None
 PRIVATE_KEY                     = '/home/omidm/.ssh/' + KEY_NAME + '.pem'
-CONTROLLER_NUM                  = 0
-WORKER_NUM                      = 0
+CONTROLLER_NUM                  = 1
+WORKER_NUM                      = 25
 INSTANCE_NUM                    = WORKER_NUM + CONTROLLER_NUM
 
 # controller configurations
@@ -50,11 +50,11 @@ FIRST_PORT                      = 5800
 
 
 # worker/simulation configurations
+OTHREAD_NUM                     = 8
 DIMENSION                       = 10
-ITERATION_NUM                   = 30
-PARTITION_NUM                   = 400
-DATA_SIZE_MB                    = 100000
-OTHREAD_NUM                     = 4
+ITERATION_NUM                   = 10
+PARTITION_NUM                   = 800
+SAMPLE_NUM_M                    = 400
 # ITERATION_BATCH               = 1
 RUN_WITH_TASKSET                = False
 WORKER_TASKSET                  = '0-1,4-5'

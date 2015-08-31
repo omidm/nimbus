@@ -149,8 +149,8 @@ void Init::Execute(Parameter params, const DataArray& da) {
   assert(sb->sample_num() == PARTITION_SIZE);
 
   // omidm
-  double label = (base_val % 2);              // for +1 and 0 labels
-  // double label = ((base_val % 2) *2) - 1;  // for +1 and -1 labels
+  // double label = (base_val % 2);        // for +1 and 0 labels
+  double label = ((base_val % 2) *2) - 1;  // for +1 and -1 labels
   size_t dimension = sb->dimension();
   size_t needed_value = sb->sample_num() * dimension;
   size_t generated_value = 0;
@@ -159,8 +159,8 @@ void Init::Execute(Parameter params, const DataArray& da) {
     iter->set_label(label);
     for (size_t i = 0; i < dimension; i++) {
       // omidm
-      iter->vector()->operator[](i) = label;
-      // iter->vector()->operator[](i) = prf(base_val * needed_value + generated_value);
+      // iter->vector()->operator[](i) = label;
+      iter->vector()->operator[](i) = prf(base_val * needed_value + generated_value);
       generated_value++;
     }
   }
@@ -267,9 +267,9 @@ void Gradient::Execute(Parameter params, const DataArray& da) {
     double l = iter->label();
     std::vector<double>* x = iter->vector();
     // omidm
-    double alpha = 0.01;
-    double scale = (l - 1 / (1 + exp(-1 * VectorDotProduct(x, w->vector())))) * alpha;
-    // double scale = (1 / (1 + exp(l * VectorDotProduct(x, w->vector()))) - 1) * l;
+    // double alpha = 0.01;
+    // double scale = (l - 1 / (1 + exp(-1 * VectorDotProduct(x, w->vector())))) * alpha;
+    double scale = (1 / (1 + exp(l * VectorDotProduct(x, w->vector()))) - 1) * l;
     VectorAddWithScale(&gradient, x, scale);
   }
 
