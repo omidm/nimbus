@@ -51,6 +51,8 @@ namespace application {
             WaterApp();
             virtual void Load();
 
+            float water_level();
+
             void set_scale(uint64_t scale);
             void set_part_num_x(uint64_t part_num_x);
             void set_part_num_y(uint64_t part_num_y);
@@ -64,6 +66,7 @@ namespace application {
             void set_spawn_projection_loop_bottleneck(bool flag);
             void set_global_write(bool flag);
             void set_smart_projection(uint64_t level);
+            void set_water_level(float water_level);
 
             uint64_t projection_part_num_x() {return projection_part_num_x_;}
             uint64_t projection_part_num_y() {return projection_part_num_y_;}
@@ -84,6 +87,7 @@ namespace application {
             uint64_t smart_projection_;
             bool spawn_projection_loop_bottleneck_;
             bool global_write_;
+            float water_level_;
     };
 
 } // namespace application

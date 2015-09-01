@@ -200,13 +200,13 @@ template<class TV> WATER_EXAMPLE<TV>::
 
 // Initializes the initial levelset function.
 template<class TV> void WATER_EXAMPLE<TV>::
-Initialize_Phi() {
+Initialize_Phi(float water_level) {
   ARRAY<T,TV_INT>& phi = particle_levelset_evolution.phi;
   for (typename GRID<TV>::CELL_ITERATOR iterator(mac_grid);
        iterator.Valid();
        iterator.Next()) {
     const TV& X = iterator.Location();
-    phi(iterator.Cell_Index()) = X.y - (T)0.35;
+    phi(iterator.Cell_Index()) = X.y - (T)water_level;
   }
 }
 //#####################################################################

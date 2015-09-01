@@ -8,6 +8,7 @@
 #include "stdio.h"
 #include "string.h"
 
+#include "application/water_multiple/water_app.h"
 #include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/data_names.h"
 #include "application/water_multiple/parameters.h"
@@ -110,7 +111,9 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
     // example.collision_bodies_affecting_fluid->Rasterize_Objects();
     // example.collision_bodies_affecting_fluid->Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
     // Initializes for particles_levelset_evolution.phi
-    example.Initialize_Phi();
+    application::WaterApp *app = dynamic_cast<application::WaterApp *>(job->application());
+    assert(app);
+    example.Initialize_Phi(app->water_level());
     example.Adjust_Phi_With_Sources(time);
     // example.particle_levelset_evolution.Make_Signed_Distance();
     example.projection.p.Fill(0);

@@ -161,7 +161,7 @@ public:
 
     void Sum_Phi_3();
 
-    void Initialize_Phi();
+    void Initialize_Phi(float water_level);
 
     void Write_Output_Files(const int frame, int rank = -1);
     void Read_Output_Files(const int frame);
