@@ -379,6 +379,7 @@ bool WorkerDataExchanger::SendSerializedData(const job_id_t& receive_job_id,
   log_.log_WriteToFile(std::string(buff));
 #endif
 
+  // For asynchronous write
   {
     boost::mutex::scoped_lock lock(*(connection->mutex()));
     std::list<SerializedData>* q = connection->send_queue();
@@ -397,6 +398,8 @@ bool WorkerDataExchanger::SendSerializedData(const job_id_t& receive_job_id,
     q->push_back(ser_data);
   }
 
+
+  // For synchronous write
   // {
   //   boost::mutex::scoped_lock lock(*(connection->mutex()));
   //   boost::system::error_code ignored_error;
@@ -404,7 +407,7 @@ bool WorkerDataExchanger::SendSerializedData(const job_id_t& receive_job_id,
   //       boost::asio::buffer(header, header_size),
   //       boost::asio::transfer_all(), ignored_error);
   //   boost::asio::write(*(connection->socket()),
-  //       boost::asio::buffer(buf.get(), size),
+  //       boost::asio::buffer(ser_data.data_ptr().get(), ser_data.size()),
   //     boost::asio::transfer_all(), ignored_error);
   // }
 
