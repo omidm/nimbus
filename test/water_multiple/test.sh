@@ -27,10 +27,13 @@ fi
 echo -e "${Gre}export DBG=errors...${RCol}"
 export DBG=error
 
+echo -e "${Gre}export TTIMER=none...${RCol}"
+export TTIMER=l1
+
 echo -e "${Pur}Launching $1 workers  each with $2 threads...${RCol}"
 for i in `seq 1 $1`;
 do
   # ./worker --cip localhost --cport 5900 --othread $2 -p 590$i --pnx 4 --pny 4 --pnz 4 --ppnx 4 --ppny 4 --ppnz 4 -s 80 --psl 0 -e 4 --wl 0.5 &
-  ./worker --cip localhost --cport 5900 --othread $2 -p 590$i --psl 0 --wl 0.35 & 
+  ./worker --cip localhost --cport 5900 --othread $2 -p 590$i --psl 0 --wl 0.35 -e 10 & 
 done
 
