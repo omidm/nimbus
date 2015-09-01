@@ -104,12 +104,12 @@ class WorkerDataExchanger {
   virtual size_t PullReceiveEvents(EventList *events,
                                       size_t max_num);
 
-  virtual bool SendSerializedData(job_id_t receive_job_id,
-                                  job_id_t mega_rcr_job_id,
-                                  worker_id_t worker_id,
-                                  SerializedData& ser_data,
-                                  data_version_t version,
-                                  template_id_t template_generation_id);
+  virtual bool SendSerializedData(const job_id_t& receive_job_id,
+                                  const job_id_t& mega_rcr_job_id,
+                                  const worker_id_t& worker_id,
+                                  const SerializedData& ser_data,
+                                  const data_version_t& version,
+                                  const template_id_t& template_generation_id);
 
   WorkerDataExchangerConnectionMap* send_connections();
 

@@ -56,7 +56,9 @@ SerializedData::SerializedData(const boost::shared_array<char>& data_ptr, const 
 }
 
 SerializedData::SerializedData(const SerializedData& other)
-: data_ptr_(other.data_ptr_), size_(other.size_) {
+: data_ptr_(other.data_ptr_),
+  size_(other.size_),
+  header_(other.header_) {
 }
 
 SerializedData::~SerializedData() {
@@ -68,6 +70,10 @@ boost::shared_array<char> SerializedData::data_ptr() const {
 
 char* SerializedData::data_ptr_raw() const {
   return data_ptr_.get();
+}
+
+std::string SerializedData::header() const {
+  return header_;
 }
 
 void  SerializedData::set_data_ptr(boost::shared_array<char> ptr) {
@@ -84,6 +90,14 @@ size_t SerializedData:: size() const {
 
 void SerializedData:: set_size(size_t size) {
   size_ = size;
+}
+
+void SerializedData::set_header(const std::string str) const {
+  header_ = str;
+}
+
+void SerializedData::set_header(char *str, size_t size) const {
+  header_ = std::string(str, size);
 }
 
 bool SerializedData::Parse(const std::string& input) {

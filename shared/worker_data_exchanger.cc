@@ -332,27 +332,24 @@ bool WorkerDataExchanger::AddContactInfo(worker_id_t worker_id,
 }
 
 
-bool WorkerDataExchanger::SendSerializedData(job_id_t receive_job_id,
-                                             job_id_t mega_rcr_job_id,
-                                             worker_id_t worker_id,
-                                             SerializedData& ser_data,
-                                             data_version_t version,
-                                             template_id_t template_generation_id) {
-  boost::shared_array<char> buf = ser_data.data_ptr();
-  size_t size = ser_data.size();
-
+bool WorkerDataExchanger::SendSerializedData(const job_id_t& receive_job_id,
+                                             const job_id_t& mega_rcr_job_id,
+                                             const worker_id_t& worker_id,
+                                             const SerializedData& ser_data,
+                                             const data_version_t& version,
+                                             const template_id_t& template_generation_id) {
   char header[MAX_HEADER_SIZE];
   int header_size = snprintf(header, MAX_HEADER_SIZE, "%lu %lu %lu %lu %lu;",
                              receive_job_id,
                              mega_rcr_job_id,
-                             size,
+                             ser_data.size(),
                              version,
                              template_generation_id);
   if (header_size >= MAX_HEADER_SIZE || header_size < 0) {
     dbg(DBG_ERROR, "ERROR: failed building the header %d.\n", header_size); // NOLINT
     assert(false);
   }
-
+  ser_data.set_header(header, (size_t)(header_size));
 
   WorkerDataExchangerConnection* connection = NULL;
   {
@@ -384,14 +381,33 @@ bool WorkerDataExchanger::SendSerializedData(job_id_t receive_job_id,
 
   {
     boost::mutex::scoped_lock lock(*(connection->mutex()));
-    boost::system::error_code ignored_error;
-    boost::asio::write(*(connection->socket()),
-        boost::asio::buffer(header, header_size),
-        boost::asio::transfer_all(), ignored_error);
-    boost::asio::write(*(connection->socket()),
-        boost::asio::buffer(buf.get(), size),
-      boost::asio::transfer_all(), ignored_error);
+    std::list<SerializedData>* q = connection->send_queue();
+    if (q->size() == 0) {
+      assert(!connection->header_sent());
+      connection->set_header_sent(true);
+
+      boost::asio::async_write(*(connection->socket()),
+                               boost::asio::buffer(header, header_size),
+                               boost::bind(&WorkerDataExchanger::HandleWrite,
+                                           this,
+                                           connection,
+                                           boost::asio::placeholders::error,
+                                           boost::asio::placeholders::bytes_transferred));
+    }
+    q->push_back(ser_data);
   }
+
+  // {
+  //   boost::mutex::scoped_lock lock(*(connection->mutex()));
+  //   boost::system::error_code ignored_error;
+  //   boost::asio::write(*(connection->socket()),
+  //       boost::asio::buffer(header, header_size),
+  //       boost::asio::transfer_all(), ignored_error);
+  //   boost::asio::write(*(connection->socket()),
+  //       boost::asio::buffer(buf.get(), size),
+  //     boost::asio::transfer_all(), ignored_error);
+  // }
+
   return true;
 }
 
@@ -426,6 +442,45 @@ bool WorkerDataExchanger::CreateNewSendConnection(worker_id_t worker_id,
 void WorkerDataExchanger::HandleWrite(WorkerDataExchangerConnection* connection,
                                       const boost::system::error_code& error,
                                       size_t bytes_transferred) {
+  if (error) {
+    dbg(DBG_NET|DBG_ERROR, "Error %s.\n", error.message().c_str());
+    assert(false);
+    return;
+  }
+
+  {
+    boost::mutex::scoped_lock lock(*(connection->mutex()));
+    std::list<SerializedData>* q = connection->send_queue();
+    if (connection->header_sent()) {
+      assert(q->size() > 0);
+      SerializedData ser_data = q->front();
+      connection->set_header_sent(false);
+
+      boost::asio::async_write(*(connection->socket()),
+                               boost::asio::buffer(ser_data.data_ptr().get(), ser_data.size()),
+                               boost::bind(&WorkerDataExchanger::HandleWrite,
+                                           this,
+                                           connection,
+                                           boost::asio::placeholders::error,
+                                           boost::asio::placeholders::bytes_transferred));
+    } else {
+      q->pop_front();
+      if (q->size() == 0) {
+        return;
+      }
+      SerializedData ser_data = q->front();
+      connection->set_header_sent(true);
+      std::string header = ser_data.header();
+
+      boost::asio::async_write(*(connection->socket()),
+                               boost::asio::buffer(header, header.size()),
+                               boost::bind(&WorkerDataExchanger::HandleWrite,
+                                           this,
+                                           connection,
+                                           boost::asio::placeholders::error,
+                                           boost::asio::placeholders::bytes_transferred));
+    }
+  }
 }
 
 WorkerDataExchangerConnectionMap* WorkerDataExchanger::send_connections() {
