@@ -41,6 +41,8 @@
 
 #include "shared/nimbus.h"
 
+#define EDGES "edges"
+
 namespace nimbus {
 
 struct EdgeEntry {

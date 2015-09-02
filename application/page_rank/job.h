@@ -41,11 +41,24 @@
 
 #include "shared/nimbus.h"
 
+#define INIT_JOB "init"
+#define FOR_LOOP_JOB "for_loop"
+#define SCATTER_JOB "scatter"
+#define GATHER_JOB "gather"
+
+
 namespace nimbus {
 
 class Main : public Job {
   public:
     explicit Main(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job* Clone();
+};
+
+class ForLoop : public Job {
+  public:
+    explicit ForLoop(Application* app);
     virtual void Execute(Parameter params, const DataArray& da);
     virtual Job* Clone();
 };

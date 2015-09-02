@@ -36,7 +36,9 @@
  * Author: Chinmayee Shah
  */
 
+#include <string>
 #include "application/page_rank/edge_data.h"
+#include "application/page_rank/protobuf_compiled/data_msgs.pb.h"
 #include "shared/nimbus.h"
 
 namespace nimbus {
@@ -83,11 +85,36 @@ void EdgeData::Copy(Data* from) {
 }
 
 bool EdgeData::Serialize(SerializedData* ser_data) {
-  return false;
+  data_msgs::EdgeDataMsg edge_data_msg;
+  for (size_t i = 0; i < num_edges_; ++i) {
+    EdgeEntry &entry = edges_[i];
+    data_msgs::EdgeMsg *edge_msg = edge_data_msg.add_edges();
+    edge_msg->set_src_id(entry.src_id);
+    edge_msg->set_dst_id(entry.dst_id);
+    edge_msg->set_delta(entry.delta);
+  }
+  std::string str;
+  edge_data_msg.SerializeToString(&str);
+  char* ptr = new char[str.length()];
+  memcpy(ptr, str.c_str(), str.length());
+  ser_data->set_data_ptr(ptr);
+  ser_data->set_size(str.length());
+  return true;
 }
 
 bool EdgeData::DeSerialize(const SerializedData &ser_data, Data** result) {
-  return false;
+  data_msgs::EdgeDataMsg edge_data_msg;
+  std::string str(ser_data.data_ptr_raw(), ser_data.size());
+  edge_data_msg.ParseFromString(str);
+  ResetEdges(edge_data_msg.edges_size());
+  for (size_t i = 0; i < num_edges_; i++) {
+    data_msgs::EdgeMsg edge_msg = edge_data_msg.edges(i);
+    EdgeEntry &entry = edges_[i];
+    entry.src_id = edge_msg.src_id();
+    entry.dst_id = edge_msg.dst_id();
+    entry.delta  = edge_msg.delta();
+  }
+  return true;
 }
 
 void EdgeData::ResetEdges(size_t num_edges) {

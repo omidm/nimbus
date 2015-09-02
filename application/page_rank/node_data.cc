@@ -37,27 +37,22 @@
  */
 
 #include <boost/unordered_map.hpp>
+#include <string>
 #include "application/page_rank/node_data.h"
+#include "application/page_rank/protobuf_compiled/data_msgs.pb.h"
 #include "shared/nimbus.h"
 
 namespace nimbus {
 
-NodeData::NodeData() : num_nodes_(0), nodes_(0) {}
+NodeData::NodeData() {}
 
 NodeData::~NodeData() {}
 
 void NodeData::Create() {
-  if (num_nodes_!= 0) {
-    num_nodes_ = 0;
-  }
   nodes_.clear();
 }
 
-void NodeData::Destroy() {
-  if (num_nodes_!= 0) {
-    num_nodes_ = 0;
-  }
-}
+void NodeData::Destroy() {}
 
 Data* NodeData::Clone() {
   return new NodeData();
@@ -65,17 +60,47 @@ Data* NodeData::Clone() {
 
 void NodeData::Copy(Data* from) {
   NodeData* data = static_cast<NodeData*>(from);
-  num_nodes_ = data->num_nodes_;
   nodes_.clear();
   nodes_ = data->nodes_;
 }
 
 bool NodeData::Serialize(SerializedData* ser_data) {
-  return false;
+  data_msgs::NodeDataMsg node_data_msg;
+  boost::unordered_map<size_t, NodeEntry>::const_iterator iter;
+  for (iter = nodes_.begin(); iter != nodes_.end(); ++iter) {
+    data_msgs::NodeMsg *node_msg = node_data_msg.add_nodes();
+    const NodeEntry &entry = iter->second;
+    node_msg->set_id(iter->first);
+    node_msg->set_degree(entry.degree);
+    node_msg->set_rank(entry.rank);
+  }
+  std::string str;
+  node_data_msg.SerializeToString(&str);
+  char* ptr = new char[str.length()];
+  memcpy(ptr, str.c_str(), str.length());
+  ser_data->set_data_ptr(ptr);
+  ser_data->set_size(str.length());
+  return true;
 }
 
 bool NodeData::DeSerialize(const SerializedData &ser_data, Data** result) {
-  return false;
+  data_msgs::NodeDataMsg node_data_msg;
+  std::string str(ser_data.data_ptr_raw(), ser_data.size());
+  node_data_msg.ParseFromString(str);
+  ResetNodes();
+  size_t num_nodes = node_data_msg.nodes_size();
+  for (size_t i = 0; i < num_nodes; i++) {
+    data_msgs::NodeMsg node_msg = node_data_msg.nodes(i);
+    NodeEntry entry;
+    entry.degree = node_msg.degree();
+    entry.rank = node_msg.rank();
+    nodes_[node_msg.id()] = entry;
+  }
+  return true;
+}
+
+void NodeData::ResetNodes() {
+  nodes_.clear();
 }
 
 }  // namespace nimbus

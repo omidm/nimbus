@@ -36,20 +36,49 @@
  * Author: Chinmayee Shah
  */
 
-#include <iostream>  // NOLINT
 #include "application/page_rank/app.h"
+#include "application/page_rank/edge_data.h"
+#include "application/page_rank/node_data.h"
+#include "application/page_rank/job.h"
 #include "shared/nimbus.h"
 
 namespace nimbus {
 
-PageRank::PageRank() {}
+PageRank::PageRank(std::string input_dir, size_t num_iterations)
+    : input_dir_(input_dir), num_iterations_(num_iterations),
+      graph_helper_(0) {}
 
-PageRank::~PageRank() {}
+PageRank::~PageRank() {
+  if (graph_helper_)
+    delete graph_helper_;
+}
 
 void PageRank::Load() {
-    std::cout << "PageRank application starting\n";
-    // Register jobs here
-    // Register data here
+  // Register jobs here
+  RegisterJob(NIMBUS_MAIN_JOB_NAME, new Main(this));
+  RegisterJob(INIT_JOB, new Init(this));
+  RegisterJob(FOR_LOOP_JOB, new ForLoop(this));
+  RegisterJob(SCATTER_JOB, new Scatter(this));
+  RegisterJob(GATHER_JOB, new Gather(this));
+  // Register data here
+  RegisterData(EDGES, new EdgeData());
+  RegisterData(NODES, new NodeData());
+}
+
+std::string PageRank::input_dir() {
+  return input_dir_;
+}
+
+size_t PageRank::num_iterations() {
+  return num_iterations_;
+}
+
+GraphLOs* PageRank::graph_helper() {
+  return graph_helper_;
+}
+
+void PageRank::set_graph_helper(GraphLOs* graph_helper) {
+  graph_helper_ = graph_helper;
 }
 
 }  // namespace nimbus

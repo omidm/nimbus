@@ -42,6 +42,8 @@
 #include <boost/unordered_map.hpp>
 #include "shared/nimbus.h"
 
+#define NODES "nodes"
+
 namespace nimbus {
 
 struct NodeEntry {
@@ -61,11 +63,10 @@ class NodeData : public Data {
     virtual bool Serialize(SerializedData* ser_data);
     virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
 
-    void ResetNodes(size_t num_nodes);
-    inline NodeEntry& operator[](size_t e) { return nodes_[e]; }
+    void ResetNodes();
+    inline NodeEntry& operator[](size_t nid) { return nodes_[nid]; }
 
   private:
-    size_t num_nodes_;
     boost::unordered_map<size_t, NodeEntry> nodes_;
 };  // class NodeData
 

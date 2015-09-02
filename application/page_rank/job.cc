@@ -52,19 +52,28 @@
 #include "application/page_rank/edge_data.h"
 #include "application/page_rank/node_data.h"
 #include "application/page_rank/job.h"
+#include "application/page_rank/protobuf_compiled/parameter_msg.pb.h"
 #include "shared/nimbus.h"
-
-#define INIT_JOB "init"
-#define LOOP_JOB "loop"
-#define SCATTER_JOB "scatter"
-#define GATHER_JOB "gather"
-
-#define NODES "nodes"
-#define EDGES "edges"
 
 #define RANK_INIT_VAL 1
 
 namespace nimbus {
+
+void LoadParameter(Parameter* parameter, size_t *value) {
+  std::string params_str(parameter->ser_data().data_ptr_raw(),
+                         parameter->ser_data().size());
+  parameter_msg::ParameterMsg msg;
+  msg.ParseFromString(params_str);
+  *value = msg.elem();
+}
+
+void SerializeParameter(Parameter* parameter, size_t value) {
+  std::string params_str;
+  parameter_msg::ParameterMsg msg;
+  msg.set_elem(value);
+  msg.SerializeToString(&params_str);
+  parameter->set_ser_data(SerializedData(params_str));
+}
 
 void GetReadData(const Job &job,
                  const std::string &name,
@@ -108,50 +117,139 @@ Job* Main::Clone() {
 }
 
 void Main::Execute(Parameter params, const DataArray& da) {
-  // application
-  PageRank *page_rank = static_cast<PageRank*>(application());
-
-  // graph_los to help with data objects and jobs
-  GraphLOs graph;
-  graph.LoadGraphInfo(page_rank->input_dir());
+  // application, graph_los to help with data objects and jobs
+  PageRank* page_rank = static_cast<PageRank*>(application());
+  GraphLOs* graph = new GraphLOs();
+  page_rank->set_graph_helper(graph);
+  graph->LoadGraphInfo(page_rank->input_dir());
+  size_t num_partitions = graph->num_partitions();
 
   // define data objects
-  graph.DefineEdgeLogicalObjects(this, EDGES);
-  graph.DefineNodeLogicalObjects(this, NODES);
-
-  size_t num_partitions = graph.num_partitions();
+  graph->DefineEdgeLogicalObjects(this, EDGES);
+  graph->DefineNodeLogicalObjects(this, NODES);
 
   // initialize data -- need to initialize only ranks
-  Parameter par;
-  for (size_t p = 0; p < num_partitions; ++p) {
-    IDSet<logical_data_id_t> init_rs;
-    const IDSet<logical_data_id_t>* nodes_ws = graph.GetWriteSet(NODES, p);
-    const IDSet<logical_data_id_t>* edges_ws = graph.GetWriteSet(EDGES, p);
-    IDSet<logical_data_id_t> init_ws(*nodes_ws);
-    init_ws.insert(*edges_ws);
-    par.set_ser_data(SerializedData(boost::lexical_cast<std::string>(p)));
-    // stage/ spawn?
+  {
+    Parameter init_params;
+    std::vector<job_id_t> init_job_ids;
+    GetNewJobID(&init_job_ids, num_partitions);
+    for (size_t p = 0; p < num_partitions; ++p) {
+      IDSet<logical_data_id_t> init_rs;
+      const IDSet<logical_data_id_t>* nodes_ws = graph->GetWriteSet(NODES, p);
+      const IDSet<logical_data_id_t>* edges_ws = graph->GetWriteSet(EDGES, p);
+      IDSet<logical_data_id_t> init_ws(*nodes_ws);
+      init_ws.insert(*edges_ws);
+      SerializeParameter(&init_params, p);
+      IDSet<job_id_t> before, after;
+      StageJobAndLoadBeforeSet(&before, INIT_JOB, init_job_ids[p],
+                               init_rs, init_ws);
+      SpawnComputeJob(INIT_JOB, init_job_ids[p], init_rs, init_ws,
+                      before, after,
+                      init_params, true, GeometricRegion(p,  0, 0, 1, 0, 0));
+    }
+    MarkEndOfStage();
   }
 
-  // run pagerank loops
-  size_t num_iters = page_rank->num_iters();
-  for (size_t i = 0; i < num_iters; ++i) {
-    for (size_t p = 0; p < num_partitions; ++p) {
-      const IDSet<logical_data_id_t>* nodes_rs = graph.GetReadSet(NODES, p);
-      const IDSet<logical_data_id_t>* edges_rs = graph.GetWriteSet(EDGES, p);
-      IDSet<logical_data_id_t> scatter_rs(*nodes_rs);
-      scatter_rs.insert(*edges_rs);
-      const IDSet<logical_data_id_t>& scatter_ws(*graph.GetWriteSet(EDGES, p));
-      // stage/ spawn?
+  // loop job
+  {
+    size_t num_iterations = page_rank->num_iterations();
+    Parameter loop_params;
+    SerializeParameter(&loop_params, num_iterations - 1);
+    std::vector<job_id_t> loop_job_id;
+    GetNewJobID(&loop_job_id, 1);
+    IDSet<logical_data_id_t> loop_rs, loop_ws;
+    IDSet<job_id_t> before, after;
+    StageJobAndLoadBeforeSet(&before, FOR_LOOP_JOB, loop_job_id[0],
+                             loop_rs, loop_ws, true);
+    SerializeParameter(&loop_params, num_iterations);
+    SpawnComputeJob(FOR_LOOP_JOB, loop_job_id[0], loop_rs, loop_ws,
+                    before, after, loop_params);
+  }
+}
+
+ForLoop::ForLoop(Application* app) {
+  set_application(app);
+}
+
+Job* ForLoop::Clone() {
+  return new ForLoop(application());
+}
+
+void ForLoop::Execute(Parameter params, const DataArray& da) {
+  // application, graph_los to help with data objects and jobs
+  PageRank* page_rank = static_cast<PageRank*>(application());
+  GraphLOs* graph = page_rank->graph_helper();
+  size_t num_partitions = graph->num_partitions();
+
+  size_t loop_counter;
+  LoadParameter(&params, &loop_counter);
+
+  // run this loop?
+  if (loop_counter > 0) {
+    std::cout << "Running iteration " << loop_counter << "\n";
+
+    StartTemplate("for_loop");
+
+    // scatter job
+    {
+      Parameter scatter_params;
+      std::vector<job_id_t> scatter_job_ids;
+      GetNewJobID(&scatter_job_ids, num_partitions);
+      for (size_t p = 0; p < num_partitions; ++p) {
+        const IDSet<logical_data_id_t>* nodes_rs = graph->GetReadSet(NODES, p);
+        const IDSet<logical_data_id_t>* edges_rs = graph->GetWriteSet(EDGES, p);
+        IDSet<logical_data_id_t> scatter_rs(*nodes_rs);
+        scatter_rs.insert(*edges_rs);
+        const IDSet<logical_data_id_t>& scatter_ws(*graph->GetWriteSet(EDGES, p));
+        IDSet<job_id_t> before, after;
+        StageJobAndLoadBeforeSet(&before, SCATTER_JOB, scatter_job_ids[p],
+                                 scatter_rs, scatter_ws);
+        SpawnComputeJob(SCATTER_JOB, scatter_job_ids[p], scatter_rs, scatter_ws,
+                        before, after,
+                        scatter_params, true, GeometricRegion(p, 0, 0, 1, 0, 0));
+      }
+      MarkEndOfStage();
     }
-    for (size_t p = 0; p < num_partitions; ++p) {
-      const IDSet<logical_data_id_t>* nodes_rs = graph.GetReadSet(NODES, p);
-      const IDSet<logical_data_id_t>* edges_rs = graph.GetReadSet(EDGES, p);
-      IDSet<logical_data_id_t> gather_rs(*nodes_rs);
-      gather_rs.insert(*edges_rs);
-      const IDSet<logical_data_id_t>& gather_ws(*graph.GetWriteSet(NODES, p));
-      // stage/ spawn?
+
+    // gather job
+    {
+      Parameter gather_params;
+      std::vector<job_id_t> gather_job_ids;
+      GetNewJobID(&gather_job_ids, num_partitions);
+      for (size_t p = 0; p < num_partitions; ++p) {
+        const IDSet<logical_data_id_t>* nodes_rs = graph->GetReadSet(NODES, p);
+        const IDSet<logical_data_id_t>* edges_rs = graph->GetReadSet(EDGES, p);
+        IDSet<logical_data_id_t> gather_rs(*nodes_rs);
+        gather_rs.insert(*edges_rs);
+        const IDSet<logical_data_id_t>& gather_ws(*graph->GetWriteSet(NODES, p));
+        IDSet<job_id_t> before, after;
+        StageJobAndLoadBeforeSet(&before, GATHER_JOB, gather_job_ids[p],
+                                 gather_rs, gather_ws);
+        SpawnComputeJob(GATHER_JOB, gather_job_ids[p], gather_rs, gather_ws,
+                        before, after,
+                        gather_params, true, GeometricRegion(p, 0, 0, 1, 0, 0));
+      }
+      MarkEndOfStage();
     }
+
+    // loop job
+    {
+      Parameter loop_params;
+      std::vector<job_id_t> loop_job_id;
+      GetNewJobID(&loop_job_id, 1);
+      IDSet<logical_data_id_t> loop_rs, loop_ws;
+      IDSet<job_id_t> before, after;
+      StageJobAndLoadBeforeSet(&before, FOR_LOOP_JOB, loop_job_id[0],
+                               loop_rs, loop_ws, true);
+      SerializeParameter(&loop_params, loop_counter - 1);
+      SpawnComputeJob(FOR_LOOP_JOB, loop_job_id[0], loop_rs, loop_ws,
+                      before, after, loop_params);
+
+      EndTemplate("for_loop");
+    }
+  } else {
+    // terminate application
+    TerminateApplication();
   }
 }
 
@@ -175,8 +273,8 @@ void Init::Execute(Parameter params, const DataArray& da) {
 
   // graph_los to help with data objects and jobs
   // get partition id for the job
-  partition_id_t partition =
-    boost::lexical_cast<partition_id_t>(params.ser_data().data_ptr());
+  partition_id_t partition;
+  LoadParameter(&params, &partition);
   std::string dir_name = SSTR(page_rank->input_dir() << partition);
   assert(boost::filesystem::is_directory(dir_name));
 
@@ -192,6 +290,7 @@ void Init::Execute(Parameter params, const DataArray& da) {
     std::ifstream node_file;
     node_file.open(SSTR(dir_name << "/nodes").c_str());
     NodeData& nodes = *(static_cast<NodeData*>(nodes_vector[0]));
+    nodes.ResetNodes();
     std::string line;
     while (std::getline(node_file, line)) {
       std::vector<std::string> tokens;
@@ -200,7 +299,7 @@ void Init::Execute(Parameter params, const DataArray& da) {
                               boost::token_compress_on);
       size_t node_id = boost::lexical_cast<size_t>(tokens[0]);
       size_t degree  = boost::lexical_cast<size_t>(tokens[1]);
-      NodeEntry& entry = nodes[node_id];
+      NodeEntry entry = nodes[node_id];
       entry.degree = degree;
       entry.rank   = RANK_INIT_VAL;
     }

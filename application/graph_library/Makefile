@@ -1,4 +1,4 @@
-all: check graph_library_t graph_initialize_t
+all: check graph_library_t
 
 NIMBUS_ROOT = ../..
 include $(NIMBUS_ROOT)/Makeinclude
@@ -14,10 +14,6 @@ TARGET = graph_initialize
 %.o: %.cc
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
-$(TARGET): graph_library_t
-	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJFILES) -o $(TARGET) $(LFLAGS)
-
 clean: clean-files
 
-graph_initialize_t: $(TARGET)
 graph_library_t: $(OBJFILES)

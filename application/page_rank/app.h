@@ -40,18 +40,25 @@
 #define NIMBUS_APPLICATION_PAGE_RANK_APP_H_
 
 #include <string>
+#include "application/graph_library/graph_los.h"
 #include "shared/nimbus.h"
 
 namespace nimbus {
 
 class PageRank : public Application {
   public:
-    PageRank();
+    explicit PageRank(std::string input_dir, size_t num_iterations);
     ~PageRank();
     virtual void Load();
-    // runtime parameters
+    // runtime parameters/ helpers
     std::string input_dir();
-    size_t num_iters();
+    size_t num_iterations();
+    GraphLOs* graph_helper();
+    void set_graph_helper(GraphLOs* graph_helper);
+  private:
+    std::string input_dir_;
+    size_t num_iterations_;
+    GraphLOs* graph_helper_;
 };  // class PageRank
 
 }  // namespace nimbus
