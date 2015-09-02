@@ -33,53 +33,43 @@
  */
 
 /*
- * GraphLOs reads in number of partitions, number of edge logical objects, and
- * read and write set information for all partitions, and provides helper
- * methods to register all the logical objects and read/ write sets for each
- * partition to spawn jobs.
  * Author: Chinmayee Shah
  */
 
-#ifndef NIMBUS_APPLICATION_GRAPH_LIBRARY_GRAPH_LOS_H_
-#define NIMBUS_APPLICATION_GRAPH_LIBRARY_GRAPH_LOS_H_
+#ifndef NIMBUS_APPLICATION_PAGE_RANK_EDGE_DATA_H_
+#define NIMBUS_APPLICATION_PAGE_RANK_EDGE_DATA_H_
 
-#include <map>
-#include <string>
-#include <vector>
 #include "shared/nimbus.h"
 
 namespace nimbus {
 
-class GraphLOs {
-  private:
-    typedef IDSet<logical_data_id_t> lolist;
-    size_t num_partitions_;
-    size_t num_edge_los_;
-    std::vector<size_t> **edge_lo_write_;
-    std::vector<size_t> **edge_lo_read_;
-    std::map< std::string, lolist** > lo_map_read_;
-    std::map< std::string, lolist** > lo_map_write_;
+struct EdgeEntry {
+  size_t src_id;
+  size_t dst_id;
+  size_t delta;
+};
 
+class EdgeData : public Data {
   public:
-    GraphLOs();
-    ~GraphLOs();
-    // read in saved (common) graph information for registering data/
-    // spawning jobs
-    void LoadGraphInfo(std::string dir_name);
-    // define logical objects for a field over edges
-    void DefineEdgeLogicalObjects(Job *job, std::string name);
-    // register logical objects for a field over vertices
-    void DefineNodeLogicalObjects(Job *job, std::string name);
-    // get read set for a variable over a partition
-    const IDSet<logical_data_id_t>* GetReadSet(std::string name,
-                                               partition_id_t p) const;
-    // get write set for a variable over a partition
-    const IDSet<logical_data_id_t>* GetWriteSet(std::string name,
-                                                partition_id_t p) const;
-    // accessors
-    size_t num_partitions() const;
-};  // class GraphLOs
+    EdgeData();
+    ~EdgeData();
+
+    virtual void Create();
+    virtual void Destroy();
+    virtual Data* Clone();
+    virtual void Copy(Data* from);
+    virtual bool Serialize(SerializedData* ser_data);
+    virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
+
+    void ResetEdges(size_t num_edges);
+    inline EdgeEntry& operator[](size_t e) { return edges_[e]; }
+    size_t num_edges();
+
+  private:
+    size_t num_edges_;
+    EdgeEntry* edges_;
+};  // class EdgeData
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_APPLICATION_GRAPH_LIBRARY_GRAPH_LOS_H_
+#endif  // NIMBUS_APPLICATION_PAGE_RANK_EDGE_DATA_H_

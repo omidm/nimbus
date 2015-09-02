@@ -56,8 +56,8 @@
 
 namespace nimbus {
 
-GraphPartitioner::GraphPartitioner() : num_nodes_(0), num_edges_(0),
-                                       edge_src_(0), edge_dst_(0),
+GraphPartitioner::GraphPartitioner() : num_nodes_(0), node_degree_(0),
+                                       num_edges_(0), edge_src_(0), edge_dst_(0),
                                        num_partitions_(0), node_partitions_(0),
                                        num_edge_logical_objects_(0),
                                        node_logical_objects_(0),
@@ -69,9 +69,11 @@ GraphPartitioner::GraphPartitioner() : num_nodes_(0), num_edges_(0),
 GraphPartitioner::~GraphPartitioner() {
   if (edge_src_) delete edge_src_;
   if (edge_dst_) delete edge_dst_;
+  if (node_degree_) delete node_degree_;
   num_nodes_ = 0;
   num_edges_ = 0;
   if (node_partitions_) delete node_partitions_;
+
   if (node_logical_objects_) {
     for (size_t p = 0; p < num_partitions_; ++p) {
       if (node_logical_objects_[p]) {
@@ -80,6 +82,7 @@ GraphPartitioner::~GraphPartitioner() {
     }
     delete node_logical_objects_;
   }
+
   if (edge_logical_objects_) {
     for (size_t pp = 0; pp < num_partitions_ * num_partitions_; ++pp) {
       if (edge_logical_objects_[pp]) {
@@ -92,6 +95,7 @@ GraphPartitioner::~GraphPartitioner() {
   if (edge_logical_object_exists_) {
     delete edge_logical_object_exists_;
   }
+
   if (edge_lo_write_) {
     for (size_t p = 0; p < num_partitions_; ++p) {
       if (edge_lo_write_[p])
@@ -144,10 +148,12 @@ void GraphPartitioner::LoadFromTSV(std::string node_file_name,
 
   // make a map from string names to node ids
   std::map<std::string, size_t> node_map;
+  node_degree_ = new size_t[num_nodes_];
   size_t node_id = 0;
   std::string node_name;
   while (node_file >> node_name) {
     node_map[node_name] = node_id;
+    node_degree_[node_id] = 0;
     node_id++;
   }
   assert(node_id == num_nodes_);
@@ -160,6 +166,7 @@ void GraphPartitioner::LoadFromTSV(std::string node_file_name,
   while (edge_file >> src_name && edge_file >> dst_name) {
     edge_src_[edge_id] = node_map[src_name];
     edge_dst_[edge_id] = node_map[dst_name];
+    node_degree_[node_map[src_name]]++;
     edge_id++;
   }
   assert(edge_id == num_edges_);
@@ -226,8 +233,11 @@ void GraphPartitioner::DetermineLogicalObjects() {
 
 /*
  * Outputs 2 files per partition: a nodes file containing ids of nodes in the
- * partition, and an edges file containing ids of edges, and source node and
- * destination node ids.
+ * partition and there degree (number of edges going out),
+ * and an edges file containing ids of edges, and source node and destination
+ * node ids.
+ * This file has detailed information about graph structure (edge id, src and
+ * dst id and node degree).
  */
 void GraphPartitioner::SaveGraphInEachPartition(std::string dir_name) const {
   boost::filesystem::create_directories(dir_name);
@@ -242,7 +252,7 @@ void GraphPartitioner::SaveGraphInEachPartition(std::string dir_name) const {
     edge_file.open(edge_fname.c_str());
     for (size_t n = 0; n < num_nodes_; n++) {
       if (node_partitions_[n] == p)
-        node_file << n << "\n";
+        node_file << n << node_degree_[n] << "\n";
     }
     for (size_t e = 0; e < num_edges_; e++) {
       if (node_partitions_[edge_src_[e]] == p ||
@@ -258,8 +268,9 @@ void GraphPartitioner::SaveGraphInEachPartition(std::string dir_name) const {
  * Outputs number of node partitions and edge logical objects in directory
  * common, and a list of logical objects that each partition reads/ writes.
  * Additionally, outputs 3 files per partition:
- *  - a node_lo file containing node ids in the node logical object
- *  (should be the same as nodes file in SaveGraphInEachPartition)
+ *  - a node_lo file containing partition id, size, and node ids in the
+ *  node logical object for the partition
+ *  (should be the similar to nodes file in SaveGraphInEachPartition)
  *  - an edge_read file containing ids of edge logical objects the partition
  *  reads, each logical object id followed by ids of edges it contains
  *  - an edge_write file containing ids of edge logical objects the partition

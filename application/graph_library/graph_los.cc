@@ -143,8 +143,14 @@ void GraphLOs::DefineEdgeLogicalObjects(Job *job, std::string name) {
     lo_map_write_var[p] = los;
     for (size_t l = 0; l < edge_los->size(); ++l) {
       size_t eid = edge_los->at(l);
+      {
+        // hack for identifying data objects
+        GeometricRegion region(p, 0, 0, 1, 1, 1);
+        ID<partition_id_t> partition(p);
+        job->DefinePartition(partition, region);
+      }
       job->DefineData(name, ids[eid], p, neighbor);
-      los->push_back(ids[eid]);
+      los->insert(ids[eid]);
     }
   }
   for (size_t p = 0; p < num_partitions_; ++p) {
@@ -153,7 +159,7 @@ void GraphLOs::DefineEdgeLogicalObjects(Job *job, std::string name) {
     lo_map_read_var[p] = los;
     for (size_t l = 0; l < edge_los->size(); ++l) {
       size_t eid = edge_los->at(l);
-      los->push_back(ids[eid]);
+      los->insert(ids[eid]);
     }
   }
 }
@@ -171,15 +177,17 @@ void GraphLOs::DefineNodeLogicalObjects(Job *job, std::string name) {
   IDSet<partition_id_t> neighbor;
   for (size_t p = 0; p < num_partitions_; ++p) {
     job->DefineData(name, ids[p], p, neighbor);
-    lo_map_read_var[p]  = new lolist(1, ids[p]);
-    lo_map_write_var[p] = new lolist(1, ids[p]);
+    lo_map_read_var[p]  = new lolist();
+    lo_map_read_var[p]->insert(ids[p]);
+    lo_map_write_var[p] = new lolist();
+    lo_map_write_var[p]->insert(ids[p]);
   }
 }
 
 /*
  * Get read set.
  */
-const std::vector<logical_data_id_t>* GraphLOs::
+const IDSet<logical_data_id_t>* GraphLOs::
 GetReadSet(std::string name, partition_id_t p) const {
   return lo_map_read_.at(name)[p];
 }
@@ -187,9 +195,16 @@ GetReadSet(std::string name, partition_id_t p) const {
 /*
  * Get write set.
  */
-const std::vector<logical_data_id_t>* GraphLOs::
+const IDSet<logical_data_id_t>* GraphLOs::
 GetWriteSet(std::string name, partition_id_t p) const {
   return lo_map_write_.at(name)[p];
+}
+
+/*
+ * Get number of partitions.
+ */
+size_t GraphLOs::num_partitions() const {
+  return num_partitions_;
 }
 
 }  // namespace nimbus

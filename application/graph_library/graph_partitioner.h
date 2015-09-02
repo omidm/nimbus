@@ -55,10 +55,11 @@ namespace nimbus {
 
 class GraphPartitioner {
   private:
-    size_t num_nodes_;  // number of nodes in graph
-    size_t num_edges_;  // number of edges in graph
-    size_t *edge_src_;  // source node index for edges
-    size_t *edge_dst_;  // destination ndoe index for egdes
+    size_t num_nodes_;     // number of nodes in graph
+    size_t *node_degree_;  // degree of each node
+    size_t num_edges_;     // number of edges in graph
+    size_t *edge_src_;     // source node index for edges
+    size_t *edge_dst_;     // destination ndoe index for egdes
     size_t num_partitions_;        // number of partitions
     size_t *node_partitions_;      // node partition id
 
