@@ -12,65 +12,68 @@ import config
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import ec2
 
-def run_experiment(scheduler_ip, scheduler_p_ip, worker_ips, worker_p_ips):
+def run_experiment(controller_ip, controller_p_ip, worker_ips, worker_p_ips):
 
-  worker_num = len(worker_ips)
+  assert(len(worker_ips) == config.WORKER_INSTANCE_NUM);
+  assert(len(worker_p_ips) == config.WORKER_INSTANCE_NUM);
 
-  run_scheduler(scheduler_ip, worker_num);
-  time.sleep(10)
+  worker_num = config.WORKER_INSTANCE_NUM * config.WORKER_PER_INSTANCE 
+  run_controller(controller_ip, worker_num);
+  time.sleep(5)
 
-  idx = 0;
-  for idx in range(0, len(worker_ips)):
+  for idx in range(0, config.WORKER_INSTANCE_NUM):
+    time.sleep(config.WORKER_PER_INSTANCE - 1)
     ip = worker_ips[idx]
     p_ip = worker_p_ips[idx]
-    run_worker(scheduler_p_ip, ip, p_ip, idx+1);
+    for w in range(0, config.WORKER_PER_INSTANCE):
+      run_worker(controller_p_ip, ip, p_ip, idx * config.WORKER_PER_INSTANCE + w);
 
 
-def run_scheduler(scheduler_ip, worker_num):
-  assert(worker_num == config.WORKER_NUM)
-
-  scheduler_command =  'cd ' + config.EC2_NIMBUS_ROOT + config.REL_SCHEDULER_PATH + ';'
-  scheduler_command += 'export DBG=error;'
-  scheduler_command += 'sudo ' + config.EC2_NIMBUS_ROOT + 'scripts/configure_tcp.sh;'
-  scheduler_command += 'sudo sysctl -p;'
-  scheduler_command += 'ulimit -c unlimited;'
-  scheduler_command += './scheduler'
-  scheduler_command += ' -p ' + str(config.FIRST_PORT)
-  scheduler_command += ' -w ' + str(config.WORKER_NUM)
-  scheduler_command += ' -t ' + str(config.ASSIGNER_THREAD_NUM)
-  scheduler_command += ' -a ' + str(config.BATCH_ASSIGN_NUM)
-  scheduler_command += ' -c ' + str(config.COMMAND_BATCH_SIZE)
+def run_controller(controller_ip, worker_num):
+  controller_command  = 'cd ' + config.EC2_NIMBUS_ROOT + config.REL_CONTROLLER_PATH + ';'
+  controller_command += 'export DBG=' + config.DBG_MODE + ';'
+  controller_command += 'export TTIMER=' + config.TTIMER_LEVEL + ';'
+  controller_command += 'sudo ' + config.EC2_NIMBUS_ROOT + 'scripts/configure_tcp.sh;'
+  controller_command += 'sudo sysctl -p;'
+  controller_command += 'ulimit -c unlimited;'
+  controller_command += './scheduler'
+  controller_command += ' -p ' + str(config.FIRST_PORT)
+  controller_command += ' -t ' + str(config.ASSIGNER_THREAD_NUM)
+  controller_command += ' -a ' + str(config.BATCH_ASSIGN_NUM)
+  controller_command += ' -c ' + str(config.COMMAND_BATCH_SIZE)
+  controller_command += ' -w ' + str(worker_num)
+  controller_command += ' --lb_period ' + str(config.LB_PERIOD)
+  controller_command += ' --ft_period ' + str(config.FT_PERIOD)
   if config.ACTIVATE_LB:
-    scheduler_command += ' --alb '
+    controller_command += ' --alb '
   if config.ACTIVATE_FT:
-    scheduler_command += ' --aft '
-  scheduler_command += ' --lb_period ' + str(config.LB_PERIOD)
-  scheduler_command += ' --ft_period ' + str(config.FT_PERIOD)
+    controller_command += ' --aft '
   if config.DEACTIVATE_CONTROLLER_TEMPLATE:
-    scheduler_command += ' --dct '
+    controller_command += ' --dct '
   if config.DEACTIVATE_COMPLEX_MEMOIZATION:
-    scheduler_command += ' --dcm '
+    controller_command += ' --dcm '
   if config.DEACTIVATE_BINDING_MEMOIZATION:
-    scheduler_command += ' --dbm '
+    controller_command += ' --dbm '
   if config.DEACTIVATE_WORKER_TEMPLATE:
-    scheduler_command += ' --dwt '
+    controller_command += ' --dwt '
   if config.DEACTIVATE_MEGA_RCR_JOB:
-    scheduler_command += ' --dmr '
+    controller_command += ' --dmr '
   if config.DEACTIVATE_DM_QUERY_CACHE:
-    scheduler_command += ' --dqc '
-  scheduler_command += ' &> ' + config.STD_OUT_LOG
+    controller_command += ' --dqc '
+  controller_command += ' &> ' + config.STD_OUT_LOG
 
   subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
-      'ubuntu@' + scheduler_ip, scheduler_command])
+      'ubuntu@' + controller_ip, controller_command])
 
-  print '** Scheduler Launched: ' + scheduler_ip
+  print '** Controller Launched: ' + controller_ip
 
 
-def run_worker(scheduler_p_ip, worker_ip, worker_p_ip, num):
+def run_worker(controller_p_ip, worker_ip, worker_p_ip, num):
   worker_command =  'cd ' + config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH + ';'
-  worker_command += 'export DBG=error;'
+  worker_command += 'export DBG=' + config.DBG_MODE + ';'
+  worker_command += 'export TTIMER=' + config.TTIMER_LEVEL + ';'
   worker_command += 'sudo ' + config.EC2_NIMBUS_ROOT + 'scripts/configure_tcp.sh;'
   worker_command += 'sudo sysctl -p;'
   worker_command += 'ulimit -c unlimited;'
@@ -78,6 +81,10 @@ def run_worker(scheduler_p_ip, worker_ip, worker_p_ip, num):
     worker_command += 'taskset -c ' + config.WORKER_TASKSET + ' ./worker'
   else:
     worker_command += './worker'
+  worker_command += ' -p ' + str(config.FIRST_PORT + num + 1)
+  worker_command += ' --ip ' + worker_p_ip
+  worker_command += ' --cip ' + controller_p_ip
+  worker_command += ' --cport ' + str(config.FIRST_PORT)
   worker_command += ' -s ' + str(config.SIMULATION_SCALE)
   worker_command += ' -e ' + str(config.FRAME_NUMBER)
   worker_command += ' --pnx ' + str(config.PART_X)
@@ -88,49 +95,45 @@ def run_worker(scheduler_p_ip, worker_ip, worker_p_ip, num):
   worker_command += ' --ppnz ' + str(config.PROJ_PART_Z)
   worker_command += ' --maxi ' + str(config.MAX_ITERATION)
   worker_command += ' --psl ' + str(config.PROJECTION_SMART_LEVEL)
+  worker_command += ' --wl ' + str(config.WATER_LEVEL)
   worker_command += ' --ibatch ' + str(config.ITERATION_BATCH)
-  if config.WRITE_PER_PART:
+  worker_command += ' --othread ' + str(config.OTHREAD_NUM)
+  if not config.GLOBAL_WRITE:
     worker_command += ' --dgw '
   if config.NO_PROJ_BOTTLENECK:
     worker_command += ' --dpb '
-  worker_command += ' -p ' + str(config.FIRST_PORT + num)
-  worker_command += ' --ip ' + worker_p_ip
-  worker_command += ' --cip ' + scheduler_p_ip
-  worker_command += ' --cport ' + str(config.FIRST_PORT)
-  worker_command += ' --othread ' + str(config.OTHREAD_NUM)
-  worker_command += ' &> ' + str(num) + '_' + config.STD_OUT_LOG
+  worker_command += ' &> ' + str(num + 1) + '_' + config.STD_OUT_LOG
 
   subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
       'ubuntu@' + worker_ip, worker_command])
 
-  print '** Worker ' + str(num) + ' Launched: ' + worker_ip
+  print '** Worker ' + str(num + 1) + ' Launched: ' + worker_ip
 
-def terminate_experiment(scheduler_ip, worker_ips):
 
-  worker_num = len(worker_ips)
+def terminate_experiment(controller_ip, worker_ips):
 
-  terminate_scheduler(scheduler_ip);
+  terminate_controller(controller_ip);
 
-  num = 0;
+  assert(len(worker_ips) == config.WORKER_INSTANCE_NUM);
+
   for ip in worker_ips:
-    num += 1
-    terminate_worker(ip, num);
+    terminate_worker(ip);
 
 
-def terminate_scheduler(scheduler_ip):
-  scheduler_command =  'killall -v scheduler;'
+def terminate_controller(controller_ip):
+  controller_command =  'killall -v scheduler;'
 
   subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
-      'ubuntu@' + scheduler_ip, scheduler_command])
+      'ubuntu@' + controller_ip, controller_command])
 
-  print '** Scheduler Terminated: ' + scheduler_ip
+  print '** Controller Terminated: ' + controller_ip
 
 
-def terminate_worker(worker_ip, num):
+def terminate_worker(worker_ip):
   worker_command =  'killall -v worker;'
 
   subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
@@ -138,27 +141,23 @@ def terminate_worker(worker_ip, num):
       '-o', 'StrictHostKeyChecking=no',
       'ubuntu@' + worker_ip, worker_command])
 
-  print '** Worker ' + str(num) + ' Terminated: ' + worker_ip
+  print '** Worker(s) Terminated: ' + worker_ip
+
 
 def  test_nodes(node_ips):
-  worker_command =  'cd ' + config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH + ';'
-  worker_command += 'pwd;'
+  command  = 'cd ' + config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH + ';'
+  command += 'pwd;'
 
-  num = 0;
   for ip in node_ips:
-    num += 1;
     subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + ip, worker_command])
+        'ubuntu@' + ip, command])
 
-    print '** Node ' + str(num) + ' Tested: ' + ip
-
-
+    print '** Node Tested: ' + ip
 
 
-
-def collect_output_data(scheduler_ip, worker_ips):
+def collect_output_data(controller_ip, worker_ips):
 
   subprocess.call(['rm', '-rf', config.OUTPUT_PATH])
   subprocess.call(['mkdir', '-p', config.OUTPUT_PATH])
@@ -166,27 +165,25 @@ def collect_output_data(scheduler_ip, worker_ips):
   subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
-      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-      config.REL_SCHEDULER_PATH + config.STD_OUT_LOG,
+      'ubuntu@' + controller_ip + ':' + config.EC2_NIMBUS_ROOT +
+      config.REL_CONTROLLER_PATH + config.STD_OUT_LOG,
       config.OUTPUT_PATH])
 
   subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
-      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-      config.REL_SCHEDULER_PATH + config.LOAD_BALANCER_LOG,
+      'ubuntu@' + controller_ip + ':' + config.EC2_NIMBUS_ROOT +
+      config.REL_CONTROLLER_PATH + config.LOAD_BALANCER_LOG,
       config.OUTPUT_PATH])
 
   subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
-      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-      config.REL_SCHEDULER_PATH + config.SCHED_PER_ITER_STAT_LOG,
+      'ubuntu@' + controller_ip + ':' + config.EC2_NIMBUS_ROOT +
+      config.REL_CONTROLLER_PATH + config.SCHED_PER_ITER_STAT_LOG,
       config.OUTPUT_PATH])
 
-  num = 0
   for ip in worker_ips:
-    num += 1
     subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
@@ -259,24 +256,22 @@ def collect_output_data(scheduler_ip, worker_ips):
 #        config.OUTPUT_PATH])
 
 
-def clean_output_data(scheduler_ip, worker_ips):
-  scheduler_path = config.EC2_NIMBUS_ROOT + config.REL_SCHEDULER_PATH;
-  scheduler_command  =  ''
-  scheduler_command +=  'rm -rf ' + scheduler_path + config.STD_OUT_LOG + ';'
-  scheduler_command +=  'rm -rf ' + scheduler_path + '*.txt;'
-  scheduler_command +=  'rm -rf ' + scheduler_path + '*log*;'
-  scheduler_command +=  'rm -rf ' + scheduler_path + 'core;'
+def clean_output_data(controller_ip, worker_ips):
+  controller_path = config.EC2_NIMBUS_ROOT + config.REL_CONTROLLER_PATH;
+  controller_command  =  ''
+  controller_command +=  'rm -rf ' + controller_path + config.STD_OUT_LOG + ';'
+  controller_command +=  'rm -rf ' + controller_path + '*.txt;'
+  controller_command +=  'rm -rf ' + controller_path + '*log*;'
+  controller_command +=  'rm -rf ' + controller_path + 'core;'
 
   subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
-      'ubuntu@' + scheduler_ip, scheduler_command])
+      'ubuntu@' + controller_ip, controller_command])
 
-  print '** Scheduler Cleaned: ' + scheduler_ip
+  print '** Controller Cleaned: ' + controller_ip
 
-  num = 0
   for ip in worker_ips:
-    num += 1
     worker_path = config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH;
     worker_command  =  ''
     worker_command +=  'rm -rf ' + worker_path + '*_' + config.STD_OUT_LOG + ';'
@@ -292,7 +287,14 @@ def clean_output_data(scheduler_ip, worker_ips):
         '-o', 'StrictHostKeyChecking=no',
         'ubuntu@' + ip, worker_command])
   
-    print '** Worker ' + str(num) + ' Cleaned: ' + ip
+    print '** Worker Cleaned: ' + ip
+
+
+
+
+
+
+
 
 
 def build_binaries(ip_address):
@@ -319,7 +321,7 @@ def build_binaries(ip_address):
   command += 'make clean;'
   command += 'make -j 12;'
   command += 'cd -;'
-  command += 'cd ' + config.REL_SCHEDULER_PATH + ';'
+  command += 'cd ' + config.REL_CONTROLLER_PATH + ';'
   command += 'make clean;'
   command += 'make -j 12;'
   command += 'cd -;'
@@ -349,8 +351,8 @@ def distribute_binaries(source_ip, dest_ips):
     subprocess.call(['scp', '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + source_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_SCHEDULER_PATH + config.SCHEDULER_BINARY,
-        'ubuntu@' + dest_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_SCHEDULER_PATH])
+        'ubuntu@' + source_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_CONTROLLER_PATH + config.CONTROLLER_BINARY,
+        'ubuntu@' + dest_ip + ':' + config.EC2_NIMBUS_ROOT + config.REL_CONTROLLER_PATH])
 
   for dest_ip in dest_ips:
     subprocess.call(['scp', '-i', config.PRIVATE_KEY,
@@ -378,7 +380,7 @@ def distribute_binaries(source_ip, dest_ips):
 #   subprocess.call(['mkdir', '-p',
 #       temp_folder_name + config.REL_APPLICATION_PATH])
 #   subprocess.call(['mkdir', '-p',
-#       temp_folder_name + config.REL_SCHEDULER_PATH])
+#       temp_folder_name + config.REL_CONTROLLER_PATH])
 #   subprocess.call(['mkdir', '-p',
 #       temp_folder_name + config.REL_WORKER_PATH])
 #   subprocess.call(['cp',
@@ -388,8 +390,8 @@ def distribute_binaries(source_ip, dest_ips):
 #       config.SOURCE_NIMBUS_ROOT  + config.REL_APPLICATION_PATH + config.APPLICATION_LIB,
 #       temp_folder_name + config.REL_APPLICATION_PATH])
 #   subprocess.call(['cp',
-#       config.SOURCE_NIMBUS_ROOT  + config.REL_SCHEDULER_PATH + config.SCHEDULER_BINARY,
-#       temp_folder_name + config.REL_SCHEDULER_PATH])
+#       config.SOURCE_NIMBUS_ROOT  + config.REL_CONTROLLER_PATH + config.CONTROLLER_BINARY,
+#       temp_folder_name + config.REL_CONTROLLER_PATH])
 #   subprocess.call(['cp',
 #       config.SOURCE_NIMBUS_ROOT  + config.REL_WORKER_PATH + config.WORKER_BINARY,
 #       temp_folder_name + config.REL_WORKER_PATH])
