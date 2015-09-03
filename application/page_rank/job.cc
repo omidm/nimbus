@@ -154,7 +154,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   {
     size_t num_iterations = page_rank->num_iterations();
     Parameter loop_params;
-    SerializeParameter(&loop_params, num_iterations - 1);
+    SerializeParameter(&loop_params, num_iterations + 1);
     std::vector<job_id_t> loop_job_id;
     GetNewJobID(&loop_job_id, 1);
     IDSet<logical_data_id_t> loop_rs, loop_ws;
@@ -164,6 +164,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
     SerializeParameter(&loop_params, num_iterations);
     SpawnComputeJob(FOR_LOOP_JOB, loop_job_id[0], loop_rs, loop_ws,
                     before, after, loop_params);
+    MarkEndOfStage();
   }
 }
 
@@ -185,8 +186,8 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
   LoadParameter(&params, &loop_counter);
 
   // run this loop?
-  if (loop_counter > 0) {
-    std::cout << "Running iteration " << loop_counter << "\n";
+  if (loop_counter > 1) {
+    std::cout << "Iterations left : " << loop_counter - 1 << "\n";
 
     StartTemplate("for_loop");
 
@@ -244,12 +245,51 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
       SerializeParameter(&loop_params, loop_counter - 1);
       SpawnComputeJob(FOR_LOOP_JOB, loop_job_id[0], loop_rs, loop_ws,
                       before, after, loop_params);
+      MarkEndOfStage();
 
       EndTemplate("for_loop");
     }
   } else {
-    // terminate application
-    TerminateApplication();
+    if (loop_counter > 0) {
+      // dump all output
+      std::cout << "Saving result\n";
+
+      // dump job
+      {
+        Parameter dump_params;
+        std::vector<job_id_t> dump_job_ids;
+        GetNewJobID(&dump_job_ids, num_partitions);
+        for (size_t p = 0; p < num_partitions; ++p) {
+          const IDSet<logical_data_id_t>& dump_rs = *(graph->GetReadSet(NODES, p));
+          const IDSet<logical_data_id_t> dump_ws;
+          IDSet<job_id_t> before, after;
+          StageJobAndLoadBeforeSet(&before, DUMP_JOB, dump_job_ids[p],
+                                   dump_rs, dump_ws);
+          SpawnComputeJob(DUMP_JOB, dump_job_ids[p], dump_rs, dump_ws,
+                          before, after,
+                          dump_params, true, GeometricRegion(p, 0, 0, 1, 0, 0));
+        }
+        MarkEndOfStage();
+      }
+
+      // loop job
+      {
+        Parameter loop_params;
+        std::vector<job_id_t> loop_job_id;
+        GetNewJobID(&loop_job_id, 1);
+        IDSet<logical_data_id_t> loop_rs, loop_ws;
+        IDSet<job_id_t> before, after;
+        StageJobAndLoadBeforeSet(&before, FOR_LOOP_JOB, loop_job_id[0],
+                                 loop_rs, loop_ws, true);
+        SerializeParameter(&loop_params, loop_counter - 1);
+        SpawnComputeJob(FOR_LOOP_JOB, loop_job_id[0], loop_rs, loop_ws,
+                        before, after, loop_params);
+        MarkEndOfStage();
+      }
+    } else {
+      // terminate application
+      TerminateApplication();
+    }
   }
 }
 
@@ -275,7 +315,7 @@ void Init::Execute(Parameter params, const DataArray& da) {
   // get partition id for the job
   partition_id_t partition;
   LoadParameter(&params, &partition);
-  std::string dir_name = SSTR(page_rank->input_dir() << partition);
+  std::string dir_name = SSTR(page_rank->input_dir() << "/" << partition);
   assert(boost::filesystem::is_directory(dir_name));
 
   // get write set logical objects consisting of nodes and edges
@@ -295,11 +335,11 @@ void Init::Execute(Parameter params, const DataArray& da) {
     while (std::getline(node_file, line)) {
       std::vector<std::string> tokens;
       boost::algorithm::split(tokens, line,
-                              boost::is_any_of(": "),
+                              boost::is_any_of(": \n"),
                               boost::token_compress_on);
       size_t node_id = boost::lexical_cast<size_t>(tokens[0]);
       size_t degree  = boost::lexical_cast<size_t>(tokens[1]);
-      NodeEntry entry = nodes[node_id];
+      NodeEntry &entry = nodes[node_id];
       entry.degree = degree;
       entry.rank   = RANK_INIT_VAL;
     }
@@ -314,7 +354,7 @@ void Init::Execute(Parameter params, const DataArray& da) {
     while (std::getline(edge_file, line)) {
       std::vector<std::string> tokens;
       boost::algorithm::split(tokens, line,
-                              boost::is_any_of(": "),
+                              boost::is_any_of(": \n"),
                               boost::token_compress_on);
       size_t edge_id = boost::lexical_cast<size_t>(tokens[0]);
       edges_partition[edge_id].src_id  = boost::lexical_cast<size_t>(tokens[1]);
@@ -334,16 +374,16 @@ void Init::Execute(Parameter params, const DataArray& da) {
       assert(num < num_edge_data);
       size_t d = num_edge_data + 1;
       for (size_t i = 0; i < num_edge_data; ++i) {
-        if (edges_vector[d]->region().x() == num)
-          d = num;
+        if (edges_vector[i]->region().x() == num)
+          d = i;
       }
       assert(d < num_edge_data);
       EdgeData& edges = *(static_cast<EdgeData*>(edges_vector[d]));
       std::vector<std::string> tokens;
       boost::algorithm::split(tokens, line,
-                              boost::is_any_of(": "),
+                              boost::is_any_of(": \n"),
                               boost::token_compress_on);
-      size_t num_edges = tokens.size() - 2;
+      size_t num_edges = tokens.size() - 3;
       edges.ResetEdges(num_edges);
       for (size_t e = 0; e < num_edges; ++e) {
         size_t edge_id = boost::lexical_cast<size_t>(tokens[e + 2]);
@@ -380,7 +420,7 @@ void Scatter::Execute(Parameter params, const DataArray& da) {
     size_t num_edges = edges.num_edges();
     for (size_t e = 0; e < num_edges; ++e) {
       EdgeEntry& entry = edges[e];
-      entry.delta = nodes[entry.src_id].rank / nodes[entry.src_id].degree;
+      entry.delta = nodes[entry.src_id].rank / (float)(nodes[entry.src_id].degree);  // NOLINT
     }
   }
 }
@@ -411,6 +451,33 @@ void Gather::Execute(Parameter params, const DataArray& da) {
       nodes[entry.dst_id].rank += entry.delta;
     }
   }
+}
+
+Dump::Dump(Application* app) {
+  set_application(app);
+}
+
+Job* Dump::Clone() {
+  return new Dump(application());
+}
+
+void Dump::Execute(Parameter params, const DataArray& da) {
+  PageRank *page_rank = static_cast<PageRank*>(application());
+
+  std::vector<Data*> nodes_vector;
+  GetReadData(*this, NODES, da, &nodes_vector);
+  NodeData& nodes = *(static_cast<NodeData*>(nodes_vector[0]));
+  std::string dir_name = SSTR(page_rank->output_dir() << "/" << region().x());
+  boost::filesystem::create_directories(dir_name);
+
+  std::ofstream node_ranks_file(SSTR(dir_name << "/ranks").c_str());
+  boost::unordered_map<size_t, NodeEntry> &node_data = nodes.data();
+  boost::unordered_map<size_t, NodeEntry>::const_iterator iter;
+  for (iter = node_data.begin(); iter != node_data.end(); ++iter) {
+    node_ranks_file << iter->first << " : " << iter->second.degree << " : " <<
+      iter->second.rank << "\n";
+  }
+  node_ranks_file.close();
 }
 
 }  // namespace nimbus

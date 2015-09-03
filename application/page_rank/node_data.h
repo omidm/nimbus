@@ -40,6 +40,7 @@
 #define NIMBUS_APPLICATION_PAGE_RANK_NODE_DATA_H_
 
 #include <boost/unordered_map.hpp>
+#include <string>
 #include "shared/nimbus.h"
 
 #define NODES "nodes"
@@ -48,12 +49,12 @@ namespace nimbus {
 
 struct NodeEntry {
   size_t degree;
-  size_t rank;
+  float rank;
 };
 
 class NodeData : public Data {
   public:
-    NodeData();
+    explicit NodeData(std::string name);
     ~NodeData();
 
     virtual void Create();
@@ -65,6 +66,7 @@ class NodeData : public Data {
 
     void ResetNodes();
     inline NodeEntry& operator[](size_t nid) { return nodes_[nid]; }
+    boost::unordered_map<size_t, NodeEntry> &data();
 
   private:
     boost::unordered_map<size_t, NodeEntry> nodes_;

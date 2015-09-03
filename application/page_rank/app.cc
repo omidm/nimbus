@@ -44,8 +44,10 @@
 
 namespace nimbus {
 
-PageRank::PageRank(std::string input_dir, size_t num_iterations)
-    : input_dir_(input_dir), num_iterations_(num_iterations),
+PageRank::PageRank(std::string input_dir, std::string output_dir,
+                   size_t num_iterations)
+    : input_dir_(input_dir), output_dir_(output_dir),
+      num_iterations_(num_iterations),
       graph_helper_(0) {}
 
 PageRank::~PageRank() {
@@ -60,13 +62,18 @@ void PageRank::Load() {
   RegisterJob(FOR_LOOP_JOB, new ForLoop(this));
   RegisterJob(SCATTER_JOB, new Scatter(this));
   RegisterJob(GATHER_JOB, new Gather(this));
+  RegisterJob(DUMP_JOB, new Dump(this));
   // Register data here
-  RegisterData(EDGES, new EdgeData());
-  RegisterData(NODES, new NodeData());
+  RegisterData(EDGES, new EdgeData(EDGES));
+  RegisterData(NODES, new NodeData(NODES));
 }
 
 std::string PageRank::input_dir() {
   return input_dir_;
+}
+
+std::string PageRank::output_dir() {
+  return output_dir_;
 }
 
 size_t PageRank::num_iterations() {

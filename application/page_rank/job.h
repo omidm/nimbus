@@ -45,7 +45,7 @@
 #define FOR_LOOP_JOB "for_loop"
 #define SCATTER_JOB "scatter"
 #define GATHER_JOB "gather"
-
+#define DUMP_JOB "dump"
 
 namespace nimbus {
 
@@ -80,6 +80,13 @@ class Scatter : public Job {
 class Gather : public Job {
   public:
     explicit Gather(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job* Clone();
+};
+
+class Dump : public Job {
+  public:
+    explicit Dump(Application* app);
     virtual void Execute(Parameter params, const DataArray& da);
     virtual Job* Clone();
 };

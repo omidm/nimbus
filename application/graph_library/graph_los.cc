@@ -90,12 +90,12 @@ void GraphLOs::LoadGraphInfo(std::string dir_name) {
   while (std::getline(edge_rs_file, line)) {
     std::vector<std::string> tokens;
     boost::algorithm::split(tokens, line,
-                            boost::is_any_of(": "),
+                            boost::is_any_of(": \n"),
                             boost::token_compress_on);
     size_t partition = boost::lexical_cast<size_t>(tokens[0]);
     assert(partition == num_lines);
     size_t rs_size = boost::lexical_cast<size_t>(tokens[1]);
-    assert(rs_size + 2 == tokens.size());
+    assert(rs_size + 3 == tokens.size());
     std::vector<size_t> *edge_lo = new std::vector<size_t>(rs_size);
     edge_lo_read_[partition] = edge_lo;
     for (size_t i = 0; i < rs_size; ++i) {
@@ -110,12 +110,12 @@ void GraphLOs::LoadGraphInfo(std::string dir_name) {
   while (std::getline(edge_ws_file, line)) {
     std::vector<std::string> tokens;
     boost::algorithm::split(tokens, line,
-                            boost::is_any_of(": "),
+                            boost::is_any_of(": \n"),
                             boost::token_compress_on);
     size_t partition = boost::lexical_cast<size_t>(tokens[0]);
     assert(partition == num_lines);
     size_t ws_size = boost::lexical_cast<size_t>(tokens[1]);
-    assert(ws_size + 2 == tokens.size());
+    assert(ws_size + 3 == tokens.size());
     std::vector<size_t> *edge_lo = new std::vector<size_t>(ws_size);
     edge_lo_write_[partition] = edge_lo;
     for (size_t i = 0; i < ws_size; ++i) {
@@ -145,11 +145,11 @@ void GraphLOs::DefineEdgeLogicalObjects(Job *job, std::string name) {
       size_t eid = edge_los->at(l);
       {
         // hack for identifying data objects
-        GeometricRegion region(p, 0, 0, 1, 1, 1);
-        ID<partition_id_t> partition(p);
+        GeometricRegion region(l, 0, 0, 1, 1, 1);
+        ID<partition_id_t> partition(eid);
         job->DefinePartition(partition, region);
       }
-      job->DefineData(name, ids[eid], p, neighbor);
+      job->DefineData(name, ids[eid], eid, neighbor);
       los->insert(ids[eid]);
     }
   }

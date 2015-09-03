@@ -43,7 +43,9 @@
 
 namespace nimbus {
 
-EdgeData::EdgeData() : num_edges_(0), edges_(0) {}
+EdgeData::EdgeData(std::string name) : num_edges_(0), edges_(0) {
+  set_name(name);
+}
 
 EdgeData::~EdgeData() {
   if (edges_) {
@@ -71,7 +73,7 @@ void EdgeData::Destroy() {
 }
 
 Data* EdgeData::Clone() {
-  return new EdgeData();
+  return new EdgeData(name());
 }
 
 void EdgeData::Copy(Data* from) {

@@ -47,16 +47,19 @@ namespace nimbus {
 
 class PageRank : public Application {
   public:
-    explicit PageRank(std::string input_dir, size_t num_iterations);
+    explicit PageRank(std::string input_dir, std::string output_dir,
+                      size_t num_iterations);
     ~PageRank();
     virtual void Load();
     // runtime parameters/ helpers
     std::string input_dir();
+    std::string output_dir();
     size_t num_iterations();
     GraphLOs* graph_helper();
     void set_graph_helper(GraphLOs* graph_helper);
   private:
     std::string input_dir_;
+    std::string output_dir_;
     size_t num_iterations_;
     GraphLOs* graph_helper_;
 };  // class PageRank

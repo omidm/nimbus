@@ -57,6 +57,7 @@ int main(int argc, char *argv[]) {
 
   // app arguments
   std::string input_dir;
+  std::string output_dir;
   size_t num_iterations;
 
   WorkerManager::across_job_parallism = 1;
@@ -76,6 +77,7 @@ int main(int argc, char *argv[]) {
 
     // Required app arguments
     ("input", po::value<std::string>(&input_dir)->required(), "input directory containing graph") // NOLINT
+    ("output", po::value<std::string>(&output_dir)->required(), "directory to save results") // NOLINT
     ("iterations", po::value<std::size_t>(&num_iterations)->required(), "number of iterations")   // NOLINT
   ;  // NOLINT
 
@@ -98,7 +100,7 @@ int main(int argc, char *argv[]) {
 
   nimbus_initialize();
   std::cout << "Simple Worker is up!" << std::endl;
-  PageRank *app = new PageRank(input_dir,
+  PageRank *app = new PageRank(input_dir, output_dir,
                                num_iterations);
   Worker *w = new Worker(controller_ip, controller_port, listening_port, app);
 
@@ -106,4 +108,5 @@ int main(int argc, char *argv[]) {
     w->set_ip_address(ip_address);
   }
   w->Run();
+  std::cout << "Worker is done!" << std::endl;
 }

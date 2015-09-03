@@ -35,7 +35,7 @@ graph_library_t:
 proto_t:
 	make -C $(PDIR_SOURCE)
 
-$(TARGET): $(OBJFILES) graph_library_t proto_t
+$(TARGET): proto_t $(OBJFILES) graph_library_t
 	$(CPP) $(SHARED_FLAGS) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(PROTO_OBJFILES) $(GRAPH_LIB_OBJFILES) $(OBJFILES) -o $(TARGET) $(LINK_FLAG)
 
 clean: clean-files

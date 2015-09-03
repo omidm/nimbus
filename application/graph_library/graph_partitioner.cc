@@ -197,8 +197,8 @@ void GraphPartitioner::DetermineLogicalObjects() {
   for (size_t p = 0; p < num_partitions_; ++p)
     node_logical_objects_[p] = new std::vector<size_t>;
   for (size_t n = 0; n < num_nodes_; ++n) {
-    size_t id = node_partitions_[n];
-    node_logical_objects_[id]->push_back(n);
+    size_t p = node_partitions_[n];
+    node_logical_objects_[p]->push_back(n);
   }
   // determine disjoint logical objects for edges
   edge_logical_objects_ =
@@ -252,12 +252,12 @@ void GraphPartitioner::SaveGraphInEachPartition(std::string dir_name) const {
     edge_file.open(edge_fname.c_str());
     for (size_t n = 0; n < num_nodes_; n++) {
       if (node_partitions_[n] == p)
-        node_file << n << node_degree_[n] << "\n";
+        node_file << n << " : " << node_degree_[n] << "\n";
     }
     for (size_t e = 0; e < num_edges_; e++) {
       if (node_partitions_[edge_src_[e]] == p ||
           node_partitions_[edge_dst_[e]] == p)
-        edge_file << e << " " << edge_src_[e] << " " << edge_dst_[e] << "\n";
+        edge_file << e << " : " << edge_src_[e] << " : " << edge_dst_[e] << "\n";
     }
     node_file.close();
     edge_file.close();
@@ -326,7 +326,7 @@ void GraphPartitioner::SaveLogicalObjects(std::string dir_name) const {
     std::string node_lo_fname    = SSTR(dir_name << "/" << p << "/node_lo");
     std::string edge_read_fname  = SSTR(dir_name << "/" << p << "/edge_read_sets");
     std::string edge_write_fname = SSTR(dir_name << "/" << p << "/edge_write_sets");
-    std::ofstream edge_read_file, edge_write_file, node_lo_file, edge_lo_file;
+    std::ofstream edge_read_file, edge_write_file, node_lo_file;
     // node logical object contents
     node_lo_file.open(node_lo_fname.c_str());
     std::vector<size_t> *node_lo = node_logical_objects_[p];
@@ -334,6 +334,7 @@ void GraphPartitioner::SaveLogicalObjects(std::string dir_name) const {
     for (size_t n = 0; n < node_lo->size(); ++n) {
       node_lo_file << node_lo->at(n) << " ";
     }
+    node_lo_file << "\n";
     node_lo_file.close();
     // edge read set ids and contents
     edge_read_file.open(edge_read_fname.c_str());
@@ -354,7 +355,7 @@ void GraphPartitioner::SaveLogicalObjects(std::string dir_name) const {
     for (std::set<size_t>::iterator l = edge_low->begin();
          l != edge_low->end(); ++l) {
       std::vector<size_t> *edge_lo = edge_logical_objects_[(*l)];
-      edge_write_file << (*l) << " : " << edge_lo->size() << ":";
+      edge_write_file << (*l) << " : " << edge_lo->size() << " : ";
       for (size_t e = 0; e < edge_lo->size(); ++e) {
         edge_write_file << edge_lo->at(e) << " ";
       }

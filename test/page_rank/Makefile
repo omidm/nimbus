@@ -22,9 +22,9 @@ LDFLAGS += -L$(ADIR) -Wl,-rpath $(ADIR)
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@
 
 $(APPLICATION):
-	make -c $(ADIR)
+	make -C $(ADIR)
 
-$(TARGET): $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
+$(TARGET): $(CPP_FILES) $(H_FILES) $(OBJECT_FILES) $(APPLICATION)
 	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJECT_FILES) -o $(TARGET) $(LFLAGS)
 
 clean: clean-files
@@ -37,4 +37,4 @@ clean-logs:
 
 clean-all: clean-files clean-logs
 	\rm -f $(TARGET)
-	make -c $(ADIR) 
+	make -C $(ADIR) clean

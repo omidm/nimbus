@@ -39,6 +39,7 @@
 #ifndef NIMBUS_APPLICATION_PAGE_RANK_EDGE_DATA_H_
 #define NIMBUS_APPLICATION_PAGE_RANK_EDGE_DATA_H_
 
+#include <string>
 #include "shared/nimbus.h"
 
 #define EDGES "edges"
@@ -48,12 +49,12 @@ namespace nimbus {
 struct EdgeEntry {
   size_t src_id;
   size_t dst_id;
-  size_t delta;
+  float delta;
 };
 
 class EdgeData : public Data {
   public:
-    EdgeData();
+    explicit EdgeData(std::string name);
     ~EdgeData();
 
     virtual void Create();

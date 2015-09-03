@@ -44,7 +44,9 @@
 
 namespace nimbus {
 
-NodeData::NodeData() {}
+NodeData::NodeData(std::string name) {
+  set_name(name);
+}
 
 NodeData::~NodeData() {}
 
@@ -55,10 +57,11 @@ void NodeData::Create() {
 void NodeData::Destroy() {}
 
 Data* NodeData::Clone() {
-  return new NodeData();
+  return new NodeData(name());
 }
 
 void NodeData::Copy(Data* from) {
+  assert(false);
   NodeData* data = static_cast<NodeData*>(from);
   nodes_.clear();
   nodes_ = data->nodes_;
@@ -84,6 +87,7 @@ bool NodeData::Serialize(SerializedData* ser_data) {
 }
 
 bool NodeData::DeSerialize(const SerializedData &ser_data, Data** result) {
+  assert(false);
   data_msgs::NodeDataMsg node_data_msg;
   std::string str(ser_data.data_ptr_raw(), ser_data.size());
   node_data_msg.ParseFromString(str);
@@ -101,6 +105,10 @@ bool NodeData::DeSerialize(const SerializedData &ser_data, Data** result) {
 
 void NodeData::ResetNodes() {
   nodes_.clear();
+}
+
+boost::unordered_map<size_t, NodeEntry> &NodeData::data() {
+  return nodes_;
 }
 
 }  // namespace nimbus
