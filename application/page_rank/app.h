@@ -52,16 +52,18 @@ class PageRank : public Application {
     ~PageRank();
     virtual void Load();
     // runtime parameters/ helpers
-    std::string input_dir();
-    std::string output_dir();
-    size_t num_iterations();
-    GraphLOs* graph_helper();
+    std::string input_dir() const;
+    std::string output_dir() const;
+    size_t num_iterations() const;
+    GraphLOs* graph_helper() const;
+    size_t num_nodes() const;
     void set_graph_helper(GraphLOs* graph_helper);
   private:
     std::string input_dir_;
     std::string output_dir_;
     size_t num_iterations_;
     GraphLOs* graph_helper_;
+    size_t num_nodes_;
 };  // class PageRank
 
 }  // namespace nimbus

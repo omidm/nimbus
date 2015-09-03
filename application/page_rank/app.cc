@@ -36,6 +36,7 @@
  * Author: Chinmayee Shah
  */
 
+#include <boost/filesystem.hpp>
 #include "application/page_rank/app.h"
 #include "application/page_rank/edge_data.h"
 #include "application/page_rank/node_data.h"
@@ -48,12 +49,14 @@ PageRank::PageRank(std::string input_dir, std::string output_dir,
                    size_t num_iterations)
     : input_dir_(input_dir), output_dir_(output_dir),
       num_iterations_(num_iterations),
-      graph_helper_(0) {}
+      graph_helper_(0), num_nodes_(0) {}
 
 PageRank::~PageRank() {
   if (graph_helper_)
     delete graph_helper_;
 }
+
+#define SSTR(x) dynamic_cast< std::ostringstream & >( std::ostringstream() << std::dec << x ).str()  // NOLINT
 
 void PageRank::Load() {
   // Register jobs here
@@ -66,22 +69,34 @@ void PageRank::Load() {
   // Register data here
   RegisterData(EDGES, new EdgeData(EDGES));
   RegisterData(NODES, new NodeData(NODES));
+  // read in graph information
+  assert(boost::filesystem::is_directory(input_dir()));
+  GraphLOs* graph = new GraphLOs();
+  set_graph_helper(graph);
+  graph->LoadGraphInfo(input_dir());
+  std::ifstream num_node_file(SSTR(input_dir() << "/common/num_nodes").c_str());
+  num_node_file >> num_nodes_;
+  num_node_file.close();
 }
 
-std::string PageRank::input_dir() {
+std::string PageRank::input_dir() const {
   return input_dir_;
 }
 
-std::string PageRank::output_dir() {
+std::string PageRank::output_dir() const {
   return output_dir_;
 }
 
-size_t PageRank::num_iterations() {
+size_t PageRank::num_iterations() const {
   return num_iterations_;
 }
 
-GraphLOs* PageRank::graph_helper() {
+GraphLOs* PageRank::graph_helper() const {
   return graph_helper_;
+}
+
+size_t PageRank::num_nodes() const {
+  return num_nodes_;
 }
 
 void PageRank::set_graph_helper(GraphLOs* graph_helper) {

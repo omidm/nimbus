@@ -87,18 +87,19 @@ bool NodeData::Serialize(SerializedData* ser_data) {
 }
 
 bool NodeData::DeSerialize(const SerializedData &ser_data, Data** result) {
-  assert(false);
+  NodeData *nd = new NodeData(name());
+  *result = nd;
   data_msgs::NodeDataMsg node_data_msg;
   std::string str(ser_data.data_ptr_raw(), ser_data.size());
   node_data_msg.ParseFromString(str);
-  ResetNodes();
+  nd->ResetNodes();
   size_t num_nodes = node_data_msg.nodes_size();
   for (size_t i = 0; i < num_nodes; i++) {
     data_msgs::NodeMsg node_msg = node_data_msg.nodes(i);
     NodeEntry entry;
     entry.degree = node_msg.degree();
     entry.rank = node_msg.rank();
-    nodes_[node_msg.id()] = entry;
+    (*nd)[node_msg.id()] = entry;
   }
   return true;
 }

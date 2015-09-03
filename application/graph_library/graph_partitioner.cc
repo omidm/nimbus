@@ -285,8 +285,20 @@ void GraphPartitioner::SaveLogicalObjects(std::string dir_name) const {
     std::string num_partitions_fname = SSTR(dir_name << "/common/num_partitions");
     std::ofstream num_partitions_file;
     num_partitions_file.open(num_partitions_fname.c_str());
-    num_partitions_file << num_partitions_;
+    num_partitions_file << num_partitions_ << "\n";
     num_partitions_file.close();
+    // edges
+    std::string num_edges_fname = SSTR(dir_name << "/common/num_edges");
+    std::ofstream num_edges_file;
+    num_edges_file.open(num_edges_fname.c_str());
+    num_edges_file << num_edges_ << "\n";
+    num_edges_file.close();
+    // nodes
+    std::string num_nodes_fname = SSTR(dir_name << "/common/num_nodes");
+    std::ofstream num_nodes_file;
+    num_nodes_file.open(num_nodes_fname.c_str());
+    num_nodes_file << num_nodes_ << "\n";
+    num_nodes_file.close();
     // number of edge logical objects
     std::string num_edge_los_fname = SSTR(dir_name << "/common/num_edge_los");
     std::ofstream num_edge_los_file;

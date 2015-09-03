@@ -55,8 +55,6 @@
 #include "application/page_rank/protobuf_compiled/parameter_msg.pb.h"
 #include "shared/nimbus.h"
 
-#define RANK_INIT_VAL 1
-
 namespace nimbus {
 
 void LoadParameter(Parameter* parameter, size_t *value) {
@@ -119,9 +117,7 @@ Job* Main::Clone() {
 void Main::Execute(Parameter params, const DataArray& da) {
   // application, graph_los to help with data objects and jobs
   PageRank* page_rank = static_cast<PageRank*>(application());
-  GraphLOs* graph = new GraphLOs();
-  page_rank->set_graph_helper(graph);
-  graph->LoadGraphInfo(page_rank->input_dir());
+  GraphLOs* graph = page_rank->graph_helper();
   size_t num_partitions = graph->num_partitions();
 
   // define data objects
@@ -145,7 +141,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
                                init_rs, init_ws);
       SpawnComputeJob(INIT_JOB, init_job_ids[p], init_rs, init_ws,
                       before, after,
-                      init_params, true, GeometricRegion(p,  0, 0, 1, 0, 0));
+                      init_params, true, GeometricRegion(p,  0, 0, 1, 1, 1));
     }
     MarkEndOfStage();
   }
@@ -207,7 +203,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
                                  scatter_rs, scatter_ws);
         SpawnComputeJob(SCATTER_JOB, scatter_job_ids[p], scatter_rs, scatter_ws,
                         before, after,
-                        scatter_params, true, GeometricRegion(p, 0, 0, 1, 0, 0));
+                        scatter_params, true, GeometricRegion(p, 0, 0, 1, 1, 1));
       }
       MarkEndOfStage();
     }
@@ -228,7 +224,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
                                  gather_rs, gather_ws);
         SpawnComputeJob(GATHER_JOB, gather_job_ids[p], gather_rs, gather_ws,
                         before, after,
-                        gather_params, true, GeometricRegion(p, 0, 0, 1, 0, 0));
+                        gather_params, true, GeometricRegion(p, 0, 0, 1, 1, 1));
       }
       MarkEndOfStage();
     }
@@ -267,7 +263,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
                                    dump_rs, dump_ws);
           SpawnComputeJob(DUMP_JOB, dump_job_ids[p], dump_rs, dump_ws,
                           before, after,
-                          dump_params, true, GeometricRegion(p, 0, 0, 1, 0, 0));
+                          dump_params, true, GeometricRegion(p, 0, 0, 1, 1, 1));
         }
         MarkEndOfStage();
       }
@@ -332,6 +328,7 @@ void Init::Execute(Parameter params, const DataArray& da) {
     NodeData& nodes = *(static_cast<NodeData*>(nodes_vector[0]));
     nodes.ResetNodes();
     std::string line;
+    float rank_init_val = 1.0/(float)(page_rank->num_nodes());  // NOLINT
     while (std::getline(node_file, line)) {
       std::vector<std::string> tokens;
       boost::algorithm::split(tokens, line,
@@ -341,7 +338,7 @@ void Init::Execute(Parameter params, const DataArray& da) {
       size_t degree  = boost::lexical_cast<size_t>(tokens[1]);
       NodeEntry &entry = nodes[node_id];
       entry.degree = degree;
-      entry.rank   = RANK_INIT_VAL;
+      entry.rank   = rank_init_val;
     }
     node_file.close();
   }
@@ -406,6 +403,7 @@ Job* Scatter::Clone() {
 }
 
 void Scatter::Execute(Parameter params, const DataArray& da) {
+  std::cout << "Scatter job on " << region().x() << "\n";
   // get read set consisting of nodes
   std::vector<Data*> nodes_vector;
   GetReadData(*this, NODES, da, &nodes_vector);
@@ -434,6 +432,7 @@ Job* Gather::Clone() {
 }
 
 void Gather::Execute(Parameter params, const DataArray& da) {
+  std::cout << "Gather job on " << region().x() << "\n";
   // get read set consisting of edges
   std::vector<Data*> edges_vector;
   GetReadData(*this, EDGES, da, &edges_vector);

@@ -105,13 +105,16 @@ bool EdgeData::Serialize(SerializedData* ser_data) {
 }
 
 bool EdgeData::DeSerialize(const SerializedData &ser_data, Data** result) {
+  EdgeData *ed = new EdgeData(name());
+  *result = ed;
   data_msgs::EdgeDataMsg edge_data_msg;
   std::string str(ser_data.data_ptr_raw(), ser_data.size());
   edge_data_msg.ParseFromString(str);
-  ResetEdges(edge_data_msg.edges_size());
-  for (size_t i = 0; i < num_edges_; i++) {
+  ed->ResetEdges(edge_data_msg.edges_size());
+  size_t num_edges = ed->num_edges();
+  for (size_t i = 0; i < num_edges; i++) {
     data_msgs::EdgeMsg edge_msg = edge_data_msg.edges(i);
-    EdgeEntry &entry = edges_[i];
+    EdgeEntry &entry = (*ed)[i];
     entry.src_id = edge_msg.src_id();
     entry.dst_id = edge_msg.dst_id();
     entry.delta  = edge_msg.delta();
