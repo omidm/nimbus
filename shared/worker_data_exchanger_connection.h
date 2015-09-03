@@ -80,7 +80,6 @@ class WorkerDataExchangerConnection {
   size_t remaining_data_length();
   bool middle_of_data();
   bool middle_of_header();
-  bool header_sent();
   std::list<SerializedData>* send_queue();
   virtual boost::mutex* mutex();
 
@@ -92,7 +91,6 @@ class WorkerDataExchangerConnection {
   void set_existing_bytes(size_t len);
   void set_middle_of_data(bool flag);
   void set_middle_of_header(bool flag);
-  void set_header_sent(bool flag);
 
  private:
   tcp::socket* socket_;
@@ -108,7 +106,6 @@ class WorkerDataExchangerConnection {
   size_t remaining_data_length_;
   bool middle_of_data_;
   bool middle_of_header_;
-  bool header_sent_;
   std::list<SerializedData> send_queue_;
   boost::mutex* mutex_;
 };

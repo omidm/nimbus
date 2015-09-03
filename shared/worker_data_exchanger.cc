@@ -384,11 +384,12 @@ bool WorkerDataExchanger::SendSerializedData(const job_id_t& receive_job_id,
     boost::mutex::scoped_lock lock(*(connection->mutex()));
     std::list<SerializedData>* q = connection->send_queue();
     if (q->size() == 0) {
-      assert(!connection->header_sent());
-      connection->set_header_sent(true);
+      std::vector<boost::asio::const_buffer> buffers;
+      buffers.push_back(boost::asio::buffer(header, header_size));
+      buffers.push_back(boost::asio::buffer(ser_data.data_ptr().get(), ser_data.size()));
 
       boost::asio::async_write(*(connection->socket()),
-                               boost::asio::buffer(header, header_size),
+                               buffers,
                                boost::bind(&WorkerDataExchanger::HandleWrite,
                                            this,
                                            connection,
@@ -454,29 +455,18 @@ void WorkerDataExchanger::HandleWrite(WorkerDataExchangerConnection* connection,
   {
     boost::mutex::scoped_lock lock(*(connection->mutex()));
     std::list<SerializedData>* q = connection->send_queue();
-    if (connection->header_sent()) {
-      assert(q->size() > 0);
+    assert(q->size() > 0);
+    q->pop_front();
+    if (q->size() > 0) {
       SerializedData ser_data = q->front();
-      connection->set_header_sent(false);
-
-      boost::asio::async_write(*(connection->socket()),
-                               boost::asio::buffer(ser_data.data_ptr().get(), ser_data.size()),
-                               boost::bind(&WorkerDataExchanger::HandleWrite,
-                                           this,
-                                           connection,
-                                           boost::asio::placeholders::error,
-                                           boost::asio::placeholders::bytes_transferred));
-    } else {
-      q->pop_front();
-      if (q->size() == 0) {
-        return;
-      }
-      SerializedData ser_data = q->front();
-      connection->set_header_sent(true);
       std::string header = ser_data.header();
 
+      std::vector<boost::asio::const_buffer> buffers;
+      buffers.push_back(boost::asio::buffer(header, header.size()));
+      buffers.push_back(boost::asio::buffer(ser_data.data_ptr().get(), ser_data.size()));
+
       boost::asio::async_write(*(connection->socket()),
-                               boost::asio::buffer(header, header.size()),
+                               buffers,
                                boost::bind(&WorkerDataExchanger::HandleWrite,
                                            this,
                                            connection,

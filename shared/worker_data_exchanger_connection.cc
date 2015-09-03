@@ -54,7 +54,6 @@ WorkerDataExchangerConnection::WorkerDataExchangerConnection(tcp::socket* sock)
   existing_bytes_ = 0;
   middle_of_data_ = false;
   middle_of_header_ = true;
-  header_sent_ = false;
   mutex_ = new boost::mutex();
 }
 
@@ -149,10 +148,6 @@ bool WorkerDataExchangerConnection::middle_of_header() {
   return middle_of_header_;
 }
 
-bool WorkerDataExchangerConnection::header_sent() {
-  return header_sent_;
-}
-
 std::list<SerializedData>* WorkerDataExchangerConnection::send_queue() {
   return &send_queue_;
 }
@@ -163,10 +158,6 @@ boost::mutex* WorkerDataExchangerConnection::mutex() {
 
 void WorkerDataExchangerConnection::set_middle_of_header(bool flag) {
   middle_of_header_ = flag;
-}
-
-void WorkerDataExchangerConnection::set_header_sent(bool flag) {
-  header_sent_ = flag;
 }
 
 bool WorkerDataExchangerConnection::middle_of_data() {
