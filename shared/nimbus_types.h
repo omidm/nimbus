@@ -108,7 +108,8 @@ namespace nimbus {
 
   typedef uint32_t switch_id_t;  // Used in cluster map for network switches
 
-  typedef int64_t int_dimension_t;
+  // keep this small in size, vector_p serialized data size depend on this.
+  typedef int32_t int_dimension_t;
   typedef double  float_dimension_t;
 
   typedef uint64_t app_data_version_t;
