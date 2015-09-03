@@ -55,6 +55,8 @@
 #include "application/page_rank/protobuf_compiled/parameter_msg.pb.h"
 #include "shared/nimbus.h"
 
+#define ALPHA 0.05
+
 namespace nimbus {
 
 void LoadParameter(Parameter* parameter, size_t *value) {
@@ -433,6 +435,7 @@ Job* Gather::Clone() {
 
 void Gather::Execute(Parameter params, const DataArray& da) {
   std::cout << "Gather job on " << region().x() << "\n";
+  PageRank *page_rank = static_cast<PageRank*>(application());
   // get read set consisting of edges
   std::vector<Data*> edges_vector;
   GetReadData(*this, EDGES, da, &edges_vector);
@@ -440,6 +443,16 @@ void Gather::Execute(Parameter params, const DataArray& da) {
   std::vector<Data*> nodes_vector;
   GetWriteData(*this, NODES, da, &nodes_vector);
   NodeData& nodes = *(static_cast<NodeData*>(nodes_vector[0]));
+
+  // reset node rank to alpha by N
+  size_t num_nodes_total = page_rank->num_nodes();
+  float reset_val = ALPHA/(float)(num_nodes_total);  // NOLINT
+  boost::unordered_map<size_t, NodeEntry>& node_data = nodes.data();
+  boost::unordered_map<size_t, NodeEntry>::iterator iter;
+  for (iter = node_data.begin(); iter != node_data.end(); ++iter) {
+    iter->second.rank = reset_val;
+  }
+
   // update ranks
   size_t num_edge_data = edges_vector.size();
   for (size_t d = 0; d < num_edge_data; ++d) {
@@ -447,7 +460,7 @@ void Gather::Execute(Parameter params, const DataArray& da) {
     size_t num_edges = edges.num_edges();
     for (size_t e = 0; e < num_edges; ++e) {
       EdgeEntry& entry = edges[e];
-      nodes[entry.dst_id].rank += entry.delta;
+      nodes[entry.dst_id].rank += (1.0 - ALPHA) * entry.delta;
     }
   }
 }
