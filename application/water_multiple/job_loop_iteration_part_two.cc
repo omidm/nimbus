@@ -138,7 +138,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
   GetNewJobID(&calculate_dt_job_ids, calculate_dt_job_num);
 
   if (!done) {
-    StartTemplate("loop_iteration_part_two");
+    StartTemplate("__MARK_STAT_loop_iteration_part_two");
   } else {
     StartTemplate("loop_iteration_part_two_end");
   }
@@ -260,7 +260,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
                        true);
     MarkEndOfStage();
 
-    EndTemplate("loop_iteration_part_two");
+    EndTemplate("__MARK_STAT_loop_iteration_part_two");
   } else {
 
     std::vector<nimbus::job_id_t> loop_job_id;

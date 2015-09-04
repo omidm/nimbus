@@ -59,6 +59,18 @@ f = open(file_name, 'r')
 time = []
 
 for line in f:
+  if "__MARK_STAT" in line:
+    result = re.findall('.*: (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+) complex .* __MARK_STAT.*\.', line)
+    if len(result) > 0:
+      time.append(decimal.Decimal(result[0]))
+      continue
+    result = re.findall('.*: (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+) Picked .* __MARK_STAT.*\.', line)
+    if len(result) > 0:
+      time.append(decimal.Decimal(result[0]))
+      continue
+
+  #############################################################################################################
+  # This part is obsolete, just kept it so that old logs could be processed
   if "for_loop" in line:
     result = re.findall('.*: (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+) complex .* for_loop\.', line)
     if len(result) > 0:
@@ -68,6 +80,8 @@ for line in f:
     if len(result) > 0:
       time.append(decimal.Decimal(result[0]))
       continue
+  #############################################################################################################
+
   elif "main" in line:
     result = re.findall('.*: (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+) Picked .* main\.', line)
     if len(result) > 0:

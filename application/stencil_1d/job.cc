@@ -156,7 +156,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
   LoadParameter(&params, &loop_counter);
 
   if (loop_counter > LOOP_CONDITION) {
-    StartTemplate("for_loop");
+    StartTemplate("__MARK_STAT_for_loop");
 
     // Spawn the batch of jobs in each stencil
     std::vector<job_id_t> stencil_job_ids;
@@ -204,7 +204,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     SerializeParameter(&par, loop_counter - 1);
     SpawnComputeJob(LOOP_JOB_NAME, forloop_job_id[0], read, write, before, after, par);
 
-    EndTemplate("for_loop");
+    EndTemplate("__MARK_STAT_for_loop");
   } else {
     StartTemplate("for_loop_end");
 

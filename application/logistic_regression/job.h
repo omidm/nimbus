@@ -46,7 +46,7 @@
 #include "shared/nimbus.h"
 
 #define INIT_JOB_NAME "init"
-#define LOOP_JOB_NAME "for_loop"
+#define LOOP_JOB_NAME "__MARK_STAT_for_loop"
 #define GRADIENT_JOB_NAME "gradient"
 #define REDUCE_JOB_NAME "reduce"
 

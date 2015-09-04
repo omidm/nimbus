@@ -78,6 +78,34 @@ for line in f:
       template_instantiate.append(0)
       last_time_stamp = decimal.Decimal(result[0])
       continue
+  if "__MARK_STAT" in line:
+    result = re.findall('.*: (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+) complex .* __MARK_STAT.*\.', line)
+    if len(result) > 0:
+      iter_num += 1
+      length = decimal.Decimal(result[0]) - last_time_stamp
+      iteration_length.append(length)
+      version_manager.append(0)
+      add_complex_job.append(0)
+      data_manager_query.append(0)
+      data_manager_update.append(0)
+      template_instantiate.append(0)
+      last_time_stamp = decimal.Decimal(result[0])
+      continue
+    result = re.findall('.*: (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+) Picked .* __MARK_STAT.*\.', line)
+    if len(result) > 0:
+      iter_num += 1
+      length = decimal.Decimal(result[0]) - last_time_stamp
+      iteration_length.append(length)
+      version_manager.append(0)
+      add_complex_job.append(0)
+      data_manager_query.append(0)
+      data_manager_update.append(0)
+      template_instantiate.append(0)
+      last_time_stamp = decimal.Decimal(result[0])
+      continue
+
+  #############################################################################################################
+  # This part is obsolete, just kept it so that old logs could be processed
   if " loop_iteration" in line:
     result = re.findall('.*: (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+) complex .* loop_iteration_part_two\.', line)
     if len(result) > 0:
@@ -103,6 +131,8 @@ for line in f:
       template_instantiate.append(0)
       last_time_stamp = decimal.Decimal(result[0])
       continue
+  #############################################################################################################
+
   if "COMPLEX: VersionManager" in line:
     result = re.findall('COMPLEX: VersionManager: .* (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+)$', line)
     if len(result) > 0:
