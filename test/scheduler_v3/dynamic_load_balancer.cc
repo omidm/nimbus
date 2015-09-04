@@ -52,7 +52,6 @@ DynamicLoadBalancer::DynamicLoadBalancer() {
   init_phase_ = true;
   last_global_run_time_ = 0;
   log_.set_file_name("load_balancer_log");
-  global_region_ = GeometricRegion(0, 0, 0, 0, 0, 0);
 }
 
 DynamicLoadBalancer::~DynamicLoadBalancer() {
@@ -60,6 +59,66 @@ DynamicLoadBalancer::~DynamicLoadBalancer() {
 
 void DynamicLoadBalancer::Run() {
 }
+
+
+void  DynamicLoadBalancer::SplitDimensions(size_t worker_num) {
+  switch (worker_num) {
+    case 1 :
+      split_[0] = 1;
+      split_[1] = 1;
+      split_[2] = 1;
+      break;
+    case 2 :
+      split_[0] = 1;
+      split_[1] = 2;
+      split_[2] = 1;
+      break;
+    case 3 :
+      split_[0] = 3;
+      split_[1] = 1;
+      split_[2] = 1;
+      break;
+    case 4 :
+      split_[0] = 2;
+      split_[1] = 2;
+      split_[2] = 1;
+      break;
+    case 5 :
+      split_[0] = 5;
+      split_[1] = 1;
+      split_[2] = 1;
+      break;
+    case 6 :
+      split_[0] = 2;
+      split_[1] = 3;
+      split_[2] = 1;
+      break;
+    case 7 :
+      split_[0] = 7;
+      split_[1] = 1;
+      split_[2] = 1;
+      break;
+    case 8 :
+      split_[0] = 2;
+      split_[1] = 2;
+      split_[2] = 2;
+      break;
+    case 64 :
+      split_[0] = 4;
+      split_[1] = 4;
+      split_[2] = 4;
+      break;
+    case 100 :
+      split_[0] = 5;
+      split_[1] = 5;
+      split_[2] = 4;
+      break;
+    default:
+      dbg(DBG_ERROR, "ERROR: Do not know how to split!");
+      assert(false);
+  }
+}
+
 
 bool DynamicLoadBalancer::SetWorkerToAssignJob(JobEntry *job) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
@@ -80,10 +139,18 @@ bool DynamicLoadBalancer::SetWorkerToAssignJob(JobEntry *job) {
   Log log(Log::NO_FILE);
   log.log_StartTimer();
 
-  if ((worker_num_ != region_map_.table_size()) ||
-      (global_region_ != data_manager_->global_bounding_region())) {
-    if (data_manager_->initialized_global_bounding_region()) {
+
+  if (enforced_global_region_) {
+    if ((worker_num_ != region_map_.table_size())) {
       BuildRegionMap();
+    }
+  } else {
+    if ((worker_num_ != region_map_.table_size()) ||
+        (global_region_ != data_manager_->global_bounding_region())) {
+      if (data_manager_->initialized_global_bounding_region()) {
+        global_region_ = data_manager_->global_bounding_region();
+        BuildRegionMap();
+      }
     }
   }
 
@@ -275,15 +342,24 @@ void DynamicLoadBalancer::BuildRegionMap() {
   // Update load balancing id.
   ++load_balancing_id_;
 
+  if (!enforced_split_) {
+    SplitDimensions(worker_num_);
+  }
+
+  if (!enforced_sub_split_) {
+    sub_split_[0] = 1;
+    sub_split_[1] = 1;
+    sub_split_[2] = 1;
+  }
+
   std::vector<worker_id_t> worker_ids;
   WorkerMap::iterator iter = worker_map_.begin();
   for (; iter != worker_map_.end(); ++iter) {
     worker_ids.push_back(iter->first);
   }
   assert(worker_num_ > 0);
-  global_region_ = data_manager_->global_bounding_region();
 
-  region_map_.Initialize(worker_ids, global_region_);
+  region_map_.Initialize(worker_ids, split_, sub_split_, global_region_);
   log_.log_WriteToFile(region_map_.Print());
 
   init_phase_ = false;

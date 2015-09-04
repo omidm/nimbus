@@ -84,6 +84,10 @@ Scheduler::Scheduler(port_t port) {
   terminate_application_flag_ = false;
   last_query_stat_time_ = (int64_t)(Log::GetRawTime());
 
+  split_ = std::vector<size_t>(3);
+  sub_split_ = std::vector<size_t>(3);
+  global_region_ = GeometricRegion();
+
   cleaner_thread_active_ = DEFAULT_CLEANER_THREAD_ACTIVE;
   bouncer_thread_active_ = DEFAULT_BOUNCER_THREAD_ACTIVE;
 
@@ -218,6 +222,18 @@ void Scheduler::set_command_batch_size(size_t num) {
 
 void Scheduler::set_job_done_batch_size(size_t num) {
   job_done_batch_size_ = num;
+}
+
+void Scheduler::set_split_dimensions(const std::vector<size_t>& split) {
+  split_ = split;
+}
+
+void Scheduler::set_sub_split_dimensions(const std::vector<size_t>& sub_split) {
+  sub_split_ = sub_split;
+}
+
+void Scheduler::set_global_region(const GeometricRegion& region) {
+  global_region_ = region;
 }
 
 void Scheduler::SchedulerCoreProcessor() {
@@ -835,6 +851,9 @@ void Scheduler::SetupLoadBalancer() {
   load_balancer_->set_data_manager(data_manager_);
   load_balancer_->set_job_assigner(job_assigner_);
   load_balancer_->set_assign_batch_size(assign_batch_size_);
+  load_balancer_->set_split_dimensions(split_);
+  load_balancer_->set_sub_split_dimensions(sub_split_);
+  load_balancer_->set_global_region(global_region_);
   load_balancer_thread_ = new boost::thread(boost::bind(&LoadBalancer::Run, load_balancer_));
 }
 

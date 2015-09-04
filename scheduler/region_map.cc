@@ -229,24 +229,50 @@ bool RegionMap::WorkersAreNeighbor(worker_id_t first, worker_id_t second) {
 
 
 void RegionMap::Initialize(const std::vector<worker_id_t>& worker_ids,
+                           const std::vector<size_t>& split,
+                           const std::vector<size_t>& sub_split,
                            const GeometricRegion& global_region) {
   global_region_ = global_region;
 
-  size_t num_x, num_y, num_z;
-  SplitDimensions(worker_ids.size(), &num_x, &num_y, &num_z);
+  // Sanity check
+  assert(worker_ids.size() > 0);
+  assert(split.size() == 3);
+  assert(sub_split.size() == 3);
+  assert((split[0] * split[1] * split[2]) == worker_ids.size());
+  assert((sub_split[0] * sub_split[1] * sub_split[2]) != 0);
+  assert((split[0] % sub_split[0]) == 0);
+  assert((split[1] % sub_split[1]) == 0);
+  assert((split[2] % sub_split[2]) == 0);
 
-  static const int arr_x[] = WEIGHT_X;
-  std::vector<size_t> weight_x(arr_x, arr_x + WEIGHT_NUM);
-  static const int arr_y[] = WEIGHT_Y;
-  std::vector<size_t> weight_y(arr_y, arr_y + WEIGHT_NUM);
-  static const int arr_z[] = WEIGHT_Z;
-  std::vector<size_t> weight_z(arr_z, arr_z + WEIGHT_NUM);
+  ClearTable();
 
-  GenerateTable(num_x, num_y, num_z,
-                weight_x, weight_y, weight_z,
-                worker_ids, global_region);
+  size_t x_num = split[0] / sub_split[0];
+  size_t y_num = split[1] / sub_split[1];
+  size_t z_num = split[2] / sub_split[2];
+  size_t worker_num = worker_ids.size() / (sub_split[0] * sub_split[1] * sub_split[2]);
+
+  int_dimension_t x = global_region.x();
+  int_dimension_t y = global_region.y();
+  int_dimension_t z = global_region.z();
+  int_dimension_t dx = global_region.dx() / sub_split[0];
+  int_dimension_t dy = global_region.dy() / sub_split[1];
+  int_dimension_t dz = global_region.dz() / sub_split[2];
+  size_t idx = 0;
+  for (size_t xi = 0; xi < sub_split[0]; xi++) {
+    for (size_t yi = 0; yi < sub_split[1]; yi++) {
+      for (size_t zi = 0; zi < sub_split[2]; zi++) {
+        std::vector<worker_id_t> w_ids;
+        for (size_t i = 0; i < worker_num; ++i) {
+          w_ids.push_back(worker_ids[idx++]);
+        }
+        GeometricRegion r(x+xi*dx, y+yi*dy, z+zi*dz, dx, dy, dz);
+        AppendTable(x_num, y_num, z_num, w_ids, r);
+      }
+    }
+  }
 
   InvalidateCache();
+  InvalidateRegionCoverage();
 }
 
 
@@ -374,57 +400,28 @@ std::string RegionMap::Print() {
   return rval;
 }
 
-void RegionMap::GenerateTable(size_t num_x, size_t num_y, size_t num_z,
-                              std::vector<size_t> weight_x,
-                              std::vector<size_t> weight_y,
-                              std::vector<size_t> weight_z,
-                              const std::vector<worker_id_t>& worker_ids,
-                              const GeometricRegion& global_region) {
-  assert(weight_x.size() >= num_x);
-  assert(weight_y.size() >= num_y);
-  assert(weight_z.size() >= num_z);
-
-  std::vector<int_dimension_t> width_x;
-  size_t weight_sum_x = 0;
-  for (size_t i = 0; i < num_x; ++i) {
-    weight_sum_x += weight_x[i];
-  }
-  for (size_t i = 0; i < num_x; ++i) {
-    width_x.push_back(global_region.dx() * weight_x[i] / weight_sum_x);
-  }
+void RegionMap::AppendTable(size_t num_x, size_t num_y, size_t num_z,
+                            const std::vector<worker_id_t>& worker_ids,
+                            const GeometricRegion& region) {
+  int_dimension_t dx = region.dx() / num_x;
   std::vector<int_dimension_t> marker_x;
-  marker_x.push_back(global_region.x());
+  marker_x.push_back(region.x());
   for (size_t i = 0; i < num_x; ++i) {
-    marker_x.push_back(marker_x[i] + width_x[i]);
+    marker_x.push_back(marker_x[i] + dx);
   }
 
-
-  std::vector<int_dimension_t> width_y;
-  size_t weight_sum_y = 0;
-  for (size_t i = 0; i < num_y; ++i) {
-    weight_sum_y += weight_y[i];
-  }
-  for (size_t i = 0; i < num_y; ++i) {
-    width_y.push_back(global_region.dy() * weight_y[i] / weight_sum_y);
-  }
+  int_dimension_t dy = region.dy() / num_y;
   std::vector<int_dimension_t> marker_y;
-  marker_y.push_back(global_region.y());
+  marker_y.push_back(region.y());
   for (size_t i = 0; i < num_y; ++i) {
-    marker_y.push_back(marker_y[i] + width_y[i]);
+    marker_y.push_back(marker_y[i] + dy);
   }
 
-  std::vector<int_dimension_t> width_z;
-  size_t weight_sum_z = 0;
-  for (size_t i = 0; i < num_z; ++i) {
-    weight_sum_z += weight_z[i];
-  }
-  for (size_t i = 0; i < num_z; ++i) {
-    width_z.push_back(global_region.dz() * weight_z[i] / weight_sum_z);
-  }
+  int_dimension_t dz = region.dz() / num_z;
   std::vector<int_dimension_t> marker_z;
-  marker_z.push_back(global_region.z());
+  marker_z.push_back(region.z());
   for (size_t i = 0; i < num_z; ++i) {
-    marker_z.push_back(marker_z[i] + width_z[i]);
+    marker_z.push_back(marker_z[i] + dz);
   }
 
   std::vector<RegionMapEntry*> domains;
@@ -444,76 +441,14 @@ void RegionMap::GenerateTable(size_t num_x, size_t num_y, size_t num_z,
     }
   }
 
-  ClearTable();
 
-  size_t index = 0;
   assert(domains.size() == worker_ids.size());
+  size_t index = 0;
   std::vector<RegionMapEntry*>::iterator iter = domains.begin();
-  for (; iter != domains.end(); ++iter) {
+  for (; iter != domains.end(); ++iter, ++index) {
     table_[worker_ids[index]] = *iter;
-    ++index;
   }
 }
-
-void RegionMap::SplitDimensions(size_t worker_num, size_t *num_x, size_t *num_y, size_t *num_z) {
-  switch (worker_num) {
-    case 1 :
-      *num_x = 1;
-      *num_y = 1;
-      *num_z = 1;
-      break;
-    case 2 :
-      *num_x = 1;
-      *num_y = 2;
-      *num_z = 1;
-      break;
-    case 3 :
-      *num_x = 1;
-      *num_y = 3;
-      *num_z = 1;
-      break;
-    case 4 :
-      *num_x = 2;
-      *num_y = 2;
-      *num_z = 1;
-      break;
-    case 5 :
-      *num_x = 1;
-      *num_y = 5;
-      *num_z = 1;
-      break;
-    case 6 :
-      *num_x = 2;
-      *num_y = 3;
-      *num_z = 1;
-      break;
-    case 7 :
-      *num_x = 1;
-      *num_y = 7;
-      *num_z = 1;
-      break;
-    case 8 :
-      *num_x = 2;
-      *num_y = 2;
-      *num_z = 2;
-      break;
-    case 64 :
-      *num_x = 4;
-      *num_y = 4;
-      *num_z = 4;
-      break;
-    case 100 :
-      *num_x = 5;
-      *num_y = 5;
-      *num_z = 4;
-      break;
-    default:
-      dbg(DBG_ERROR, "ERROR: Do not know how to split!");
-      assert(false);
-  }
-}
-
-
 
 RegionMap& RegionMap::operator= (
     const RegionMap& right) {
@@ -521,5 +456,88 @@ RegionMap& RegionMap::operator= (
   cache_ = right.cache_;
   return *this;
 }
+
+
+// Obsolete
+// void RegionMap::GenerateTable(size_t num_x, size_t num_y, size_t num_z,
+//                               std::vector<size_t> weight_x,
+//                               std::vector<size_t> weight_y,
+//                               std::vector<size_t> weight_z,
+//                               const std::vector<worker_id_t>& worker_ids,
+//                               const GeometricRegion& global_region) {
+//   assert(weight_x.size() >= num_x);
+//   assert(weight_y.size() >= num_y);
+//   assert(weight_z.size() >= num_z);
+//
+//   std::vector<int_dimension_t> width_x;
+//   size_t weight_sum_x = 0;
+//   for (size_t i = 0; i < num_x; ++i) {
+//     weight_sum_x += weight_x[i];
+//   }
+//   for (size_t i = 0; i < num_x; ++i) {
+//     width_x.push_back(global_region.dx() * weight_x[i] / weight_sum_x);
+//   }
+//   std::vector<int_dimension_t> marker_x;
+//   marker_x.push_back(global_region.x());
+//   for (size_t i = 0; i < num_x; ++i) {
+//     marker_x.push_back(marker_x[i] + width_x[i]);
+//   }
+//
+//
+//   std::vector<int_dimension_t> width_y;
+//   size_t weight_sum_y = 0;
+//   for (size_t i = 0; i < num_y; ++i) {
+//     weight_sum_y += weight_y[i];
+//   }
+//   for (size_t i = 0; i < num_y; ++i) {
+//     width_y.push_back(global_region.dy() * weight_y[i] / weight_sum_y);
+//   }
+//   std::vector<int_dimension_t> marker_y;
+//   marker_y.push_back(global_region.y());
+//   for (size_t i = 0; i < num_y; ++i) {
+//     marker_y.push_back(marker_y[i] + width_y[i]);
+//   }
+//
+//   std::vector<int_dimension_t> width_z;
+//   size_t weight_sum_z = 0;
+//   for (size_t i = 0; i < num_z; ++i) {
+//     weight_sum_z += weight_z[i];
+//   }
+//   for (size_t i = 0; i < num_z; ++i) {
+//     width_z.push_back(global_region.dz() * weight_z[i] / weight_sum_z);
+//   }
+//   std::vector<int_dimension_t> marker_z;
+//   marker_z.push_back(global_region.z());
+//   for (size_t i = 0; i < num_z; ++i) {
+//     marker_z.push_back(marker_z[i] + width_z[i]);
+//   }
+//
+//   std::vector<RegionMapEntry*> domains;
+//   for (size_t i = 0; i < num_x; ++i) {
+//     for (size_t j = 0; j < num_y; ++j) {
+//       for (size_t k = 0; k < num_z; ++k) {
+//         RegionMapEntry *rme = new RegionMapEntry();
+//         GeometricRegion r(marker_x[i],
+//                           marker_y[j],
+//                           marker_z[k],
+//                           marker_x[i + 1] - marker_x[i],
+//                           marker_y[j + 1] - marker_y[j],
+//                           marker_z[k + 1] - marker_z[k]);
+//         rme->Grow(&r);
+//         domains.push_back(rme);
+//       }
+//     }
+//   }
+//
+//   ClearTable();
+//
+//   size_t index = 0;
+//   assert(domains.size() == worker_ids.size());
+//   std::vector<RegionMapEntry*>::iterator iter = domains.begin();
+//   for (; iter != domains.end(); ++iter) {
+//     table_[worker_ids[index]] = *iter;
+//     ++index;
+//   }
+// }
 
 }  // namespace nimbus
