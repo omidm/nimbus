@@ -72,7 +72,7 @@ char* SerializedData::data_ptr_raw() const {
   return data_ptr_.get();
 }
 
-std::string SerializedData::header() const {
+const std::string& SerializedData::header() const {
   return header_;
 }
 

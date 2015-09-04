@@ -62,7 +62,7 @@ class SerializedData {
     size_t size() const;
     char* data_ptr_raw() const;
     boost::shared_array<char> data_ptr() const;
-    std::string header() const;
+    const std::string& header() const;
 
     void set_size(size_t size);
     void set_data_ptr(char* ptr);

@@ -385,7 +385,9 @@ bool WorkerDataExchanger::SendSerializedData(const job_id_t& receive_job_id,
     std::list<SerializedData>* q = connection->send_queue();
     if (q->size() == 0) {
       std::vector<boost::asio::const_buffer> buffers;
-      buffers.push_back(boost::asio::buffer(header, header_size));
+      // Note: header() method returns a reference so the hader buffer remains
+      // valid as long as ser_data is valid. - omidm
+      buffers.push_back(boost::asio::buffer(ser_data.header(), ser_data.header().size()));
       buffers.push_back(boost::asio::buffer(ser_data.data_ptr().get(), ser_data.size()));
 
       boost::asio::async_write(*(connection->socket()),
@@ -415,6 +417,39 @@ bool WorkerDataExchanger::SendSerializedData(const job_id_t& receive_job_id,
   return true;
 }
 
+void WorkerDataExchanger::HandleWrite(WorkerDataExchangerConnection* connection,
+                                      const boost::system::error_code& error,
+                                      size_t bytes_transferred) {
+  if (error) {
+    dbg(DBG_NET|DBG_ERROR, "Error %s.\n", error.message().c_str());
+    return;
+  }
+
+  {
+    boost::mutex::scoped_lock lock(*(connection->mutex()));
+    std::list<SerializedData>* q = connection->send_queue();
+    assert(q->size() > 0);
+    q->pop_front();
+    if (q->size() > 0) {
+      SerializedData ser_data = q->front();
+
+      std::vector<boost::asio::const_buffer> buffers;
+      // Note: header() method returns a reference so the hader buffer remains
+      // valid as long as ser_data is valid. - omidm
+      buffers.push_back(boost::asio::buffer(ser_data.header(), ser_data.header().size()));
+      buffers.push_back(boost::asio::buffer(ser_data.data_ptr().get(), ser_data.size()));
+
+      boost::asio::async_write(*(connection->socket()),
+                               buffers,
+                               boost::bind(&WorkerDataExchanger::HandleWrite,
+                                           this,
+                                           connection,
+                                           boost::asio::placeholders::error,
+                                           boost::asio::placeholders::bytes_transferred));
+    }
+  }
+}
+
 bool WorkerDataExchanger::CreateNewSendConnection(worker_id_t worker_id,
                                                   std::string ip_address,
                                                   port_t port_no) {
@@ -441,39 +476,6 @@ bool WorkerDataExchanger::CreateNewSendConnection(worker_id_t worker_id,
   connection->socket()->set_option(nd_option);
   send_connections_[worker_id] = connection;
   return true;
-}
-
-void WorkerDataExchanger::HandleWrite(WorkerDataExchangerConnection* connection,
-                                      const boost::system::error_code& error,
-                                      size_t bytes_transferred) {
-  if (error) {
-    dbg(DBG_NET|DBG_ERROR, "Error %s.\n", error.message().c_str());
-    assert(false);
-    return;
-  }
-
-  {
-    boost::mutex::scoped_lock lock(*(connection->mutex()));
-    std::list<SerializedData>* q = connection->send_queue();
-    assert(q->size() > 0);
-    q->pop_front();
-    if (q->size() > 0) {
-      SerializedData ser_data = q->front();
-      std::string header = ser_data.header();
-
-      std::vector<boost::asio::const_buffer> buffers;
-      buffers.push_back(boost::asio::buffer(header, header.size()));
-      buffers.push_back(boost::asio::buffer(ser_data.data_ptr().get(), ser_data.size()));
-
-      boost::asio::async_write(*(connection->socket()),
-                               buffers,
-                               boost::bind(&WorkerDataExchanger::HandleWrite,
-                                           this,
-                                           connection,
-                                           boost::asio::placeholders::error,
-                                           boost::asio::placeholders::bytes_transferred));
-    }
-  }
 }
 
 WorkerDataExchangerConnectionMap* WorkerDataExchanger::send_connections() {
