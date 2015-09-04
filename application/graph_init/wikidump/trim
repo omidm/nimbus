@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+# This script trims wiki dumps into only relevant information.
+# The output is:
+#   - results/pages_trimmed containing page id, namespace, title
+#   - results/links_trimmed containing pade id (from), namespace, title (to)
+# This should be further parsed by parse_and_save to construct edges as
+# (src id, dst id) which can be parsed and partitioned into partitions and
+# disjoint logical data objects.
+# Author: chinmayee Shah
+
+echo "Pages file is $1"
+echo "Links file is $2"
+
+TMPDIR=tmp
+RDIR=result
+
+rm -rf ${TMPDIR}
+
+mkdir -p ${TMPDIR}
+mkdir -p ${RDIR}
+
+echo ""
+echo "Trimming pages ..."
+grep INSERT $1 > ${TMPDIR}/pages
+echo "Creating new line for each entry ..."
+sed -i 's/),(/\n/g' ${TMPDIR}/pages
+echo "Extracting only the relevant fields ..."
+awk -F"," '{print $1,$2,$3}' ${TMPDIR}/pages > ${RDIR}/pages_trimmed
+rm ${TMPDIR}/pages*
+echo "Done trimming pages"
+
+echo ""
+echo "Trimming links ..."
+grep INSERT $2 > ${TMPDIR}/links
+echo "Creating new line for each entry ..."
+sed -i 's/),(/\n/g' ${TMPDIR}/links
+echo "Extracting only the relevant fields ..."
+awk -F"," '{print $1,$2,$3}' ${TMPDIR}/links > ${RDIR}/links_trimmed
+rm ${TMPDIR}/links*
+echo "Done trimming links"
+
+rm -rf ${TMPDIR}
