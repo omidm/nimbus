@@ -1,0 +1,249 @@
+#!/usr/bin/env python
+
+from optparse import OptionParser
+import sys
+
+parser = OptionParser()
+parser.add_option("-p", "--pagefile", dest="pagefile",
+                          help="trimmed pages file (input)")
+parser.add_option("-l", "--linkfile", dest="linkfile",
+                          help="trimmed links file (input)")
+parser.add_option("-n", "--nodenumfile", dest="nodenumfile",
+                          help="output file for number of nodes")
+parser.add_option("-e", "--edgenumfile", dest="edgenumfile",
+                          help="output file for number of edges")
+parser.add_option("-o", "--outfile", dest="outfile",
+                          help="output file for edges (src id, dst id)")
+
+(options, args) = parser.parse_args()
+
+
+################################################################################
+##  Parse pages
+################################################################################
+
+pages = dict()
+print("Building pages dictiionary ...")
+pages_file = open(options.pagefile, 'r')
+num_nodes = 0
+num_all_pages = 0
+
+nodes_done = False
+isentry  = False
+isstring = False
+idparsed = False
+nsparsed = False
+ttparsed = False
+identry = ""
+nsentry = ""
+ttentry = ""
+while not nodes_done:
+    c = pages_file.read(1)
+    if c == "":
+        # done reading file
+        nodes_done = True
+    elif not isentry:
+        if c == '(':
+            isentry = True
+        else:
+            continue
+    else:
+        if str.isdigit(c) and not idparsed:
+            # parse id here
+            while str.isdigit(c):
+                identry += c
+                c = pages_file.read(1)
+            idparsed = True
+            afterentry = ""
+            while c != ',':
+                c = pages_file.read(1)
+                afterentry += c
+                if not (str.isspace(c) or c == ","):
+                    print("Unexpected character in page id : %s at node %d" % (identry, afterentry, num_all_pages + 1))
+                    sys.exit(1)
+        elif str.isdigit(c) and not nsparsed:
+            assert(idparsed)
+            # parse namespace here
+            while str.isdigit(c):
+                nsentry += c
+                c = pages_file.read(1)
+            nsparsed = True
+            afterentry = ""
+            while c != ',':
+                c = pages_file.read(1)
+                afterentry += c
+                if not (str.isspace(c) or c == ","):
+                    print("Unexpected character in namespace %d : %s at node %d" % (nsentry, afterentry, num_all_pages + 1))
+                    sys.exit(1)
+        elif c == "'" and not ttparsed:
+            assert(idparsed and nsparsed)
+            # parse title here
+            c = pages_file.read(1)
+            while c != "'":
+                ttentry += c
+                if c == "\\":
+                    # string escapes
+                    ttentry += c
+                    c = pages_file.read(1) # skip whatever this is
+                    ttentry += c
+                c = pages_file.read(1)
+            # print(ttentry)
+            ttparsed = True
+            afterentry = c
+            while c != ',':
+                c = pages_file.read(1)
+                afterentry += c
+                if not (str.isspace(c) or c == ","):
+                    print("Unexpected characters after title %s : %s at node %d" % (ttentry, afterentry, (num_all_pages + 1)))
+                    sys.exit(1)
+        # get enclosing ')' for entry -- string entries can have ')'
+        # which may be unbalanced?
+        elif c == "'" and not isstring:
+            assert(idparsed and nsparsed and ttparsed)
+            isstring = True
+        elif c == "\\" and isstring:
+            # string escapes
+            c = pages_file.read(1) # skip whatever this is
+        elif c == "'" and isstring:
+            isstring = False
+        elif not isstring and c == ')':
+            num_all_pages += 1
+            if int(nsentry) == 0:
+                pages[ttentry] = int(identry)
+                num_nodes += 1
+                if num_nodes % pow(10,6) == 0:
+                    print("Parsed %d nodes ..." % num_nodes)
+            isentry  = False
+            idparsed = False
+            nsparsed = False
+            ttparsed = False
+            identry = ""
+            nsentry = ""
+            ttentry = ""
+        else:
+            continue
+pages_file.close()
+print("Built pages dictiionary")
+
+################################################################################
+##  Parse links and print edges to file for later partitioning
+################################################################################
+
+print("Building edges from links...")
+links_file = open(options.linkfile, 'r')
+edges_file = open(options.outfile, 'w')
+num_edges = 0
+num_all_links = 0
+
+edges_done = False
+isentry  = False
+isstring = False
+idparsed = False
+nsparsed = False
+ttparsed = False
+identry = ""
+nsentry = ""
+ttentry = ""
+while not edges_done:
+    c = links_file.read(1)
+    if c == "":
+        # done reading file
+        edges_done = True
+    elif not isentry:
+        if c == '(':
+            isentry = True
+        else:
+            continue
+    else:
+        if str.isdigit(c) and not idparsed:
+            # parse id here
+            while str.isdigit(c):
+                identry += c
+                c = links_file.read(1)
+            idparsed = True
+            afterentry = ""
+            while c != ',':
+                c = links_file.read(1)
+                afterentry += c
+                if not (str.isspace(c) or c == ","):
+                    print("Unexpected character in page id : %s at edge %d" % (identry, afterentry, num_all_links + 1))
+                    sys.exit(1)
+        elif str.isdigit(c) and not nsparsed:
+            assert(idparsed)
+            # parse namespace here
+            while str.isdigit(c):
+                nsentry += c
+                c = links_file.read(1)
+            nsparsed = True
+            afterentry = ""
+            while c != ',':
+                c = links_file.read(1)
+                afterentry += c
+                if not (str.isspace(c) or c == ","):
+                    print("Unexpected character in namespace %d : %s at node %d" % (nsentry, afterentry, num_all_links + 1))
+                    sys.exit(1)
+        elif c == "'" and not ttparsed:
+            assert(idparsed and nsparsed)
+            # parse title here
+            c = links_file.read(1)
+            while c != "'":
+                ttentry += c
+                if c == "\\":
+                    # string escapes
+                    ttentry += c
+                    c = links_file.read(1) # skip whatever this is
+                    ttentry += c
+                c = links_file.read(1)
+            # print(ttentry)
+            ttparsed = True
+            afterentry = c
+            while c != ',':
+                c = links_file.read(1)
+                afterentry += c
+                if not (str.isspace(c) or c == ","):
+                    print("Unexpected characters after title %s : %s at node %d" % (ttentry, afterentry, (num_all_links + 1)))
+                    sys.exit(1)
+        # get enclosing ')' for entry -- string entries can have ')'
+        # which may be unbalanced?
+        elif c == "'" and not isstring:
+            assert(idparsed and nsparsed and ttparsed)
+            isstring = True
+        elif c == "\\" and isstring:
+            # string escapes
+            c = links_file.read(1) # skip whatever this is
+        elif c == "'" and isstring:
+            isstring = False
+        elif not isstring and c == ')':
+            num_all_links += 1
+            if int(nsentry) == 0:
+                from_id = identry
+                if ttentry in pages:
+                    to_id   = pages[nodes]
+                    edges_file.write("%d %d", from_id, to_id)
+                    num_edges += 1
+                    if num_edges % pow(10,6) == 0:
+                        print("Parsed %d edges ..." % num_edges)
+            isentry  = False
+            idparsed = False
+            nsparsed = False
+            ttparsed = False
+            identry = ""
+            nsentry = ""
+            ttentry = ""
+        else:
+            continue
+links_file.close()
+edges_file.close()
+print("Built edges ...")
+
+
+################################################################################
+##  Save number of edges and nodes
+################################################################################
+
+nodenum_file = open(options.nodenumfile, 'w')
+edgenum_file = open(options.edgenumfile, 'w')
+nodenum_file.write("%s\n" % num_nodes)
+edgenum_file.write("%s\n" % num_edges)
+nodenum_file.close()
+edgenum_file.close()

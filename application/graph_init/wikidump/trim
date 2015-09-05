@@ -12,32 +12,16 @@
 echo "Pages file is $1"
 echo "Links file is $2"
 
-TMPDIR=tmp
 RDIR=result
 
-rm -rf ${TMPDIR}
-
-mkdir -p ${TMPDIR}
 mkdir -p ${RDIR}
 
 echo ""
 echo "Trimming pages ..."
-grep INSERT $1 > ${TMPDIR}/pages
-echo "Creating new line for each entry ..."
-sed -i 's/),(/\n/g' ${TMPDIR}/pages
-echo "Extracting only the relevant fields ..."
-awk -F"," '{print $1,$2,$3}' ${TMPDIR}/pages > ${RDIR}/pages_trimmed
-rm ${TMPDIR}/pages*
+grep INSERT $1 > ${RDIR}/pages
 echo "Done trimming pages"
 
 echo ""
 echo "Trimming links ..."
-grep INSERT $2 > ${TMPDIR}/links
-echo "Creating new line for each entry ..."
-sed -i 's/),(/\n/g' ${TMPDIR}/links
-echo "Extracting only the relevant fields ..."
-awk -F"," '{print $1,$2,$3}' ${TMPDIR}/links > ${RDIR}/links_trimmed
-rm ${TMPDIR}/links*
+grep INSERT $2 > ${RDIR}/links
 echo "Done trimming links"
-
-rm -rf ${TMPDIR}
