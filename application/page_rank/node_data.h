@@ -49,7 +49,8 @@ namespace nimbus {
 
 struct NodeEntry {
   size_t degree;
-  float rank;
+  double rank;
+  double contribution;  // must be initialized for every use
 };
 
 class NodeData : public Data {

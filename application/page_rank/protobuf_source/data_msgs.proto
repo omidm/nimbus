@@ -3,7 +3,7 @@ package data_msgs;
 message  NodeMsg{
   required uint64 id     = 1;
   required uint64 degree = 2;
-  required float rank    = 3;
+  required double rank    = 3;
 }
 
 message  NodeDataMsg{
@@ -13,7 +13,7 @@ message  NodeDataMsg{
 message  EdgeMsg{
   required uint64 src_id  = 2;
   required uint64 dst_id  = 3;
-  required float delta    = 4;
+  required double delta    = 4;
 }
 
 message  EdgeDataMsg{

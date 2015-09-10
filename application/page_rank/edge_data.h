@@ -49,7 +49,7 @@ namespace nimbus {
 struct EdgeEntry {
   size_t src_id;
   size_t dst_id;
-  float delta;
+  double delta;
 };
 
 class EdgeData : public Data {

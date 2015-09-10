@@ -330,7 +330,7 @@ void Init::Execute(Parameter params, const DataArray& da) {
     NodeData& nodes = *(static_cast<NodeData*>(nodes_vector[0]));
     nodes.ResetNodes();
     std::string line;
-    float rank_init_val = 1.0/(float)(page_rank->num_nodes());  // NOLINT
+    double rank_init_val = 1.0/(double)(page_rank->num_nodes());  // NOLINT
     while (std::getline(node_file, line)) {
       std::vector<std::string> tokens;
       boost::algorithm::split(tokens, line,
@@ -410,6 +410,13 @@ void Scatter::Execute(Parameter params, const DataArray& da) {
   std::vector<Data*> nodes_vector;
   GetReadData(*this, NODES, da, &nodes_vector);
   NodeData& nodes = *(static_cast<NodeData*>(nodes_vector[0]));
+  // set contributions from nodes (optimization)
+  boost::unordered_map<size_t, NodeEntry>& node_data = nodes.data();
+  boost::unordered_map<size_t, NodeEntry>::iterator iter;
+  for (iter = node_data.begin(); iter != node_data.end(); ++iter) {
+    NodeEntry& entry = iter->second;
+    entry.contribution = (1.0 - ALPHA) * entry.rank / (double)(entry.degree);  // NOLINT
+  }
   // get wrie set consisting of edges
   std::vector<Data*> edges_vector;
   GetWriteData(*this, EDGES, da, &edges_vector);
@@ -420,7 +427,7 @@ void Scatter::Execute(Parameter params, const DataArray& da) {
     size_t num_edges = edges.num_edges();
     for (size_t e = 0; e < num_edges; ++e) {
       EdgeEntry& entry = edges[e];
-      entry.delta = nodes[entry.src_id].rank / (float)(nodes[entry.src_id].degree);  // NOLINT
+      entry.delta = nodes[entry.src_id].contribution;
     }
   }
 }
@@ -446,7 +453,7 @@ void Gather::Execute(Parameter params, const DataArray& da) {
 
   // reset node rank to alpha by N
   size_t num_nodes_total = page_rank->num_nodes();
-  float reset_val = ALPHA/(float)(num_nodes_total);  // NOLINT
+  double reset_val = ALPHA/(double)(num_nodes_total);  // NOLINT
   boost::unordered_map<size_t, NodeEntry>& node_data = nodes.data();
   boost::unordered_map<size_t, NodeEntry>::iterator iter;
   for (iter = node_data.begin(); iter != node_data.end(); ++iter) {
@@ -460,7 +467,7 @@ void Gather::Execute(Parameter params, const DataArray& da) {
     size_t num_edges = edges.num_edges();
     for (size_t e = 0; e < num_edges; ++e) {
       EdgeEntry& entry = edges[e];
-      nodes[entry.dst_id].rank += (1.0 - ALPHA) * entry.delta;
+      nodes[entry.dst_id].rank += entry.delta;  // (1.0 - ALPHA) already in nodeentry.contribution  NOLINT
     }
   }
 }
