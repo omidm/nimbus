@@ -1,16 +1,17 @@
 package data_msgs;
 
-message  VectorMsg{
-  repeated float elems       = 1;
+message  WeightMsg{
+  repeated double vector_elems    = 1;
+  repeated double gradient_elems  = 2;
 }
 
 message  SampleMsg{
-  optional float label       = 1;
-  repeated float elems       = 2;
+  optional double label  = 1;
+  repeated double elems  = 2;
 }
 
 message SampleBatchMsg{
-  repeated SampleMsg samples = 2;
+  repeated SampleMsg samples  = 2;
 }
 
 

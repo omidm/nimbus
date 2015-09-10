@@ -121,7 +121,7 @@ bool WorkerManager::ClassifyAndAddJob(Job* job) {
 
 bool WorkerManager::PushJob(Job* job) {
   // TODO(quhang): when a job is dispatched.
-  worker_->StatDispatchJob();
+  worker_->StatDispatchJob(1);
   if (ClassifyAndAddJob(job)) {
     TriggerScheduling();
   }
@@ -163,6 +163,8 @@ bool WorkerManager::FinishJob(Job* job) {
 }
 
 bool WorkerManager::GetLocalJobDoneList(JobList* buffer) {
+  // TODO(omidm): this function should never get called, remove it.
+  assert(false);
   pthread_mutex_lock(&local_job_done_list_lock_);
   int len = local_job_done_list_.size();
   buffer->splice(buffer->end(), local_job_done_list_);

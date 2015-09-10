@@ -62,6 +62,7 @@
 
 namespace nimbus {
 
+class ExecutionTemplate;
 class Application;
 class Job;
 class WorkerThread;
@@ -175,6 +176,8 @@ class Job {
     const IDSet<job_id_t>* before_set_p() const;
     IDSet<job_id_t> after_set() const;
     ID<job_id_t> future_job_id() const;
+    job_id_t shadow_job_id() const;
+    ExecutionTemplate* execution_template() const;
 
     Parameter parameters() const;
     Application* application() const;
@@ -186,20 +189,23 @@ class Job {
       return max_alloc_;
     }
 
-    void set_name(std::string name);
-    void set_id(ID<job_id_t> id);
-    void set_read_set(IDSet<physical_data_id_t> read_set);
-    void set_write_set(IDSet<physical_data_id_t> write_set);
-    void set_before_set(IDSet<job_id_t> before_set);
-    void set_after_set(IDSet<job_id_t> after_set);
-    void set_parameters(Parameter parameters);
+    void set_name(const std::string& name);
+    void set_id(const ID<job_id_t>& id);
+    void set_read_set(const IDSet<physical_data_id_t>& read_set);
+    void set_write_set(const IDSet<physical_data_id_t>& write_set);
+    void set_before_set(const IDSet<job_id_t>& before_set);
+    void set_after_set(const IDSet<job_id_t>& after_set);
+    void set_parameters(const Parameter& parameters);
     void set_application(Application* app);
-    void set_sterile(bool sterile);
-    void set_region(GeometricRegion region);
-    void set_future_job_id(ID<job_id_t> future_job_id);
-    void set_run_time(double run_time);
-    void set_wait_time(double wait_time);
-    void set_max_alloc(size_t max_alloc) {
+    void set_sterile(const bool& sterile);
+    void set_region(const GeometricRegion& region);
+    void set_future_job_id(const ID<job_id_t>& future_job_id);
+    void set_shadow_job_id(const job_id_t& id);
+    void set_execution_template(ExecutionTemplate *execution_template);
+    void clear_template_variables();
+    void set_run_time(const double& run_time);
+    void set_wait_time(const double& wait_time);
+    void set_max_alloc(const size_t& max_alloc) {
       max_alloc_ = max_alloc;
     }
     // TODO(quhang) should add accesssors.
@@ -251,6 +257,9 @@ class Job {
     size_t max_alloc_;
     WorkerThread* worker_thread_;
 
+    job_id_t shadow_job_id_;
+    ExecutionTemplate *execution_template_;
+
     SpawnState spawn_state_;
     std::string template_name_;
     std::vector<job_id_t> template_inner_job_ids_;
@@ -286,6 +295,7 @@ class RemoteCopySendJob : public Job {
     void set_to_worker_id(ID<worker_id_t> worker_id);
     void set_to_ip(std::string ip);
     void set_to_port(ID<port_t> port);
+    void set_template_generation_id(template_id_t id);
 
   private:
     ID<job_id_t> receive_job_id_;
@@ -294,6 +304,7 @@ class RemoteCopySendJob : public Job {
     std::string to_ip_;
     ID<port_t> to_port_;
     WorkerDataExchanger* data_exchanger_;
+    template_id_t template_generation_id_;
 };
 
 class RemoteCopyReceiveJob : public Job {
@@ -316,6 +327,7 @@ class RemoteCopyReceiveJob : public Job {
 
 class MegaRCRJob : public Job {
   public:
+    explicit MegaRCRJob(Application *app);
     MegaRCRJob(Application *app,
                const std::vector<job_id_t>& receive_job_ids,
                const std::vector<physical_data_id_t>& to_phy_ids);
@@ -329,8 +341,11 @@ class MegaRCRJob : public Job {
     const std::vector<job_id_t>* receive_job_ids_p();
     const std::vector<physical_data_id_t>* to_phy_ids_p();
 
+    void set_receive_job_ids(const std::vector<job_id_t>& receive_job_ids);
+    void set_to_phy_ids(const std::vector<physical_data_id_t>& to_phy_ids);
     void set_serialized_data(job_id_t job_id, SerializedData* ser_data);
     void set_serialized_data_map(const std::map<job_id_t, SerializedData*>& map);
+    void clear_serialized_data_map();
 
     bool AllDataReceived();
 

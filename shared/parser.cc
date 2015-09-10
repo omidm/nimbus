@@ -105,12 +105,14 @@ bool ParseWorkerDataHeader(const std::string& input,
                            job_id_t& receive_job_id,
                            job_id_t& mega_rcr_job_id,
                            size_t& data_length,
-                           data_version_t& version) {
-  int num = 4;
+                           data_version_t& version,
+                           template_id_t& template_generation_id) {
+  int num = 5;
   job_id_t temp_j;
   job_id_t temp_m;
   size_t temp_d;
   data_version_t temp_v;
+  template_id_t temp_t;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -167,6 +169,16 @@ bool ParseWorkerDataHeader(const std::string& input,
     return false;
   } else {
     version = temp_v;
+  }
+
+  iter++;
+  std::stringstream ss_t(*iter);
+  ss_t >> temp_t;
+  if (ss_t.fail()) {
+    std::cout << "ERROR: wrong element for template generation id." << std::endl;
+    return false;
+  } else {
+    template_generation_id = temp_t;
   }
 
   return true;

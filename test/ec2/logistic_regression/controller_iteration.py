@@ -106,8 +106,8 @@ for line in f:
 
   #############################################################################################################
   # This part is obsolete, just kept it so that old logs could be processed
-  if " loop_iteration" in line:
-    result = re.findall('.*: (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+) complex .* loop_iteration_part_two\.', line)
+  if "for_loop" in line:
+    result = re.findall('.*: (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+) complex .* for_loop\.', line)
     if len(result) > 0:
       iter_num += 1
       length = decimal.Decimal(result[0]) - last_time_stamp
@@ -119,7 +119,7 @@ for line in f:
       template_instantiate.append(0)
       last_time_stamp = decimal.Decimal(result[0])
       continue
-    result = re.findall('.*: (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+) Picked .* loop_iteration\.', line)
+    result = re.findall('.*: (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+) Picked .* for_loop\.', line)
     if len(result) > 0:
       iter_num += 1
       length = decimal.Decimal(result[0]) - last_time_stamp

@@ -29,7 +29,7 @@ import ec2
 #     config.INSTANCE_NUM);
 
 ip_addresses = ec2.get_ip_addresses(config.EC2_LOCATION,
-    placement_group='nimbus-cluster');
+    placement_group=config.PLACEMENT_GROUP);
 print ip_addresses
 
 utils.make_nodes_file_content(ip_addresses["public"])

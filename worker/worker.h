@@ -52,6 +52,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm>
 #include "worker/data.h"
 #include "worker/job.h"
 #include "worker/application.h"
@@ -68,6 +69,7 @@
 #include "shared/high_resolution_timer.h"
 #include "shared/multi_level_timer.h"
 #include "shared/profiler.h"
+#include "shared/execution_template.h"
 #include "shared/helpers.h"
 
 namespace nimbus {
@@ -94,6 +96,19 @@ class Worker {
   virtual ~Worker();
 
   virtual void Run();
+  virtual void CreateModules();
+  virtual void SetupTimers();
+  virtual void SetupApplication();
+  virtual void SetupWorkerManager();
+  virtual void SetupSchedulerClient();
+  virtual void SetupWorkerDataExchanger();
+
+  virtual void SetupCommandProcessor();
+  virtual void RunCommandProcessor();
+
+  virtual void SetupReceiveEventProcessor();
+  virtual void RunReceiveEventProcessor();
+
   virtual void WorkerCoreProcessor();
 
   // virtual void ExecuteJob(Job* job);
@@ -117,6 +132,9 @@ class Worker {
   virtual void ProcessPrepareRewindCommand(PrepareRewindCommand* command);
   virtual void ProcessRequestStatCommand(RequestStatCommand *command);
   virtual void ProcessPrintStatCommand(PrintStatCommand *command);
+  virtual void ProcessStartCommandTemplateCommand(StartCommandTemplateCommand* command);
+  virtual void ProcessEndCommandTemplateCommand(EndCommandTemplateCommand* command);
+  virtual void ProcessSpawnCommandTemplateCommand(SpawnCommandTemplateCommand* command);
 
   virtual void NotifyLocalJobDone(Job* job);
 
@@ -135,7 +153,7 @@ class Worker {
   WorkerDataExchanger* data_exchanger_;
   DistributedDB *ddb_;
   WorkerLdoMap* ldo_map_;
-  IDMaker id_maker_;
+  IDMaker *id_maker_;
   SchedulerCommand::PrototypeTable scheduler_command_table_;
   worker_id_t id_;
   std::string ip_address_;
@@ -152,10 +170,17 @@ class Worker {
   WorkerJobGraph worker_job_graph_;
   boost::recursive_mutex job_graph_mutex_;
 
+  boost::recursive_mutex *receive_event_mutex_;
+  boost::condition_variable_any *receive_event_cond_;
+
+  boost::recursive_mutex *command_processor_mutex_;
+  boost::condition_variable_any *command_processor_cond_;
+
   Computer host_;
   boost::thread* client_thread_;
-  boost::thread* data_exchanger_thread_;
   boost::thread* profiler_thread_;
+  boost::thread* command_processor_thread_;
+  boost::thread* receive_event_thread_;
   // TODO(quhang) a strong assumption is made that the data map is never changed
   // during the runtime. Indeed, for now, it is only changed at the very
   // beginning of the simulation, so it keeps the same during the simulation,
@@ -169,9 +194,13 @@ class Worker {
   HighResolutionTimer timer_;
   Profiler profiler_;
 
-  virtual void SetupSchedulerInterface();
+  typedef std::map<template_id_t, WorkerDataExchanger::EventList> EventMap;
 
-  virtual void SetupDataExchangerInterface();
+  bool filling_execution_template_;
+  std::string execution_template_in_progress_;
+  std::map<std::string, ExecutionTemplate*> execution_templates_;
+  std::map<template_id_t, ExecutionTemplate*> active_execution_templates_;
+  EventMap pending_events_;
 
   virtual void LoadSchedulerCommands();
 
@@ -186,16 +215,16 @@ class Worker {
   virtual bool IsEmptyGraph(WorkerJobGraph* job_graph);
 
  public:
-  void StatAddJob();
-  void StatEndJob(int len);
-  void StatDispatchJob(int len = 1);
+  void StatAddJob(size_t num);
+  void StatEndJob(size_t num);
+  void StatDispatchJob(size_t num);
   void ResolveDataArray(Job* job);
   void GetTimerStat(int64_t* idle, int64_t* block, int64_t* run);
   void PrintTimerStat();
 
  private:
-  int stat_blocked_job_num_, stat_ready_job_num_;
-  int stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_;
+  size_t stat_blocked_job_num_, stat_ready_job_num_;
+  size_t stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_;
   MultiLevelTimer run_timer_;
   MultiLevelTimer block_timer_;
   MultiLevelTimer total_timer_;

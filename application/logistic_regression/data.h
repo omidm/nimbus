@@ -60,15 +60,15 @@ class Sample {
     virtual ~Sample();
 
     size_t dimension() const;
-    float label() const;
-    std::vector<float>* vector();
+    double label() const;
+    std::vector<double>* vector();
 
-    void set_label(float label);
+    void set_label(double label);
 
   private:
     size_t dimension_;
-    float label_;
-    std::vector<float> vector_;
+    double label_;
+    std::vector<double> vector_;
 };
 
 class SampleBatch : public Data {
@@ -107,13 +107,16 @@ class Weight : public Data {
     virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
 
     size_t dimension() const;
-    const std::vector<float>* vector() const;
+    std::vector<double>* vector();
+    std::vector<double>* gradient();
 
-    void set_vector(const std::vector<float>& vector);
+    void set_vector(const std::vector<double>& vector);
+    void set_gradient(const std::vector<double>& gradient);
 
   private:
     size_t dimension_;
-    std::vector<float> vector_;
+    std::vector<double> vector_;
+    std::vector<double> gradient_;
 };
 
 

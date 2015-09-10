@@ -98,6 +98,7 @@ namespace nimbus {
     LoadBalancer *load_balancer_;
     size_t thread_num_;
     checkpoint_id_t checkpoint_id_;
+    template_id_t template_generation_id_;
     bool data_manager_query_cache_active_;
     bool fault_tolerance_active_;
     Scheduler *scheduler_;

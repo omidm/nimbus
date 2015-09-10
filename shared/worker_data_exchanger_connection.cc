@@ -54,11 +54,13 @@ WorkerDataExchangerConnection::WorkerDataExchangerConnection(tcp::socket* sock)
   existing_bytes_ = 0;
   middle_of_data_ = false;
   middle_of_header_ = true;
+  mutex_ = new boost::mutex();
 }
 
 WorkerDataExchangerConnection::~WorkerDataExchangerConnection() {
   delete read_buffer_;
   delete socket_;
+  delete mutex_;
 }
 
 void WorkerDataExchangerConnection::AllocateData(size_t size) {
@@ -125,6 +127,10 @@ job_id_t WorkerDataExchangerConnection::mega_rcr_job_id() {
   return mega_rcr_job_id_;
 }
 
+template_id_t WorkerDataExchangerConnection::template_generation_id() {
+  return template_generation_id_;
+}
+
 void WorkerDataExchangerConnection::set_receive_job_id(job_id_t job_id) {
   receive_job_id_ = job_id;
 }
@@ -133,8 +139,21 @@ void WorkerDataExchangerConnection::set_mega_rcr_job_id(job_id_t job_id) {
   mega_rcr_job_id_ = job_id;
 }
 
+void WorkerDataExchangerConnection::set_template_generation_id(
+    template_id_t template_generation_id) {
+  template_generation_id_ = template_generation_id;
+}
+
 bool WorkerDataExchangerConnection::middle_of_header() {
   return middle_of_header_;
+}
+
+std::list<SerializedData>* WorkerDataExchangerConnection::send_queue() {
+  return &send_queue_;
+}
+
+boost::mutex* WorkerDataExchangerConnection::mutex() {
+  return mutex_;
 }
 
 void WorkerDataExchangerConnection::set_middle_of_header(bool flag) {

@@ -2,6 +2,7 @@
 
 # Author: Omid Mashayekhi <omidm@stanford.edu>
 
+# ssh -i ~/.ssh/omidm-sing-key-pair-us-west-2.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@<ip>
 
 # US West (Northern California) Region
 # EC2_LOCATION = 'us-west-1'
@@ -18,8 +19,7 @@
 # US West (Oregon) Region
 EC2_LOCATION                    = 'us-west-2'
 UBUNTU_AMI                      = 'ami-fa9cf1ca'
-# NIMBUS_AMI                      = 'ami-9996aea9'
-NIMBUS_AMI                      = 'ami-37202e07'
+NIMBUS_AMI                      = 'ami-e9dcd4d9'
 KEY_NAME                        = 'omidm-sing-key-pair-us-west-2'
 SECURITY_GROUP                  = 'nimbus_sg_uswest2'
 CONTROLLER_INSTANCE_TYPE        = 'c3.4xlarge'
@@ -27,9 +27,13 @@ WORKER_INSTANCE_TYPE            = 'c3.2xlarge'
 PLACEMENT                       = 'us-west-2c' # None
 PLACEMENT_GROUP                 = 'nimbus-cluster' # None
 PRIVATE_KEY                     = '/home/omidm/.ssh/' + KEY_NAME + '.pem'
-CONTROLLER_NUM                  = 0
-WORKER_NUM                      = 0
-INSTANCE_NUM                    = WORKER_NUM + CONTROLLER_NUM
+CONTROLLER_INSTANCE_NUM         = 1
+WORKER_INSTANCE_NUM             = 8
+WORKER_PER_INSTANCE             = 1
+
+#Environment variables
+DBG_MODE                        = 'error'
+TTIMER_LEVEL                    = 'none' 
 
 # controller configurations
 ASSIGNER_THREAD_NUM             = 8
@@ -49,20 +53,21 @@ FIRST_PORT                      = 5800
 
 
 # worker/simulation configurations
-SIMULATION_SCALE                = 1024
-PART_X                          = 8
-PART_Y                          = 8
-PART_Z                          = 8
-PROJ_PART_X                     = 8
-PROJ_PART_Y                     = 8
-PROJ_PART_Z                     = 8
-FRAME_NUMBER                    = 1
 OTHREAD_NUM                     = 8
+SIMULATION_SCALE                = 512
+PART_X                          = 4
+PART_Y                          = 4
+PART_Z                          = 4
+PROJ_PART_X                     = 4
+PROJ_PART_Y                     = 4
+PROJ_PART_Z                     = 4
+FRAME_NUMBER                    = 1
 ITERATION_BATCH                 = 1
 MAX_ITERATION                   = 100
+WATER_LEVEL                     = 0.35
 PROJECTION_SMART_LEVEL          = 0
 NO_PROJ_BOTTLENECK              = False
-WRITE_PER_PART                  = True
+GLOBAL_WRITE                    = False
 RUN_WITH_TASKSET                = False
 WORKER_TASKSET                  = '0-3,8-11'
 
@@ -80,15 +85,15 @@ OUTPUT_PATH                     = 'output/'
 # Build and Path configuration
 SOURCE_NIMBUS_ROOT   = '~/cloud/src/nimbus/'
 EC2_NIMBUS_ROOT      = '~/cloud/src/nimbus/'
-# EC2_NIMBUS_ROOT      = '~/physbam/'
+# EC2_NIMBUS_ROOT    = '~/physbam/'
 REL_APPLICATION_PATH = 'application/water_multiple/Build/Release/'
-REL_SCHEDULER_PATH   = 'test/scheduler_v3/'
+REL_CONTROLLER_PATH  = 'test/scheduler_v3/'
 REL_WORKER_PATH      = 'test/water_multiple/'
-# REL_WORKER_PATH      = 'Projects/Water/'
+# REL_WORKER_PATH    = 'Projects/Water/'
 
 NIMBUS_LIB           = 'libnimbus.so'
 APPLICATION_LIB      = 'libwater_app.so'
-SCHEDULER_BINARY     = 'scheduler'
+CONTROLLER_BINARY    = 'scheduler'
 WORKER_BINARY        = 'worker'
 
 

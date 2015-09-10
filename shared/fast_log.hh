@@ -44,6 +44,7 @@
 #include <pthread.h>
 #include <sys/types.h>
 
+#include <string.h>
 #include <cassert>
 #include <cstdio>
 #include <map>
@@ -52,16 +53,31 @@
 namespace nimbus {
 namespace timer {
 
+
+typedef int64_t nimbus_ttimer_level;
+extern nimbus_ttimer_level ttimer_level;
+
 /* In order to add a new timer type, two places need to be editted:
  *   (1) Add the timer as an enumeration type in "enum TimerType";
  *   (2) Edit the "TimerName" function in "fast_log.cc" so that the logging
  *       system can print out a useful name for the added timer type.
  */
 enum TimerType {
-  kTotal = 0,
+  NO_TTIMER = 0,
+
+  kTotal,
+  kSumCyclesTotal,
+  kSumCyclesBlock,
+  kSumCyclesRun,
+
+  LEVEL_ZERO,
+
   kExecuteComputationJob,
   kExecuteCopyJob,
   kExecuteParentJob,
+
+  LEVEL_ONE, 
+
   kInvalidateMappings,
   kClearAfterSet,
   kRCRCopy,
@@ -71,10 +87,11 @@ enum TimerType {
   kJobGraph4,
   kExecuteWriteJob,
   kDataExchangerLock,
+
+  LEVEL_TWO,
+
+  kSyncData,
   kAssemblingCache,
-  kSumCyclesTotal,
-  kSumCyclesBlock,
-  kSumCyclesRun,
   kCoreCommand,
   kCoreTransmission,
   kCoreJobDone,
@@ -85,11 +102,14 @@ enum TimerType {
   kWriteAppDataField,
   kWriteAppDataParticle,
   kInitializeCalculateDt,
+
+  LEVEL_THREE,
+
   k1, k2, k3, k4, k5, k6, k7, k8, k9,
   k10, k11, k12, k13, k14, k15, k16, k17, k18, k19, k20,
-  kSyncData,
   kMaxTimer
 };
+
 struct TimerRecord {
   TimerRecord() : depth(0), sum(0) {
   }
@@ -135,6 +155,9 @@ int64_t ReadTimerTypeSum(TimerType type);
  * used normally.
  */
 inline void StartTimer(TimerType timer_type, int depth = 1) {
+  if (timer_type > ttimer_level) {
+    return;
+  }
   assert(depth > 0);
   void* ptr = pthread_getspecific(timer_keys[timer_type]);
   TimerRecord* record = static_cast<TimerRecord*>(ptr);
@@ -155,6 +178,9 @@ inline void StartTimer(TimerType timer_type, int depth = 1) {
  * used normally.
  */
 inline void StopTimer(TimerType timer_type, int depth = 1) {
+  if (timer_type > ttimer_level) {
+    return;
+  }
   assert(depth > 0);
   void* ptr = pthread_getspecific(timer_keys[timer_type]);
   TimerRecord* record = static_cast<TimerRecord*>(ptr);
@@ -170,6 +196,9 @@ inline void StopTimer(TimerType timer_type, int depth = 1) {
 }
 
 inline int64_t ReadTimer(TimerType timer_type) {
+  if (timer_type > ttimer_level) {
+    return 0;
+  }
   void* ptr = pthread_getspecific(timer_keys[timer_type]);
   TimerRecord* record = static_cast<TimerRecord*>(ptr);
   assert(record);

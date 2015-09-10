@@ -53,15 +53,15 @@ size_t Sample::dimension() const {
   return dimension_;
 }
 
-float Sample::label() const {
+double Sample::label() const {
   return label_;
 }
 
-std::vector<float>* Sample::vector() {
+std::vector<double>* Sample::vector() {
   return &vector_;
 }
 
-void Sample::set_label(float label) {
+void Sample::set_label(double label) {
   label_ = label;
 }
 
@@ -101,7 +101,7 @@ void SampleBatch::Copy(Data* from) {
 }
 
 bool SampleBatch::Serialize(SerializedData* ser_data) {
-  // currently we only support float!
+  // currently we only support double!
   data_msgs::SampleBatchMsg sample_batch_msg;
   typename std::vector<Sample>::iterator iter = samples_.begin();
   for (; iter != samples_.end(); ++iter) {
@@ -124,7 +124,7 @@ bool SampleBatch::Serialize(SerializedData* ser_data) {
 
 
 bool SampleBatch::DeSerialize(const SerializedData& ser_data, Data** result) {
-  // currently we only support float!
+  // currently we only support double!
 
   data_msgs::SampleBatchMsg sample_batch_msg;
   std::string str(ser_data.data_ptr_raw(), ser_data.size());
@@ -168,11 +168,13 @@ Weight::~Weight() {
 }
 
 void Weight::Create() {
-  vector_.resize(dimension_);
+  vector_.resize(dimension_, 1);
+  gradient_.resize(dimension_, 1);
 }
 
 void Weight::Destroy() {
   vector_.clear();
+  gradient_.clear();
 }
 
 Data* Weight::Clone() {
@@ -183,20 +185,32 @@ void Weight::Copy(Data* from) {
   Weight *data = reinterpret_cast<Weight*>(from); // NOLINT
   assert(data);
   vector_.clear();
-  typename std::vector<float>::const_iterator iter = data->vector()->begin();
-  for (; iter != data->vector()->end(); ++iter) {
-    vector_.push_back(*iter);
+  {
+    typename std::vector<double>::const_iterator iter = data->vector()->begin();
+    for (; iter != data->vector()->end(); ++iter) {
+      vector_.push_back(*iter);
+    }
+  }
+  gradient_.clear();
+  {
+    typename std::vector<double>::const_iterator iter = data->gradient()->begin();
+    for (; iter != data->gradient()->end(); ++iter) {
+      gradient_.push_back(*iter);
+    }
   }
 }
 
 bool Weight::Serialize(SerializedData* ser_data) {
-  // currently we only support float!
-  data_msgs::VectorMsg vec_msg;
+  // currently we only support double!
+  data_msgs::WeightMsg weight_msg;
   for (size_t i = 0; i < dimension_; i++) {
-    vec_msg.add_elems(vector_[i]);
+    weight_msg.add_vector_elems(vector_[i]);
+  }
+  for (size_t i = 0; i < dimension_; i++) {
+    weight_msg.add_gradient_elems(gradient_[i]);
   }
   std::string str;
-  vec_msg.SerializeToString(&str);
+  weight_msg.SerializeToString(&str);
   char* ptr = new char[str.length()];
   memcpy(ptr, str.c_str(), str.length());
   ser_data->set_data_ptr(ptr);
@@ -205,15 +219,19 @@ bool Weight::Serialize(SerializedData* ser_data) {
 }
 
 bool Weight::DeSerialize(const SerializedData& ser_data, Data** result) {
-  // currently we only support float!
-  data_msgs::VectorMsg vec_msg;
+  // currently we only support double!
+  data_msgs::WeightMsg weight_msg;
   std::string str(ser_data.data_ptr_raw(), ser_data.size());
-  vec_msg.ParseFromString(str);
+  weight_msg.ParseFromString(str);
   Weight* w = new Weight(dimension_);
   w->Create();
-  assert(size_t(vec_msg.elems_size()) == dimension_);
+  assert(size_t(weight_msg.vector_elems_size()) == dimension_);
   for (size_t i = 0; i < dimension_; i++) {
-     w->vector_[i] = vec_msg.elems(i);
+     w->vector_[i] = weight_msg.vector_elems(i);
+  }
+  assert(size_t(weight_msg.gradient_elems_size()) == dimension_);
+  for (size_t i = 0; i < dimension_; i++) {
+     w->gradient_[i] = weight_msg.gradient_elems(i);
   }
 
   *result = w;
@@ -224,17 +242,19 @@ size_t Weight::dimension() const {
   return dimension_;
 }
 
-const std::vector<float>* Weight::vector() const {
+std::vector<double>* Weight::vector() {
   return &vector_;
 }
 
-void Weight::set_vector(const std::vector<float>& vector) {
+std::vector<double>* Weight::gradient() {
+  return &gradient_;
+}
+
+void Weight::set_vector(const std::vector<double>& vector) {
   vector_ = vector;
 }
 
-
-
-
-
-
+void Weight::set_gradient(const std::vector<double>& gradient) {
+  gradient_ = gradient;
+}
 

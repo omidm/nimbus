@@ -81,7 +81,7 @@ def run_worker(scheduler_p_ip, worker_ip, worker_p_ip, num):
 
   worker_command += ' -d ' + str(config.DIMENSION)
   worker_command += ' -i ' + str(config.ITERATION_NUM)
-  worker_command += ' -s ' + str(config.DATA_SIZE_MB)
+  worker_command += ' --sn ' + str(config.SAMPLE_NUM_M)
   worker_command += ' --pn ' + str(config.PARTITION_NUM)
   worker_command += ' --othread ' + str(config.OTHREAD_NUM)
   # worker_command += ' --ibatch ' + str(config.ITERATION_BATCH)

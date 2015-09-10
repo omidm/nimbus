@@ -93,6 +93,11 @@ bool kUseGlobalWrite;
       global_write_ = DEFAULT_USE_GLOBAL_WRITE;
       translator_log = NULL;
       smart_projection_ = DEFAULT_PROJECTION_SMART; 
+      water_level_ = DEFAULT_WATER_LEVEL; 
+    }
+
+    float WaterApp::water_level() {
+      return water_level_;
     }
 
     void WaterApp::set_scale(uint64_t scale) {
@@ -148,6 +153,10 @@ bool kUseGlobalWrite;
       smart_projection_ = level;
     }
 
+    void WaterApp::set_water_level(float water_level) {
+      water_level_ = water_level;
+    }
+
     /* Register data and job types and initialize constant quantities used by
      * application jobs. */
     void WaterApp::Load() {
@@ -160,6 +169,7 @@ bool kUseGlobalWrite;
         assert((part_num_x_ % projection_part_num_x_) == 0);
         assert((part_num_y_ % projection_part_num_y_) == 0);
         assert((part_num_z_ % projection_part_num_z_) == 0);
+        assert((water_level >= 0) && (water_level <= 1));
         kScale = scale_;
         kAppPartNumX = part_num_x_;
         kAppPartNumY = part_num_y_;

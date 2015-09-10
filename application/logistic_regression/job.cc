@@ -38,6 +38,7 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
+#include <inttypes.h>
 #include <math.h>
 #include "./app.h"
 #include "./job.h"
@@ -54,12 +55,12 @@ Main::Main(Application* app) {
 };
 
 Job * Main::Clone() {
-  std::cout << "Cloning main job!\n";
+  dbg(DBG_APP, "Cloning main job!\n");
   return new Main(application());
 };
 
 void Main::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the main job\n";
+  dbg(DBG_APP, "Executing the main job!\n");
   assert(PARTITION_NUM > 0);
 
   IDSet<logical_data_id_t> read, write;
@@ -86,35 +87,97 @@ void Main::Execute(Parameter params, const DataArray& da) {
   }
 
   /*
-   * Spawning the loop job
+   * Spawning the init jobs and loop job
    */
-  std::vector<job_id_t> loop_job_id;
-  GetNewJobID(&loop_job_id, 1);
 
-  // StartTemplate("main_job");
+  // Spawn the batch of jobs for init stage
+  std::vector<job_id_t> init_job_ids;
+  GetNewJobID(&init_job_ids, PARTITION_NUM);
+  for (size_t i = 0; i < PARTITION_NUM; ++i) {
+    GeometricRegion r(i * PARTITION_SIZE, 0, 0, PARTITION_SIZE, 1, 1);
+    read.clear();
+    write.clear();
+    LoadLdoIdsInSet(&write, r, SAMPLE_BATCH_DATA_NAME, NULL);
+    before.clear();
+    StageJobAndLoadBeforeSet(&before, GRADIENT_JOB_NAME, init_job_ids[i], read, write);
+    SerializeParameter(&par, i);
+    SpawnComputeJob(INIT_JOB_NAME, init_job_ids[i], read, write, before, after, par, true, r); // NOLINT
+  }
+
+  MarkEndOfStage();
 
   // Spawning loop job
-  read.clear();
-  write.clear();
-  before.clear();
-  StageJobAndLoadBeforeSet(&before, LOOP_JOB_NAME, loop_job_id[0], read, write, true);
-  SerializeParameter(&par, ITERATION_NUM);
-  SpawnComputeJob(LOOP_JOB_NAME, loop_job_id[0], read, write, before, after, par);
-
-  // EndTemplate("main_job");
+  std::vector<job_id_t> loop_job_id;
+  GetNewJobID(&loop_job_id, 1);
+  {
+    read.clear();
+    write.clear();
+    before.clear();
+    StageJobAndLoadBeforeSet(&before, LOOP_JOB_NAME, loop_job_id[0], read, write, true);
+    SerializeParameter(&par, ITERATION_NUM);
+    SpawnComputeJob(LOOP_JOB_NAME, loop_job_id[0], read, write, before, after, par);
+  }
 };
+
+// used for for initializing the samples.
+static uint32_t prf(uint32_t x) {
+  x += 4698U;
+  x = ((x >> 16) ^ x) * 0x45d9f3bU;
+  x = ((x >> 16) ^ x) * 0x45d9f3bU;
+  x = ((x >> 16) ^ x);
+  return x;
+}
+
+Init::Init(Application* app) {
+  set_application(app);
+};
+
+Job * Init::Clone() {
+  dbg(DBG_APP, "Cloning init job!\n");
+  return new Init(application());
+};
+
+void Init::Execute(Parameter params, const DataArray& da) {
+  dbg(DBG_APP, "Executing the init job: %lu\n", id().elem());
+
+  size_t base_val;
+  LoadParameter(&params, &base_val);
+
+  assert(da.size() == 1);
+  SampleBatch *sb = reinterpret_cast<SampleBatch*>(da[0]); // NOLINT
+  assert(sb);
+  assert(sb->sample_num() == PARTITION_SIZE);
+
+  // omidm
+  // double label = (base_val % 2);        // for +1 and 0 labels
+  double label = ((base_val % 2) *2) - 1;  // for +1 and -1 labels
+  size_t dimension = sb->dimension();
+  size_t needed_value = sb->sample_num() * dimension;
+  size_t generated_value = 0;
+  std::vector<Sample>::iterator iter = sb->samples()->begin();
+  for (; iter != sb->samples()->end(); ++iter) {
+    iter->set_label(label);
+    for (size_t i = 0; i < dimension; i++) {
+      // omidm
+      // iter->vector()->operator[](i) = label;
+      iter->vector()->operator[](i) = prf(base_val * needed_value + generated_value);
+      generated_value++;
+    }
+  }
+};
+
 
 ForLoop::ForLoop(Application* app) {
   set_application(app);
 };
 
 Job * ForLoop::Clone() {
-  std::cout << "Cloning forLoop job!\n";
+  dbg(DBG_APP, "Cloning forLoop job!\n");
   return new ForLoop(application());
 };
 
 void ForLoop::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the forLoop job: " << id().elem() << std::endl;
+  dbg(DBG_APP, "Executing the forLoop job: %lu\n", id().elem());
 
   IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
@@ -124,20 +187,19 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
   LoadParameter(&params, &loop_counter);
 
   if (loop_counter > 0) {
-    StartTemplate("for_loop");
+    StartTemplate("__MARK_STAT_for_loop");
 
     // Spawn the batch of jobs for gradient stage
     std::vector<job_id_t> gradient_job_ids;
     GetNewJobID(&gradient_job_ids, PARTITION_NUM);
     for (size_t i = 0; i < PARTITION_NUM; ++i) {
-      read.clear();
       GeometricRegion r(i * PARTITION_SIZE, 0, 0, PARTITION_SIZE, 1, 1);
+      read.clear();
       LoadLdoIdsInSet(&read, r, SAMPLE_BATCH_DATA_NAME, NULL);
       write.clear();
       LoadLdoIdsInSet(&write, r, WEIGHT_DATA_NAME, NULL);
       before.clear();
       StageJobAndLoadBeforeSet(&before, GRADIENT_JOB_NAME, gradient_job_ids[i], read, write);
-      after.clear();
       SpawnComputeJob(GRADIENT_JOB_NAME, gradient_job_ids[i], read, write, before, after, par, true, r); // NOLINT
     }
 
@@ -147,8 +209,8 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     std::vector<job_id_t> reduction_job_id;
     GetNewJobID(&reduction_job_id, 1);
     {
-      read.clear();
       GeometricRegion r(0, 0, 0, PARTITION_NUM * PARTITION_SIZE, 1, 1);
+      read.clear();
       LoadLdoIdsInSet(&read, r, WEIGHT_DATA_NAME, NULL);
       write.clear();
       LoadLdoIdsInSet(&write, r, WEIGHT_DATA_NAME, NULL);
@@ -172,7 +234,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
       SerializeParameter(&par, loop_counter - 1);
       SpawnComputeJob(LOOP_JOB_NAME, forloop_job_id[0], read, write, before, after, par);
     }
-    EndTemplate("for_loop");
+    EndTemplate("__MARK_STAT_for_loop");
   } else {
     // StartTemplate("for_loop_end");
 
@@ -187,28 +249,31 @@ Gradient::Gradient(Application* app) {
 };
 
 Job * Gradient::Clone() {
-  std::cout << "Cloning gradient job!\n";
+  dbg(DBG_APP, "Cloning gradient job!\n");
   return new Gradient(application());
 };
 
 void Gradient::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the gradient job: " << id().elem() << std::endl;
+  dbg(DBG_APP, "Executing the gradient job: %lu\n", id().elem());
   assert(da.size() == 2);
   SampleBatch *sb = reinterpret_cast<SampleBatch*>(da[0]); // NOLINT
   assert(sb);
   Weight *w = reinterpret_cast<Weight*>(da[1]); // NOLINT
   assert(w);
 
-  std::vector<float> gradient(w->dimension(), 0);
+  std::vector<double> gradient(w->dimension(), 0);
   std::vector<Sample>::iterator iter = sb->samples()->begin();
   for (; iter != sb->samples()->end(); ++iter) {
-    float l = iter->label();
-    std::vector<float>* x = iter->vector();
-    float scale = (1 / (1 + (exp(l * VectorDotProduct(x, w->vector())))) - 1) * l;
+    double l = iter->label();
+    std::vector<double>* x = iter->vector();
+    // omidm
+    // double alpha = 0.01;
+    // double scale = (l - 1 / (1 + exp(-1 * VectorDotProduct(x, w->vector())))) * alpha;
+    double scale = (1 / (1 + exp(l * VectorDotProduct(x, w->vector()))) - 1) * l;
     VectorAddWithScale(&gradient, x, scale);
   }
 
-  w->set_vector(gradient);
+  w->set_gradient(gradient);
 };
 
 Reduce::Reduce(Application *app) {
@@ -216,19 +281,36 @@ Reduce::Reduce(Application *app) {
 };
 
 Job * Reduce::Clone() {
-  std::cout << "Cloning reduce job!\n";
+  dbg(DBG_APP, "Cloning reduce job!\n");
   return new Reduce(application());
 };
 
 void Reduce::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the reduce job: " << id().elem() << std::endl;
+  dbg(DBG_APP, "Executing the reduce job: %lu\n", id().elem());
   assert(da.size() == 2 * PARTITION_NUM);
+  Weight *weight = reinterpret_cast<Weight*>(da[0]); // NOLINT
+  assert(weight);
+  std::vector<double> reduced = *(weight->vector());
+
   DataArray::const_iterator iter = da.begin();
-  for (; iter != da.end(); ++iter) {
+  for (size_t i = 0; i < PARTITION_NUM; ++i, ++iter) {
     Weight *w = reinterpret_cast<Weight*>(*iter); // NOLINT
     assert(w);
-    w->set_vector(std::vector<float>(w->dimension()));
+    VectorAddWithScale(&reduced, w->gradient(), 1);
   }
+  for (size_t i = 0; i < PARTITION_NUM; ++i, ++iter) {
+    Weight *w = reinterpret_cast<Weight*>(*iter); // NOLINT
+    assert(w);
+    w->set_vector(reduced);
+  }
+  assert(iter == da.end());
+
+  std::cout << "*********** Weight::";
+  std::vector<double>::iterator it = reduced.begin();
+  for (; it != reduced.end(); ++it) {
+    std::cout << ", " <<  *it;
+  }
+  std::cout << std::endl;
 };
 
 

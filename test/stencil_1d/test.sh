@@ -24,6 +24,9 @@ fi
 # ../scheduler_v1/scheduler 2  > scheduler.txt &
 # sleep 1
  
+echo -e "${Gre}export DBG=errors...${RCol}"
+export DBG=error
+
 echo -e "${Pur}Launching the workers ...${RCol}"
 for i in `seq 1 $1`;
 do

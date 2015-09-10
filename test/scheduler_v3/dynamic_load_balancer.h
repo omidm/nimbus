@@ -92,7 +92,6 @@ namespace nimbus {
     Log log_;
     size_t worker_num_;
     bool init_phase_;
-    GeometricRegion global_region_;
     RegionMap region_map_;
     WorkerMap worker_map_;
     boost::recursive_mutex mutex_;
@@ -100,6 +99,8 @@ namespace nimbus {
     int64_t last_global_run_time_;
     Exchange last_exchange_;
     BlackList black_list_;
+
+    void SplitDimensions(size_t worker_num);
 
     void BuildRegionMap();
 

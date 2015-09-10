@@ -47,7 +47,7 @@
 #define MAIN "main"
 #define INITIALIZE "initialize"
 #define LOOP_FRAME "loop_frame"
-#define LOOP_ITERATION "loop_iteration"
+#define LOOP_ITERATION "__MARK_STAT_loop_iteration"
 #define LOOP_ITERATION_PART_TWO "loop_iteration_part_two"
 #define WRITE_OUTPUT "write_output"
 #define RESEED_PARTICLES "reseed_particles"

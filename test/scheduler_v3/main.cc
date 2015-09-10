@@ -56,6 +56,10 @@ int main(int argc, char *argv[]) {
   size_t command_batch_size;
   int64_t lb_period;
   int64_t ft_period;
+  std::vector<size_t> split;
+  std::vector<size_t> sub_split;
+  std::vector<int_dimension_t> region;
+
 
   po::options_description desc("Options");
   desc.add_options()
@@ -70,6 +74,9 @@ int main(int argc, char *argv[]) {
     ("command_batch_size,c", po::value<size_t>(&command_batch_size), "maximum number of commands in a batch processing") //NOLINT
     ("lb_period", po::value<int64_t>(&lb_period), "query period for load balancing (seconds)") //NOLINT
     ("ft_period", po::value<int64_t>(&ft_period), "checkpoint creation period for fault tolerance (seconds)") //NOLINT
+    ("split", po::value<std::vector<size_t> >(&split)->multitoken(), "three space separated positive integres to sepcify the number of partitions per dimension: nx ny nz") // NOLINT
+    ("sub_split", po::value<std::vector<size_t> >(&sub_split)->multitoken(), "three space separated positive integres to sepcify the number of sub-partitions per dimension: nx ny nz") // NOLINT
+    ("region", po::value<std::vector<int_dimension_t> >(&region)->multitoken(), "six space separated integres to sepcify the global region: x y z dx dy dz") // NOLINT
 
     ("dct", "deactivate controller template")
     ("dcm", "deactivate complex memoization")
@@ -82,7 +89,12 @@ int main(int argc, char *argv[]) {
     ("aft", "activate fault tolerance");
 
   po::variables_map vm;
-  po::store(po::parse_command_line(argc, argv, desc), vm);
+  try {
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+  } catch (std::exception& e) { // NOLINT
+    std::cerr << "ERROR: " << e.what() << "\n";
+    return -1;
+  }
 
   if (vm.count("help")) {
     std::cout << desc << "\n";
@@ -91,9 +103,7 @@ int main(int argc, char *argv[]) {
 
   try {
     po::notify(vm);
-    // std::cout << "***** OMID: " << vm["worker_num"].as<size_t>() << std::endl;
-  }
-  catch(std::exception& e) { // NOLINT
+  } catch (std::exception& e) { // NOLINT
     std::cerr << "ERROR: " << e.what() << "\n";
     return -1;
   }
@@ -153,6 +163,44 @@ int main(int argc, char *argv[]) {
 
   if (vm.count("alb")) {
     s->set_load_balancing_active(true);
+  }
+
+  if (vm.count("split")) {
+    if (split.size() != 3) {
+      std::cerr << "ERROR: split need exactly 3 integers\n";
+      return -1;
+    }
+    if (!(split[0] && split[1] && split[2])) {
+        std::cerr << "ERROR: split integers should be positive\n";
+        return -1;
+    }
+    s->set_split_dimensions(split);
+  }
+
+  if (vm.count("sub_split")) {
+    if (sub_split.size() != 3) {
+      std::cerr << "ERROR: sub_split need exactly 3 integers\n";
+      return -1;
+    }
+    if (!(sub_split[0] && sub_split[1] && sub_split[2])) {
+        std::cerr << "ERROR: sub_split integers should be positive\n";
+        return -1;
+    }
+    s->set_sub_split_dimensions(sub_split);
+  }
+
+  if (vm.count("region")) {
+    if (region.size() != 6) {
+      std::cerr << "ERROR: global region needs exactly 6 integers\n";
+      return -1;
+    }
+    s->set_global_region(
+        GeometricRegion(region[0],
+                        region[1],
+                        region[2],
+                        region[3],
+                        region[4],
+                        region[5]));
   }
 
   if (vm.count("aft")) {

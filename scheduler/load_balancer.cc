@@ -48,10 +48,6 @@
 namespace nimbus {
 
 LoadBalancer::LoadBalancer() {
-  Initialize();
-}
-
-void LoadBalancer::Initialize() {
   cluster_map_ = NULL;
   job_manager_ = NULL;
   data_manager_ = NULL;
@@ -61,6 +57,13 @@ void LoadBalancer::Initialize() {
   // by default it is safe to load balance, unless job manager is memoizing
   // binding, and so we cannot load balance. -omidm
   safe_to_load_balance_ = true;
+
+  enforced_split_ = false;
+  enforced_sub_split_ = false;
+  enforced_global_region_ = false;
+  split_ = std::vector<size_t>(3);
+  sub_split_ = std::vector<size_t>(3);
+  global_region_ = GeometricRegion();
 }
 
 LoadBalancer::~LoadBalancer() {
@@ -93,6 +96,28 @@ void LoadBalancer::set_job_assigner(JobAssigner *job_assigner) {
 void LoadBalancer::set_assign_batch_size(size_t num) {
   assign_batch_size_ = num;
 }
+
+void LoadBalancer::set_split_dimensions(const std::vector<size_t>& split) {
+  split_ = split;
+  if (split_[0] && split_[1] && split_[2]) {
+    enforced_split_ = true;
+  }
+}
+
+void LoadBalancer::set_sub_split_dimensions(const std::vector<size_t>& sub_split) {
+  sub_split_ = sub_split;
+  if (sub_split_[0] && sub_split_[1] && sub_split_[2]) {
+    enforced_split_ = true;
+  }
+}
+
+void LoadBalancer::set_global_region(const GeometricRegion& region) {
+  global_region_ = region;
+  if (global_region_ != GeometricRegion()) {
+    enforced_global_region_ = true;
+  }
+}
+
 
 void LoadBalancer::Run() {
   dbg(DBG_WARN, "WARNING: Base load balancer is being used!!!\n");

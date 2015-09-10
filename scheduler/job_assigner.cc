@@ -58,6 +58,7 @@ JobAssigner::JobAssigner() {
 void JobAssigner::Initialize() {
   thread_num_ = 0;
   checkpoint_id_ = NIMBUS_INIT_CHECKPOINT_ID;
+  template_generation_id_ = NIMBUS_INIT_TEMPLATE_ID;
   pending_assignment_ = 0;
   server_ = NULL;
   id_maker_ = NULL;
@@ -311,7 +312,7 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
   size_t copy_job_num = bt->copy_job_num();
   size_t compute_job_num = bt->compute_job_num();
 
-  if (job->template_entry()->template_name() == "loop_iteration_part_two") {
+  if (job->template_entry()->template_name().find("__MARK_STAT") != std::string::npos) {
     scheduler_->PrintStats();
     PrintStatCommand command(0);
     server_->BroadcastCommand(&command);
@@ -344,6 +345,7 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
                   job->parameters(),
                   copy_job_ids,
                   physical_ids,
+                  ++template_generation_id_,
                   server_);
   log.log_StopTimer();
   std::cout << "COMPLEX: Instantiate: "
@@ -379,7 +381,7 @@ bool JobAssigner::AssignJob(JobEntry *job) {
     std::cout << "COPY JOBS UNTIL " << job->job_name() << " : " << j[0] << std::endl;
   }
 
-  if (job->job_name() == "loop_iteration") {
+  if (job->job_name().find("__MARK_STAT") != std::string::npos) {
     scheduler_->PrintStats();
     PrintStatCommand command(0);
     server_->BroadcastCommand(&command);

@@ -89,6 +89,10 @@ class SchedulerClient {
 
   void set_scheduler_command_table(SchedulerCommand::PrototypeTable* cmt);
 
+  void set_command_processor_mutex(boost::recursive_mutex *mutex);
+
+  void set_command_processor_cond(boost::condition_variable_any *cond);
+
   void PushCommandToTheQueue(SchedulerCommand *command);
 
  private:
@@ -101,8 +105,10 @@ class SchedulerClient {
   uint32_t max_read_buffer_length_;
   uint32_t existing_bytes_;
   SchedulerCommandList received_commands_;
-  boost::mutex command_queue_mutex_;
   boost::mutex send_command_mutex_;
+
+  boost::recursive_mutex *command_processor_mutex_;
+  boost::condition_variable_any *command_processor_cond_;
 
   boost::thread* command_template_thread_;
   typedef std::map<std::string, CommandTemplate*> TemplateMap;

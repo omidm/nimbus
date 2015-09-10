@@ -48,7 +48,7 @@
 
 #define INIT_JOB_NAME "init"
 #define PRINT_JOB_NAME "print"
-#define LOOP_JOB_NAME "for_loop"
+#define LOOP_JOB_NAME "__MARK_STAT_for_loop"
 #define STENCIL_JOB_NAME "stencil"
 
 using namespace nimbus; // NOLINT

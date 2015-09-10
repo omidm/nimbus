@@ -58,7 +58,8 @@ class SpawnCommandTemplateCommand : public SchedulerCommand {
                                 const std::vector<job_id_t>& inner_job_ids,
                                 const std::vector<job_id_t>& outer_job_ids,
                                 const std::vector<Parameter>& parameters,
-                                const std::vector<physical_data_id_t>& phy_ids);
+                                const std::vector<physical_data_id_t>& phy_ids,
+                                const template_id_t& template_generation_id);
 
     ~SpawnCommandTemplateCommand();
 
@@ -72,6 +73,7 @@ class SpawnCommandTemplateCommand : public SchedulerCommand {
     std::vector<job_id_t> outer_job_ids();
     std::vector<Parameter> parameters();
     std::vector<physical_data_id_t> phy_ids();
+    template_id_t template_generation_id();
 
   private:
     std::string command_template_name_;
@@ -79,6 +81,7 @@ class SpawnCommandTemplateCommand : public SchedulerCommand {
     std::vector<job_id_t> outer_job_ids_;
     std::vector<Parameter> parameters_;
     std::vector<physical_data_id_t> phy_ids_;
+    template_id_t template_generation_id_;
 
     bool ReadFromProtobuf(const SpawnCommandTemplatePBuf& buf);
     bool WriteToProtobuf(SpawnCommandTemplatePBuf* buf);

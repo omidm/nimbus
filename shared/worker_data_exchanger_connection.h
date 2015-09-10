@@ -52,6 +52,7 @@
 #include "shared/dbg.h"
 #include "shared/parser.h"
 #include "shared/nimbus_types.h"
+#include "shared/serialized_data.h"
 
 namespace nimbus {
 
@@ -69,6 +70,7 @@ class WorkerDataExchangerConnection {
   tcp::socket* socket();
   job_id_t receive_job_id();
   job_id_t mega_rcr_job_id();
+  template_id_t template_generation_id();
   boost::shared_array<char> data_ptr();
   char* read_buffer();
   size_t existing_bytes();
@@ -78,9 +80,12 @@ class WorkerDataExchangerConnection {
   size_t remaining_data_length();
   bool middle_of_data();
   bool middle_of_header();
+  std::list<SerializedData>* send_queue();
+  virtual boost::mutex* mutex();
 
   void set_receive_job_id(job_id_t job_id);
   void set_mega_rcr_job_id(job_id_t job_id);
+  void set_template_generation_id(template_id_t template_generation_id);
   void set_data_length(size_t len);
   void set_data_version(data_version_t version);
   void set_existing_bytes(size_t len);
@@ -91,6 +96,7 @@ class WorkerDataExchangerConnection {
   tcp::socket* socket_;
   job_id_t receive_job_id_;
   job_id_t mega_rcr_job_id_;
+  template_id_t template_generation_id_;
   boost::shared_array<char> data_ptr_;
   char* data_cursor_;
   char* read_buffer_;
@@ -100,6 +106,8 @@ class WorkerDataExchangerConnection {
   size_t remaining_data_length_;
   bool middle_of_data_;
   bool middle_of_header_;
+  std::list<SerializedData> send_queue_;
+  boost::mutex* mutex_;
 };
 
 typedef std::list<WorkerDataExchangerConnection*>

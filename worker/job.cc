@@ -57,6 +57,8 @@ Job::Job() {
   worker_thread_ = NULL;
   spawn_state_ = INIT;
   dependency_query_ = new DependencyQuery();
+  shadow_job_id_ = NIMBUS_KERNEL_JOB_ID;
+  execution_template_ = NULL;
 }
 
 Job::~Job() {
@@ -515,6 +517,14 @@ ID<job_id_t> Job::future_job_id() const {
   return future_job_id_;
 }
 
+job_id_t Job::shadow_job_id() const {
+  return shadow_job_id_;
+}
+
+ExecutionTemplate* Job::execution_template() const {
+  return execution_template_;
+}
+
 double Job::run_time() const {
   return run_time_;
 }
@@ -523,31 +533,31 @@ double Job::wait_time() const {
   return wait_time_;
 }
 
-void Job::set_name(std::string name) {
+void Job::set_name(const std::string& name) {
   name_ = name;
 }
 
-void Job::set_id(ID<job_id_t> id) {
+void Job::set_id(const ID<job_id_t>& id) {
   id_ = id;
 }
 
-void Job::set_read_set(IDSet<physical_data_id_t> read_set) {
+void Job::set_read_set(const IDSet<physical_data_id_t>& read_set) {
   read_set_ = read_set;
 }
 
-void Job::set_write_set(IDSet<physical_data_id_t> write_set) {
+void Job::set_write_set(const IDSet<physical_data_id_t>& write_set) {
   write_set_ = write_set;
 }
 
-void Job::set_before_set(IDSet<job_id_t> before_set) {
+void Job::set_before_set(const IDSet<job_id_t>& before_set) {
   before_set_ = before_set;
 }
 
-void Job::set_after_set(IDSet<job_id_t> after_set) {
+void Job::set_after_set(const IDSet<job_id_t>& after_set) {
   after_set_ = after_set;
 }
 
-void Job::set_parameters(Parameter parameters) {
+void Job::set_parameters(const Parameter& parameters) {
   parameters_ = parameters;
 }
 
@@ -556,23 +566,38 @@ void Job::set_application(Application* app) {
   app_is_set_ = true;
 }
 
-void Job::set_sterile(bool sterile) {
+void Job::set_sterile(const bool& sterile) {
   sterile_ = sterile;
 }
 
-void Job::set_region(GeometricRegion region) {
+void Job::set_region(const GeometricRegion& region) {
   region_ = region;
 }
 
-void Job::set_future_job_id(ID<job_id_t> future_job_id) {
+void Job::set_future_job_id(const ID<job_id_t>& future_job_id) {
   future_job_id_ = future_job_id;
 }
 
-void Job::set_run_time(double run_time) {
+void Job::set_shadow_job_id(const job_id_t& id) {
+  shadow_job_id_ = id;
+}
+
+void Job::set_execution_template(ExecutionTemplate *execution_template) {
+  execution_template_ = execution_template;
+}
+
+void Job::clear_template_variables() {
+  spawn_state_ = INIT;
+  template_inner_job_ids_.clear();
+  template_outer_job_ids_.clear();
+  template_parameters_.clear();
+}
+
+void Job::set_run_time(const double& run_time) {
   run_time_ = run_time;
 }
 
-void Job::set_wait_time(double wait_time) {
+void Job::set_wait_time(const double& wait_time) {
   wait_time_ = wait_time;
 }
 
@@ -587,6 +612,7 @@ StaticConfigManager* Job::GetStaticConfigManager() const {
 RemoteCopySendJob::RemoteCopySendJob(WorkerDataExchanger* da, Application *app) {
   data_exchanger_ = da;
   set_application(app);
+  template_generation_id_ = NIMBUS_INVALID_TEMPLATE_ID;
 }
 
 RemoteCopySendJob::~RemoteCopySendJob() {
@@ -602,7 +628,8 @@ void RemoteCopySendJob::Execute(Parameter params, const DataArray& da) {
                                       mega_rcr_job_id().elem(),
                                       to_worker_id_.elem(),
                                       ser_data,
-                                      da[0]->version());
+                                      da[0]->version(),
+                                      template_generation_id_);
   // delete ser_data.data_ptr(); // Not needed with shared pointer.
 }
 
@@ -651,6 +678,9 @@ void RemoteCopySendJob::set_to_port(ID<port_t> port) {
   to_port_ = port;
 }
 
+void RemoteCopySendJob::set_template_generation_id(template_id_t id) {
+  template_generation_id_ = id;
+}
 
 RemoteCopyReceiveJob::RemoteCopyReceiveJob(Application *app) {
   set_application(app);
@@ -686,6 +716,10 @@ void RemoteCopyReceiveJob::set_serialized_data(SerializedData* ser_data) {
 
 void RemoteCopyReceiveJob::set_data_version(data_version_t version) {
   data_version_ = version;
+}
+
+MegaRCRJob::MegaRCRJob(Application *app) {
+  set_application(app);
 }
 
 MegaRCRJob::MegaRCRJob(Application *app,
@@ -731,12 +765,24 @@ const std::vector<physical_data_id_t>* MegaRCRJob::to_phy_ids_p() {
   return &to_phy_ids_;
 }
 
+void MegaRCRJob::set_receive_job_ids(const std::vector<job_id_t>& receive_job_ids) {
+  receive_job_ids_ = receive_job_ids;
+}
+
+void MegaRCRJob::set_to_phy_ids(const std::vector<physical_data_id_t>& to_phy_ids) {
+  to_phy_ids_ = to_phy_ids;
+}
+
 void MegaRCRJob::set_serialized_data(job_id_t job_id, SerializedData* ser_data) {
   serialized_data_map_[job_id] = ser_data;
 }
 
 void MegaRCRJob::set_serialized_data_map(const std::map<job_id_t, SerializedData*>& map) {
   serialized_data_map_ = map;
+}
+
+void MegaRCRJob::clear_serialized_data_map() {
+  serialized_data_map_.clear();
 }
 
 bool MegaRCRJob::AllDataReceived() {

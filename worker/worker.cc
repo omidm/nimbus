@@ -82,6 +82,7 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     worker_manager_ = new WorkerManager();
     ddb_ = new DistributedDB();
     DUMB_JOB_ID = std::numeric_limits<job_id_t>::max();
+    filling_execution_template_ = false;
     worker_job_graph_.AddVertex(
         DUMB_JOB_ID,
         new WorkerJobEntry(
@@ -95,26 +96,49 @@ Worker::~Worker() {
   worker_job_graph_.RemoveVertex(DUMB_JOB_ID);
   delete worker_manager_;
   delete ddb_;
+  delete receive_event_mutex_;
+  delete receive_event_cond_;
+  delete command_processor_mutex_;
+  delete command_processor_cond_;
 }
 
 void Worker::Run() {
   std::cout << "Running the Worker" << std::endl;
 
-  SetupSchedulerInterface();
+  CreateModules();
 
-  ldo_map_ = new WorkerLdoMap();
-  application_->Start(client_, &id_maker_, ldo_map_);
+  SetupTimers();
+  SetupApplication();
+  SetupWorkerManager();
+  SetupSchedulerClient();
+  SetupWorkerDataExchanger();
 
-  SetupDataExchangerInterface();
+  // SetupCommandProcessor();
+  command_processor_thread_ = new boost::thread(
+      boost::bind(&Worker::SetupCommandProcessor, this));
+
+  // SetupReceiveEventProcessor();
+  receive_event_thread_ = new boost::thread(
+      boost::bind(&Worker::SetupReceiveEventProcessor, this));
 
   WorkerCoreProcessor();
 }
 
-void Worker::WorkerCoreProcessor() {
+
+void Worker::CreateModules() {
+  id_maker_ = new IDMaker();
+  ldo_map_ = new WorkerLdoMap();
+  client_ = new SchedulerClient(scheduler_ip_, scheduler_port_);
+  data_exchanger_ = new WorkerDataExchanger(listening_port_);
+  receive_event_mutex_ = new boost::recursive_mutex();
+  receive_event_cond_ = new boost::condition_variable_any();
+  command_processor_mutex_ = new boost::recursive_mutex();
+  command_processor_cond_ = new boost::condition_variable_any();
+}
+
+void Worker::SetupTimers() {
   timer::InitializeKeys();
   timer::InitializeTimers();
-  // timer::StartTimer(timer::kSumCyclesTotal, WorkerManager::across_job_parallism);
-  total_timer_.Start(WorkerManager::across_job_parallism);
 
   stat_blocked_job_num_ = 0;
   stat_ready_job_num_ = 0;
@@ -124,12 +148,100 @@ void Worker::WorkerCoreProcessor() {
   run_timer_.set_name("kSumCyclesRun");
   block_timer_.set_name("kSumCyclesBlock");
   total_timer_.set_name("kSumCyclesTotal");
-  std::cout << "Base Worker Core Processor" << std::endl;
+
+  // timer::StartTimer(timer::kSumCyclesTotal, WorkerManager::across_job_parallism);
+  total_timer_.Start(WorkerManager::across_job_parallism);
+}
+
+void Worker::SetupApplication() {
+  application_->Start(client_, id_maker_, ldo_map_);
+}
+
+void Worker::SetupWorkerManager() {
   worker_manager_->worker_ = this;
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Launching worker threads.\n");
   worker_manager_->StartWorkerThreads();
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Finishes launching worker threads.\n");
   worker_manager_->TriggerScheduling();
+}
+
+void Worker::SetupSchedulerClient() {
+  LoadSchedulerCommands();
+  client_->set_command_processor_mutex(command_processor_mutex_);
+  client_->set_command_processor_cond(command_processor_cond_);
+  client_->set_scheduler_command_table(&scheduler_command_table_);
+  client_thread_ = new boost::thread(
+      boost::bind(&SchedulerClient::Run, client_));
+}
+
+void Worker::SetupWorkerDataExchanger() {
+  data_exchanger_->set_receive_event_mutex(receive_event_mutex_);
+  data_exchanger_->set_receive_event_cond(receive_event_cond_);
+  data_exchanger_->Run();
+}
+
+void Worker::SetupCommandProcessor() {
+  timer::InitializeTimers();
+  RunCommandProcessor();
+}
+
+void Worker::RunCommandProcessor() {
+  while (true) {
+    SchedulerCommandList storage;
+    {
+      boost::unique_lock<boost::recursive_mutex> lock(*command_processor_mutex_);
+
+      while (!client_->ReceiveCommands(&storage, SCHEDULER_COMMAND_GROUP_QUOTA)) {
+        command_processor_cond_->wait(lock);
+      }
+    }
+
+    SchedulerCommandList::iterator iter = storage.begin();
+    for (; iter != storage.end(); ++iter) {
+      timer::StartTimer(timer::kCoreCommand);
+      SchedulerCommand *comm = *iter;
+      dbg(DBG_WORKER, "Receives command from scheduler: %s\n",
+          comm->ToString().c_str());
+      dbg(DBG_WORKER_FD,
+          DBG_WORKER_FD_S"Scheduler command arrives(%s).\n",
+          comm->name().c_str());
+      ProcessSchedulerCommand(comm);
+      delete comm;
+      timer::StopTimer(timer::kCoreCommand);
+    }
+  }
+}
+
+void Worker::SetupReceiveEventProcessor() {
+  timer::InitializeTimers();
+  RunReceiveEventProcessor();
+}
+
+void Worker::RunReceiveEventProcessor() {
+  while (true) {
+    WorkerDataExchanger::EventList events;
+    {
+      boost::unique_lock<boost::recursive_mutex> lock(*receive_event_mutex_);
+
+      while (data_exchanger_->PullReceiveEvents(&events, RECEIVE_EVENT_BATCH_QUOTA) == 0) {
+        receive_event_cond_->wait(lock);
+      }
+    }
+    timer::StartTimer(timer::kJobGraph1);
+    boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+    timer::StartTimer(timer::kCoreTransmission);
+    ProcessReceiveEvents(events);
+    timer::StopTimer(timer::kCoreTransmission);
+    timer::StopTimer(timer::kJobGraph1);
+  }
+}
+
+void Worker::WorkerCoreProcessor() {
+  std::cout << "Base Worker Core Processor" << std::endl;
+
+  receive_event_thread_->join();
+
+  assert(false);
 
   while (true) {
     bool processed_tasks = false;
@@ -300,6 +412,15 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::PRINT_STAT:
       ProcessPrintStatCommand(reinterpret_cast<PrintStatCommand*>(cm));
       break;
+    case SchedulerCommand::START_COMMAND_TEMPLATE:
+      ProcessStartCommandTemplateCommand(reinterpret_cast<StartCommandTemplateCommand*>(cm));
+      break;
+    case SchedulerCommand::END_COMMAND_TEMPLATE:
+      ProcessEndCommandTemplateCommand(reinterpret_cast<EndCommandTemplateCommand*>(cm));
+      break;
+    case SchedulerCommand::SPAWN_COMMAND_TEMPLATE:
+      ProcessSpawnCommandTemplateCommand(reinterpret_cast<SpawnCommandTemplateCommand*>(cm));
+      break;
     default:
       std::cout << "ERROR: " << cm->ToNetworkData() <<
         " have not been implemented in ProcessSchedulerCommand yet." <<
@@ -323,7 +444,7 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
     ip_address_ = cm->ip();
   }
   id_ = cm->worker_id().elem();
-  id_maker_.Initialize(id_);
+  id_maker_->Initialize(id_);
   ddb_->Initialize(ip_address_, id_);
 
   std::string wstr = int2string(id_);
@@ -349,6 +470,14 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
   job->set_sterile(cm->sterile());
   job->set_region(cm->region());
   job->set_parameters(cm->params());
+
+  if (filling_execution_template_) {
+    std::map<std::string, ExecutionTemplate*>::iterator iter =
+      execution_templates_.find(execution_template_in_progress_);
+    assert(iter != execution_templates_.end());
+    iter->second->AddComputeJobTemplate(cm, application_);
+  }
+
   AddJobToGraph(job);
 }
 
@@ -391,6 +520,14 @@ void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
   read_set.insert(cm->from_physical_data_id().elem());
   job->set_read_set(read_set);
   job->set_before_set(cm->before_set());
+
+  if (filling_execution_template_) {
+    std::map<std::string, ExecutionTemplate*>::iterator iter =
+      execution_templates_.find(execution_template_in_progress_);
+    assert(iter != execution_templates_.end());
+    iter->second->AddRemoteCopySendJobTemplate(cm, application_, data_exchanger_);
+  }
+
   AddJobToGraph(job);
 }
 
@@ -402,6 +539,14 @@ void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {
   write_set.insert(cm->to_physical_data_id().elem());
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
+
+  if (filling_execution_template_) {
+    std::map<std::string, ExecutionTemplate*>::iterator iter =
+      execution_templates_.find(execution_template_in_progress_);
+    assert(iter != execution_templates_.end());
+    iter->second->AddRemoteCopyReceiveJobTemplate(cm, application_);
+  }
+
   AddJobToGraph(job);
 }
 
@@ -411,6 +556,14 @@ void Worker::ProcessMegaRCRCommand(MegaRCRCommand* cm) {
                              cm->to_physical_data_ids());
   job->set_name("MegaRCR");
   job->set_id(cm->job_id());
+
+  if (filling_execution_template_) {
+    std::map<std::string, ExecutionTemplate*>::iterator iter =
+      execution_templates_.find(execution_template_in_progress_);
+    assert(iter != execution_templates_.end());
+    iter->second->AddMegaRCRJobTemplate(cm, application_);
+  }
+
   AddJobToGraph(job);
 }
 
@@ -439,6 +592,7 @@ void Worker::ProcessLoadDataCommand(LoadDataCommand* cm) {
 }
 
 void Worker::ProcessPrepareRewindCommand(PrepareRewindCommand* cm) {
+  // TODO(omidm): fix this function, adopt to execution template!
   boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
 
   // First remove all blocked jobs.
@@ -447,6 +601,7 @@ void Worker::ProcessPrepareRewindCommand(PrepareRewindCommand* cm) {
   // Wait untill all runing jobs finish.
   while (!IsEmptyGraph(&worker_job_graph_)) {
     JobList local_job_done_list;
+    // TODO(omidm): you should not call this function, remove!
     worker_manager_->GetLocalJobDoneList(&local_job_done_list);
     bool new_done = false;
     while (!local_job_done_list.empty()) {
@@ -486,6 +641,14 @@ void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
   write_set.insert(cm->to_physical_data_id().elem());
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
+
+  if (filling_execution_template_) {
+    std::map<std::string, ExecutionTemplate*>::iterator iter =
+      execution_templates_.find(execution_template_in_progress_);
+    assert(iter != execution_templates_.end());
+    iter->second->AddLocalCopyJobTemplate(cm, application_);
+  }
+
   AddJobToGraph(job);
 }
 
@@ -530,23 +693,79 @@ void Worker::ProcessDefinedTemplateCommand(DefinedTemplateCommand* cm) {
 }
 
 
-void Worker::SetupDataExchangerInterface() {
-  data_exchanger_ = new WorkerDataExchanger(listening_port_);
-  data_exchanger_thread_ = new boost::thread(
-      boost::bind(&WorkerDataExchanger::Run, data_exchanger_));
+void Worker::ProcessStartCommandTemplateCommand(StartCommandTemplateCommand* command) {
+  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+  assert(!filling_execution_template_);
+  std::string key = command->command_template_name();
+  std::map<std::string, ExecutionTemplate*>::iterator iter =
+    execution_templates_.find(key);
+  assert(iter == execution_templates_.end());
+  execution_templates_[key] =
+    new ExecutionTemplate(key,
+                          command->inner_job_ids(),
+                          command->outer_job_ids(),
+                          command->phy_ids());
+
+  execution_template_in_progress_ = key;
+  filling_execution_template_ = true;
 }
 
-void Worker::SetupSchedulerInterface() {
-  LoadSchedulerCommands();
-  client_ = new SchedulerClient(scheduler_ip_, scheduler_port_);
-  client_->set_scheduler_command_table(&scheduler_command_table_);
-  // client_->Run();
-  client_thread_ = new boost::thread(
-      boost::bind(&SchedulerClient::Run, client_));
+void Worker::ProcessEndCommandTemplateCommand(EndCommandTemplateCommand* command) {
+  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+  assert(filling_execution_template_);
+  std::string key = command->command_template_name();
+  std::map<std::string, ExecutionTemplate*>::iterator iter =
+    execution_templates_.find(key);
+  assert(iter != execution_templates_.end());
+  iter->second->Finalize();
 
-  // profiler_thread_ = new boost::thread(
-  //     boost::bind(&Profiler::Run, &profiler_, client_, id_));
+  filling_execution_template_ = false;
 }
+
+void Worker::ProcessSpawnCommandTemplateCommand(SpawnCommandTemplateCommand* command) {
+  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+
+  std::string key = command->command_template_name();
+  std::map<std::string, ExecutionTemplate*>::iterator iter =
+    execution_templates_.find(key);
+  assert(iter != execution_templates_.end());
+
+  ExecutionTemplate *et = iter->second;
+  JobList ready_jobs;
+  template_id_t tgi = command->template_generation_id();
+  EventMap::iterator it = pending_events_.find(tgi);
+  if (it != pending_events_.end()) {
+    et->Instantiate(command->inner_job_ids(),
+                    command->outer_job_ids(),
+                    command->parameters(),
+                    command->phy_ids(),
+                    it->second,
+                    tgi,
+                    &ready_jobs);
+    pending_events_.erase(it);
+  } else {
+    WorkerDataExchanger::EventList empty_pending_events;
+    et->Instantiate(command->inner_job_ids(),
+                    command->outer_job_ids(),
+                    command->parameters(),
+                    command->phy_ids(),
+                    empty_pending_events,
+                    tgi,
+                    &ready_jobs);
+  }
+
+  StatAddJob(et->job_num());
+
+  active_execution_templates_[tgi] = iter->second;
+
+  JobList::iterator i = ready_jobs.begin();
+  for (; i != ready_jobs.end(); ++i) {
+    ResolveDataArray(*i);
+  }
+  bool success_flag = worker_manager_->PushJobList(&ready_jobs);
+  assert(success_flag);
+}
+
 
 void Worker::LoadSchedulerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
@@ -595,7 +814,7 @@ void Worker::AddJobToGraph(Job* job) {
   boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
 
   // TODO(quhang): when a job is received.
-  StatAddJob();
+  StatAddJob(1);
   assert(job != NULL);
   job_id_t job_id = job->id().elem();
   dbg(DBG_WORKER_FD,
@@ -731,6 +950,7 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
 }
 
 void Worker::NotifyLocalJobDone(Job* job) {
+  bool template_job = false;
   {
     timer::StartTimer(timer::kJobGraph3);
     boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
@@ -738,23 +958,45 @@ void Worker::NotifyLocalJobDone(Job* job) {
 
     job_id_t job_id = job->id().elem();
     data_map_.ReleaseAccess(job_id);
-    // Job done for unknown job is not handled.
-    if (!worker_job_graph_.HasVertex(job_id)) {
-      // The job must be in the local job graph.
-      assert(false);
-      return;
+    job_id_t shadow_job_id = job->shadow_job_id();
+    if (shadow_job_id != NIMBUS_KERNEL_JOB_ID) {
+      template_job = true;
+      ExecutionTemplate *et = job->execution_template();
+      assert(et);
+      JobList ready_jobs;
+      if (et->MarkJobDone(shadow_job_id, &ready_jobs, false)) {
+        assert(ready_jobs.size() == 0);
+        std::map<template_id_t, ExecutionTemplate*>::iterator iter =
+          active_execution_templates_.find(et->template_generation_id());
+        assert(iter != active_execution_templates_.end());
+        active_execution_templates_.erase(iter);
+      } else {
+        JobList::iterator iter = ready_jobs.begin();
+        for (; iter != ready_jobs.end(); ++iter) {
+          ResolveDataArray(*iter);
+        }
+        bool success_flag = worker_manager_->PushJobList(&ready_jobs);
+        assert(success_flag);
+      }
+    } else {
+      // Job done for unknown job is not handled.
+      if (!worker_job_graph_.HasVertex(job_id)) {
+        // The job must be in the local job graph.
+        assert(false);
+        return;
+      }
+      WorkerJobVertex* vertex = NULL;
+      worker_job_graph_.GetVertex(job_id, &vertex);
+      assert(vertex->incoming_edges()->empty());
+      ClearAfterSet(vertex);
+      delete vertex->entry();
+      worker_job_graph_.RemoveVertex(job_id);
+      if (!IDMaker::SchedulerProducedJobID(job_id)) {
+        AddFinishHintSet(job_id);
+      }
+      // vertex->entry()->set_state(WorkerJobEntry::FINISH);
+      // vertex->entry()->set_job(NULL);
     }
-    WorkerJobVertex* vertex = NULL;
-    worker_job_graph_.GetVertex(job_id, &vertex);
-    assert(vertex->incoming_edges()->empty());
-    ClearAfterSet(vertex);
-    delete vertex->entry();
-    worker_job_graph_.RemoveVertex(job_id);
-    if (!IDMaker::SchedulerProducedJobID(job_id)) {
-      AddFinishHintSet(job_id);
-    }
-    // vertex->entry()->set_state(WorkerJobEntry::FINISH);
-    // vertex->entry()->set_job(NULL);
   }
 
   Parameter params;
@@ -768,7 +1010,10 @@ void Worker::NotifyLocalJobDone(Job* job) {
     client_->SendCommand(&cm);
   }
 
-  delete job;
+  if  (!template_job) {
+    delete job;
+  }
+
   timer::StopTimer(timer::kJobGraph3);
 }
 
@@ -916,14 +1161,34 @@ void Worker::ProcessMegaRCREvent(const WorkerDataExchanger::Event& e) {
 
 
 void Worker::ProcessReceiveEvents(const WorkerDataExchanger::EventList& events) {
+  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
+  JobList ready_jobs;
   WorkerDataExchanger::EventList::const_iterator iter;
   for (iter = events.begin(); iter != events.end(); ++iter) {
-    if (iter->mega_rcr_job_id_ == NIMBUS_KERNEL_JOB_ID) {
-      ProcessRCREvent(*iter);
+    template_id_t tgi = iter->template_generation_id_;
+    if (tgi != NIMBUS_INVALID_TEMPLATE_ID) {
+      std::map<template_id_t, ExecutionTemplate*>::iterator it =
+        active_execution_templates_.find(tgi);
+      if (it != active_execution_templates_.end()) {
+        it->second->ProcessReceiveEvent(*iter, &ready_jobs, true);
+      } else {
+        pending_events_[tgi].push_back(*iter);
+      }
     } else {
-      ProcessMegaRCREvent(*iter);
+      if (iter->mega_rcr_job_id_ == NIMBUS_KERNEL_JOB_ID) {
+        ProcessRCREvent(*iter);
+      } else {
+        ProcessMegaRCREvent(*iter);
+      }
     }
   }
+
+  JobList::iterator i = ready_jobs.begin();
+  for (; i != ready_jobs.end(); ++i) {
+    ResolveDataArray(*i);
+  }
+  bool success_flag = worker_manager_->PushJobList(&ready_jobs);
+  assert(success_flag);
 }
 
 
@@ -980,31 +1245,34 @@ bool Worker::IsEmptyGraph(WorkerJobGraph* job_graph) {
   return true;
 }
 
-void Worker::StatAddJob() {
+void Worker::StatAddJob(size_t num) {
   boost::unique_lock<boost::recursive_mutex> lock(stat_mutex_);
   // printf("add %d %d %d %d %d\n",
   //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
   //        stat_blocked_job_num_, stat_ready_job_num_);
-  ++stat_blocked_job_num_;
-  if (stat_idle_cores_ != 0) {
-    --stat_idle_cores_;
-    ++stat_blocked_cores_;
-    // timer::StartTimer(timer::kSumCyclesBlock);
-    block_timer_.Start(1);
+  assert((stat_idle_cores_ >= 0) && (num >= 0));
+  stat_blocked_job_num_ += num;
+  size_t diff = std::min(stat_idle_cores_, num);
+  if (diff > 0) {
+    stat_idle_cores_ -= diff;
+    stat_blocked_cores_ += diff;
+    // timer::StartTimer(timer::kSumCyclesBlock, diff);
+    block_timer_.Start(diff);
   }
   // printf("#add %d %d %d %d %d\n",
   //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
   //        stat_blocked_job_num_, stat_ready_job_num_);
 }
-void Worker::StatDispatchJob(int len) {
+void Worker::StatDispatchJob(size_t num) {
   boost::unique_lock<boost::recursive_mutex> lock(stat_mutex_);
-  // printf("%d dis %d %d %d %d %d\n", len,
+  // printf("%d dis %d %d %d %d %d\n", num,
   //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
   //        stat_blocked_job_num_, stat_ready_job_num_);
-  stat_blocked_job_num_ -= len;
-  stat_ready_job_num_ += len;
+  assert(stat_blocked_job_num_ >= num);
+  stat_blocked_job_num_ -= num;
+  stat_ready_job_num_ += num;
   if (stat_blocked_cores_ > 0) {
-    int release_cores = std::min(stat_blocked_cores_, len);
+    size_t release_cores = std::min(stat_blocked_cores_, num);
     if (release_cores > 0) {
       stat_blocked_cores_ -= release_cores;
       // timer::StopTimer(timer::kSumCyclesBlock, release_cores);
@@ -1018,18 +1286,19 @@ void Worker::StatDispatchJob(int len) {
   //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
   //        stat_blocked_job_num_, stat_ready_job_num_);
 }
-void Worker::StatEndJob(int len) {
+void Worker::StatEndJob(size_t num) {
   boost::unique_lock<boost::recursive_mutex> lock(stat_mutex_);
-  // printf("%d end %d %d %d %d %d\n", len,
+  // printf("%d end %d %d %d %d %d\n", num,
   //        stat_busy_cores_, stat_blocked_cores_, stat_idle_cores_,
   //        stat_blocked_job_num_, stat_ready_job_num_);
-  using std::min;
-  stat_ready_job_num_ -= len;
-  int busy_cores = min(stat_ready_job_num_,
-                       static_cast<int>(WorkerManager::across_job_parallism));
-  int blocked_cores = min(stat_blocked_job_num_,
-                          static_cast<int>(WorkerManager::across_job_parallism) - busy_cores);
-  int idle_cores =
+  stat_ready_job_num_ -= num;
+  size_t busy_cores =
+    std::min(stat_ready_job_num_,
+             static_cast<size_t>(WorkerManager::across_job_parallism));
+  size_t blocked_cores =
+    std::min(stat_blocked_job_num_,
+             static_cast<size_t>(WorkerManager::across_job_parallism) - busy_cores);
+  size_t idle_cores =
       WorkerManager::across_job_parallism - busy_cores - blocked_cores;
   if (busy_cores != stat_busy_cores_) {
     // timer::StopTimer(timer::kSumCyclesRun, stat_busy_cores_ - busy_cores);

@@ -62,10 +62,14 @@ class SerializedData {
     size_t size() const;
     char* data_ptr_raw() const;
     boost::shared_array<char> data_ptr() const;
+    const std::string& header() const;
 
     void set_size(size_t size);
     void set_data_ptr(char* ptr);
     void set_data_ptr(boost::shared_array<char> ptr);
+
+    void set_header(const std::string str) const;
+    void set_header(char *str, size_t size) const;
 
     bool Parse(const std::string& input);
     std::string ToNetworkData();
@@ -74,6 +78,7 @@ class SerializedData {
   private:
     boost::shared_array<char> data_ptr_;
     size_t size_;
+    mutable std::string header_;
 };
 
 typedef std::list<SerializedData*> SerializedDataList;

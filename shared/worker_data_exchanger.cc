@@ -44,6 +44,9 @@
 
 #define _NIMBUS_NO_NETWORK_LOG
 
+#define MAX_THREAD_NUM 1
+#define MAX_HEADER_SIZE 100
+
 #define DATA_EXCHANGER_TCP_SEND_BUF_SIZE 10485760  // 10MB
 #define DATA_EXCHANGER_TCP_RECEIVE_BUF_SIZE 10485760  // 10MB
 
@@ -56,6 +59,7 @@ WorkerDataExchanger::WorkerDataExchanger(port_t port_no)
   io_service_ = new boost::asio::io_service();
   acceptor_ = new tcp::acceptor(*io_service_,
       tcp::endpoint(tcp::v4(), listening_port_));
+  assert(MAX_THREAD_NUM >= 1);
 
 #ifndef _NIMBUS_NO_NETWORK_LOG
   std::ostringstream ss;
@@ -87,11 +91,22 @@ WorkerDataExchanger::~WorkerDataExchanger() {
   delete io_service_;
 }
 
+void WorkerDataExchanger::set_receive_event_mutex(boost::recursive_mutex *mutex) {
+  receive_event_mutex_ = mutex;
+}
+
+void WorkerDataExchanger::set_receive_event_cond(boost::condition_variable_any *cond) {
+  receive_event_cond_ = cond;
+}
+
+void WorkerDataExchanger::ThreadEntry() {
+  timer::InitializeTimers();
+  io_service_->run();
+}
+
 void WorkerDataExchanger::Run() {
   dbg(DBG_NET, "Running the worker data exchanger.\n");
-  timer::InitializeTimers();
   ListenForNewConnections();
-  io_service_->run();
 }
 
 void WorkerDataExchanger::ListenForNewConnections() {
@@ -102,6 +117,12 @@ void WorkerDataExchanger::ListenForNewConnections() {
   acceptor_->async_accept(*connection->socket(),
       boost::bind(&WorkerDataExchanger::HandleAccept,
         this, connection, boost::asio::placeholders::error));
+  if (threads_.size() < MAX_THREAD_NUM) {
+    boost::thread *t = new boost::thread(
+        boost::bind(&WorkerDataExchanger::ThreadEntry, this));
+    threads_.push_back(t);
+  }
+  assert(threads_.size() >= 1);
 }
 
 void WorkerDataExchanger::HandleAccept(WorkerDataExchangerConnection* connection,
@@ -217,15 +238,23 @@ size_t WorkerDataExchanger::ReadHeader(WorkerDataExchangerConnection* connection
       job_id_t mega_rcr_job_id = 0;
       size_t data_length = 0;
       data_version_t version = 0;
-      buffer[i] = '\0';
-      std::string input(buffer);
-      ParseWorkerDataHeader(input, receive_job_id, mega_rcr_job_id, data_length, version);
+      template_id_t template_generation_id = 0;
+
+      char *next;
+      receive_job_id = strtoll(buffer, &next, 10);
+      mega_rcr_job_id = strtoll(next, &next, 10);
+      data_length = strtoll(next, &next, 10);
+      version = strtoll(next, &next, 10);
+      template_generation_id = strtoll(next, &next, 10);
+      assert((*next) == ';');
+
       connection->set_middle_of_data(true);
       connection->set_middle_of_header(false);
       connection->set_receive_job_id(receive_job_id);
       connection->set_mega_rcr_job_id(mega_rcr_job_id);
       connection->set_data_length(data_length);
       connection->set_data_version(version);
+      connection->set_template_generation_id(template_generation_id);
       connection->AllocateData(data_length);
       return (i + 1);
     }
@@ -249,7 +278,8 @@ size_t WorkerDataExchanger::ReadData(WorkerDataExchangerConnection* connection,
     AddSerializedData(connection->receive_job_id(),
                       connection->mega_rcr_job_id(),
                       ser_data,
-                      connection->data_version());
+                      connection->data_version(),
+                      connection->template_generation_id());
     return remaining;
   }
 }
@@ -257,7 +287,8 @@ size_t WorkerDataExchanger::ReadData(WorkerDataExchangerConnection* connection,
 void WorkerDataExchanger::AddSerializedData(job_id_t receive_job_id,
                                             job_id_t mega_rcr_job_id,
                                             SerializedData* ser_data,
-                                            data_version_t version) {
+                                            data_version_t version,
+                                            template_id_t template_generation_id) {
 #ifndef _NIMBUS_NO_NETWORK_LOG
   char buff[LOG_MAX_BUFF_SIZE];
   snprintf(buff, sizeof(buff), "R %10.9lf j: %5.0lu s: %5.0lu",
@@ -265,19 +296,21 @@ void WorkerDataExchanger::AddSerializedData(job_id_t receive_job_id,
   log_.log_WriteToFile(std::string(buff));
 #endif
   timer::StartTimer(timer::kDataExchangerLock);
-  boost::mutex::scoped_lock lock(event_list_mutex_);
+  boost::unique_lock<boost::recursive_mutex> lock(*receive_event_mutex_);
   timer::StopTimer(timer::kDataExchangerLock);
   event_list_.push_back(Event(receive_job_id,
                               mega_rcr_job_id,
                               version,
-                              ser_data));
+                              ser_data,
+                              template_generation_id));
+  receive_event_cond_->notify_all();
 }
 
 size_t WorkerDataExchanger::PullReceiveEvents(EventList *events,
                                              size_t max_num) {
   events->clear();
   timer::StartTimer(timer::kDataExchangerLock);
-  boost::mutex::scoped_lock lock(event_list_mutex_);
+  boost::unique_lock<boost::recursive_mutex> lock(*receive_event_mutex_);
   timer::StopTimer(timer::kDataExchangerLock);
   size_t count = 0;
   EventList::iterator iter = event_list_.begin();
@@ -299,41 +332,45 @@ bool WorkerDataExchanger::AddContactInfo(worker_id_t worker_id,
 }
 
 
-bool WorkerDataExchanger::SendSerializedData(job_id_t receive_job_id,
-                                             job_id_t mega_rcr_job_id,
-                                             worker_id_t worker_id,
-                                             SerializedData& ser_data,
-                                             data_version_t version) {
-  boost::shared_array<char> buf = ser_data.data_ptr();
-  size_t size = ser_data.size();
-  boost::mutex::scoped_lock lock1(send_connection_mutex_);
-  boost::mutex::scoped_lock lock2(address_book_mutex_);
-  if (send_connections_.count(worker_id) == 0) {
-    if (address_book_.count(worker_id) == 0) {
-      std::cout << "ERROR: could not find the address info of the worker id: " <<
-        worker_id << std::endl;
-      return false;
+bool WorkerDataExchanger::SendSerializedData(const job_id_t& receive_job_id,
+                                             const job_id_t& mega_rcr_job_id,
+                                             const worker_id_t& worker_id,
+                                             const SerializedData& ser_data,
+                                             const data_version_t& version,
+                                             const template_id_t& template_generation_id) {
+  char header[MAX_HEADER_SIZE];
+  int header_size = snprintf(header, MAX_HEADER_SIZE, "%lu %lu %lu %lu %lu;",
+                             receive_job_id,
+                             mega_rcr_job_id,
+                             ser_data.size(),
+                             version,
+                             template_generation_id);
+  if (header_size >= MAX_HEADER_SIZE || header_size < 0) {
+    dbg(DBG_ERROR, "ERROR: failed building the header %d.\n", header_size); // NOLINT
+    assert(false);
+  }
+  ser_data.set_header(header, (size_t)(header_size));
+
+  WorkerDataExchangerConnection* connection = NULL;
+  {
+    boost::mutex::scoped_lock lock1(send_connection_mutex_);
+    boost::mutex::scoped_lock lock2(address_book_mutex_);
+    WorkerDataExchangerConnectionMap::iterator iter =
+      send_connections_.find(worker_id);
+    if (iter == send_connections_.end()) {
+      if (address_book_.count(worker_id) == 0) {
+        dbg(DBG_ERROR, "ERROR: could not find the address info of the worker id: %lu.\n", worker_id); //NOLINT
+        assert(false);
+      } else {
+        std::pair<std::string, port_t> add = address_book_[worker_id];
+        CreateNewSendConnection(worker_id, add.first, add.second);
+      }
+      connection = send_connections_[worker_id];
     } else {
-      std::pair<std::string, port_t> add = address_book_[worker_id];
-      CreateNewSendConnection(worker_id, add.first, add.second);
+      connection = iter->second;
     }
   }
-  WorkerDataExchangerConnection* connection = send_connections_[worker_id];
-  boost::system::error_code ignored_error;
 
-  std::string header;
-  std::ostringstream ss_j;
-  ss_j << receive_job_id;
-  header += (ss_j.str() + " ");
-  std::ostringstream ss_m;
-  ss_m << mega_rcr_job_id;
-  header += (ss_m.str() + " ");
-  std::ostringstream ss_s;
-  ss_s << size;
-  header += (ss_s.str() + " ");
-  std::ostringstream ss_v;
-  ss_v << version;
-  header += (ss_v.str() + ";");
 
 #ifndef _NIMBUS_NO_NETWORK_LOG
   char buff[LOG_MAX_BUFF_SIZE];
@@ -342,12 +379,75 @@ bool WorkerDataExchanger::SendSerializedData(job_id_t receive_job_id,
   log_.log_WriteToFile(std::string(buff));
 #endif
 
-  boost::asio::write(*(connection->socket()), boost::asio::buffer(header),
-      boost::asio::transfer_all(), ignored_error);
-  boost::asio::write(*(connection->socket()),
-      boost::asio::buffer(buf.get(), size),
-      boost::asio::transfer_all(), ignored_error);
+  // For asynchronous write
+  {
+    boost::mutex::scoped_lock lock(*(connection->mutex()));
+    std::list<SerializedData>* q = connection->send_queue();
+    if (q->size() == 0) {
+      std::vector<boost::asio::const_buffer> buffers;
+      // Note: header() method returns a reference so the hader buffer remains
+      // valid as long as ser_data is valid. - omidm
+      buffers.push_back(boost::asio::buffer(ser_data.header(), ser_data.header().size()));
+      buffers.push_back(boost::asio::buffer(ser_data.data_ptr().get(), ser_data.size()));
+
+      boost::asio::async_write(*(connection->socket()),
+                               buffers,
+                               boost::bind(&WorkerDataExchanger::HandleWrite,
+                                           this,
+                                           connection,
+                                           boost::asio::placeholders::error,
+                                           boost::asio::placeholders::bytes_transferred));
+    }
+    q->push_back(ser_data);
+  }
+
+
+  // For synchronous write
+  // {
+  //   boost::mutex::scoped_lock lock(*(connection->mutex()));
+  //   boost::system::error_code ignored_error;
+  //   boost::asio::write(*(connection->socket()),
+  //       boost::asio::buffer(header, header_size),
+  //       boost::asio::transfer_all(), ignored_error);
+  //   boost::asio::write(*(connection->socket()),
+  //       boost::asio::buffer(ser_data.data_ptr().get(), ser_data.size()),
+  //     boost::asio::transfer_all(), ignored_error);
+  // }
+
   return true;
+}
+
+void WorkerDataExchanger::HandleWrite(WorkerDataExchangerConnection* connection,
+                                      const boost::system::error_code& error,
+                                      size_t bytes_transferred) {
+  if (error) {
+    dbg(DBG_NET|DBG_ERROR, "Error %s.\n", error.message().c_str());
+    return;
+  }
+
+  {
+    boost::mutex::scoped_lock lock(*(connection->mutex()));
+    std::list<SerializedData>* q = connection->send_queue();
+    assert(q->size() > 0);
+    q->pop_front();
+    if (q->size() > 0) {
+      SerializedData ser_data = q->front();
+
+      std::vector<boost::asio::const_buffer> buffers;
+      // Note: header() method returns a reference so the hader buffer remains
+      // valid as long as ser_data is valid. - omidm
+      buffers.push_back(boost::asio::buffer(ser_data.header(), ser_data.header().size()));
+      buffers.push_back(boost::asio::buffer(ser_data.data_ptr().get(), ser_data.size()));
+
+      boost::asio::async_write(*(connection->socket()),
+                               buffers,
+                               boost::bind(&WorkerDataExchanger::HandleWrite,
+                                           this,
+                                           connection,
+                                           boost::asio::placeholders::error,
+                                           boost::asio::placeholders::bytes_transferred));
+    }
+  }
 }
 
 bool WorkerDataExchanger::CreateNewSendConnection(worker_id_t worker_id,
@@ -376,11 +476,6 @@ bool WorkerDataExchanger::CreateNewSendConnection(worker_id_t worker_id,
   connection->socket()->set_option(nd_option);
   send_connections_[worker_id] = connection;
   return true;
-}
-
-void WorkerDataExchanger::HandleWrite(WorkerDataExchangerConnection* connection,
-                                      const boost::system::error_code& error,
-                                      size_t bytes_transferred) {
 }
 
 WorkerDataExchangerConnectionMap* WorkerDataExchanger::send_connections() {

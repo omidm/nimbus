@@ -75,6 +75,7 @@ int main(int argc, char *argv[]) {
   uint64_t max_iterations;
   uint64_t iteration_batch;
   uint64_t smart_projection_level;
+  float water_level;
 
 
   po::options_description desc("Options");
@@ -100,6 +101,7 @@ int main(int argc, char *argv[]) {
     ("maxi", po::value<uint64_t>(&max_iterations), "maximum projection iterations") //NOLINT
     ("ibatch", po::value<uint64_t>(&iteration_batch), "projection iteration batch") //NOLINT
     ("psl", po::value<uint64_t>(&smart_projection_level), "smart projection level") //NOLINT
+    ("wl", po::value<float>(&water_level), "initial water level, float between 0 and 1") //NOLINT
 
     ("ithread", po::value<uint64_t>(&WorkerManager::inside_job_parallism), "number of threads within one job") //NOLINT
     ("othread", po::value<uint64_t>(&WorkerManager::across_job_parallism), "number of threads at worker for job execution") //NOLINT
@@ -167,6 +169,10 @@ int main(int argc, char *argv[]) {
 
   if (vm.count("psl")) {
     app->set_smart_projection(smart_projection_level);
+  }
+
+  if (vm.count("wl")) {
+    app->set_water_level(water_level);
   }
 
   if (vm.count("maxi")) {

@@ -80,6 +80,10 @@ namespace nimbus {
     virtual void set_data_manager(DataManager *data_manager);
     virtual void set_job_assigner(JobAssigner *job_assigner);
     virtual void set_assign_batch_size(size_t num);
+    virtual void set_split_dimensions(const std::vector<size_t>& split);
+    virtual void set_sub_split_dimensions(const std::vector<size_t>& split);
+    virtual void set_global_region(const GeometricRegion& region);
+
 
     virtual void Run();
 
@@ -112,6 +116,13 @@ namespace nimbus {
     load_balancing_id_t load_balancing_id_;
     bool safe_to_load_balance_;
 
+    bool enforced_split_;
+    bool enforced_sub_split_;
+    bool enforced_global_region_;
+    std::vector<size_t> split_;
+    std::vector<size_t> sub_split_;
+    GeometricRegion global_region_;
+
     class WorkerStat {
       public:
         WorkerStat(const counter_t& query_id,
@@ -140,7 +151,6 @@ namespace nimbus {
 
   private:
     LoadBalancer(const LoadBalancer& other) {}
-    void Initialize();
 
     typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
     WorkerMap worker_map_;

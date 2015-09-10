@@ -74,17 +74,20 @@ class WorkerDataExchanger {
       Event(const job_id_t& receive_job_id,
             const job_id_t& mega_rcr_job_id,
             const data_version_t& version,
-            SerializedData *ser_data)
+            SerializedData *ser_data,
+            const template_id_t& template_generation_id)
         : receive_job_id_(receive_job_id),
           mega_rcr_job_id_(mega_rcr_job_id),
           version_(version),
-          ser_data_(ser_data) {}
+          ser_data_(ser_data),
+          template_generation_id_(template_generation_id) {}
       ~Event() {}
 
       job_id_t receive_job_id_;
       job_id_t mega_rcr_job_id_;
       data_version_t version_;
       SerializedData *ser_data_;
+      template_id_t template_generation_id_;
   };
 
   typedef std::list<Event> EventList;
@@ -93,6 +96,7 @@ class WorkerDataExchanger {
   virtual ~WorkerDataExchanger();
 
   virtual void Run();
+  virtual void ThreadEntry();
 
   virtual bool AddContactInfo(worker_id_t worker_id,
                               std::string ip_address, port_t port_no);
@@ -100,15 +104,20 @@ class WorkerDataExchanger {
   virtual size_t PullReceiveEvents(EventList *events,
                                       size_t max_num);
 
-  virtual bool SendSerializedData(job_id_t receive_job_id,
-                                  job_id_t mega_rcr_job_id,
-                                  worker_id_t worker_id,
-                                  SerializedData& ser_data,
-                                  data_version_t version);
+  virtual bool SendSerializedData(const job_id_t& receive_job_id,
+                                  const job_id_t& mega_rcr_job_id,
+                                  const worker_id_t& worker_id,
+                                  const SerializedData& ser_data,
+                                  const data_version_t& version,
+                                  const template_id_t& template_generation_id);
 
   WorkerDataExchangerConnectionMap* send_connections();
 
   WorkerDataExchangerConnectionList* receive_connections();
+
+  void set_receive_event_mutex(boost::recursive_mutex *mutex);
+
+  void set_receive_event_cond(boost::condition_variable_any *cond);
 
   void WriteTimeDriftToLog(double drift);
 
@@ -120,11 +129,15 @@ class WorkerDataExchanger {
   tcp::acceptor* acceptor_;
   boost::asio::io_service* io_service_;
 
+  std::vector<boost::thread*> threads_;
+
   AddressBook address_book_;
   boost::mutex address_book_mutex_;
 
   EventList event_list_;
-  boost::mutex event_list_mutex_;
+  boost::recursive_mutex *receive_event_mutex_;
+  boost::condition_variable_any *receive_event_cond_;
+
 
   WorkerDataExchangerConnectionMap send_connections_;
   boost::mutex send_connection_mutex_;
@@ -162,7 +175,8 @@ class WorkerDataExchanger {
   virtual void AddSerializedData(job_id_t receive_job_id,
                                  job_id_t mega_rcr_job_id,
                                  SerializedData* ser_data,
-                                 data_version_t version);
+                                 data_version_t version,
+                                 template_id_t template_generation_id);
 };
 
 }  // namespace nimbus

@@ -95,6 +95,10 @@ class Scheduler {
     virtual void set_command_batch_size(size_t num);
     virtual void set_job_done_batch_size(size_t num);
 
+    virtual void set_split_dimensions(const std::vector<size_t>& split);
+    virtual void set_sub_split_dimensions(const std::vector<size_t>& split);
+    virtual void set_global_region(const GeometricRegion& region);
+
     /* TODO(omidm): figure out what we want for these methods. */
     virtual void LoadClusterMap(std::string) {}
     virtual void DeleteWorker(SchedulerWorker * worker) {}
@@ -198,6 +202,10 @@ class Scheduler {
     int64_t load_balancing_period_;
     bool fault_tolerance_active_;
     int64_t checkpoint_creation_period_;
+
+    std::vector<size_t> split_;
+    std::vector<size_t> sub_split_;
+    GeometricRegion global_region_;
 
     port_t listening_port_;
     size_t init_worker_num_;

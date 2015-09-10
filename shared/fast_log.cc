@@ -61,6 +61,7 @@ TimersMap timers_map;
 CountersMap counters_map;
 pthread_key_t timer_keys[kMaxTimer];
 pthread_key_t counter_keys[kMaxCounter];
+nimbus_ttimer_level ttimer_level = NO_TTIMER;
 
 std::string TimerName(TimerType timer_type) {
   switch (timer_type) {
@@ -125,8 +126,27 @@ std::string CounterName(CounterType counter_type) {
 }
 
 void InitializeKeys() {
+  ttimer_level = NO_TTIMER;  // by default timers are off;
+
+  const char * ttimer_env = getenv("TTIMER");
+  if (ttimer_env) {
+    if (strcmp(ttimer_env, "none") == 0) {
+      ttimer_level = NO_TTIMER;
+    } else if (strcmp(ttimer_env, "l0") == 0) {
+      ttimer_level = LEVEL_ZERO;
+    } else if (strcmp(ttimer_env, "l1") == 0) {
+      ttimer_level = LEVEL_ONE;
+    } else if (strcmp(ttimer_env, "l2") == 0) {
+      ttimer_level = LEVEL_TWO;
+    } else if (strcmp(ttimer_env, "l3") == 0) {
+      ttimer_level = LEVEL_THREE;
+    } else if (strcmp(ttimer_env, "all") == 0) {
+      ttimer_level = kMaxTimer;
+    }
+  }
+
   pthread_mutex_init(&map_lock, NULL);
-  for (int i = 0; i < kMaxTimer; ++i) {
+  for (int i = 0; i < ttimer_level; ++i) {
     pthread_key_create(&(timer_keys[i]), NULL);
   }
   for (int i = 0; i < kMaxCounter; ++i) {
@@ -136,7 +156,7 @@ void InitializeKeys() {
 
 void InitializeTimers() {
   pid_t pid = syscall(SYS_gettid);
-  for (int i = 0; i < kMaxTimer; ++i) {
+  for (int i = 0; i < ttimer_level; ++i) {
     TimerRecord* record = new(malloc(4096)) TimerRecord;
     pthread_setspecific(timer_keys[i], record);
     pthread_mutex_lock(&map_lock);
@@ -186,7 +206,10 @@ void PrintTimerSummary(FILE* output) {
 }
 
 
-int64_t ReadTimerTypeSum(TimerType type) {
+int64_t ReadTimerTypeSum(TimerType timer_type) {
+  if (timer_type > ttimer_level) {
+    return 0;
+  }
   pthread_mutex_lock(&map_lock);
   struct timespec now;
   int64_t sum = 0;
@@ -195,7 +218,7 @@ int64_t ReadTimerTypeSum(TimerType type) {
        iter != timers_map.end(); ++iter) {
     TimerRecord* record = iter->second;
     assert(record != NULL);
-    if (iter->first.second == type) {
+    if (iter->first.second == timer_type) {
       sum += record->sum +
              record->depth * (
                  (now.tv_sec - record->old_timestamp.tv_sec) * 1e9

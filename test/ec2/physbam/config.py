@@ -21,8 +21,8 @@ NIMBUS_AMI = 'ami-5a45306a'
 UBUNTU_AMI = 'ami-fa9cf1ca'
 KEY_NAME = 'omidm-sing-key-pair-us-west-2'
 SECURITY_GROUP = 'nimbus_sg_uswest2'
-INSTANCE_TYPE = 'c3.xlarge'
-PLACEMENT_GROUP = 'nimbus-cluster'
+INSTANCE_TYPE = 'c3.2xlarge'
+PLACEMENT_GROUP = 'physbam-cluster'
 INSTANCE_NUM = 8
 
 

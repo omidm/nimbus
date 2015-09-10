@@ -535,6 +535,7 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
                                   const std::vector<Parameter>& parameters,
                                   const std::vector<job_id_t>& copy_job_ids,
                                   const std::vector<physical_data_id_t> *physical_ids,
+                                  const template_id_t& template_generation_id,
                                   SchedulerServer *server) {
   Log log(Log::NO_FILE);
   log.log_StartTimer();
@@ -578,7 +579,7 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
 
 
   if (established_command_template_) {
-    SpawnCommandTemplateAtWorkers(parameters, server);
+    SpawnCommandTemplateAtWorkers(parameters, server, template_generation_id);
     return true;
   }
 
@@ -688,7 +689,8 @@ void BindingTemplate::SendCommandTemplateFinalizeToWorkers(SchedulerServer *serv
 }
 
 void BindingTemplate::SpawnCommandTemplateAtWorkers(const std::vector<Parameter>& parameters,
-                                                    SchedulerServer *server) {
+                                                    SchedulerServer *server,
+                                                    const template_id_t& template_generation_id) {
   std::set<worker_id_t>::iterator iter = worker_ids_.begin();
   for (; iter != worker_ids_.end(); ++iter) {
     worker_id_t w_id = *iter;
@@ -736,7 +738,8 @@ void BindingTemplate::SpawnCommandTemplateAtWorkers(const std::vector<Parameter>
                                    inner_job_ids,
                                    outer_job_ids,
                                    params,
-                                   phy_ids);
+                                   phy_ids,
+                                   template_generation_id);
 
     SchedulerWorker *worker;
     if (!server->GetSchedulerWorkerById(worker, w_id)) {
