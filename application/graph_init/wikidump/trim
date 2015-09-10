@@ -12,7 +12,7 @@
 echo "Pages file is $1"
 echo "Links file is $2"
 
-RDIR=result
+RDIR=result/trim
 
 mkdir -p ${RDIR}
 

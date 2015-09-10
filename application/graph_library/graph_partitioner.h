@@ -59,7 +59,7 @@ class GraphPartitioner {
     size_t *node_degree_;  // degree of each node
     size_t num_edges_;     // number of edges in graph
     size_t *edge_src_;     // source node index for edges
-    size_t *edge_dst_;     // destination ndoe index for egdes
+    size_t *edge_dst_;     // destination node index for egdes
     size_t num_partitions_;        // number of partitions
     size_t *node_partitions_;      // node partition id
 
@@ -75,7 +75,11 @@ class GraphPartitioner {
     ~GraphPartitioner();
     // load a graph from tsv nodes and edges files
     void LoadFromTSV(std::string node_file_name,
-        std::string edge_file_name);
+                     std::string edge_file_name);
+    // load a graph by reading in number of nodes, number of edges, and edges
+    void LoadGraph(std::string num_nodes_file_name,
+                   std::string num_edges_file_name,
+                   std::string edges_file_name);
     // construct random edge-cut partitions on graph, with p partitions
     void PartitionRandomEdgeCut(size_t num_partitions);
     // determine logical objects for an edge-cut partitioned graph, and

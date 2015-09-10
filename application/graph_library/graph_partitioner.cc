@@ -56,6 +56,8 @@
 
 namespace nimbus {
 
+#define NUM_LOG 1000000
+
 GraphPartitioner::GraphPartitioner() : num_nodes_(0), node_degree_(0),
                                        num_edges_(0), edge_src_(0), edge_dst_(0),
                                        num_partitions_(0), node_partitions_(0),
@@ -130,18 +132,24 @@ void GraphPartitioner::LoadFromTSV(std::string node_file_name,
   edge_file.open(edge_file_name.c_str());
 
   // determine number of nodes and edges
+  std::cout << "Loading graph metadata ...\n";
   std::string line;
   num_nodes_ = 0;
   while (std::getline(node_file, line)) {
     num_nodes_++;
   }
+  std::cout << "Graph has " << num_nodes_ << " nodes\n";
   num_edges_ = 0;
   while (std::getline(edge_file, line)) {
     num_edges_++;
   }
+  std::cout << "Graph has " << num_edges_ << " edges\n";
 
   node_file.close();
   edge_file.close();
+
+  std::cout << "Loading " << num_nodes_ << " nodes and " <<
+    num_edges_ << " edges ...\n";
 
   node_file.open(node_file_name.c_str());
   edge_file.open(edge_file_name.c_str());
@@ -155,8 +163,11 @@ void GraphPartitioner::LoadFromTSV(std::string node_file_name,
     node_map[node_name] = node_id;
     node_degree_[node_id] = 0;
     node_id++;
+    if (node_id % NUM_LOG == 0)
+      std::cout << "Loaded " << node_id << " nodes ...\n";
   }
   assert(node_id == num_nodes_);
+  std::cout << "Completed loading all " << num_nodes_ << " nodes\n";
 
   // determine src node id and dst node id for each edge
   edge_src_ = new size_t[num_edges_];
@@ -164,9 +175,67 @@ void GraphPartitioner::LoadFromTSV(std::string node_file_name,
   size_t edge_id = 0;
   std::string src_name, dst_name;
   while (edge_file >> src_name && edge_file >> dst_name) {
+    if (node_map.find(src_name) == node_map.end() ||
+        node_map.find(dst_name) == node_map.end()) {
+      std::cout << "Invalid node " << src_name << " or " << dst_name << std::endl;
+      exit(-1);
+    }
     edge_src_[edge_id] = node_map[src_name];
     edge_dst_[edge_id] = node_map[dst_name];
     node_degree_[node_map[src_name]]++;
+    edge_id++;
+    if (edge_id % NUM_LOG == 0)
+      std::cout << "Loaded " << edge_id << " edges ...\n";
+  }
+  assert(edge_id == num_edges_);
+
+  node_file.close();
+  edge_file.close();
+  std::cout << "Completed loading all " << num_edges_ << " edges\n";
+}
+
+/*
+ * Load graph in memory.
+ */
+void GraphPartitioner::LoadGraph(std::string num_nodes_file_name,
+                                 std::string num_edges_file_name,
+                                 std::string edges_file_name) {
+  std::ifstream num_nodes_file, num_edges_file, edges_file;
+  if (!(boost::filesystem::is_regular_file(num_nodes_file_name) &&
+        boost::filesystem::is_regular_file(num_edges_file_name) &&
+        boost::filesystem::is_regular_file(edges_file_name))) {
+    std::cout << "Invalid input node file or edge file\n";
+    exit(-1);
+  }
+  num_nodes_file.open(num_nodes_file_name.c_str());
+  num_edges_file.open(num_edges_file_name.c_str());
+
+  // determine number of nodes and edges
+  num_nodes_file >> num_nodes_;
+  num_edges_file >> num_edges_;
+  num_nodes_file.close();
+  num_edges_file.close();
+  std::cout << "Loading graph with " << num_nodes_ << " nodes and " <<
+    num_edges_ << " edges ...\n";
+
+  // read in edges
+  edges_file.open(edges_file_name.c_str());
+  node_degree_ = new size_t[num_nodes_];
+  for (size_t n = 0; n < num_nodes_; ++n) {
+    node_degree_[n] = 0;
+  }
+
+  // determine src node id and dst node id for each edge
+  edge_src_ = new size_t[num_edges_];
+  edge_dst_ = new size_t[num_edges_];
+  size_t edge_id = 0;
+  size_t src_id, dst_id;
+  while (edges_file >> src_id && edges_file >> dst_id) {
+    std::cout << edge_id << std::endl;
+    std::cout << src_id << " , " << dst_id << std::endl;
+    edge_src_[edge_id] = src_id;
+    edge_dst_[edge_id] = dst_id;
+    node_degree_[src_id]++;
     edge_id++;
   }
   assert(edge_id == num_edges_);
