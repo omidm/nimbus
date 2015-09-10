@@ -55,7 +55,7 @@
 #include "application/page_rank/protobuf_compiled/parameter_msg.pb.h"
 #include "shared/nimbus.h"
 
-#define ALPHA 0.05
+#define ALPHA 0.1
 
 namespace nimbus {
 
