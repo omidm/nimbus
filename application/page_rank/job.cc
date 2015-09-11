@@ -55,7 +55,7 @@
 #include "application/page_rank/protobuf_compiled/parameter_msg.pb.h"
 #include "shared/nimbus.h"
 
-#define ALPHA 0.1
+#define ALPHA 0.15
 
 namespace nimbus {
 
@@ -187,7 +187,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
   if (loop_counter > 1) {
     std::cout << "Iterations left : " << loop_counter - 1 << "\n";
 
-    StartTemplate("for_loop");
+    StartTemplate("__MARK_STAT_for_loop");
 
     // scatter job
     {
@@ -245,7 +245,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
                       before, after, loop_params);
       MarkEndOfStage();
 
-      EndTemplate("for_loop");
+      EndTemplate("__MARK_STAT_for_loop");
     }
   } else {
     if (loop_counter > 0) {
@@ -330,7 +330,7 @@ void Init::Execute(Parameter params, const DataArray& da) {
     NodeData& nodes = *(static_cast<NodeData*>(nodes_vector[0]));
     nodes.ResetNodes();
     std::string line;
-    double rank_init_val = 1.0/(double)(page_rank->num_nodes());  // NOLINT
+    double rank_init_val = ALPHA/(double)(page_rank->num_nodes());  // NOLINT
     while (std::getline(node_file, line)) {
       std::vector<std::string> tokens;
       boost::algorithm::split(tokens, line,
