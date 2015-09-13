@@ -53,7 +53,7 @@ FIRST_PORT                      = 5900
 PARTITIONS                      = 10
 INPUT_DIR                       = 'input-wiki-' + str(PARTITIONS) + 'p'
 OUTPUT_DIR                      = 'output-wiki'
-ITERATION_NUM                   = 10
+ITERATION_NUM                   = 11
 
 
 # worker/simulation (common) configurations
