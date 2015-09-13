@@ -40,7 +40,7 @@ def run_scheduler(scheduler_ip, worker_num):
   scheduler_command += ' -t ' + str(config.ASSIGNER_THREAD_NUM)
   scheduler_command += ' -a ' + str(config.BATCH_ASSIGN_NUM)
   scheduler_command += ' -c ' + str(config.COMMAND_BATCH_SIZE)
-  scheduler_command += ' --split ' + str(config.PARTITIONS) + ' 1 1'
+  scheduler_command += ' --split ' + str(config.WORKER_NUM) + ' 1 1'
   if config.ACTIVATE_LB:
     scheduler_command += ' --alb '
   if config.ACTIVATE_FT:
