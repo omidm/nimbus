@@ -257,6 +257,44 @@ void GraphPartitioner::PartitionRandomEdgeCut(size_t num_partitions) {
 }
 
 /*
+ * Creates a random edge-cut partition by placing vertices in random partitions,
+ * and refine partitions based on neighboring vertex partitions.
+ */
+void GraphPartitioner::PartitionRandomEdgeCutAndRefine(
+    size_t num_partitions, size_t num_passes) {
+  num_partitions_ = num_partitions;
+  srand(0);
+  if (!node_partitions_)
+    node_partitions_ = new size_t[num_nodes_];
+  for (size_t n = 0; n < num_nodes_; ++n) {
+    node_partitions_[n] = rand() % num_partitions;  // NOLINT
+  }
+  size_t blen = num_partitions * num_nodes_;
+  size_t *neighbor_partitions = new size_t[blen];
+  for (size_t pass = 0; pass < num_passes; ++pass) {
+    for (size_t i = 0; i < blen; ++i) {
+      neighbor_partitions[i] = 0;
+    }
+    for (size_t e = 0; e < num_edges_; ++e) {
+      size_t src = edge_src_[e];
+      size_t dst = edge_dst_[e];
+      neighbor_partitions[src * num_partitions + node_partitions_[dst]] += 1;
+    }
+    for (size_t n = 0; n < num_nodes_; ++n) {
+      size_t row = n * num_partitions;
+      size_t partn = node_partitions_[n];
+      size_t count = 0;
+      for (size_t p = 0; p < num_partitions; ++p) {
+        if (neighbor_partitions[row + p] > count)
+          partn = p;
+      }
+      node_partitions_[n] = partn;
+    }
+  }
+  delete neighbor_partitions;
+}
+
+/*
  * Determines disjoint logical objects on edges and vertices. Also determines
  * the set of logical objects in read and write sets for each partition.
  */

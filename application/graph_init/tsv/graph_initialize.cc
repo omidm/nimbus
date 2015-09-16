@@ -46,6 +46,8 @@
 int main(int argc, char **argv) {
   nimbus::GraphPartitioner graph;
 
+  size_t num_passes = 0;
+
   namespace po = boost::program_options;
   po::options_description desc("Options");
   desc.add_options()
@@ -53,6 +55,8 @@ int main(int argc, char **argv) {
     ("nodefile", po::value<std::string>()->required(), "node file name")
     ("edgefile", po::value<std::string>()->required(), "edge file name")
     ("partitions", po::value<int>()->required(), "number of partitions")
+    ("passes", po::value<size_t>(&num_passes),
+     "number of times to refine partitions")
     ("outdir", po::value<std::string>()->required(),
      "output partitions and logical regions to this directory")
     ;  // NOLINT
@@ -76,7 +80,7 @@ int main(int argc, char **argv) {
 
   graph.LoadFromTSV(vm["nodefile"].as<std::string>().c_str(),
                     vm["edgefile"].as<std::string>().c_str());
-  graph.PartitionRandomEdgeCut(vm["partitions"].as<int>());
+  graph.PartitionRandomEdgeCutAndRefine(vm["partitions"].as<int>(), num_passes);
   graph.DetermineLogicalObjects();
   graph.SaveGraphInEachPartition(vm["outdir"].as<std::string>().c_str());
   graph.SaveLogicalObjects(vm["outdir"].as<std::string>().c_str());
