@@ -285,8 +285,10 @@ void GraphPartitioner::PartitionRandomEdgeCutAndRefine(
       size_t partn = node_partitions_[n];
       size_t count = 0;
       for (size_t p = 0; p < num_partitions; ++p) {
-        if (neighbor_partitions[row + p] > count)
+        if (neighbor_partitions[row + p] > count) {
           partn = p;
+          count = neighbor_partitions[row + p];
+        }
       }
       node_partitions_[n] = partn;
     }
