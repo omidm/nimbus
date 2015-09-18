@@ -23,13 +23,11 @@ NIMBUS_AMI                      = 'ami-37202e07'
 KEY_NAME                        = 'nimbus_chinmayee'
 SECURITY_GROUP                  = 'nimbus_sg_uswest2'
 CONTROLLER_INSTANCE_TYPE        = 'c3.4xlarge'
-WORKER_INSTANCE_TYPE            = 'c3.4xlarge'
+WORKER_INSTANCE_TYPE            = 'c3.2xlarge'
 PLACEMENT                       = 'us-west-2c' # None
-PLACEMENT_GROUP               = 'nimbus-cluster' # None
-# PLACEMENT_GROUP                 = '*'
 PRIVATE_KEY                     = '/home/chinmayee/.ssh/' + KEY_NAME + '.pem'
 CONTROLLER_NUM                  = 1
-WORKER_NUM                      = 10
+WORKER_NUM                      = 5
 INSTANCE_NUM                    = WORKER_NUM + CONTROLLER_NUM
 
 # controller configurations
@@ -50,15 +48,20 @@ FIRST_PORT                      = 5900
 
 
 # worker/simulation (app specific) configurations
-PARTITIONS                      = 160  # NOTE: CHANGE THIS FOR EXPERIMENTS
+PARTITIONS                      = 80  # NOTE: CHANGE THIS FOR EXPERIMENTS
 INPUT_DIR                       = 'input-wiki-' + str(PARTITIONS) + 'p'
 OUTPUT_DIR                      = 'output-wiki'
 ITERATION_NUM                   = 11
 
 
+# placement group
+# PLACEMENT_GROUP             = '*'
+PLACEMENT_GROUP               = 'pagerank-' + str(PARTITIONS) + '-p-' + str(WORKER_NUM) + 'w'  # None
+
+
 # worker/simulation (common) configurations
 # OTHREAD_NUM                     = (PARTITIONS/WORKER_NUM)
-OTHREAD_NUM                     = 8
+OTHREAD_NUM                     = 8  # NOTE: VERIFY THAT THIS MAKES SENSE
 RUN_WITH_TASKSET                = False
 WORKER_TASKSET                  = '0-1,4-5'
 # ITERATION_BATCH               = 1
