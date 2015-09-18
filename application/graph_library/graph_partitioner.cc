@@ -271,7 +271,7 @@ void GraphPartitioner::PartitionRandomEdgeCutRefine(size_t num_partitions,
   if (!node_partitions_)
     node_partitions_ = new size_t[num_nodes_];
   for (size_t n = 0; n < num_nodes_; ++n) {
-    node_partitions_[n] = 2 * (rand() % step1_partitions);  // NOLINT
+    node_partitions_[n] = step2_partitions * (rand() % step1_partitions);  // NOLINT
   }
   for (size_t n = 0; n < num_nodes_; ++n) {
     node_partitions_[n] += rand() % step2_partitions;  // NOLINT
