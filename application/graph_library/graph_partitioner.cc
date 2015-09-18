@@ -257,10 +257,48 @@ void GraphPartitioner::PartitionRandomEdgeCut(size_t num_partitions) {
 }
 
 /*
+ * Creates a random edge-cut partition by placing vertices in random partitions
+ * into step1_partitions, further partitioning each partition into
+ * step2_partitions.
+ */
+void GraphPartitioner::PartitionRandomEdgeCutRefine(size_t num_partitions,
+                                                    size_t step1_partitions,
+                                                    size_t step2_partitions) {
+  assert(num_partitions == step1_partitions * step2_partitions);
+  num_partitions_ = num_partitions;
+  srand(0);
+  if (!node_partitions_)
+    node_partitions_ = new size_t[num_nodes_];
+  for (size_t n = 0; n < num_nodes_; ++n) {
+    node_partitions_[n] = 2 * (rand() % step1_partitions);  // NOLINT
+  }
+  for (size_t n = 0; n < num_nodes_; ++n) {
+    node_partitions_[n] += rand() % step2_partitions;  // NOLINT
+  }
+}
+
+/*
+ * Creates a random edge-cut partition by placing vertices in random partitions
+ * into step1_partitions, and coelece every step2 partitions.
+ */
+void GraphPartitioner::PartitionRandomEdgeCutCoelesce(size_t num_partitions,
+                                                      size_t step1_partitions,
+                                                      size_t step2) {
+  assert(num_partitions = step1_partitions / step2);
+  num_partitions_ = num_partitions;
+  srand(0);
+  if (!node_partitions_)
+    node_partitions_ = new size_t[num_nodes_];
+  for (size_t n = 0; n < num_nodes_; ++n) {
+    node_partitions_[n] = (rand() % step1_partitions)/step2;  // NOLINT
+  }
+}
+
+/*
  * Creates a random edge-cut partition by placing vertices in random partitions,
  * and refine partitions based on neighboring vertex partitions.
  */
-void GraphPartitioner::PartitionRandomEdgeCutAndRefine(
+void GraphPartitioner::PartitionRandomEdgeCutPasses(
     size_t num_partitions, size_t num_passes) {
   num_partitions_ = num_partitions;
   srand(0);
@@ -294,6 +332,15 @@ void GraphPartitioner::PartitionRandomEdgeCutAndRefine(
     }
   }
   delete neighbor_partitions;
+}
+
+void GraphPartitioner::PartitionUsingInput(size_t num_partitions, std::string filename) {
+  num_partitions_ = num_partitions;
+  std::ifstream partition_file(filename.c_str());
+  for (size_t n = 0; n < num_nodes_; ++n) {
+    partition_file >> node_partitions_[n];  // NOLINT
+  }
+  partition_file.close();
 }
 
 /*

@@ -82,10 +82,18 @@ class GraphPartitioner {
                    std::string edges_file_name);
     // construct random edge-cut partitions on graph, with p partitions
     void PartitionRandomEdgeCut(size_t num_partitions);
+    // construct random edge-cut partitions on graph, with p partitions
+    void PartitionRandomEdgeCutRefine(
+        size_t num_partitions, size_t step1_partitions, size_t step2_partitions);
+    // construct random edge-cut partitions on graph, with p partitions
+    void PartitionRandomEdgeCutCoelesce(
+        size_t num_partitions, size_t step1_partitions, size_t step2);
+    void PartitionUsingInput(
+        size_t num_partitions, std::string file_name);
     // construct random edge-cut partitions on graph, with p partitions, and
     // refine partitions based on number of neighboring vertices in another
     // partition
-    void PartitionRandomEdgeCutAndRefine(size_t num_partitions, size_t num_passes);
+    void PartitionRandomEdgeCutPasses(size_t num_partitions, size_t num_passes);
     // determine logical objects for an edge-cut partitioned graph, and
     // read & write sets
     void DetermineLogicalObjects();
