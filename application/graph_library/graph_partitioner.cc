@@ -163,8 +163,9 @@ void GraphPartitioner::LoadFromTSV(std::string node_file_name,
     node_map[node_name] = node_id;
     node_degree_[node_id] = 0;
     node_id++;
-    if (node_id % NUM_LOG == 0)
+    if (node_id % NUM_LOG == 0) {
       std::cout << "Loaded " << node_id << " nodes ...\n";
+    }
   }
   assert(node_id == num_nodes_);
   std::cout << "Completed loading all " << num_nodes_ << " nodes\n";
@@ -335,12 +336,20 @@ void GraphPartitioner::PartitionRandomEdgeCutPasses(
 }
 
 void GraphPartitioner::PartitionUsingInput(size_t num_partitions, std::string filename) {
+  std::cout << "Loading node partitions ...\n";
   num_partitions_ = num_partitions;
+  if (!node_partitions_)
+    node_partitions_ = new size_t[num_nodes_];
   std::ifstream partition_file(filename.c_str());
   for (size_t n = 0; n < num_nodes_; ++n) {
-    partition_file >> node_partitions_[n];  // NOLINT
+    size_t p;
+    partition_file >> p;  // NOLINT
+    assert(0 <= p);
+    assert(p <= num_partitions-1);
+    node_partitions_[n] = p;
   }
   partition_file.close();
+  std::cout << "Loaded node partitions\n";
 }
 
 /*

@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
     ("edgefile", po::value<std::string>()->required(), "edge file name")
     ("partitions", po::value<int>()->required(), "number of partitions")
     ("partitioner", po::value<std::string>(&partitioner), "partitioner : random, refine, coelesce, passes, fromfile")  // NOLINT
-    ("partition_file", po::value<int>(&partition_file), "partition_file")
+    ("partition_file", po::value<std::string>(&partition_file), "partition_file")
     ("step1", po::value<size_t>(&step1), "step1")
     ("step2", po::value<size_t>(&step2), "step1")
     ("passes", po::value<size_t>(&num_passes), "number of times to refine partitions")  // NOLINT
