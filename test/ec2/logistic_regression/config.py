@@ -22,15 +22,19 @@ UBUNTU_AMI                      = 'ami-fa9cf1ca'
 NIMBUS_AMI                      = 'ami-37202e07'
 KEY_NAME                        = 'omidm-sing-key-pair-us-west-2'
 SECURITY_GROUP                  = 'nimbus_sg_uswest2'
-CONTROLLER_INSTANCE_TYPE        = 'm3.2xlarge'
-WORKER_INSTANCE_TYPE            = 'm3.2xlarge'
+CONTROLLER_INSTANCE_TYPE        = 'c3.4xlarge'
+WORKER_INSTANCE_TYPE            = 'c3.2xlarge'
 PLACEMENT                       = 'us-west-2c' # None
-# PLACEMENT_GROUP               = 'nimbus-cluster' # None
-PLACEMENT_GROUP                 = '*'
+PLACEMENT_GROUP                 = 'nimbus-cluster' # None
+# PLACEMENT_GROUP               = '*'
 PRIVATE_KEY                     = '/home/omidm/.ssh/' + KEY_NAME + '.pem'
-CONTROLLER_NUM                  = 0
-WORKER_NUM                      = 0
+CONTROLLER_NUM                  = 1
+WORKER_NUM                      = 20
 INSTANCE_NUM                    = WORKER_NUM + CONTROLLER_NUM
+
+#Environment variables
+DBG_MODE                        = 'error'
+TTIMER_LEVEL                    = 'l1' 
 
 # controller configurations
 ASSIGNER_THREAD_NUM             = 8
@@ -44,6 +48,7 @@ DEACTIVATE_MEGA_RCR_JOB         = False
 DEACTIVATE_DM_QUERY_CACHE       = False
 ACTIVATE_LB                     = False
 ACTIVATE_FT                     = False
+ENFORCED_SPLIT                  = True
 LB_PERIOD                       = 60
 FT_PERIOD                       = 600
 FIRST_PORT                      = 5800
@@ -53,8 +58,8 @@ FIRST_PORT                      = 5800
 OTHREAD_NUM                     = 8
 DIMENSION                       = 10
 ITERATION_NUM                   = 10
-PARTITION_NUM                   = 800
-SAMPLE_NUM_M                    = 400
+PARTITION_NUM                   = 2000
+SAMPLE_NUM_M                    = 100
 # ITERATION_BATCH               = 1
 RUN_WITH_TASKSET                = False
 WORKER_TASKSET                  = '0-1,4-5'
