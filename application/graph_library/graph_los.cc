@@ -142,8 +142,6 @@ void GraphLOs::DefineEdgeLogicalObjects(Job *job, std::string name) {
   std::vector<GeometricRegion> pregions(nsq, GeometricRegion(0, 0, 0, 1, 1, 1));
   for (size_t p = 0; p < num_partitions_; ++p) {
     std::vector<size_t> *edge_los = edge_lo_write_[p];
-    lolist* los = new lolist;
-    lo_map_write_var[p] = los;
     for (size_t l = 0; l < edge_los->size(); ++l) {
       size_t eid = edge_los->at(l);
       pregions[eid] = GeometricRegion(l, 0, 0, 1, 1, 1);
@@ -159,12 +157,6 @@ void GraphLOs::DefineEdgeLogicalObjects(Job *job, std::string name) {
     lo_map_write_var[p] = los;
     for (size_t l = 0; l < edge_los->size(); ++l) {
       size_t eid = edge_los->at(l);
-      {
-        // hack for identifying data objects
-        GeometricRegion region(l, 0, 0, 1, 1, 1);
-        ID<partition_id_t> partition(eid);
-        job->DefinePartition(partition, region);
-      }
       job->DefineData(name, ids[eid], eid, neighbor);
       los->insert(ids[eid]);
     }
