@@ -131,7 +131,7 @@ void GraphLOs::LoadGraphInfo(std::string dir_name) {
  */
 void GraphLOs::DefineEdgeLogicalObjects(Job *job, std::string name) {
   std::vector<logical_data_id_t> ids;
-  job->GetNewLogicalDataID(&ids, num_edge_los_);
+  job->GetNewLogicalDataID(&ids, num_partitions_ * num_partitions_);
   lolist **lo_map_read_var  = new lolist* [num_partitions_];
   lolist **lo_map_write_var = new lolist* [num_partitions_];
   lo_map_read_[name]  = lo_map_read_var;
