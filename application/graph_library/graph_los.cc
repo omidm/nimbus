@@ -130,13 +130,29 @@ void GraphLOs::LoadGraphInfo(std::string dir_name) {
  * Define logical objects named name over edges.
  */
 void GraphLOs::DefineEdgeLogicalObjects(Job *job, std::string name) {
+  size_t nsq = num_partitions_ * num_partitions_;
   std::vector<logical_data_id_t> ids;
-  job->GetNewLogicalDataID(&ids, num_partitions_ * num_partitions_);
+  job->GetNewLogicalDataID(&ids, nsq);
   lolist **lo_map_read_var  = new lolist* [num_partitions_];
   lolist **lo_map_write_var = new lolist* [num_partitions_];
   lo_map_read_[name]  = lo_map_read_var;
   lo_map_write_[name] = lo_map_write_var;
   IDSet<partition_id_t> neighbor;
+  // hack for identifying data objects
+  std::vector<GeometricRegion> pregions(nsq, GeometricRegion(0, 0, 0, 1, 1, 1));
+  for (size_t p = 0; p < num_partitions_; ++p) {
+    std::vector<size_t> *edge_los = edge_lo_write_[p];
+    lolist* los = new lolist;
+    lo_map_write_var[p] = los;
+    for (size_t l = 0; l < edge_los->size(); ++l) {
+      size_t eid = edge_los->at(l);
+      pregions[eid] = GeometricRegion(l, 0, 0, 1, 1, 1);
+    }
+  }
+  for (size_t i = 0; i < nsq; ++i) {
+    ID<partition_id_t> partition(i);
+    job->DefinePartition(partition, pregions[i]);
+  }
   for (size_t p = 0; p < num_partitions_; ++p) {
     std::vector<size_t> *edge_los = edge_lo_write_[p];
     lolist* los = new lolist;
