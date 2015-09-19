@@ -1,20 +1,23 @@
 #!/usr/bin/env bash
 
+set -o errexit
+
 cp config.py config.tmp.py
 mkdir -p ec2-outputs
+rm -r output
 
 
 # ALL TEMPLATES ACTIVE
 
 echo "Starting experiment with all templates active ..."
-sed -i 's/DEACTIVATE_CONTROLLER_TEMPLATE.*/DEACTIVATE_CONTROLLER_TEMPLATE = False/g' config.py
-sed -i 's/DEACTIVATE_BINDING_MEMOIZATION.*/DEACTIVATE_BINDING_MEMOIZATION = False/g' config.py
+sed -i '' 's/DEACTIVATE_CONTROLLER_TEMPLATE.*/DEACTIVATE_CONTROLLER_TEMPLATE = False/g' config.py
+sed -i '' 's/DEACTIVATE_BINDING_MEMOIZATION.*/DEACTIVATE_BINDING_MEMOIZATION = False/g' config.py
 echo "Change in config:"
-diff config.old.py config.py
+diff config.tmp.py config.py
 
 ./run.py -a t &> /dev/null
 sleep 60
-./run.py -a r &>> run.log
+./run.py -a r &> run.log
 sleep 240
 echo "4 minutes done ..."
 sleep 240
@@ -33,7 +36,7 @@ sleep 240
 echo "32 minutes done ..."
 ./run.py -a c &> /dev/null
 sleep 90
-val=`grep -i terminate old/all-outputs/p10-no-templates/ec2_log.txt | awk '{ print $4 }'`
+val=`grep -i terminate output/ec2_log.txt | awk '{ print $4 }'`
 if [ -z $val ]
 then
   val="blah"
@@ -44,7 +47,7 @@ do
     sleep 210
     ./run.py -a c &> /dev/null
     sleep 90
-    val=`grep -i terminate old/all-outputs/p10-no-templates/ec2_log.txt | awk '{ print $4 }'`
+    val=`grep -i terminate output/ec2_log.txt | awk '{ print $4 }'`
     if [ -z $val ]
     then
       val="blah"
@@ -59,14 +62,14 @@ mv output ec2-outputs/templates
 # CONTROLLER TEMPLATE OFF
 
 echo "Starting experiment with controller templates off ..."
-sed -i 's/DEACTIVATE_CONTROLLER_TEMPLATE.*/DEACTIVATE_CONTROLLER_TEMPLATE = True/g' config.py
-sed -i 's/DEACTIVATE_BINDING_MEMOIZATION.*/DEACTIVATE_BINDING_MEMOIZATION = False/g' config.py
+sed -i '' 's/DEACTIVATE_CONTROLLER_TEMPLATE.*/DEACTIVATE_CONTROLLER_TEMPLATE = True/g' config.py
+sed -i '' 's/DEACTIVATE_BINDING_MEMOIZATION.*/DEACTIVATE_BINDING_MEMOIZATION = False/g' config.py
 echo "Change in config:"
 diff config.old.py config.py
 
 ./run.py -a t &> /dev/null
 sleep 60
-./run.py -a r &>> run.log
+./run.py -a r &> run.log
 sleep 240
 echo "4 minutes done ..."
 sleep 240
@@ -85,7 +88,7 @@ sleep 240
 echo "32 minutes done ..."
 ./run.py -a c &> /dev/null
 sleep 90
-val=`grep -i terminate old/all-outputs/p10-no-templates/ec2_log.txt | awk '{ print $4 }'`
+val=`grep -i terminate output/ec2_log.txt | awk '{ print $4 }'`
 if [ -z $val ]
 then
   val="blah"
@@ -96,7 +99,7 @@ do
     sleep 210
     ./run.py -a c &> /dev/null
     sleep 90
-    val=`grep -i terminate old/all-outputs/p10-no-templates/ec2_log.txt | awk '{ print $4 }'`
+    val=`grep -i terminate output/ec2_log.txt | awk '{ print $4 }'`
     if [ -z $val ]
     then
         val="blah"
@@ -111,14 +114,14 @@ mv output ec2-outputs/no-ctemp
 # BINDING MEMOIZATION OFF
 
 echo "Starting experiment with memoization off ..."
-sed -i 's/DEACTIVATE_CONTROLLER_TEMPLATE.*/DEACTIVATE_CONTROLLER_TEMPLATE = False/g' config.py
-sed -i 's/DEACTIVATE_BINDING_MEMOIZATION.*/DEACTIVATE_BINDING_MEMOIZATION = True/g' config.py
+sed -i '' 's/DEACTIVATE_CONTROLLER_TEMPLATE.*/DEACTIVATE_CONTROLLER_TEMPLATE = False/g' config.py
+sed -i '' 's/DEACTIVATE_BINDING_MEMOIZATION.*/DEACTIVATE_BINDING_MEMOIZATION = True/g' config.py
 echo "Change in config:"
 diff config.old.py config.py
 
 ./run.py -a t &> /dev/null
 sleep 60
-./run.py -a r &>> run.log
+./run.py -a r &> run.log
 sleep 240
 echo "4 minutes done ..."
 sleep 240
@@ -137,7 +140,7 @@ sleep 240
 echo "32 minutes done ..."
 ./run.py -a c &> /dev/null
 sleep 90
-val=`grep -i terminate old/all-outputs/p10-no-templates/ec2_log.txt | awk '{ print $4 }'`
+val=`grep -i terminate output/ec2_log.txt | awk '{ print $4 }'`
 if [ -z $val ]
 then
   val="blah"
@@ -148,7 +151,7 @@ do
     sleep 210
     ./run.py -a c &> /dev/null
     sleep 90
-    val=`grep -i terminate old/all-outputs/p10-no-templates/ec2_log.txt | awk '{ print $4 }'`
+    val=`grep -i terminate output/ec2_log.txt | awk '{ print $4 }'`
     if [ -z $val ]
     then
       val="blah"
@@ -164,3 +167,9 @@ mv output ec2-outputs/no-btemp
 
 echo "Cleaning temporary files ..."
 mv config.tmp.py config.py
+
+
+# KILLING INSTANCES
+
+echo "Killing instances"
+./run.py -a k &> /dev/null

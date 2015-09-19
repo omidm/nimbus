@@ -25,7 +25,7 @@ SECURITY_GROUP                  = 'nimbus_sg_uswest2'
 CONTROLLER_INSTANCE_TYPE        = 'c3.4xlarge'
 WORKER_INSTANCE_TYPE            = 'c3.2xlarge'
 PLACEMENT                       = 'us-west-2c' # None
-PRIVATE_KEY                     = '/home/chinmayee/.ssh/' + KEY_NAME + '.pem'
+PRIVATE_KEY                     = '/Users/chinmayee/.ssh/' + KEY_NAME + '.pem'
 CONTROLLER_NUM                  = 1
 WORKER_NUM                      = 5
 INSTANCE_NUM                    = WORKER_NUM + CONTROLLER_NUM
@@ -56,7 +56,7 @@ ITERATION_NUM                   = 11
 
 # placement group
 # PLACEMENT_GROUP             = '*'
-PLACEMENT_GROUP               = 'pagerank-' + str(PARTITIONS) + '-p-' + str(WORKER_NUM) + 'w'  # None
+PLACEMENT_GROUP               = 'pagerank-' + str(PARTITIONS) + 'p-' + str(WORKER_NUM) + 'w'  # None
 
 
 # worker/simulation (common) configurations
