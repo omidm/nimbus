@@ -109,6 +109,7 @@ for line in f:
   if "for_loop" in line:
     result = re.findall('.*: (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+) complex .* for_loop\.', line)
     if len(result) > 0:
+      print line
       iter_num += 1
       length = decimal.Decimal(result[0]) - last_time_stamp
       iteration_length.append(length)
@@ -121,6 +122,7 @@ for line in f:
       continue
     result = re.findall('.*: (\d+|\d+\.\d+|\d+e-\d+|\d+\.\d+e-\d+) Picked .* for_loop\.', line)
     if len(result) > 0:
+      print line
       iter_num += 1
       length = decimal.Decimal(result[0]) - last_time_stamp
       iteration_length.append(length)
@@ -165,6 +167,8 @@ data_manager_query.pop(iter_num)
 data_manager_update.pop(iter_num)
 template_instantiate.pop(iter_num)
 
+print(iter_num)
+print(len(data_manager_update))
 assert(len(iteration_length) == iter_num)
 assert(len(data_manager_update) == iter_num)
 
@@ -181,7 +185,7 @@ print '       iter#       AC(VM)     DM Query    Temp Inst.   DM Update   (AC+DM
 if (args.collapse):
   print '----------------------------------------------------------------------------------------------------'
   for i in range(0, iter_num):
-    print '    {:8.0f} {:8.2f}({:0.2f})   {:8.2f}     {:8.2f}     {:8.2f}     {:8.2f} {:8.2f}    {:8.2f}'.format(
+    print '    {:8.0f} {:8.3f}({:0.2f})   {:8.3f}     {:8.3f}     {:8.3f}     {:8.3f} {:8.3f}    {:8.3f}'.format(
         i+1,
         add_complex_job[i],
         version_manager[i],
@@ -200,7 +204,7 @@ TIN = np.mean(template_instantiate[TI:iter_num])
 DMU = np.mean(data_manager_update[TI:iter_num])
 IL = np.mean(iteration_length[TI:iter_num])
 print '----------------------------------------------------------------------------------------------------'
-print 'Average: {:3.0f} {:8.2f}({:0.2f})   {:8.2f}     {:8.2f}     {:8.2f}     {:8.2f} {:8.2f}    {:8.2f}'.format(
+print 'Average: {:3.0f} {:8.3f}({:0.2f})   {:8.3f}     {:8.3f}     {:8.3f}     {:8.3f} {:8.3f}    {:8.3f}'.format(
     iter_num - TI, AC, VM, DMQ, TIN, DMU, AC+DMQ+TIN, AC+DMQ+TIN+DMU, IL) 
 print '----------------------------------------------------------------------------------------------------'
 
