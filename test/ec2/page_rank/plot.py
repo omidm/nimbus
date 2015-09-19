@@ -4,12 +4,13 @@ import matplotlib.cm as cmx
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 from matplotlib import rc
+import matplotlib.font_manager as fm
 
 # Configure matplot to understand tex grammer.
 # rc('text', usetex=True)
-rc('font', size=24)
+rc('font', size=18)
 
-N = 5
+N = 2
 P = 4
 ind = np.arange(N) * 1.2
 width = 0.2
@@ -17,9 +18,9 @@ sep   = 0.22
 
 Legends = [
 'Spark',
-'Nimbus /wo Template',
-'Nimbus /w Template (Including Learning)',
-'Nimbus /w Template (Excluding Learning)'
+'Nimbus with no controller template',
+'Nimbus with no binding template',
+'Nimbus with all templates'
 ]
 
 n_colors = P
@@ -32,45 +33,46 @@ def plot_bar(bar_data, ind, color, add_sum):
     if add_sum:
       for num, rect in zip(bar_data, p):
         plt.text(rect.get_x() + rect.get_width()/2,
-                 rect.get_y()+ rect.get_height() + 0.3,
+                 rect.get_y() + rect.get_height() + 1,
                  '{:.2f}'.format(num),
                  ha='center', va='center',
-                 fontsize='xx-small')
+                 fontsize='15')
     return p
 
 
-spark       = [ 7.30, 7.50, 7.40, 10.50, 22.20]
-no_template = [ 0.20, 0.65, 1.41,  2.92,  7.76]
-template_il = [ 0.14, 0.24, 0.45,  0.93,  2.34]
-template_xl = [ 0.14, 0.15, 0.24,  0.45,  1.11]
+spark       = [ 25.0, 25.0 ]
+template    = [ 6.07, 10.14 ]
+template_nb = [ 5.06, 13.33 ]
+template_nc = [ 7.06, 19.15 ]
 
 Parts = []
 
 p = plot_bar(spark, ind - 2*sep, Colors[0], True)
 Parts.append(p[0])
 
-p = plot_bar(no_template, ind - sep, Colors[1], True)
+p = plot_bar(template_nc, ind - sep, Colors[1], True)
 Parts.append(p[0])
 
-p = plot_bar(template_il, ind, Colors[2], True)
+p = plot_bar(template_nb, ind, Colors[2], True)
 Parts.append(p[0])
 
-p = plot_bar(template_xl, ind + sep, Colors[3], True)
+p = plot_bar(template, ind + sep, Colors[3], True)
 Parts.append(p[0])
 
-ticks=['4','20','40','80','200']
+ticks=['400', '800']
 plt.xticks(ind+width/2., ticks)
-plt.xlabel('Partition number per core (200 cores)')
+plt.xlabel('Total partitions')
 plt.ylabel('Iteration length (seconds)')
-# plt.set_yscale('log')
+axes = plt.gca()
+axes.set_ylim([0, 40])
 
+legend_font = fm.FontProperties(size='12')
 plt.legend(Parts, Legends,
-           ncol=1, loc=1, mode='expand',
-           fontsize='small', frameon=False)
+           ncol=1, loc=9,
+           frameon=False, prop=legend_font)
 
-title  = 'Logistic Regression, 25 workers, 1 controller, m3.2xlarge instances '
-title += '400 million 10 dimensional samples'
-plt.title(title, fontsize='small')
+title  = 'Pagerank for Wikipedia dump'
+plt.title(title, fontsize='18')
 
 plt.show()
-# plt.savefig('../figs/weak_scale.pdf')
+plt.savefig('pr_strong_scale.pdf')
