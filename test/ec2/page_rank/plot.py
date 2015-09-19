@@ -47,16 +47,16 @@ template_nc = [ 7.06, 19.15 ]
 
 Parts = []
 
-p = plot_bar(spark, ind - 2*sep, Colors[0], True)
+p = plot_bar(spark, ind - 1.5*sep, Colors[0], True)
 Parts.append(p[0])
 
-p = plot_bar(template_nc, ind - sep, Colors[1], True)
+p = plot_bar(template_nc, ind - 0.5*sep, Colors[1], True)
 Parts.append(p[0])
 
-p = plot_bar(template_nb, ind, Colors[2], True)
+p = plot_bar(template_nb, ind + 0.5*sep, Colors[2], True)
 Parts.append(p[0])
 
-p = plot_bar(template, ind + sep, Colors[3], True)
+p = plot_bar(template, ind + 1.5*sep, Colors[3], True)
 Parts.append(p[0])
 
 ticks=['400', '800']
