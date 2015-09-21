@@ -18,9 +18,9 @@ sep   = 0.22
 
 Legends = [
 'Spark',
-'Nimbus with no controller template',
-'Nimbus with no binding template',
-'Nimbus with all templates'
+'Nimbus /wo Templates',
+'Nimbus /w CT',
+'Nimbus /w CT + WT'
 ]
 
 n_colors = P
@@ -33,14 +33,14 @@ def plot_bar(bar_data, ind, color, add_sum):
     if add_sum:
       for num, rect in zip(bar_data, p):
         plt.text(rect.get_x() + rect.get_width()/2,
-                 rect.get_y() + rect.get_height() + 1,
+                 rect.get_y() + rect.get_height() + 1.5,
                  '{:.2f}'.format(num),
                  ha='center', va='center',
-                 fontsize='15')
+                 fontsize='12')
     return p
 
 
-spark       = [ 25.0, 25.0 ]
+spark       = [ 50.0, 50.0 ]
 template    = [ 6.07, 10.14 ]
 template_nb = [ 5.06, 13.33 ]
 template_nc = [ 7.06, 19.15 ]
@@ -64,15 +64,15 @@ plt.xticks(ind+width/2., ticks)
 plt.xlabel('Total partitions')
 plt.ylabel('Iteration length (seconds)')
 axes = plt.gca()
-axes.set_ylim([0, 40])
+axes.set_ylim([0, 75])
 
-legend_font = fm.FontProperties(size='12')
+legend_font = fm.FontProperties(size='14')
 plt.legend(Parts, Legends,
-           ncol=1, loc=9,
+           ncol=1, loc=2,
            frameon=False, prop=legend_font)
 
-title  = 'Pagerank for Wikipedia dump'
-plt.title(title, fontsize='18')
+# title  = 'Pagerank for Wikipedia dump'
+# plt.title(title, fontsize='15')
 
-plt.show()
+# plt.show()
 plt.savefig('pr_strong_scale.pdf')
