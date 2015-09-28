@@ -29,7 +29,7 @@ PLACEMENT_GROUP                 = 'nimbus-cluster' # None
 # PLACEMENT_GROUP               = '*'
 PRIVATE_KEY                     = '/home/omidm/.ssh/' + KEY_NAME + '.pem'
 CONTROLLER_NUM                  = 1
-WORKER_NUM                      = 20
+WORKER_NUM                      = 25
 INSTANCE_NUM                    = WORKER_NUM + CONTROLLER_NUM
 
 #Environment variables
@@ -57,7 +57,7 @@ FIRST_PORT                      = 5800
 # worker/simulation configurations
 OTHREAD_NUM                     = 8
 DIMENSION                       = 10
-ITERATION_NUM                   = 10
+ITERATION_NUM                   = 30
 PARTITION_NUM                   = 2000
 SAMPLE_NUM_M                    = 100
 # ITERATION_BATCH               = 1
