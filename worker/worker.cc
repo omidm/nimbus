@@ -83,6 +83,7 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     ddb_ = new DistributedDB();
     DUMB_JOB_ID = std::numeric_limits<job_id_t>::max();
     filling_execution_template_ = false;
+    prepare_rewind_phase_ = false;
     worker_job_graph_.AddVertex(
         DUMB_JOB_ID,
         new WorkerJobEntry(
@@ -592,28 +593,21 @@ void Worker::ProcessLoadDataCommand(LoadDataCommand* cm) {
 }
 
 void Worker::ProcessPrepareRewindCommand(PrepareRewindCommand* cm) {
-  // TODO(omidm): fix this function, adopt to execution template!
   boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
-
-  // First remove all blocked jobs.
-  ClearBlockedJobs(&worker_job_graph_);
+  // Remove all blocked jobs from regular job graph.
+  ClearBlockedJobs();
+  // Setting this flag stops adding more ready jobs from execution templates.
+  prepare_rewind_phase_ = true;
 
   // Wait untill all runing jobs finish.
-  while (!IsEmptyGraph(&worker_job_graph_)) {
-    JobList local_job_done_list;
-    // TODO(omidm): you should not call this function, remove!
-    worker_manager_->GetLocalJobDoneList(&local_job_done_list);
-    bool new_done = false;
-    while (!local_job_done_list.empty()) {
-      Job* job = local_job_done_list.front();
-      local_job_done_list.pop_front();
-      new_done = true;
-      NotifyLocalJobDone(job);
-    }
-    if (!new_done) {
-      usleep(10);
-    }
+  while (!AllReadyJobsAreDone()) {
+    job_graph_cond_.wait(lock);
   }
+
+  // Clear the obsolete state.
+  pending_events_.clear();
+  active_execution_templates_.clear();
+  prepare_rewind_phase_ = false;
 
   PrepareRewindCommand command(ID<worker_id_t>(id_), cm->checkpoint_id());
   client_->SendCommand(&command);
@@ -758,20 +752,18 @@ void Worker::ProcessSpawnCommandTemplateCommand(SpawnCommandTemplateCommand* com
   }
 
   // If the instantiation is pending, don't do the rest! -omidm
-  if (et->pending_instantiate()) {
-    return;
+  if (!et->pending_instantiate()) {
+    StatAddJob(et->job_num());
+
+    active_execution_templates_[tgi] = iter->second;
+
+    JobList::iterator i = ready_jobs.begin();
+    for (; i != ready_jobs.end(); ++i) {
+      ResolveDataArray(*i);
+    }
+    bool success_flag = worker_manager_->PushJobList(&ready_jobs);
+    assert(success_flag);
   }
-
-  StatAddJob(et->job_num());
-
-  active_execution_templates_[tgi] = iter->second;
-
-  JobList::iterator i = ready_jobs.begin();
-  for (; i != ready_jobs.end(); ++i) {
-    ResolveDataArray(*i);
-  }
-  bool success_flag = worker_manager_->PushJobList(&ready_jobs);
-  assert(success_flag);
 }
 
 
@@ -959,6 +951,7 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
 
 void Worker::NotifyLocalJobDone(Job* job) {
   bool template_job = false;
+  bool sent_job_done = false;
   {
     timer::StartTimer(timer::kJobGraph3);
     boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
@@ -972,7 +965,7 @@ void Worker::NotifyLocalJobDone(Job* job) {
       ExecutionTemplate *et = job->execution_template();
       assert(et);
       JobList ready_jobs;
-      if (et->MarkJobDone(shadow_job_id, &ready_jobs, false)) {
+      if (et->MarkJobDone(shadow_job_id, &ready_jobs, prepare_rewind_phase_, false)) {
         assert(ready_jobs.size() == 0);
         std::map<template_id_t, ExecutionTemplate*>::iterator iter =
           active_execution_templates_.find(et->template_generation_id());
@@ -1020,8 +1013,27 @@ void Worker::NotifyLocalJobDone(Job* job) {
       // vertex->entry()->set_state(WorkerJobEntry::FINISH);
       // vertex->entry()->set_job(NULL);
     }
+
+    // If in the prepare rewind phase, then send job done within the lock to
+    // make sure that the job done is sent before prepare rewind command. For
+    // other case job done sending does not need to be protected so for the
+    // sake of performance do it out of the locked section. -omidm
+    if (prepare_rewind_phase_) {
+      sent_job_done = true;
+      SendJobDoneAndDeleteJob(job, template_job);
+    }
+
+    job_graph_cond_.notify_all();
   }
 
+  if (!sent_job_done) {
+    SendJobDoneAndDeleteJob(job, template_job);
+  }
+
+  timer::StopTimer(timer::kJobGraph3);
+}
+
+void Worker::SendJobDoneAndDeleteJob(Job* job, bool template_job) {
   Parameter params;
   SaveDataJob *j = dynamic_cast<SaveDataJob*>(job); // NOLINT
   if (j != NULL) {
@@ -1036,8 +1048,6 @@ void Worker::NotifyLocalJobDone(Job* job) {
   if  (!template_job) {
     delete job;
   }
-
-  timer::StopTimer(timer::kJobGraph3);
 }
 
 void Worker::NotifyJobDone(job_id_t job_id, bool final) {
@@ -1235,10 +1245,11 @@ bool Worker::InFinishHintSet(const job_id_t job_id) {
 }
 
 
-void Worker::ClearBlockedJobs(WorkerJobGraph* job_graph) {
+void Worker::ClearBlockedJobs() {
+  boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
   std::list<job_id_t> list_to_remove;
-  typename WorkerJobVertex::Iter iter = job_graph->begin();
-  for (; iter != job_graph->end(); ++iter) {
+  typename WorkerJobVertex::Iter iter = worker_job_graph_.begin();
+  for (; iter != worker_job_graph_.end(); ++iter) {
     WorkerJobEntry* job_entry = iter->second->entry();
     if (job_entry->get_state() != WorkerJobEntry::CONTROL &&
         job_entry->get_state() != WorkerJobEntry::READY) {
@@ -1253,18 +1264,30 @@ void Worker::ClearBlockedJobs(WorkerJobGraph* job_graph) {
 
   std::list<job_id_t>::iterator it = list_to_remove.begin();
   for (; it != list_to_remove.end(); ++it) {
-    job_graph->RemoveVertex(*it);
+    worker_job_graph_.RemoveVertex(*it);
   }
 }
 
-bool Worker::IsEmptyGraph(WorkerJobGraph* job_graph) {
-  typename WorkerJobVertex::Iter iter = job_graph->begin();
-  for (; iter != job_graph->end(); ++iter) {
-    WorkerJobEntry* job_entry = iter->second->entry();
-    if (job_entry->get_state() != WorkerJobEntry::CONTROL) {
-      return false;
+bool Worker::AllReadyJobsAreDone() {
+  {
+    typename WorkerJobVertex::Iter iter = worker_job_graph_.begin();
+    for (; iter != worker_job_graph_.end(); ++iter) {
+      WorkerJobEntry* job_entry = iter->second->entry();
+      if (job_entry->get_state() != WorkerJobEntry::CONTROL) {
+        return false;
+      }
     }
   }
+  {
+    std::map<template_id_t, ExecutionTemplate*>::iterator iter =
+      active_execution_templates_.begin();
+    for (; iter != active_execution_templates_.end(); ++iter) {
+      if (iter->second->ready_job_counter() != 0) {
+        return false;
+      }
+    }
+  }
+
   return true;
 }
 

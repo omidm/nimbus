@@ -82,6 +82,7 @@ class ExecutionTemplate {
     template_id_t template_generation_id();
     bool pending_instantiate();
     template_id_t pending_template_generation_id();
+    size_t ready_job_counter();
 
 
     bool Finalize();
@@ -99,6 +100,7 @@ class ExecutionTemplate {
 
     bool MarkJobDone(const job_id_t& shadow_job_id,
                      JobList *ready_jobs,
+                     bool &prepare_rewind_phase,
                      bool append);
 
     void ProcessReceiveEvent(const WorkerDataExchanger::Event& event,
@@ -302,6 +304,7 @@ class ExecutionTemplate {
     size_t copy_job_num_;
     size_t compute_job_num_;
     size_t job_done_counter_;
+    size_t ready_job_counter_;
     std::string execution_template_name_;
     template_id_t template_generation_id_;
     // Currently we do not support future job - omidm

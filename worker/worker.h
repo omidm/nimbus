@@ -169,6 +169,7 @@ class Worker {
   bool InFinishHintSet(const job_id_t job_id);
   WorkerJobGraph worker_job_graph_;
   boost::recursive_mutex job_graph_mutex_;
+  boost::condition_variable_any job_graph_cond_;
 
   boost::recursive_mutex *receive_event_mutex_;
   boost::condition_variable_any *receive_event_cond_;
@@ -202,6 +203,8 @@ class Worker {
   std::map<template_id_t, ExecutionTemplate*> active_execution_templates_;
   EventMap pending_events_;
 
+  bool prepare_rewind_phase_;
+
   virtual void LoadSchedulerCommands();
 
   virtual void AddJobToGraph(Job* job);
@@ -211,8 +214,10 @@ class Worker {
   virtual void ProcessRCREvent(const WorkerDataExchanger::Event& event);
   virtual void ProcessMegaRCREvent(const WorkerDataExchanger::Event& event);
 
-  virtual void ClearBlockedJobs(WorkerJobGraph* job_graph);
-  virtual bool IsEmptyGraph(WorkerJobGraph* job_graph);
+  virtual void SendJobDoneAndDeleteJob(Job* job, bool template_job);
+
+  virtual void ClearBlockedJobs();
+  virtual bool AllReadyJobsAreDone();
 
  public:
   void StatAddJob(size_t num);

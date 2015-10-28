@@ -77,9 +77,7 @@ class WorkerManager {
   bool PushJob(Job* job);
   // 2. Push a list of jobs.
   bool PushJobList(std::list<Job*>* job_list);
-  // 3. Retrieve the job done list.
-  bool GetLocalJobDoneList(JobList* buffer);
-  // 4. Trigger scheduling.
+  // 3. Trigger scheduling.
   void TriggerScheduling();
 
   // Interfaces for worker threads.
@@ -128,9 +126,6 @@ class WorkerManager {
   // 3. The list of ready computation jobs.
   pthread_mutex_t auxiliary_job_queue_lock_;
   std::list<Job*> auxiliary_job_list_;
-  // 4. The list of finished jobs.
-  pthread_mutex_t local_job_done_list_lock_;
-  JobList local_job_done_list_;
 
  private:
   // Performance measurement.

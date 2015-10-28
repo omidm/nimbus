@@ -52,6 +52,7 @@ ExecutionTemplate::ExecutionTemplate(const std::string& execution_template_name,
   copy_job_num_ = 0;
   compute_job_num_ = 0;
   job_done_counter_ = 0;
+  ready_job_counter_ = 0;
   pending_instantiate_ = false;
   execution_template_name_ = execution_template_name;
   template_generation_id_ = NIMBUS_INIT_TEMPLATE_ID;
@@ -131,6 +132,10 @@ template_id_t ExecutionTemplate::pending_template_generation_id() {
   return pending_template_generation_id_;
 }
 
+size_t ExecutionTemplate::ready_job_counter() {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  return ready_job_counter_;
+}
 
 bool ExecutionTemplate::Finalize() {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
@@ -186,6 +191,7 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
     return false;
   }
 
+  assert(ready_job_counter_ == 0);
   assert(!pending_instantiate_);
   assert(finalized_);
   assert(inner_job_ids.size() == inner_job_id_list_.size());
@@ -235,14 +241,18 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
   }
 
   ready_jobs->clear();
+  size_t counter = 0;
   {
     JobTemplateVector::iterator iter = seed_job_templates_.begin();
     for (; iter != seed_job_templates_.end(); ++iter) {
       JobTemplate *jt = *iter;
       jt->Refresh(parameters_, template_generation_id_);
       ready_jobs->push_back((jt->job_));
+      ++counter;
     }
   }
+
+  ready_job_counter_ += counter;
 
   {
     WorkerDataExchanger::EventList::const_iterator iter = pending_events.begin();
@@ -250,6 +260,7 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
       ProcessReceiveEvent(*iter, ready_jobs, true);
     }
   }
+
 
   return true;
 }
@@ -259,6 +270,7 @@ bool ExecutionTemplate::InstantiatePending(const WorkerDataExchanger::EventList&
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   assert(pending_instantiate_);
   assert(job_done_counter_ == 0);
+  assert(ready_job_counter_ == 0);
   pending_instantiate_ = false;
 
   Instantiate(pending_inner_job_ids_,
@@ -274,6 +286,7 @@ bool ExecutionTemplate::InstantiatePending(const WorkerDataExchanger::EventList&
 
 bool ExecutionTemplate::MarkJobDone(const job_id_t& shadow_job_id,
                                     JobList *ready_jobs,
+                                    bool &prepare_rewind_phase,
                                     bool append) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   assert(finalized_);
@@ -281,25 +294,38 @@ bool ExecutionTemplate::MarkJobDone(const job_id_t& shadow_job_id,
     ready_jobs->clear();
   }
 
+  bool et_complete = false;
+
+  assert(job_done_counter_ > 0);
+  assert(ready_job_counter_ > 0);
+  --job_done_counter_;
+  --ready_job_counter_;
+  if (job_done_counter_ == 0) {
+    assert(ready_job_counter_ == 0);
+    et_complete = true;
+  }
+
+  if (prepare_rewind_phase) {
+    return et_complete;
+  }
+
   JobTemplateMap::iterator it = job_templates_.find(shadow_job_id);
   assert(it != job_templates_.end());
   JobTemplateVector ready_list;
   it->second->ClearAfterSet(&ready_list);
 
+  size_t counter = 0;
   JobTemplateVector::iterator iter = ready_list.begin();
   for (; iter != ready_list.end(); ++iter) {
     JobTemplate *jt = *iter;
     jt->Refresh(parameters_, template_generation_id_);
     ready_jobs->push_back((jt->job_));
+    ++counter;
   }
 
-  assert(job_done_counter_ > 0);
-  --job_done_counter_;
-  if (job_done_counter_ == 0) {
-    return true;
-  }
+  ready_job_counter_ += counter;
 
-  return false;
+  return et_complete;
 }
 
 void ExecutionTemplate::ProcessReceiveEvent(const WorkerDataExchanger::Event& e,
@@ -313,6 +339,7 @@ void ExecutionTemplate::ProcessReceiveEvent(const WorkerDataExchanger::Event& e,
 
   assert(e.template_generation_id_ == template_generation_id_);
 
+  size_t counter = 0;
   JobTemplateMap::iterator iter;
   if (e.mega_rcr_job_id_ == NIMBUS_KERNEL_JOB_ID) {
     iter = job_templates_.find(e.receive_job_id_);
@@ -328,6 +355,7 @@ void ExecutionTemplate::ProcessReceiveEvent(const WorkerDataExchanger::Event& e,
     if (jt->dependency_counter_ == 0) {
       jt->Refresh(parameters_, template_generation_id_);
       ready_jobs->push_back(rcr);
+      ++counter;
     }
   } else {
     iter = job_templates_.find(e.mega_rcr_job_id_);
@@ -343,8 +371,11 @@ void ExecutionTemplate::ProcessReceiveEvent(const WorkerDataExchanger::Event& e,
     if (jt->dependency_counter_ == 0) {
       jt->Refresh(parameters_, template_generation_id_);
       ready_jobs->push_back(mrcr);
+      ++counter;
     }
   }
+
+  ready_job_counter_ += counter;
 }
 
 bool ExecutionTemplate::AddComputeJobTemplate(ComputeJobCommand* cm,

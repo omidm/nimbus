@@ -67,8 +67,6 @@ WorkerManager::WorkerManager() {
   pthread_mutex_init(&computation_job_queue_lock_, NULL);
   pthread_mutex_init(&auxiliary_job_queue_lock_, NULL);
 
-  pthread_mutex_init(&local_job_done_list_lock_, NULL);
-
   if (across_job_parallism <= 0) {
     computation_thread_num = 1;
   } else {
@@ -153,26 +151,7 @@ bool WorkerManager::PullAuxiliaryJobs(WorkerThreadAuxiliary* worker_thread,
 }
 
 bool WorkerManager::FinishJob(Job* job) {
-  // pthread_mutex_lock(&local_job_done_list_lock_);
-  // local_job_done_list_.push_back(job);
-  // pthread_mutex_unlock(&local_job_done_list_lock_);
-
-  // worker_->StatEndJob(1);
   worker_->NotifyLocalJobDone(job);
-  return true;
-}
-
-bool WorkerManager::GetLocalJobDoneList(JobList* buffer) {
-  // TODO(omidm): this function should never get called, remove it.
-  assert(false);
-  pthread_mutex_lock(&local_job_done_list_lock_);
-  int len = local_job_done_list_.size();
-  buffer->splice(buffer->end(), local_job_done_list_);
-  pthread_mutex_unlock(&local_job_done_list_lock_);
-  // TODO(quhang): when a job is done.
-  if (len != 0) {
-    worker_->StatEndJob(len);
-  }
   return true;
 }
 
