@@ -80,6 +80,8 @@ class ExecutionTemplate {
     size_t compute_job_num();
     std::string execution_template_name();
     template_id_t template_generation_id();
+    bool pending_instantiate();
+    template_id_t pending_template_generation_id();
 
 
     bool Finalize();
@@ -91,6 +93,9 @@ class ExecutionTemplate {
                      const WorkerDataExchanger::EventList& pending_events,
                      const template_id_t& template_generation_id,
                      JobList *ready_jobs);
+
+    bool InstantiatePending(const WorkerDataExchanger::EventList& pending_events,
+                            JobList *ready_jobs);
 
     bool MarkJobDone(const job_id_t& shadow_job_id,
                      JobList *ready_jobs,
@@ -318,6 +323,13 @@ class ExecutionTemplate {
     std::vector<Parameter> parameters_;
 
     mutable boost::recursive_mutex mutex_;
+
+    bool pending_instantiate_;
+    std::vector<job_id_t> pending_inner_job_ids_;
+    std::vector<job_id_t> pending_outer_job_ids_;
+    std::vector<Parameter> pending_parameters_;
+    std::vector<physical_data_id_t> pending_physical_ids_;
+    template_id_t pending_template_generation_id_;
 
 
     JobIdPtr GetExistingInnerJobIdPtr(job_id_t job_id);

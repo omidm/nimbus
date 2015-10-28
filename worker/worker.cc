@@ -729,20 +729,23 @@ void Worker::ProcessSpawnCommandTemplateCommand(SpawnCommandTemplateCommand* com
   std::map<std::string, ExecutionTemplate*>::iterator iter =
     execution_templates_.find(key);
   assert(iter != execution_templates_.end());
-
   ExecutionTemplate *et = iter->second;
+
   JobList ready_jobs;
   template_id_t tgi = command->template_generation_id();
   EventMap::iterator it = pending_events_.find(tgi);
   if (it != pending_events_.end()) {
-    et->Instantiate(command->inner_job_ids(),
-                    command->outer_job_ids(),
-                    command->parameters(),
-                    command->phy_ids(),
-                    it->second,
-                    tgi,
-                    &ready_jobs);
-    pending_events_.erase(it);
+    bool instantiated =
+      et->Instantiate(command->inner_job_ids(),
+                      command->outer_job_ids(),
+                      command->parameters(),
+                      command->phy_ids(),
+                      it->second,
+                      tgi,
+                      &ready_jobs);
+    if (instantiated) {
+      pending_events_.erase(it);
+    }
   } else {
     WorkerDataExchanger::EventList empty_pending_events;
     et->Instantiate(command->inner_job_ids(),
@@ -752,6 +755,11 @@ void Worker::ProcessSpawnCommandTemplateCommand(SpawnCommandTemplateCommand* com
                     empty_pending_events,
                     tgi,
                     &ready_jobs);
+  }
+
+  // If the instantiation is pending, don't do the rest! -omidm
+  if (et->pending_instantiate()) {
+    return;
   }
 
   StatAddJob(et->job_num());
@@ -970,14 +978,29 @@ void Worker::NotifyLocalJobDone(Job* job) {
           active_execution_templates_.find(et->template_generation_id());
         assert(iter != active_execution_templates_.end());
         active_execution_templates_.erase(iter);
-      } else {
-        JobList::iterator iter = ready_jobs.begin();
-        for (; iter != ready_jobs.end(); ++iter) {
-          ResolveDataArray(*iter);
+        if (et->pending_instantiate()) {
+          template_id_t tgi = et->pending_template_generation_id();
+          EventMap::iterator it = pending_events_.find(tgi);
+          if (it != pending_events_.end()) {
+            et->InstantiatePending(it->second,
+                                   &ready_jobs);
+            pending_events_.erase(it);
+          } else {
+            WorkerDataExchanger::EventList empty_pending_events;
+            et->InstantiatePending(empty_pending_events,
+                                   &ready_jobs);
+          }
+          assert(!et->pending_instantiate());
+          StatAddJob(et->job_num());
+          active_execution_templates_[tgi] = et;
         }
-        bool success_flag = worker_manager_->PushJobList(&ready_jobs);
-        assert(success_flag);
       }
+      JobList::iterator iter = ready_jobs.begin();
+      for (; iter != ready_jobs.end(); ++iter) {
+        ResolveDataArray(*iter);
+      }
+      bool success_flag = worker_manager_->PushJobList(&ready_jobs);
+      assert(success_flag);
     } else {
       // Job done for unknown job is not handled.
       if (!worker_job_graph_.HasVertex(job_id)) {

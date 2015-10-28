@@ -52,6 +52,7 @@ ExecutionTemplate::ExecutionTemplate(const std::string& execution_template_name,
   copy_job_num_ = 0;
   compute_job_num_ = 0;
   job_done_counter_ = 0;
+  pending_instantiate_ = false;
   execution_template_name_ = execution_template_name;
   template_generation_id_ = NIMBUS_INIT_TEMPLATE_ID;
   future_job_id_ptr_ = JobIdPtr(new job_id_t(0));
@@ -120,6 +121,16 @@ template_id_t ExecutionTemplate::template_generation_id() {
   return template_generation_id_;
 }
 
+bool ExecutionTemplate::pending_instantiate() {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  return pending_instantiate_;
+}
+
+template_id_t ExecutionTemplate::pending_template_generation_id() {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  return pending_template_generation_id_;
+}
+
 
 bool ExecutionTemplate::Finalize() {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
@@ -157,11 +168,29 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
                                     const template_id_t& template_generation_id,
                                     JobList *ready_jobs) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
+  if (job_done_counter_ != 0) {
+    std::cout << "WARNING: Instantiating a new execution template "
+              << "before finishing the previous one!\n"
+              << "         Number of left jobs: " << job_done_counter_ << std::endl;
+
+    assert(!pending_instantiate_);
+
+    pending_instantiate_ = true;
+    pending_inner_job_ids_ = inner_job_ids;
+    pending_outer_job_ids_ = outer_job_ids;
+    pending_parameters_ = parameters;
+    pending_physical_ids_ = physical_ids;
+    pending_template_generation_id_ = template_generation_id;
+    ready_jobs->clear();
+    return false;
+  }
+
+  assert(!pending_instantiate_);
   assert(finalized_);
   assert(inner_job_ids.size() == inner_job_id_list_.size());
   assert(outer_job_ids.size() == outer_job_id_list_.size());
   assert(physical_ids.size() == phy_id_list_.size());
-  assert(job_done_counter_ == 0);
   // assert(seed_job_templates_.size() > 0);
 
   template_generation_id_ = template_generation_id;
@@ -221,6 +250,24 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
       ProcessReceiveEvent(*iter, ready_jobs, true);
     }
   }
+
+  return true;
+}
+
+bool ExecutionTemplate::InstantiatePending(const WorkerDataExchanger::EventList& pending_events,
+                                           JobList *ready_jobs) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  assert(pending_instantiate_);
+  assert(job_done_counter_ == 0);
+  pending_instantiate_ = false;
+
+  Instantiate(pending_inner_job_ids_,
+              pending_outer_job_ids_,
+              pending_parameters_,
+              pending_physical_ids_,
+              pending_events,
+              pending_template_generation_id_,
+              ready_jobs);
 
   return true;
 }
