@@ -98,6 +98,8 @@ def run_worker(controller_p_ip, worker_ip, worker_p_ip, num):
   worker_command += ' --wl ' + str(config.WATER_LEVEL)
   worker_command += ' --ibatch ' + str(config.ITERATION_BATCH)
   worker_command += ' --othread ' + str(config.OTHREAD_NUM)
+  if config.NO_EXECUTION_TEMPLATE:
+    worker_command += ' --det '
   if not config.GLOBAL_WRITE:
     worker_command += ' --dgw '
   if config.NO_PROJ_BOTTLENECK:

@@ -87,7 +87,7 @@ for rank in range(1, N+1):
       idx += 1
       run, block, idle, parent, dxl = parse_line(line)
       if (args.collapse):
-        print '          {:8.0f} {:8.2f} {:8.2f} {:8.2f}  {:8.2f} {:8.2f} {:8.2f}  {:8.2f}'.format(
+        print '          {:8.0f} {:8.3f} {:8.3f} {:8.3f}  {:8.3f} {:8.3f} {:8.3f}  {:8.3f}'.format(
             idx, parent, dxl, run/CN, block/CN, idle/CN, (block+idle)/CN, (idle+block+run)/CN)
       if idx <= TI:
         continue
@@ -107,10 +107,10 @@ for rank in range(1, N+1):
   total_idle_sum   += idle_sum/iter_num
   total_total_sum  += total_sum/iter_num
 
-  print '{:8.0f}: {:8.0f} {:8.2f} {:8.2f} {:8.2f}  {:8.2f} {:8.2f} {:8.2f}  {:8.2f}'.format(
+  print '{:8.0f}: {:8.0f} {:8.3f} {:8.3f} {:8.3f}  {:8.3f} {:8.3f} {:8.3f}  {:8.3f}'.format(
             rank, iter_num, parent_sum/iter_num, dxl_sum/iter_num, run_sum/CN/iter_num, block_sum/CN/iter_num, idle_sum/CN/iter_num, (block_sum+idle_sum)/CN/iter_num, total_sum/CN/iter_num)
 
 print '--------------------------------------------------------------------------------------'
-print ' Average: {:8.0f} {:8.2f} {:8.2f} {:8.2f}  {:8.2f} {:8.2f} {:8.2f}  {:8.2f}'.format(
+print ' Average: {:8.0f} {:8.3f} {:8.3f} {:8.3f}  {:8.3f} {:8.3f} {:8.3f}  {:8.3f}'.format(
     iter_nums[0], total_parent_sum, total_dxl_sum/N, total_run_sum/N/CN, total_block_sum/N/CN, total_idle_sum/N/CN, (total_block_sum+total_idle_sum)/N/CN, total_total_sum/N/CN)
 print '--------------------------------------------------------------------------------------'

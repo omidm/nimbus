@@ -9,7 +9,7 @@ from matplotlib import rc
 # rc('text', usetex=True)
 rc('font', size=24)
 
-N = 4
+N = 3
 P = 4
 ind = np.arange(N) * 1.2
 width = 0.25
@@ -27,6 +27,13 @@ color_map = cmx.ScalarMappable(
         colors.Normalize(vmin=0, vmax=n_colors+1), cmap='Greens')
 Colors = [color_map.to_rgba(i) for i in range(n_colors, -1, -1)]
 
+color_map = cmx.ScalarMappable(
+        colors.Normalize(vmin=0, vmax=n_colors+1), cmap='Reds')
+RColors = [color_map.to_rgba(i) for i in range(n_colors, -1, -1)]
+
+
+
+
 def plot_bar(bar_data, ind, color, add_sum):
     p = plt.bar(ind, bar_data, width, color=color)
     if add_sum:
@@ -39,14 +46,14 @@ def plot_bar(bar_data, ind, color, add_sum):
     return p
 
 
-spark       = [ 2.27, 2.40, 3.03,  4.01]
-no_template = [ 0.27, 0.56, 0.81,  1.19]
-c_template  = [ 0.21, 0.38, 0.66,  0.82]
-cw_template = [ 0.06, 0.14, 0.20,  0.27]
+spark       = [ 1.54, 1.56, 1.64]
+no_template = [ 0.24, 0.54, 1.12]
+c_template  = [ 0.19, 0.40, 0.84]
+cw_template = [ 0.06, 0.12, 0.22]
 
 Parts = []
 
-p = plot_bar(spark, ind - 2*sep, Colors[0], True)
+p = plot_bar(spark, ind - 2*sep, RColors[0], True)
 Parts.append(p[0])
 
 p = plot_bar(no_template, ind - sep, Colors[1], True)
@@ -58,11 +65,12 @@ Parts.append(p[0])
 p = plot_bar(cw_template, ind + sep, Colors[3], True)
 Parts.append(p[0])
 
-ticks=['(20, 160, 100)','(40, 320, 200)','(60, 480, 300)','(80, 640, 400)']
+ticks=['(25, 2000, 100)','(25, 4000, 100)', '(25, 8000, 100)']
 plt.xticks(ind, ticks, fontsize='medium')
-plt.xlabel('(#workers, #cores, #samples in millions)', fontsize='large')
+plt.xlabel('(#workers, #partitions, #samples in millions)', fontsize='large')
 plt.ylabel('Iteration length (seconds)', fontsize='large')
-plt.ylim([0, 5])
+plt.ylim([0, 3])
+plt.yticks(np.linspace(0,3,4))
 plt.xlim([-1 + width, N + width])
 # plt.set_yscale('log')
 

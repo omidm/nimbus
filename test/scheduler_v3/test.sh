@@ -28,5 +28,6 @@ echo -e "${Gre}export DBG=errors...${RCol}"
 export DBG=error
 
 echo -e "${Pur}Launching scheduler  waiting for $1 workers ...${RCol}"
-./scheduler  -p 5900 -w $1
+echo -e "${Pur}   extra options: $2 ${RCol}"
+./scheduler  -p 5900 -w $1 $2
 

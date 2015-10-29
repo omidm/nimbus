@@ -27,9 +27,13 @@ fi
 echo -e "${Gre}export DBG=errors...${RCol}"
 export DBG=error
 
-echo -e "${Pur}Launching the workers ...${RCol}"
+echo -e "${Gre}export TTIMER=none...${RCol}"
+export TTIMER=l1
+
+echo -e "${Pur}Launching $1 workers  each with $2 threads...${RCol}"
+echo -e "${Pur}Extra arguments: $3 ${RCol}"
 for i in `seq 1 $1`;
 do
-  ./worker -sip localhost -sport 5900 -port 590$i &
+  ./worker $3 --cip localhost --cport 5900 -p 590$i &
 done
 

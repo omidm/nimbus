@@ -31,9 +31,11 @@ echo -e "${Gre}export TTIMER=none...${RCol}"
 export TTIMER=l1
 
 echo -e "${Pur}Launching $1 workers  each with $2 threads...${RCol}"
+echo -e "${Pur}Extra arguments: $3 ${RCol}"
 for i in `seq 1 $1`;
 do
-  # ./worker --cip localhost --cport 5900 --othread $2 -p 590$i --pnx 4 --pny 4 --pnz 4 --ppnx 4 --ppny 4 --ppnz 4 -s 80 --psl 0 -e 4 --wl 0.5 &
-  ./worker --cip localhost --cport 5900 --othread $2 -p 590$i --psl 0 --wl 0.35 -e 10 & 
+  # ./worker $3 --cip localhost --cport 5900 --othread $2 -p 590$i --pnx 8 --pny 8 --pnz 8 --ppnx 8 --ppny 8 --ppnz 8 -s 160 --psl 0 -e 4 --wl 0.35 &
+  # ./worker $3 --cip localhost --cport 5900 --othread $2 -p 590$i --pnx 4 --pny 4 --pnz 4 --ppnx 4 --ppny 4 --ppnz 4 -s 80 --psl 0 -e 4 --wl 0.35 &
+  ./worker $3 --cip localhost --cport 5900 --othread $2 -p 590$i --psl 0 --wl 0.35 -e 10 & 
 done
 

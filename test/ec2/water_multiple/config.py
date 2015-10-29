@@ -66,6 +66,7 @@ ITERATION_BATCH                 = 1
 MAX_ITERATION                   = 100
 WATER_LEVEL                     = 0.35
 PROJECTION_SMART_LEVEL          = 0
+NO_EXECUTION_TEMPLATE           = False
 NO_PROJ_BOTTLENECK              = False
 GLOBAL_WRITE                    = False
 RUN_WITH_TASKSET                = False

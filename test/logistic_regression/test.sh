@@ -28,8 +28,9 @@ echo -e "${Gre}export DBG=errors...${RCol}"
 export DBG=error
 
 echo -e "${Pur}Launching $1 workers  each with $2 threads...${RCol}"
+echo -e "${Pur}Extra arguments: $3 ${RCol}"
 for i in `seq 1 $1`;
 do
-  ./worker --cip localhost --cport 5900 --othread $2 -p 590$i -i 20 --sn 1 --pn 10 &
+  ./worker $3 --cip localhost --cport 5900 --othread $2 -p 590$i -i 20 --sn 1 --pn 10 &
 done
 

@@ -2,8 +2,11 @@
 
 import numpy as np
 import sys
+import math
 import argparse
 import pylab
+import matplotlib.pyplot as plt
+from matplotlib import rc
 
 def mean(x):
     return sum(x)/len(x)
@@ -79,15 +82,56 @@ print ' {:20s} : {:8.7f} '.format('70th percentile', np.percentile(task_length, 
 print ' {:20s} : {:8.7f} '.format('80th percentile', np.percentile(task_length, 80))
 print ' {:20s} : {:8.7f} '.format('90th percentile', np.percentile(task_length, 90))
 print ' {:20s} : {:8.7f} '.format('95th percentile', np.percentile(task_length, 95))
+print ' {:20s} : {:8.7f} '.format('98th percentile', np.percentile(task_length, 98))
+print ' {:20s} : {:8.7f} '.format('99th percentile', np.percentile(task_length, 99))
 print '--------------------------------------------------------------------------------------'
 
 
-bins = np.linspace(np.min(task_length), np.percentile(task_length, 95), num=100)
+rc('font', size=24)
+
+num_bins = 400
+cut_percentile = 100
+
+# bins = np.linspace(np.min(task_length), np.percentile(task_length, cut_percentile), num=num_bins)
+bins = np.logspace(math.log(np.min(task_length), 10), math.log(np.percentile(task_length, cut_percentile), 10), num=num_bins)
 weights = np.ones_like(task_length)/float(len(task_length))
 
+
 pylab.figure()
-pylab.hist(task_length, bins=bins, weights=weights, normed=False, histtype='step', stacked=True, fill=True);
+pylab.hist(task_length, linewidth=3, bins=bins, weights=weights, normed=False, histtype='step', stacked=True, fill=False, cumulative=True)
+
+pylab.xlabel('Task length (seconds)', fontsize='x-large')
+pylab.xticks(fontsize='x-large')
+# pylab.xticks(np.linspace(0,.070,8), fontsize='large')
+# pylab.xlim([0, .071])
+pylab.ylabel('CDF', fontsize='x-large')
+pylab.yticks(fontsize='large')
+# pylab.yticks(np.linspace(0,0.4,5), fontsize='large')
+pylab.xscale('log')
+pylab.xlim([0, 15])
+
 pylab.show()
+
+
+
+# counts, bin_edges = np.histogram(task_length, bins=num_bins, normed=True)
+# cdf = np.cumsum(counts)
+# 
+# plt.xscale('log')
+# 
+# plt.plot(bin_edges[1:], cdf)
+# plt.show()
+
+
+
+
+
+
+
+
+
+
+
 
 
 
