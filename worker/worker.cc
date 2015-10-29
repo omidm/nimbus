@@ -79,6 +79,7 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     }
     id_ = -1;
     ip_address_ = NIMBUS_RECEIVER_KNOWN_IP;
+    execution_template_active_ = true;
     worker_manager_ = new WorkerManager();
     ddb_ = new DistributedDB();
     DUMB_JOB_ID = std::numeric_limits<job_id_t>::max();
@@ -171,6 +172,7 @@ void Worker::SetupSchedulerClient() {
   client_->set_command_processor_mutex(command_processor_mutex_);
   client_->set_command_processor_cond(command_processor_cond_);
   client_->set_scheduler_command_table(&scheduler_command_table_);
+  client_->set_execution_template_active(execution_template_active_);
   client_thread_ = new boost::thread(
       boost::bind(&SchedulerClient::Run, client_));
 }
@@ -803,6 +805,10 @@ void Worker::set_id(worker_id_t id) {
 
 void Worker::set_ip_address(std::string ip) {
   ip_address_ = ip;
+}
+
+void Worker::set_execution_template_active(bool flag) {
+  execution_template_active_ = flag;
 }
 
 PhysicalDataMap* Worker::data_map() {

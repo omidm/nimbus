@@ -93,6 +93,8 @@ class SchedulerClient {
 
   void set_command_processor_cond(boost::condition_variable_any *cond);
 
+  void set_execution_template_active(bool flag);
+
   void PushCommandToTheQueue(SchedulerCommand *command);
 
  private:
@@ -106,6 +108,8 @@ class SchedulerClient {
   uint32_t existing_bytes_;
   SchedulerCommandList received_commands_;
   boost::mutex send_command_mutex_;
+
+  bool execution_template_active_;
 
   boost::recursive_mutex *command_processor_mutex_;
   boost::condition_variable_any *command_processor_cond_;

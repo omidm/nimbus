@@ -73,6 +73,7 @@ SchedulerClient::SchedulerClient(std::string scheduler_ip,
   : scheduler_ip_(scheduler_ip),
     scheduler_port_(scheduler_port) {
       filling_template_ = false;
+      execution_template_active_ = true;
 }
 
 SchedulerClient::~SchedulerClient() {
@@ -163,7 +164,7 @@ size_t SchedulerClient::EnqueueCommands(char* buffer, size_t size) {
       if (SchedulerCommand::GenerateSchedulerCommandChild(input,
                                                           scheduler_command_table_,
                                                           command)) {
-        if (true) {
+        if (execution_template_active_) {
           dbg(DBG_NET, "Enqueueing command %s.\n", command->ToString().c_str());
           boost::unique_lock<boost::recursive_mutex> lock(*command_processor_mutex_);
           received_commands_.push_back(command);
@@ -217,7 +218,7 @@ size_t SchedulerClient::EnqueueCommands(char* buffer, size_t size) {
         }
       } else {
         dbg(DBG_NET, "Ignored unknown command: %s.\n", input.c_str());
-        exit(-1);
+        assert(false);
       }
       dbg(DBG_NET, "Read %i bytes of %i available.\n", len, bytes_remaining);
       bytes_remaining -= len;
@@ -422,5 +423,10 @@ void SchedulerClient::PushCommandToTheQueue(SchedulerCommand *command) {
   received_commands_.push_back(command);
   command_processor_cond_->notify_all();
 }
+
+void SchedulerClient::set_execution_template_active(bool flag) {
+  execution_template_active_ = flag;
+}
+
 
 }  // namespace nimbus

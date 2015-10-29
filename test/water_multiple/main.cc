@@ -106,6 +106,7 @@ int main(int argc, char *argv[]) {
     ("ithread", po::value<uint64_t>(&WorkerManager::inside_job_parallism), "number of threads within one job") //NOLINT
     ("othread", po::value<uint64_t>(&WorkerManager::across_job_parallism), "number of threads at worker for job execution") //NOLINT
 
+    ("det", "deactivate execution template")
     ("dpb", "deactivate projection bottleneck job")
     ("dgw", "deactivate one global write per frame");
 
@@ -133,6 +134,10 @@ int main(int argc, char *argv[]) {
 
   if (vm.count("ip")) {
     w->set_ip_address(ip_address);
+  }
+
+  if (vm.count("det")) {
+    w->set_execution_template_active(false);
   }
 
   if (vm.count("scale")) {
@@ -190,9 +195,6 @@ int main(int argc, char *argv[]) {
   if (vm.count("dgw")) {
     app->set_global_write(false);
   }
-
-
-
 
   w->Run();
 }
