@@ -1,0 +1,21 @@
+package data_msgs;
+
+message  NodeMsg{
+  required uint64 id     = 1;
+  required uint64 degree = 2;
+  required double rank    = 3;
+}
+
+message  NodeDataMsg{
+  repeated NodeMsg nodes = 1;
+}
+
+message  EdgeMsg{
+  required uint64 src_id  = 2;
+  required uint64 dst_id  = 3;
+  required double delta    = 4;
+}
+
+message  EdgeDataMsg{
+  repeated EdgeMsg edges = 1;
+}

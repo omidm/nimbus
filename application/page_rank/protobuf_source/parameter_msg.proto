@@ -1,0 +1,5 @@
+package parameter_msg;
+
+message ParameterMsg {
+  required uint64 elem = 1;
+}
