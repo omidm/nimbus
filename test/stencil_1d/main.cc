@@ -38,6 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include <boost/program_options.hpp>
 #include <iostream>  // NOLINT
 #include <sstream> // NOLINT
 #include "shared/nimbus.h"
@@ -46,123 +47,74 @@
 
 using namespace nimbus; // NOLINT
 
-void PrintUsage() {
-  std::cout << "ERROR: wrong arguments\n";
-  std::cout << "Usage:\n";
-  std::cout << "./worker\n";
-  std::cout << "REQUIRED ARGUMENTS:\n";
-  std::cout << "\t-sip [scheduler ip] -sport [scheduler port] -port [listening port]\n";
-  std::cout << "OPTIONIAL:\n";
-  std::cout << "\t-ip [ip address]\n";
-  std::cout << "\t-lc [loop counter]\n";
-  std::cout << "\t-pn [part num]\n";
-  std::cout << "\t-cpp [chunk per part]\n";
-  std::cout << "\t-cs [chunk size]\n";
-  std::cout << "\t-bw [bandwidth]\n";
-}
-
 int main(int argc, char *argv[]) {
-  port_t listening_port, scheduler_port;
-  std::string scheduler_ip, ip_address;
-  bool ip_address_given = false;
-  bool listening_port_given = false;
-  bool scheduler_ip_given = false;
-  bool scheduler_port_given = false;
+  namespace po = boost::program_options;
 
-  size_t counter = 150;
+  port_t listening_port;
+  port_t controller_port;
+  std::string controller_ip;
+  std::string ip_address;
+
+  WorkerManager::across_job_parallism = 1;
+
+  size_t iter_num = 150;
   size_t part_num = 4;
   size_t chunk_per_part = 4;
   size_t chunk_size = 5;
   size_t bandwidth = 1;
 
+  po::options_description desc("Options");
+  desc.add_options()
+    ("help,h", "produce help message")
 
+    // Required arguments
+    ("port,p", po::value<port_t>(&listening_port)->required(), "listening port for data exchanger") // NOLINT
+    ("cport", po::value<port_t>(&controller_port)->required(), "controller listening port") // NOLINT
+    ("cip", po::value<std::string>(&controller_ip)->required(), "controller ip address") // NOLINT
 
-  if (((argc - 1) % 2 != 0) || (argc < 3)) {
-    PrintUsage();
-    exit(-1);
+    // Optinal arguments
+    ("ip", po::value<std::string>(&ip_address), "forced ip address of the worker, not known by controller") // NOLINT
+
+    ("iter_num,i", po::value<size_t>(&iter_num), "number of iterations [default = 150]") //NOLINT
+    ("pn", po::value<size_t>(&part_num), "number of partitions [default = 4]") //NOLINT
+    ("cpp", po::value<size_t>(&chunk_per_part), "number of chunks per partition [default = 4]") //NOLINT
+    ("cs", po::value<size_t>(&chunk_size), "chunk size in cells [default = 5]") //NOLINT
+    ("bw", po::value<size_t>(&bandwidth), "ghost region bandwidth [default = 1]") //NOLINT
+
+    ("othread", po::value<uint64_t>(&WorkerManager::across_job_parallism), "number of threads at worker for job execution") //NOLINT
+
+    ("det", "deactivate execution template");
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+
+  if (vm.count("help")) {
+    std::cout << desc << "\n";
+    return 0;
   }
 
-  WorkerManager::across_job_parallism = 1;
-
-  for (int i = 1; i < argc; i = i + 2) {
-    std::string tag = argv[i];
-    std::string val = argv[i+1];
-    if (tag == "-sip") {
-      scheduler_ip = val;
-      scheduler_ip_given = true;
-    } else if (tag == "-ip") {
-      ip_address = val;
-      ip_address_given = true;
-    } else if (tag == "-sport") {
-      std::stringstream ss(val);
-      ss >> scheduler_port;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-      scheduler_port_given = true;
-    } else if (tag == "-port") {
-      std::stringstream ss(val);
-      ss >> listening_port;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-      listening_port_given = true;
-    } else if (tag == "-lc") {
-      std::stringstream ss(val);
-      ss >> counter;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-    } else if (tag == "-pn") {
-      std::stringstream ss(val);
-      ss >> part_num;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-    } else if (tag == "-cpp") {
-      std::stringstream ss(val);
-      ss >> chunk_per_part;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-    } else if (tag == "-cs") {
-      std::stringstream ss(val);
-      ss >> chunk_size;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-    } else if (tag == "-bw") {
-      std::stringstream ss(val);
-      ss >> bandwidth;
-      if (ss.fail()) {
-        PrintUsage();
-        exit(-1);
-      }
-    } else {
-      PrintUsage();
-      exit(-1);
-    }
+  try {
+    po::notify(vm);
   }
-
-  if (!scheduler_ip_given || !scheduler_port_given || !listening_port_given) {
-    PrintUsage();
-    exit(-1);
+  catch(std::exception& e) { // NOLINT
+    std::cerr << "ERROR: " << e.what() << "\n";
+    return -1;
   }
 
   nimbus_initialize();
-  std::cout << "Job spawner worker is up!" << std::endl;
+  std::cout << "Stencil1D Worker is up!" << std::endl;
   Stencil1DApp * app = new Stencil1DApp(
-      counter, part_num, chunk_per_part, chunk_size, bandwidth);
-  Worker * w = new Worker(scheduler_ip, scheduler_port, listening_port, app);
-  if (ip_address_given) {
+      iter_num, part_num, chunk_per_part, chunk_size, bandwidth);
+  Worker * w = new Worker(controller_ip, controller_port, listening_port, app);
+
+  if (vm.count("ip")) {
     w->set_ip_address(ip_address);
   }
+
+  if (vm.count("det")) {
+    w->set_execution_template_active(false);
+  }
+
   w->Run();
 }
 

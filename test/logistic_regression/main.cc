@@ -81,7 +81,9 @@ int main(int argc, char *argv[]) {
     ("iteration,i", po::value<std::size_t>(&iteration_num)->default_value(DEFAULT_ITERATION_NUM), "number of iterations") // NOLINT
     ("pn", po::value<std::size_t>(&partition_num)->default_value(DEFAULT_PARTITION_NUM), "number of partitions") // NOLINT
     ("sn", po::value<std::size_t>(&sample_num_m)->default_value(DEFAULT_SAMPLE_NUM_M), "number of samples in Million") // NOLINT
-    ("othread", po::value<uint64_t>(&WorkerManager::across_job_parallism), "number of threads at worker for job execution"); //NOLINT
+    ("othread", po::value<uint64_t>(&WorkerManager::across_job_parallism), "number of threads at worker for job execution") //NOLINT
+
+    ("det", "deactivate execution template");
 
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -110,6 +112,10 @@ int main(int argc, char *argv[]) {
 
   if (vm.count("ip")) {
     w->set_ip_address(ip_address);
+  }
+
+  if (vm.count("det")) {
+    w->set_execution_template_active(false);
   }
 
   w->Run();
