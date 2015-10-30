@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+
+from optparse import OptionParser
+import sys
+
+parser = OptionParser()
+parser.add_option("-n", "--nodefile", dest="nodefile",
+                          help="input node file")
+parser.add_option("-e", "--edgefile", dest="edgefile",
+                          help="input edges file (src id, dst id)")
+parser.add_option("-o", "--outfile", dest="outfile",
+                          help="output file (input to parmets)")
+
+(options, args) = parser.parse_args()
+
+
+################################################################################
+##  Parse pages
+################################################################################
+
+node_map = dict()
+edges = dict()
+
+print("Building node map ...")
+
+nodefile = open(options.nodefile, 'r')
+node_num = 0
+for line in nodefile:
+    node_num += 1
+    node_map[int(line)] = node_num
+    edges[node_num] = []
+nodefile.close()
+
+print("Building graph for metis ...")
+
+edgefile = open(options.edgefile, 'r')
+for line in edgefile:
+    words = str.split(line)
+    src = node_map[int(words[0])]
+    dst = node_map[int(words[1])]
+    edges[src].append(dst)
+    edges[dst].append(src)
+edgefile.close()
+
+print("Saving output for metis ...")
+
+edge_num = 0
+outfile = open(options.outfile, 'w')
+for e in edges:
+    unique = set(edges[e])
+    edge_num += len(unique)
+    text = " ".join(map(str, unique))
+    text += "\n"
+    outfile.write(text)
+outfile.close()
+
+print("Please add the following to the top of output file")
+print("%d %d 000\n" % (node_num, edge_num/2))

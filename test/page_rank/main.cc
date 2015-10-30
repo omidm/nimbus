@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
     // Required app arguments
     ("input", po::value<std::string>(&input_dir)->required(), "input directory containing graph") // NOLINT
     ("output", po::value<std::string>(&output_dir)->required(), "directory to save results") // NOLINT
-    ("iterations", po::value<std::size_t>(&num_iterations)->required(), "number of iterations")   // NOLINT
+    ("iterations", po::value<std::size_t>(&num_iterations)->required(), "number of iterations to perform + 1 (outputs saved in final iteration)")   // NOLINT
   ;  // NOLINT
 
   po::variables_map vm;

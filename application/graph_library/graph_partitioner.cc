@@ -163,8 +163,9 @@ void GraphPartitioner::LoadFromTSV(std::string node_file_name,
     node_map[node_name] = node_id;
     node_degree_[node_id] = 0;
     node_id++;
-    if (node_id % NUM_LOG == 0)
+    if (node_id % NUM_LOG == 0) {
       std::cout << "Loaded " << node_id << " nodes ...\n";
+    }
   }
   assert(node_id == num_nodes_);
   std::cout << "Completed loading all " << num_nodes_ << " nodes\n";
@@ -254,6 +255,101 @@ void GraphPartitioner::PartitionRandomEdgeCut(size_t num_partitions) {
   for (size_t n = 0; n < num_nodes_; ++n) {
     node_partitions_[n] = rand() % num_partitions;  // NOLINT
   }
+}
+
+/*
+ * Creates a random edge-cut partition by placing vertices in random partitions
+ * into step1_partitions, further partitioning each partition into
+ * step2_partitions.
+ */
+void GraphPartitioner::PartitionRandomEdgeCutRefine(size_t num_partitions,
+                                                    size_t step1_partitions,
+                                                    size_t step2_partitions) {
+  assert(num_partitions == step1_partitions * step2_partitions);
+  num_partitions_ = num_partitions;
+  srand(0);
+  if (!node_partitions_)
+    node_partitions_ = new size_t[num_nodes_];
+  for (size_t n = 0; n < num_nodes_; ++n) {
+    node_partitions_[n] = step2_partitions * (rand() % step1_partitions);  // NOLINT
+  }
+  for (size_t n = 0; n < num_nodes_; ++n) {
+    node_partitions_[n] += rand() % step2_partitions;  // NOLINT
+  }
+}
+
+/*
+ * Creates a random edge-cut partition by placing vertices in random partitions
+ * into step1_partitions, and coelece every step2 partitions.
+ */
+void GraphPartitioner::PartitionRandomEdgeCutCoelesce(size_t num_partitions,
+                                                      size_t step1_partitions,
+                                                      size_t step2) {
+  assert(num_partitions = step1_partitions / step2);
+  num_partitions_ = num_partitions;
+  srand(0);
+  if (!node_partitions_)
+    node_partitions_ = new size_t[num_nodes_];
+  for (size_t n = 0; n < num_nodes_; ++n) {
+    node_partitions_[n] = (rand() % step1_partitions)/step2;  // NOLINT
+  }
+}
+
+/*
+ * Creates a random edge-cut partition by placing vertices in random partitions,
+ * and refine partitions based on neighboring vertex partitions.
+ */
+void GraphPartitioner::PartitionRandomEdgeCutPasses(
+    size_t num_partitions, size_t num_passes) {
+  num_partitions_ = num_partitions;
+  srand(0);
+  if (!node_partitions_)
+    node_partitions_ = new size_t[num_nodes_];
+  for (size_t n = 0; n < num_nodes_; ++n) {
+    node_partitions_[n] = rand() % num_partitions;  // NOLINT
+  }
+  size_t blen = num_partitions * num_nodes_;
+  size_t *neighbor_partitions = new size_t[blen];
+  for (size_t pass = 0; pass < num_passes; ++pass) {
+    for (size_t i = 0; i < blen; ++i) {
+      neighbor_partitions[i] = 0;
+    }
+    for (size_t e = 0; e < num_edges_; ++e) {
+      size_t src = edge_src_[e];
+      size_t dst = edge_dst_[e];
+      neighbor_partitions[src * num_partitions + node_partitions_[dst]] += 1;
+    }
+    for (size_t n = 0; n < num_nodes_; ++n) {
+      size_t row = n * num_partitions;
+      size_t partn = node_partitions_[n];
+      size_t count = 0;
+      for (size_t p = 0; p < num_partitions; ++p) {
+        if (neighbor_partitions[row + p] > count) {
+          partn = p;
+          count = neighbor_partitions[row + p];
+        }
+      }
+      node_partitions_[n] = partn;
+    }
+  }
+  delete neighbor_partitions;
+}
+
+void GraphPartitioner::PartitionUsingInput(size_t num_partitions, std::string filename) {
+  std::cout << "Loading node partitions ...\n";
+  num_partitions_ = num_partitions;
+  if (!node_partitions_)
+    node_partitions_ = new size_t[num_nodes_];
+  std::ifstream partition_file(filename.c_str());
+  for (size_t n = 0; n < num_nodes_; ++n) {
+    size_t p;
+    partition_file >> p;  // NOLINT
+    assert(0 <= p);
+    assert(p <= num_partitions-1);
+    node_partitions_[n] = p;
+  }
+  partition_file.close();
+  std::cout << "Loaded node partitions\n";
 }
 
 /*

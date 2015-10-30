@@ -42,7 +42,7 @@
 #include "shared/nimbus.h"
 
 #define INIT_JOB "init"
-#define FOR_LOOP_JOB "for_loop"
+#define FOR_LOOP_JOB "__MARK_STAT_for_loop"
 #define SCATTER_JOB "scatter"
 #define GATHER_JOB "gather"
 #define DUMP_JOB "dump"

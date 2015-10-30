@@ -25,4 +25,4 @@ graph_initialize_t: graph_library_t $(OBJFILES)
 	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(GRAPH_LIB_OBJFILES) $(OBJFILES) -o $(TARGET) $(LFLAGS)
 
 clean: clean-files
-	rm $(TARGET)
+	\rm -rf $(TARGET)
