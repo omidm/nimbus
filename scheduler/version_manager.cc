@@ -51,6 +51,9 @@ VersionManager::VersionManager() {
   snap_shot_pending_ = false;
   non_sterile_counter_ = 0;
   snap_shot_rate_ = DEFAULT_SNAP_SHOT_RATE;
+
+  batch_size_ = 0;
+  batch_state_ = INIT;
 }
 
 VersionManager::~VersionManager() {
@@ -65,6 +68,7 @@ void VersionManager::set_snap_shot_rate(size_t rate) {
 }
 
 bool VersionManager::AddJobEntry(JobEntry *job) {
+  FlushPendingBatch();
   {
     IDSet<logical_data_id_t>::ConstIter it;
     for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
@@ -96,8 +100,70 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
   return true;
 }
 
+void VersionManager::FlushPendingBatch() {
+  switch (batch_state_) {
+    case INIT:
+      std::cout << "LAZY: FLUSH on INIT\n";
+      assert(batch_size_ == 0);
+      break;
+    case DETECTING:
+      std::cout << "LAZY: FLUSH on DETECTING\n";
+      assert(batch_size_ == 0);
+      batch_state_ = INIT;
+      break;
+    case ACTIVE:
+      std::cout << "LAZY: FLUSH on ACTIVE\n";
+      assert(batch_size_ > 0);
+      InsertComplexJobBatchInLdl();
+      batch_size_ = 0;
+      batch_state_ = INIT;
+      break;
+    default:
+      assert(false);
+      break;
+  }
+}
+
 bool VersionManager::AddComplexJobEntry(ComplexJobEntry *complex_job) {
-  InsertComplexJobInLdl(complex_job);
+  std::string name = complex_job->template_entry()->template_name();
+  switch (batch_state_) {
+    case INIT:
+      std::cout << "LAZY: INIT\n";
+      assert(batch_size_ == 0);
+      batch_state_ = DETECTING;
+      last_complex_job_ = complex_job;
+      InsertComplexJobInLdl(complex_job);
+      break;
+    case DETECTING:
+      std::cout << "LAZY: DETECTING\n";
+      assert(batch_size_ == 0);
+      if (name == last_complex_job_->template_entry()->template_name()) {
+        batch_size_ = 1;
+        batch_state_ = ACTIVE;
+        last_complex_job_ = complex_job;
+        base_batch_mbs_ = complex_job->meta_before_set();
+        std::cout << "LAZY: TURNED TO ACTIVE\n";
+      } else {
+        batch_state_ = INIT;
+        InsertComplexJobInLdl(complex_job);
+      }
+    case ACTIVE:
+      std::cout << "LAZY: ACTIVE\n";
+      assert(batch_size_ > 0);
+      if (name == last_complex_job_->template_entry()->template_name()) {
+        ++batch_size_;
+        last_complex_job_ = complex_job;
+      } else {
+        InsertComplexJobBatchInLdl();
+        batch_size_ = 0;
+        batch_state_ = INIT;
+        InsertComplexJobInLdl(complex_job);
+      }
+      break;
+    default:
+      assert(false);
+      break;
+  }
 
   complex_jobs_[complex_job->job_id()] = complex_job;
   DetectNewComplexJob(complex_job);
@@ -133,6 +199,7 @@ bool VersionManager::AddComplexJobEntry(ComplexJobEntry *complex_job) {
 }
 
 bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
+  FlushPendingBatch();
   assert(job->IsReadyForCompleteVersioning());
 
   IDSet<logical_data_id_t>::ConstIter it;
@@ -178,6 +245,7 @@ bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
 }
 
 bool VersionManager::ResolveEntireContextForJob(JobEntry *job) {
+  FlushPendingBatch();
   LdoMap::const_iterator it;
   for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
     data_version_t version;
@@ -195,6 +263,7 @@ bool VersionManager::ResolveEntireContextForJob(JobEntry *job) {
 
 bool VersionManager::ResolveJobDataVersionsForPattern(JobEntry *job,
                           const BindingTemplate::PatternList* patterns) {
+  FlushPendingBatch();
   BindingTemplate::PatternList::const_iterator it;
   for (it = patterns->begin(); it != patterns->end(); ++it) {
     logical_data_id_t ldid = (*it)->ldid_;
@@ -212,6 +281,7 @@ bool VersionManager::ResolveJobDataVersionsForPattern(JobEntry *job,
 }
 
 bool VersionManager::MemoizeVersionsForTemplate(JobEntry *job) {
+  FlushPendingBatch();
   TemplateJobEntry* tj = job->template_job();
   assert(job->memoize());
   assert(tj);
@@ -292,6 +362,39 @@ bool VersionManager::MemoizeVersionsForTemplate(JobEntry *job) {
   return true;
 }
 
+bool VersionManager::InsertComplexJobBatchInLdl() {
+  assert(batch_size_ > 0);
+  std::cout << "LAZY: Flush a Batch of size: " << batch_size_ << std::endl;
+  assert(batch_state_ == ACTIVE);
+  ShadowJobEntryList list;
+  last_complex_job_->OMIDGetParentShadowJobs(&list);
+  // For now only one parent job per complex job is allowd!
+  assert(list.size() == 1);
+  ShadowJobEntry* sj = *(list.begin());
+  ComplexJobEntry* xj = sj->complex_job();
+  assert(xj == last_complex_job_);
+
+  VersionList::const_iterator iter = sj->vlist_write_diff()->begin();
+  for (; iter != sj->vlist_write_diff()->end(); ++iter) {
+    data_version_t diff_version = iter->second;
+    data_version_t base_version;
+    if (xj->vmap_read()->query_entry(iter->first, &base_version)) {
+    } else if (LookUpVersionByMetaBeforeSet(base_batch_mbs_, iter->first, &base_version)) {
+      // inceremnt the base based on the batch size
+      xj->vmap_read()->set_entry(iter->first, base_version + (batch_size_ - 1) * diff_version);
+    } else {
+      dbg(DBG_ERROR, "ERROR: complex job %lu as batch could not be versioned for ldid %lu.", xj->job_id(), iter->first); //NOLINT
+      assert(false);
+      return false;
+    }
+
+    // inceremnt the base based on the batch size
+    InsertCheckPointLdlEntry(
+        iter->first, xj->job_id(), base_version + batch_size_ * diff_version, xj->job_depth());
+  }
+
+  return true;
+}
 
 bool VersionManager::InsertComplexJobInLdl(ComplexJobEntry *job) {
   ShadowJobEntryList list;
@@ -471,10 +574,21 @@ bool VersionManager::LookUpVersion(
   }
 }
 
-
+bool VersionManager::LookUpVersionByMetaBeforeSet(
+    boost::shared_ptr<MetaBeforeSet> mbs,
+    logical_data_id_t ldid,
+    data_version_t *version) {
+  Index::iterator iter = index_.find(ldid);
+  if (iter == index_.end()) {
+    return false;
+  } else {
+    return iter->second->LookUpVersionByMetaBeforeSet(mbs, version);
+  }
+}
 
 size_t VersionManager::GetJobsNeedDataVersion(
     JobEntryList* list, VLD vld) {
+  FlushPendingBatch();
   size_t count = 0;
   list->clear();
 
@@ -694,6 +808,7 @@ bool VersionManager::CleanUp() {
 }
 
 void VersionManager::Reinitialize(const JobEntryList *list) {
+  FlushPendingBatch();
   snap_shot_pending_ = false;
   non_sterile_counter_ = 0;
   snap_shot_.clear();

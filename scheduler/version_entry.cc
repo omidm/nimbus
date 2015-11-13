@@ -225,6 +225,18 @@ bool VersionEntry::RemoveJobEntry(JobEntry *job) {
   return true;
 }
 
+bool VersionEntry::LookUpVersionByMetaBeforeSet(
+    boost::shared_ptr<MetaBeforeSet> mbs,
+    data_version_t *version) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
+  if (!UpdateLdl()) {
+    dbg(DBG_ERROR, "Could not update the ldl for ldid %lu.\n", ldid_);
+  }
+
+  return ldl_.LookUpVersion(mbs, version);
+}
+
 bool VersionEntry::LookUpVersion(
     JobEntry *job,
     data_version_t *version) {
