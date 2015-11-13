@@ -50,6 +50,7 @@
 #include <list>
 #include <map>
 #include <set>
+#include <string>
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "scheduler/job_entry.h"
@@ -126,6 +127,11 @@ class VersionManager {
                        logical_data_id_t ldid,
                        data_version_t *version);
 
+    bool LookUpVersionByMetaBeforeSet(
+                       boost::shared_ptr<MetaBeforeSet> mbs,
+                       logical_data_id_t ldid,
+                       data_version_t *version);
+
     bool InsertComplexJobInLdl(ComplexJobEntry *job);
 
     bool CreateCheckPoint(JobEntry *job);
@@ -145,6 +151,23 @@ class VersionManager {
         const job_id_t& job_id,
         const data_version_t& version,
         const job_depth_t& job_depth);
+
+
+    // meta data to handle the batched commit
+    enum BatchState {
+      INIT      = 0,
+      DETECTING = 1,
+      ACTIVE    = 2
+    };
+
+    size_t batch_size_;
+    BatchState batch_state_;
+    ComplexJobEntry *last_complex_job_;
+    boost::shared_ptr<MetaBeforeSet> base_batch_mbs_;
+
+    bool InsertComplexJobBatchInLdl();
+
+    void FlushPendingBatch();
 };
 
 }  // namespace nimbus

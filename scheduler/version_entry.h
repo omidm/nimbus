@@ -89,6 +89,10 @@ class VersionEntry {
     bool LookUpVersion(JobEntry *job,
                        data_version_t *version);
 
+    bool LookUpVersionByMetaBeforeSet(
+                       boost::shared_ptr<MetaBeforeSet> mbs,
+                       data_version_t *version);
+
     bool CleanLdl(const IDSet<job_id_t>& snap_shot_);
 
     void Reinitialize();
