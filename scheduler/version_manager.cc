@@ -103,7 +103,7 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
 void VersionManager::FlushPendingBatch() {
   switch (batch_state_) {
     case INIT:
-      std::cout << "LAZY: FLUSH on INIT\n";
+      // std::cout << "LAZY: FLUSH on INIT\n";
       assert(batch_size_ == 0);
       break;
     case DETECTING:
@@ -147,6 +147,7 @@ bool VersionManager::AddComplexJobEntry(ComplexJobEntry *complex_job) {
         batch_state_ = INIT;
         InsertComplexJobInLdl(complex_job);
       }
+      break;
     case ACTIVE:
       std::cout << "LAZY: ACTIVE\n";
       assert(batch_size_ > 0);

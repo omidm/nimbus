@@ -194,6 +194,7 @@ namespace nimbus {
         };
 
         void Invalidate();
+        bool QueryIsHit(const std::string& record_name);
         bool Query(const std::string& record_name,
                    const std::vector<physical_data_id_t>*& phy_ids);
         void Learn(const std::string& record_name,
@@ -210,6 +211,16 @@ namespace nimbus {
     };
 
     DataManagerQueryCache dm_query_cache_;
+
+    void FlushBatchUpdate();
+
+    size_t update_batch_size_;
+    std::vector<logical_data_id_t> batch_ldid_;
+    std::vector<physical_data_id_t> batch_pdid_;
+    std::vector<data_version_t> batch_base_version_;
+    std::vector<data_version_t> batch_unit_diff_version_;
+    IDSet<job_id_t> list_job_read_;
+    job_id_t last_complex_job_id_;
 
   private:
     JobAssigner(const JobAssigner& other) {}
