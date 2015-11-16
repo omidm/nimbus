@@ -60,6 +60,7 @@ void JobAssigner::Initialize() {
   checkpoint_id_ = NIMBUS_INIT_CHECKPOINT_ID;
   template_generation_id_ = NIMBUS_INIT_TEMPLATE_ID;
   pending_assignment_ = 0;
+  update_batch_size_ = 0;
   server_ = NULL;
   id_maker_ = NULL;
   job_manager_ = NULL;
@@ -221,6 +222,7 @@ bool JobAssigner::QueryDataManagerForPatterns(
       const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(ldid));
 
     ConstPhysicalDataPList instances;
+    FlushBatchUpdate();
     data_manager_->AllInstances(ldo, &instances);
 
     // For now we assume that binding for template does not require creating
@@ -263,6 +265,32 @@ bool JobAssigner::QueryDataManagerForPatterns(
   return true;
 }
 
+void JobAssigner::FlushBatchUpdate() {
+  if (update_batch_size_ > 0) {
+    std::cout << "LAZY: FLUSH BATCH UPDATE of size: "
+              << update_batch_size_ << std::endl;
+    IDSet<job_id_t> list_job_read;
+    list_job_read.insert(last_complex_job_id_);
+
+    for (size_t i = 0; i < batch_ldid_.size(); ++i) {
+      if (!data_manager_->UpdateVersionAndAccessRecord(
+            batch_ldid_[i],
+            batch_pdid_[i],
+            batch_base_version_[i] + update_batch_size_ * batch_unit_diff_version_[i],
+            list_job_read,
+            last_complex_job_id_)) {
+        assert(false);
+      }
+    }
+
+    update_batch_size_ = 0;
+    batch_ldid_.clear();
+    batch_pdid_.clear();
+    batch_base_version_.clear();
+    batch_unit_diff_version_.clear();
+  }
+}
+
 bool JobAssigner::UpdateDataManagerByPatterns(
                       ComplexJobEntry* job,
                       const BindingTemplate *binding_template,
@@ -275,6 +303,43 @@ bool JobAssigner::UpdateDataManagerByPatterns(
   IDSet<job_id_t> list_job_read;
   list_job_read.insert(job->job_id());
   job_id_t last_job_write = job->job_id();
+
+
+  if (dm_query_cache_.QueryIsHit(binding_template->record_name())) {
+    if (update_batch_size_ == 0) {
+      if (!job->versioned_for_pattern()) {
+        assert(false);
+        if (!job_manager_->ResolveJobDataVersionsForPattern(job, patterns)) {
+          assert(false);
+        }
+      }
+
+      size_t physical_ids_idx = 0;
+      BindingTemplate::PatternList::const_iterator iter = patterns->begin();
+      for (; iter != patterns->end(); ++iter) {
+        BindingTemplate::PatternEntry *pe = *iter;
+        data_version_t base_version;
+        if (!job->vmap_read()->query_entry(pe->ldid_, &base_version)) {
+          assert(false);
+        }
+        batch_ldid_.push_back(pe->ldid_);
+        batch_pdid_.push_back(physical_ids->operator[](physical_ids_idx));
+        batch_base_version_.push_back(base_version);
+        batch_unit_diff_version_.push_back(pe->version_diff_from_base_);
+
+        ++physical_ids_idx;
+      }
+    }
+
+    last_complex_job_id_ = job->job_id();
+    ++update_batch_size_;
+    return true;
+  }
+
+
+
+  FlushBatchUpdate();
+
 
 
   if (!job->versioned_for_pattern()) {
@@ -543,6 +608,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
   }
 
   PhysicalDataList instances_at_worker;
+  FlushBatchUpdate();
   data_manager_->InstancesByWorkerAndVersion(
       ldo, worker->worker_id(), version, &instances_at_worker);
 
@@ -753,6 +819,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
   }
 
   PhysicalDataList instances_in_system;
+  FlushBatchUpdate();
   data_manager_->InstancesByVersion(ldo, version, &instances_in_system);
 
   if ((instances_at_worker.size() == 0) && (instances_in_system.size() >= 1)) {
@@ -861,6 +928,7 @@ bool JobAssigner::AllocateLdoInstanceToJob(JobEntry* job,
 
   job->set_physical_table_entry(ldo->id(), pd.id());
 
+  FlushBatchUpdate();
   data_manager_->UpdatePhysicalInstance(ldo, pd, pd_new);
   dm_query_cache_.Invalidate();
 
@@ -891,6 +959,7 @@ bool JobAssigner::SaveJobContextForCheckpoint(JobEntry *job) {
       const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(ldid));
 
     PhysicalDataList instances_in_system;
+    FlushBatchUpdate();
     data_manager_->InstancesByVersion(ldo, version, &instances_in_system);
 
 
@@ -962,6 +1031,7 @@ bool JobAssigner::LoadData(SchedulerWorker* worker,
   to_data_new.set_version(version);
   to_data_new.set_last_job_write(j[0]);
   to_data_new.clear_list_job_read();
+  FlushBatchUpdate();
   data_manager_->UpdatePhysicalInstance(ldo, *to_data, to_data_new);
   dm_query_cache_.Invalidate();
 
@@ -996,6 +1066,7 @@ bool JobAssigner::SaveData(SchedulerWorker* worker,
   // Update data table.
   PhysicalData from_data_new = *from_data;
   from_data_new.add_to_list_job_read(j[0]);
+  FlushBatchUpdate();
   data_manager_->UpdatePhysicalInstance(ldo, *from_data, from_data_new);
   dm_query_cache_.Invalidate();
 
@@ -1028,6 +1099,7 @@ size_t JobAssigner::GetObsoleteLdoInstancesAtWorker(SchedulerWorker* worker,
   size_t count = 0;
   dest->clear();
   PhysicalDataList pv;
+  FlushBatchUpdate();
   data_manager_->InstancesByWorker(ldo, worker->worker_id(), &pv);
   PhysicalDataList::iterator iter = pv.begin();
   for (; iter != pv.end(); ++iter) {
@@ -1057,6 +1129,7 @@ bool JobAssigner::CreateDataAtWorker(SchedulerWorker* worker,
   IDSet<job_id_t> list_job_read;
   list_job_read.insert(j[0]);  // if other job wants to write, waits for creation.
   PhysicalData p(d[0], worker->worker_id(), NIMBUS_INIT_DATA_VERSION, list_job_read, j[0]);
+  FlushBatchUpdate();
   data_manager_->AddPhysicalInstance(ldo, p);
   dm_query_cache_.Invalidate();
 
@@ -1105,6 +1178,7 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   to_data_new.set_version(from_data->version());
   to_data_new.set_last_job_write(receive_id);
   to_data_new.clear_list_job_read();
+  FlushBatchUpdate();
   data_manager_->UpdatePhysicalInstance(ldo, *to_data, to_data_new);
   dm_query_cache_.Invalidate();
 
@@ -1142,6 +1216,7 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   // Update data table.
   PhysicalData from_data_new = *from_data;
   from_data_new.add_to_list_job_read(send_id);
+  FlushBatchUpdate();
   data_manager_->UpdatePhysicalInstance(ldo, *from_data, from_data_new);
   dm_query_cache_.Invalidate();
 
@@ -1204,6 +1279,7 @@ bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
   // Update data table.
   PhysicalData from_data_new = *from_data;
   from_data_new.add_to_list_job_read(j[0]);
+  FlushBatchUpdate();
   data_manager_->UpdatePhysicalInstance(ldo, *from_data, from_data_new);
   dm_query_cache_.Invalidate();
 
@@ -1211,6 +1287,7 @@ bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
   to_data_new.set_version(from_data->version());
   to_data_new.set_last_job_write(j[0]);
   to_data_new.clear_list_job_read();
+  FlushBatchUpdate();
   data_manager_->UpdatePhysicalInstance(ldo, *to_data, to_data_new);
   dm_query_cache_.Invalidate();
 
@@ -1306,6 +1383,12 @@ void JobAssigner::DataManagerQueryCache::Invalidate() {
 
   state_ = INIT;
 }
+
+bool JobAssigner::DataManagerQueryCache::QueryIsHit(const std::string& record_name) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
+  return (state_ == VALID && record_name_ == record_name);
+}
+
 
 bool JobAssigner::DataManagerQueryCache::Query(const std::string& record_name,
                               const std::vector<physical_data_id_t>*& phy_ids) {
