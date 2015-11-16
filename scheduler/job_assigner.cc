@@ -266,6 +266,8 @@ bool JobAssigner::QueryDataManagerForPatterns(
 }
 
 void JobAssigner::FlushBatchUpdate() {
+  boost::unique_lock<boost::mutex> lock(batch_update_mutex_);
+
   if (update_batch_size_ > 0) {
     std::cout << "LAZY: FLUSH BATCH UPDATE of size: "
               << update_batch_size_ << std::endl;

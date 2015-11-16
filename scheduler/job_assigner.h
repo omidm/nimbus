@@ -212,6 +212,7 @@ namespace nimbus {
 
     DataManagerQueryCache dm_query_cache_;
 
+
     void FlushBatchUpdate();
 
     size_t update_batch_size_;
@@ -221,6 +222,7 @@ namespace nimbus {
     std::vector<data_version_t> batch_unit_diff_version_;
     IDSet<job_id_t> list_job_read_;
     job_id_t last_complex_job_id_;
+    boost::mutex batch_update_mutex_;
 
   private:
     JobAssigner(const JobAssigner& other) {}
