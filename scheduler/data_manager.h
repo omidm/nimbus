@@ -109,6 +109,9 @@ namespace nimbus {
                                       const job_id_t& last_job_write);
 
     const PhysicalDataList* AllInstances(LogicalDataObject* object);
+    bool GetInstance(LogicalDataObject* object,
+                     const physical_data_id_t& pdid,
+                     PhysicalData *pd);
     int AllInstances(LogicalDataObject* object,
                      PhysicalDataList* dest);
     int AllInstances(LogicalDataObject* object,

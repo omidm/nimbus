@@ -164,6 +164,7 @@ class VersionManager {
     BatchState batch_state_;
     ComplexJobEntry *last_complex_job_;
     boost::shared_ptr<MetaBeforeSet> base_batch_mbs_;
+    boost::mutex batch_update_mutex_;
 
     bool InsertComplexJobBatchInLdl();
 

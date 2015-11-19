@@ -386,6 +386,14 @@ bool nimbus::DataManager::UpdateVersionAndAccessRecord(const logical_data_id_t& 
                                                            last_job_write);
 }
 
+
+bool nimbus::DataManager::GetInstance(LogicalDataObject* object,
+                                       const physical_data_id_t& pdid,
+                                       PhysicalData *pd) {
+  return physical_object_map_.GetInstance(object, pdid, pd);
+}
+
+
 /**
  * \fn const PhysicalDataList * nimbus::DataManager::AllInstances(LogicalDataObject *object)
  * \brief Brief description.

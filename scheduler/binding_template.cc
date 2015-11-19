@@ -110,6 +110,52 @@ const BindingTemplate::PatternList* BindingTemplate::end_pattern_list_p() const 
   return &end_pattern_list_;
 }
 
+
+
+void
+BindingTemplate::GetRequiredUpdatesForCascading(boost::shared_ptr<VersionList> vlist_write_diff,
+                                                ConstPatternList *patterns,
+                                                std::vector<data_version_t> *versions_diff) {
+  patterns->clear();
+  versions_diff->clear();
+
+  VersionMap vmap_diff;
+  {
+    VersionList::const_iterator iter = vlist_write_diff->begin();
+    for (; iter != vlist_write_diff->end(); ++iter) {
+      vmap_diff.set_entry(iter->first, iter->second);
+    }
+  }
+
+  PatternMap::iterator iter = entry_pattern_map_.begin();
+  for (; iter != entry_pattern_map_.end(); ++iter) {
+    if (iter->second->version_type_ == WILD_CARD) {
+      continue;
+    }
+
+    logical_data_id_t ldid = iter->second->ldid_;
+    physical_data_id_t pdid = iter->second->pdid_;
+
+    data_version_t write_diff_version;
+    if (!vmap_diff.query_entry(ldid, &write_diff_version)) {
+      write_diff_version = 0;
+    }
+
+    PatternMap::iterator it = end_pattern_map_.find(pdid);
+    assert(it != end_pattern_map_.end());
+
+    data_version_t v_diff_now = it->second->version_diff_from_base_;
+    data_version_t v_diff_needed = iter->second->version_diff_from_base_ + write_diff_version;
+
+    if (v_diff_now != v_diff_needed) {
+      assert(v_diff_now < v_diff_needed);
+      patterns->push_back(it->second);
+      versions_diff->push_back(v_diff_needed);
+    }
+  }
+}
+
+
 bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   assert(!finalized_);
