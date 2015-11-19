@@ -57,6 +57,7 @@
 #include <algorithm>
 #include <map>
 #include <set>
+#include "scheduler/version_map.h"
 #include "shared/nimbus_types.h"
 #include "shared/scheduler_server.h"
 #include "shared/scheduler_command_include.h"
@@ -120,6 +121,7 @@ class BindingTemplate {
     };
 
     typedef std::vector<PatternEntry*> PatternList;
+    typedef std::vector<const PatternEntry*> ConstPatternList;
     typedef boost::unordered_map<physical_data_id_t, PatternEntry*> PatternMap;
     typedef std::pair<PatternList*, PatternList*> PatternBucket;
     typedef boost::unordered_map<logical_data_id_t, PatternBucket> PatternSorted;
@@ -149,6 +151,10 @@ class BindingTemplate {
 
     bool AddRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* command,
                                      worker_id_t w_id);
+
+    void GetRequiredUpdatesForCascading(boost::shared_ptr<VersionList> vlist_write_diff,
+                                        ConstPatternList *patterns,
+                                        std::vector<data_version_t> *versions_diff);
 
   private:
     typedef boost::shared_ptr<job_id_t> JobIdPtr;

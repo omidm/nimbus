@@ -101,6 +101,8 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
 }
 
 void VersionManager::FlushPendingBatch() {
+  boost::unique_lock<boost::mutex> lock(batch_update_mutex_);
+
   switch (batch_state_) {
     case INIT:
       // std::cout << "LAZY: FLUSH on INIT\n";

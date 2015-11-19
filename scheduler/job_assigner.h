@@ -120,6 +120,10 @@ namespace nimbus {
 
     virtual bool AssignComplexJob(ComplexJobEntry* job);
 
+    virtual bool UpdateDataForCascading(BindingTemplate *bt,
+                                        const BindingTemplate::PatternEntry *pattern,
+                                        data_version_t new_version_diff);
+
     virtual bool PrepareDataForJobAtWorker(JobEntry* job,
                                            SchedulerWorker* worker,
                                            logical_data_id_t l_id);

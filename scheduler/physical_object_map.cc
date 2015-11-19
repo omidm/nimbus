@@ -238,7 +238,26 @@ bool nimbus::PhysicalObjectMap::UpdateVersionAndAccessRecord(const logical_data_
 
 
 
+bool nimbus::PhysicalObjectMap::GetInstance(LogicalDataObject* object,
+                                            const physical_data_id_t& pdid,
+                                            PhysicalData *pd) {
+  PhysicalObjectMapType::iterator iter = data_map_.find(object->id());
+  if (iter == data_map_.end()) {
+    return false;
+  } else {
+    PhysicalDataList* v = iter->second;
+    PhysicalDataList::iterator it = v->begin();
 
+    for (; it != v->end(); ++it) {
+      if (it->id() == pdid) {
+        *pd = *it;
+        return true;
+      }
+    }
+
+    return false;
+  }
+}
 
 
 /**

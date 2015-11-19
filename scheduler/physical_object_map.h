@@ -87,6 +87,10 @@ namespace nimbus {
 
     virtual const PhysicalDataList* AllInstances(LogicalDataObject* object);
 
+    virtual bool GetInstance(LogicalDataObject* object,
+                             const physical_data_id_t& pdid,
+                             PhysicalData *pd);
+
     virtual int AllInstances(LogicalDataObject* object,
                              PhysicalDataList* dest);
 

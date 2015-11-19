@@ -514,7 +514,29 @@ bool JobAssigner::AssignJob(JobEntry *job) {
       ComplexJobEntry *xj = sj->complex_job();
 
       if (job->to_finalize_binding_template()) {
-        job->binding_template()->Finalize(xj->inner_job_ids());
+        BindingTemplate *bt = job->binding_template();
+
+        BindingTemplate::ConstPatternList patterns;
+        std::vector<data_version_t> versions;
+        ShadowJobEntryList list;
+        xj->OMIDGetParentShadowJobs(&list);
+        // For now complex job can have only one parent job - omidm
+        assert(list.size() == 1);
+        ShadowJobEntry* sj = *(list.begin());
+        assert(!sj->sterile());
+        bt->GetRequiredUpdatesForCascading(sj->vlist_write_diff(),
+                                           &patterns,
+                                           &versions);
+        assert(patterns.size() == versions.size());
+        if (patterns.size() != 0) {
+          std::cout << "WARNING: need to add " << patterns.size() << " extra copy jobs\n.";
+          for (size_t i = 0; i < patterns.size(); ++i) {
+            UpdateDataForCascading(bt, patterns[i], versions[i]);
+          }
+        }
+
+
+        bt->Finalize(xj->inner_job_ids());
       }
     }
     // BINDING MEMOIZE - omidm
@@ -527,6 +549,108 @@ bool JobAssigner::AssignJob(JobEntry *job) {
 
   return false;
 }
+
+bool JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
+                                         const BindingTemplate::PatternEntry *pattern,
+                                         data_version_t new_version_diff) {
+  std::cout << "OMID: Going to update!\n";
+
+  SchedulerWorker* worker;
+  if (!server_->GetSchedulerWorkerById(worker, pattern->worker_id_)) {
+    dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", pattern->worker_id_);
+    assert(false);
+  }
+
+  LogicalDataObject* ldo =
+    const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(pattern->ldid_));
+
+  boost::unique_lock<boost::mutex> lock(ldo->mutex());
+
+  PhysicalData target_instance;
+  if (!data_manager_->GetInstance(ldo, pattern->pdid_, &target_instance)) {
+      dbg(DBG_ERROR, "ERROR: could find pdid %lu.\n", pattern->pdid_);
+  }
+  assert(target_instance.id() == pattern->pdid_);
+  assert(target_instance.worker() == pattern->worker_id_);
+  assert(pattern->version_diff_from_base_ < new_version_diff);
+  data_version_t target_version =
+    target_instance.version() + (new_version_diff - pattern->version_diff_from_base_);
+
+  JobEntryList list;
+  VersionedLogicalData vld(pattern->ldid_, target_instance.version());
+  job_manager_->GetJobsNeedDataVersion(&list, vld);
+  assert(list.size() == 0);
+
+
+
+  PhysicalDataList instances_at_worker;
+  FlushBatchUpdate();
+  data_manager_->InstancesByWorkerAndVersion(
+      ldo, pattern->worker_id_, target_version, &instances_at_worker);
+
+  if (instances_at_worker.size() > 0) {
+    PhysicalData from_instance = *instances_at_worker.begin();
+    // BINDING MEMOIZE - omidm
+    bt->TrackDataObject(pattern->worker_id_,
+                        pattern->ldid_,
+                        pattern->pdid_,
+                        BindingTemplate::WILD_CARD,
+                        0);
+    bt->TrackDataObject(pattern->worker_id_,
+                        pattern->ldid_,
+                        from_instance.id(),
+                        BindingTemplate::REGULAR,
+                        new_version_diff);
+    bt->UpdateDataObject(target_instance.id(),
+                         new_version_diff);
+    // BINDING MEMOIZE - omidm
+
+    // BINDING MEMOIZE - omidm
+    LocalCopyData(worker, ldo, &from_instance, &target_instance, bt);
+
+
+    return true;
+  }
+
+  PhysicalDataList instances_in_system;
+  FlushBatchUpdate();
+  data_manager_->InstancesByVersion(ldo, target_version, &instances_in_system);
+
+  if (instances_in_system.size() > 0) {
+    std::cout << "WARNING: Needed remote copy to make cascading work.\n";
+    PhysicalData from_instance = *instances_in_system.begin();
+    worker_id_t sender_id = from_instance.worker();
+    SchedulerWorker* worker_sender;
+    if (!server_->GetSchedulerWorkerById(worker_sender, sender_id)) {
+      dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", sender_id);
+      assert(false);
+    }
+
+    bt->TrackDataObject(pattern->worker_id_,
+                        pattern->ldid_,
+                        pattern->pdid_,
+                        BindingTemplate::WILD_CARD,
+                        0);
+    bt->TrackDataObject(sender_id,
+                        pattern->ldid_,
+                        from_instance.id(),
+                        BindingTemplate::REGULAR,
+                        new_version_diff);
+    bt->UpdateDataObject(target_instance.id(),
+                         new_version_diff);
+    // BINDING MEMOIZE - omidm
+
+    // BINDING MEMOIZE - omidm
+    RemoteCopyData(worker_sender, worker, ldo, &from_instance, &target_instance, bt);
+
+    return true;
+  }
+
+
+  assert(false);
+  return false;
+}
+
 
 bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
                                             SchedulerWorker* worker,
