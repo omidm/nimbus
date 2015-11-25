@@ -1,18 +1,65 @@
+Author: Omid Mashayekhi <omidm@stanford.edu>
 Author: Hang Qu <quhang@stanford.edu>
 
-Application "open2d" and "open3d" are for viewing simulation result.
 Application "water" is a water simulation example, without Nimbus.
+Application "open2d" and "open3d" are for viewing simulation result.
 
-Instructions for building applications:
-Please first build the PhysBAM library in folder "physbam-lib".
-Go into the corresponding directory of the application you want to build, e.g.,
-> cd water.
-Then type:
-> mkdir -p Build/Release
-> cd Build/Release
-> ccmake ../..
-Configure the cmake options.
-Finally, you can run make in the 'Build/Release' folder:
 
-# [TODO:quhang] Make it compile in MacOS.
+-------------------------------------------------------------------
+Building:
+-------------------------------------------------------------------
+
+1. You need to build the PhysBAM library in "physbam-lib" forlder:
+  $ cd ../physbam-lib/
+  $ mkdir -p Build/Release
+  $ cd Build/Release
+  $ ccmake ../..
+  $ make
+
+1. Build the application you want, for example for water applications:
+  $ cd water/
+  $ mkdir -p Build/Release
+  $ cd Build/Release
+  $ ccmake ../..
+  $ make
+
+
+NOTE 1: in ccmake press "c" for configure and then "g" for generate. You may
+        need to hit "c" multiple times until all the preceding stars disappear.
+
+NOTE 2: to build in debug mode, replace "Release" with "Debug" in the
+        instructions. Note that the created executable name from DEbug mode
+        could be different from Release mode (e.g. Water -> Water-debug).
+
+NOTE 3: to compile the distributed version with MPI capabilities activated,
+     when building the library you need to use following cmake configurations:
+     USE_OPENMPI  ->  ON
+     LAMMPI       ->  OFF
+
+-------------------------------------------------------------------
+Running:
+-------------------------------------------------------------------
+
+** Example 1: Run and view non-distributed 3D water simulation:
+
+  $ cd water
+  $ ./Water -scale 40 -e 10
+  $ ../opengl_3d/opengl_3d/ output/
+
+
+** Example 2: Run and view distributed 3D water simulation:
+
+First create a file with the following format in each line:
+    <NODE IP_ADDRESS> cpu=<CORE_NUM>
+
+for example to run over 4 cores on the local machine create a file named
+nodes.txt with the following content:
+  localhost cpu=4
+and save it in the water/ directory.
+
+  $ cd water/
+  $ mpirun -hostfile nodes.txt -np 4 ./Water -scale 40 -e 10
+  $ ../opengl_3d/opengl_3d/ output/<node-number>/
+
+
 
