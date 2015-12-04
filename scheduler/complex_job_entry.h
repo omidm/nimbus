@@ -92,6 +92,11 @@ class ComplexJobEntry : public JobEntry {
     const std::vector<job_id_t>* outer_job_ids_p() const;
     const std::vector<Parameter>* parameters_p() const;
 
+    bool cascaded_bound() const;
+    bool parent_cascaded_bound() const;
+    void set_cascaded_bound(bool flag);
+    void set_parent_cascaded_bound(bool flag);
+
     ShadowJobEntryMap shadow_jobs();
     const ShadowJobEntryMap* shadow_jobs_p();
 
@@ -156,6 +161,9 @@ class ComplexJobEntry : public JobEntry {
     std::vector<job_id_t> inner_job_ids_;
     std::vector<job_id_t> outer_job_ids_;
     std::vector<Parameter> parameters_;
+
+    bool cascaded_bound_;
+    bool parent_cascaded_bound_;
 
     IdMap shadow_job_ids_;
     IdPool assigned_shadow_job_ids_;

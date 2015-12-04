@@ -582,19 +582,21 @@ size_t TemplateEntry::QueryAccessPattern(const logical_data_id_t& ldid,
   return count;
 }
 
-std::string TemplateEntry::ProduceBindingRecordName(const JobEntry *job) {
+std::string TemplateEntry::ProduceBindingRecordName(const ComplexJobEntry *job) {
+  assert(job->grand_parent_job_name() != "");
+  assert(job->load_balancing_id() != NIMBUS_INIT_LOAD_BALANCING_ID);
+  assert(job->parent_load_balancing_id() != NIMBUS_INIT_LOAD_BALANCING_ID);
+
   std::string key = template_name_;
   key += "-" + int2string(job->load_balancing_id());
   key += "--" + job->grand_parent_job_name();
   key += "-" + int2string(job->parent_load_balancing_id());
+  key += + (job->parent_cascaded_bound() ? "-cascaded" : "-simple");
   return key;
 }
 
 bool TemplateEntry::AddBindingRecord(const ComplexJobEntry *complex_job,
                                      BindingTemplate*& binding_template) {
-  assert(complex_job->grand_parent_job_name() != "");
-  assert(complex_job->load_balancing_id() != NIMBUS_INIT_LOAD_BALANCING_ID);
-  assert(complex_job->parent_load_balancing_id() != NIMBUS_INIT_LOAD_BALANCING_ID);
   std::string record_name = ProduceBindingRecordName(complex_job);
 
   BindingMap::iterator iter = binding_records_.find(record_name);

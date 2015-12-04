@@ -516,25 +516,26 @@ bool JobAssigner::AssignJob(JobEntry *job) {
       if (job->to_finalize_binding_template()) {
         BindingTemplate *bt = job->binding_template();
 
-        BindingTemplate::ConstPatternList patterns;
-        std::vector<data_version_t> versions;
-        ShadowJobEntryList list;
-        xj->OMIDGetParentShadowJobs(&list);
-        // For now complex job can have only one parent job - omidm
-        assert(list.size() == 1);
-        ShadowJobEntry* sj = *(list.begin());
-        assert(!sj->sterile());
-        bt->GetRequiredUpdatesForCascading(sj->vlist_write_diff(),
-                                           &patterns,
-                                           &versions);
-        assert(patterns.size() == versions.size());
-        if (patterns.size() != 0) {
-          std::cout << "WARNING: need to add " << patterns.size() << " extra copy jobs\n.";
-          for (size_t i = 0; i < patterns.size(); ++i) {
-            UpdateDataForCascading(bt, patterns[i], versions[i]);
+        if (xj->cascaded_bound()) {
+          BindingTemplate::ConstPatternList patterns;
+          std::vector<data_version_t> versions;
+          ShadowJobEntryList list;
+          xj->OMIDGetParentShadowJobs(&list);
+          // For now complex job can have only one parent job - omidm
+          assert(list.size() == 1);
+          ShadowJobEntry* sj = *(list.begin());
+          assert(!sj->sterile());
+          bt->GetRequiredUpdatesForCascading(sj->vlist_write_diff(),
+                                             &patterns,
+                                             &versions);
+          assert(patterns.size() == versions.size());
+          if (patterns.size() != 0) {
+            std::cout << "WARNING: need to add " << patterns.size() << " extra copy jobs.\n";
+            for (size_t i = 0; i < patterns.size(); ++i) {
+              UpdateDataForCascading(bt, patterns[i], versions[i]);
+            }
           }
         }
-
 
         bt->Finalize(xj->inner_job_ids());
       }
@@ -554,6 +555,8 @@ bool JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
                                          const BindingTemplate::PatternEntry *pattern,
                                          data_version_t new_version_diff) {
   std::cout << "OMID: Going to update!\n";
+
+  assert(pattern->version_type_ == BindingTemplate::REGULAR);
 
   SchedulerWorker* worker;
   if (!server_->GetSchedulerWorkerById(worker, pattern->worker_id_)) {

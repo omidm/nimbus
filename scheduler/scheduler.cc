@@ -50,6 +50,7 @@ namespace nimbus {
 #define DEFAULT_CONTROLLER_TEMPLATE_ACTIVE true
 #define DEFAULT_COMPLEX_MEMOIZATION_ACTIVE true
 #define DEFAULT_BINDING_MEMOIZATION_ACTIVE true
+#define DEFAULT_CASCADED_BINDING_ACTIVE true
 #define DEFAULT_WORKER_TEMPLATE_ACTIVE true
 #define DEFAULT_MEGA_RCR_JOB_ACTIVE true
 #define DEFAULT_DATA_MANAGER_QUERY_CACHE_ACTIVE true
@@ -94,6 +95,7 @@ Scheduler::Scheduler(port_t port) {
   controller_template_active_ = DEFAULT_CONTROLLER_TEMPLATE_ACTIVE;
   complex_memoization_active_ = DEFAULT_COMPLEX_MEMOIZATION_ACTIVE;
   binding_memoization_active_ = DEFAULT_BINDING_MEMOIZATION_ACTIVE;
+  cascaded_binding_active_ = DEFAULT_CASCADED_BINDING_ACTIVE;
   worker_template_active_ = DEFAULT_WORKER_TEMPLATE_ACTIVE;
   mega_rcr_job_active_ = DEFAULT_MEGA_RCR_JOB_ACTIVE;
   data_manager_query_cache_active_ = DEFAULT_DATA_MANAGER_QUERY_CACHE_ACTIVE;
@@ -170,6 +172,10 @@ void Scheduler::set_complex_memoization_active(bool flag) {
 
 void Scheduler::set_binding_memoization_active(bool flag) {
   binding_memoization_active_ = flag;
+}
+
+void Scheduler::set_cascaded_binding_active(bool flag) {
+  cascaded_binding_active_ = flag;
 }
 
 void Scheduler::set_worker_template_active(bool flag) {
@@ -835,6 +841,7 @@ void Scheduler::SetupJobManager() {
   job_manager_->set_after_map(after_map_);
   job_manager_->set_ldo_map_p(data_manager_->ldo_map_p());
   job_manager_->set_binding_memoization_active(binding_memoization_active_);
+  job_manager_->set_cascaded_binding_active(cascaded_binding_active_);
   job_manager_->set_fault_tolerance_active(fault_tolerance_active_);
   job_manager_->set_checkpoint_creation_period(checkpoint_creation_period_);
 }
