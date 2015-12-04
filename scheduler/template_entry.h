@@ -233,7 +233,7 @@ class TemplateEntry {
 
     void CompleteLdidInfo();
 
-    std::string ProduceBindingRecordName(const JobEntry *job);
+    std::string ProduceBindingRecordName(const ComplexJobEntry *job);
 };
 
 }  // namespace nimbus

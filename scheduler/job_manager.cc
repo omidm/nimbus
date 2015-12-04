@@ -55,6 +55,7 @@ JobManager::JobManager() {
   ldo_map_p_ = NULL;
   after_map_ = NULL;
   binding_memoization_active_ = false;
+  cascaded_binding_active_ = false;
   fault_tolerance_active_ = false;
   checkpoint_creation_period_ = 10000000;
   last_checkpoint_time_ = (int64_t)(Log::GetRawTime());
@@ -80,6 +81,10 @@ void JobManager::set_ldo_map_p(const LdoMap* ldo_map_p) {
 
 void JobManager::set_binding_memoization_active(bool flag) {
   binding_memoization_active_ = flag;
+}
+
+void JobManager::set_cascaded_binding_active(bool flag) {
+  cascaded_binding_active_ = flag;
 }
 
 void JobManager::set_fault_tolerance_active(bool flag) {
@@ -258,6 +263,7 @@ bool JobManager::AddComplexJobEntry(ComplexJobEntry* complex_job) {
       complex_job->set_parent_job_name(parent_job->job_name());
       complex_job->set_grand_parent_job_name(parent_job->parent_job_name());
       complex_job->set_parent_load_balancing_id(parent_job->load_balancing_id());
+      complex_job->set_parent_cascaded_bound(false);  // parent was not even part of a template!
     } else if (GetComplexJobContainer(complex_job->parent_job_id(), xj)) {
       ShadowJobEntry *sj = NULL;
       if (!xj->OMIDGetShadowJobEntryById(complex_job->parent_job_id(), sj)) {
@@ -267,6 +273,7 @@ bool JobManager::AddComplexJobEntry(ComplexJobEntry* complex_job) {
       complex_job->set_parent_job_name(sj->job_name());
       complex_job->set_grand_parent_job_name(xj->parent_job_name());
       complex_job->set_parent_load_balancing_id(xj->load_balancing_id());
+      complex_job->set_parent_cascaded_bound(xj->cascaded_bound());
     }
   }
 
@@ -794,6 +801,8 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list,
         (complex_job->checkpoint_id() == NIMBUS_INIT_CHECKPOINT_ID);
 
       if (memoize_binding) {
+        // set whether this complex job will be bound with cascading or not.
+        complex_job->set_cascaded_bound(cascaded_binding_active_);
         bool create_bt = true;
         if (te->QueryBindingRecord(complex_job, bt)) {
           create_bt = false;

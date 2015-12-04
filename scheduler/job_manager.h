@@ -76,6 +76,7 @@ class JobManager {
     void set_after_map(AfterMap* after_map);
     void set_ldo_map_p(const LdoMap* ldo_map_p);
     void set_binding_memoization_active(bool flag);
+    void set_cascaded_binding_active(bool flag);
     void set_fault_tolerance_active(bool flag);
     void set_checkpoint_creation_period(int64_t period);
 
@@ -180,6 +181,7 @@ class JobManager {
     VersionManager version_manager_;
     CheckpointManager checkpoint_manager_;
     bool binding_memoization_active_;
+    bool cascaded_binding_active_;
 
     Graph<JobEntry, job_id_t> job_graph_;
     ComplexJobEntryMap complex_jobs_;

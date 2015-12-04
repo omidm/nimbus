@@ -114,6 +114,8 @@ void ComplexJobEntry::Initialize() {
   shadow_jobs_complete_ = false;
   initialized_cursor_ = false;
   drained_all_ = false;
+  cascaded_bound_ = false;
+  parent_cascaded_bound_ = false;
 }
 
 
@@ -150,6 +152,22 @@ std::vector<Parameter> ComplexJobEntry::parameters() const {
 
 const std::vector<Parameter>* ComplexJobEntry::parameters_p() const {
   return &parameters_;
+}
+
+bool ComplexJobEntry::cascaded_bound() const {
+  return cascaded_bound_;
+}
+
+bool ComplexJobEntry::parent_cascaded_bound() const {
+  return parent_cascaded_bound_;
+}
+
+void ComplexJobEntry::set_cascaded_bound(bool flag) {
+  cascaded_bound_ = flag;
+}
+
+void ComplexJobEntry::set_parent_cascaded_bound(bool flag) {
+  parent_cascaded_bound_ = flag;
 }
 
 void ComplexJobEntry::SetParentJobIds() {
