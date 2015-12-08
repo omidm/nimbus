@@ -58,8 +58,8 @@ def run_controller(controller_ip, worker_num):
     controller_command += ' --dwt '
   if config.DEACTIVATE_MEGA_RCR_JOB:
     controller_command += ' --dmr '
-  if config.DEACTIVATE_DM_QUERY_CACHE:
-    controller_command += ' --dqc '
+  if config.DEACTIVATE_CASCADED_BINDING:
+    controller_command += ' --dcb '
   controller_command += ' &> ' + config.STD_OUT_LOG
 
   subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,

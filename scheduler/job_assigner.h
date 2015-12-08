@@ -82,7 +82,6 @@ namespace nimbus {
     virtual void set_load_balancer(LoadBalancer *load_balancer);
     virtual void set_thread_num(size_t thread_num);
     virtual void set_checkpoint_id(checkpoint_id_t checkpoint_id);
-    virtual void set_data_manager_query_cache_active(bool flag);
     virtual void set_fault_tolerance_active(bool flag);
     virtual void set_scheduler(Scheduler *scheduler);
     virtual void set_ldo_map_p(const LdoMap* ldo_map_p);
@@ -99,7 +98,6 @@ namespace nimbus {
     size_t thread_num_;
     checkpoint_id_t checkpoint_id_;
     template_id_t template_generation_id_;
-    bool data_manager_query_cache_active_;
     bool fault_tolerance_active_;
     Scheduler *scheduler_;
     const LdoMap *ldo_map_p_;
@@ -120,7 +118,7 @@ namespace nimbus {
 
     virtual bool AssignComplexJob(ComplexJobEntry* job);
 
-    virtual bool UpdateDataForCascading(BindingTemplate *bt,
+    virtual size_t UpdateDataForCascading(BindingTemplate *bt,
                                         const BindingTemplate::PatternEntry *pattern,
                                         data_version_t new_version_diff);
 
@@ -193,8 +191,7 @@ namespace nimbus {
 
         enum State {
           INIT     = 0,
-          LEARNING = 1,
-          VALID    = 2
+          VALID    = 1
         };
 
         void Invalidate();

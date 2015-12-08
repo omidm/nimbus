@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
     ("dbm", "deactivate binding memoization")
     ("dwt", "deactivate worker template")
     ("dmr", "deactivate mega rcr job")
-    ("dqc", "deactivate data manager query cache")
+    ("dcb", "deactivate cascaded binding")
 
     ("alb", "activate load balancing")
     ("aft", "activate fault tolerance");
@@ -141,8 +141,8 @@ int main(int argc, char *argv[]) {
     s->set_mega_rcr_job_active(false);
   }
 
-  if (vm.count("dqc")) {
-    s->set_data_manager_query_cache_active(false);
+  if (vm.count("dcb")) {
+    s->set_cascaded_binding_active(false);
   }
 
   if (vm.count("lb_period")) {

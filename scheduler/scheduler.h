@@ -82,7 +82,6 @@ class Scheduler {
     virtual void set_cascaded_binding_active(bool flag);
     virtual void set_worker_template_active(bool flag);
     virtual void set_mega_rcr_job_active(bool flag);
-    virtual void set_data_manager_query_cache_active(bool flag);
 
     virtual void set_load_balancing_active(bool flag);
     virtual void set_load_balancing_period(int64_t period);
@@ -198,7 +197,6 @@ class Scheduler {
     bool cascaded_binding_active_;
     bool worker_template_active_;
     bool mega_rcr_job_active_;
-    bool data_manager_query_cache_active_;
 
     bool load_balancing_active_;
     int64_t load_balancing_period_;

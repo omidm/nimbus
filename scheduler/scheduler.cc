@@ -50,10 +50,9 @@ namespace nimbus {
 #define DEFAULT_CONTROLLER_TEMPLATE_ACTIVE true
 #define DEFAULT_COMPLEX_MEMOIZATION_ACTIVE true
 #define DEFAULT_BINDING_MEMOIZATION_ACTIVE true
-#define DEFAULT_CASCADED_BINDING_ACTIVE true
 #define DEFAULT_WORKER_TEMPLATE_ACTIVE true
 #define DEFAULT_MEGA_RCR_JOB_ACTIVE true
-#define DEFAULT_DATA_MANAGER_QUERY_CACHE_ACTIVE true
+#define DEFAULT_CASCADED_BINDING_ACTIVE true
 
 #define DEFAULT_LOAD_BALANCING_ACTIVE false
 #define DEFAULT_LOAD_BALANCING_PERIOD 30
@@ -98,7 +97,6 @@ Scheduler::Scheduler(port_t port) {
   cascaded_binding_active_ = DEFAULT_CASCADED_BINDING_ACTIVE;
   worker_template_active_ = DEFAULT_WORKER_TEMPLATE_ACTIVE;
   mega_rcr_job_active_ = DEFAULT_MEGA_RCR_JOB_ACTIVE;
-  data_manager_query_cache_active_ = DEFAULT_DATA_MANAGER_QUERY_CACHE_ACTIVE;
 
   load_balancing_active_ = DEFAULT_LOAD_BALANCING_ACTIVE;
   load_balancing_period_ = DEFAULT_LOAD_BALANCING_PERIOD;
@@ -184,10 +182,6 @@ void Scheduler::set_worker_template_active(bool flag) {
 
 void Scheduler::set_mega_rcr_job_active(bool flag) {
   mega_rcr_job_active_ = flag;
-}
-
-void Scheduler::set_data_manager_query_cache_active(bool flag) {
-  data_manager_query_cache_active_ = flag;
 }
 
 void Scheduler::set_load_balancing_active(bool flag) {
@@ -871,7 +865,6 @@ void Scheduler::SetupJobAssigner() {
   job_assigner_->set_data_manager(data_manager_);
   job_assigner_->set_load_balancer(load_balancer_);
   job_assigner_->set_thread_num(job_assigner_thread_num_);
-  job_assigner_->set_data_manager_query_cache_active(data_manager_query_cache_active_);
   job_assigner_->set_fault_tolerance_active(fault_tolerance_active_);
   job_assigner_->set_scheduler(this);
   job_assigner_->set_ldo_map_p(data_manager_->ldo_map_p());

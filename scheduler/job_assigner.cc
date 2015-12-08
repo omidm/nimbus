@@ -66,7 +66,6 @@ void JobAssigner::Initialize() {
   job_manager_ = NULL;
   data_manager_ = NULL;
   load_balancer_ = NULL;
-  data_manager_query_cache_active_ = false;
   fault_tolerance_active_ = false;
   scheduler_ = NULL;
   ldo_map_p_ = NULL;
@@ -94,10 +93,6 @@ void JobAssigner::set_data_manager(DataManager *data_manager) {
 
 void JobAssigner::set_load_balancer(LoadBalancer *load_balancer) {
   load_balancer_ = load_balancer;
-}
-
-void JobAssigner::set_data_manager_query_cache_active(bool flag) {
-  data_manager_query_cache_active_ = flag;
 }
 
 void JobAssigner::set_thread_num(size_t thread_num) {
@@ -192,7 +187,7 @@ bool JobAssigner::QueryDataManagerForPatterns(
                       ComplexJobEntry* job,
                       const BindingTemplate *binding_template,
                       const std::vector<physical_data_id_t>*& physical_ids) {
-  if (data_manager_query_cache_active_) {
+  if (job->cascaded_bound()) {
     if (dm_query_cache_.Query(binding_template->record_name(), physical_ids)) {
       std::cout << "COMPLEX: Hit DM Query Cache.\n";
       return true;
@@ -530,10 +525,12 @@ bool JobAssigner::AssignJob(JobEntry *job) {
                                              &versions);
           assert(patterns.size() == versions.size());
           if (patterns.size() != 0) {
-            std::cout << "WARNING: need to add " << patterns.size() << " extra copy jobs.\n";
+            size_t rc_count = 0;
             for (size_t i = 0; i < patterns.size(); ++i) {
-              UpdateDataForCascading(bt, patterns[i], versions[i]);
+              rc_count += UpdateDataForCascading(bt, patterns[i], versions[i]);
             }
+            dbg(DBG_WARN, "WARNING: need to add %lu extra copy jobs (%lu remote copies) for cascading %s.\n", // NOLINT
+                   patterns.size(), rc_count, xj->template_entry()->template_name().c_str());
           }
         }
 
@@ -551,11 +548,10 @@ bool JobAssigner::AssignJob(JobEntry *job) {
   return false;
 }
 
-bool JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
-                                         const BindingTemplate::PatternEntry *pattern,
-                                         data_version_t new_version_diff) {
-  std::cout << "OMID: Going to update!\n";
-
+size_t JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
+                                          const BindingTemplate::PatternEntry *pattern,
+                                          data_version_t new_version_diff) {
+  size_t remote_copy_count = 0;
   assert(pattern->version_type_ == BindingTemplate::REGULAR);
 
   SchedulerWorker* worker;
@@ -612,7 +608,7 @@ bool JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
     LocalCopyData(worker, ldo, &from_instance, &target_instance, bt);
 
 
-    return true;
+    return remote_copy_count;
   }
 
   PhysicalDataList instances_in_system;
@@ -620,7 +616,7 @@ bool JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
   data_manager_->InstancesByVersion(ldo, target_version, &instances_in_system);
 
   if (instances_in_system.size() > 0) {
-    std::cout << "WARNING: Needed remote copy to make cascading work.\n";
+    remote_copy_count = 1;
     PhysicalData from_instance = *instances_in_system.begin();
     worker_id_t sender_id = from_instance.worker();
     SchedulerWorker* worker_sender;
@@ -646,12 +642,12 @@ bool JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
     // BINDING MEMOIZE - omidm
     RemoteCopyData(worker_sender, worker, ldo, &from_instance, &target_instance, bt);
 
-    return true;
+    return remote_copy_count;
   }
 
 
   assert(false);
-  return false;
+  return remote_copy_count;
 }
 
 
@@ -1499,14 +1495,14 @@ JobAssigner::DataManagerQueryCache::DataManagerQueryCache() {
 }
 
 JobAssigner::DataManagerQueryCache::~DataManagerQueryCache() {
-  if (state_ == LEARNING || state_ == VALID) {
+  if (state_ == VALID) {
     delete cached_phy_ids_;
   }
 }
 
 void JobAssigner::DataManagerQueryCache::Invalidate() {
   boost::unique_lock<boost::mutex> lock(mutex_);
-  if (state_ == LEARNING || state_ == VALID) {
+  if (state_ == VALID) {
     delete cached_phy_ids_;
   }
 
@@ -1537,25 +1533,7 @@ void JobAssigner::DataManagerQueryCache::Learn(const std::string& record_name,
     case INIT:
       record_name_ = record_name;
       cached_phy_ids_ = phy_ids;
-      state_ = LEARNING;
-      break;
-    case LEARNING:
-      if (record_name_ == record_name) {
-        if (SameQueries(phy_ids, cached_phy_ids_)) {
-        delete cached_phy_ids_;
-        cached_phy_ids_ = phy_ids;
-        state_ = VALID;
-        } else {
-          delete cached_phy_ids_;
-          cached_phy_ids_ = phy_ids;
-          state_ = LEARNING;
-        }
-      } else {
-        record_name_ = record_name;
-        delete cached_phy_ids_;
-        cached_phy_ids_ = phy_ids;
-        state_ = LEARNING;
-      }
+      state_ = VALID;
       break;
     case VALID:
       if (record_name_ == record_name) {
@@ -1565,8 +1543,11 @@ void JobAssigner::DataManagerQueryCache::Learn(const std::string& record_name,
         record_name_ = record_name;
         delete cached_phy_ids_;
         cached_phy_ids_ = phy_ids;
-        state_ = LEARNING;
+        state_ = INIT;
       }
+      break;
+    default:
+      assert(false);
       break;
   }
 }
