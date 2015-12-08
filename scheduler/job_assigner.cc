@@ -525,12 +525,19 @@ bool JobAssigner::AssignJob(JobEntry *job) {
                                              &versions);
           assert(patterns.size() == versions.size());
           if (patterns.size() != 0) {
+<<<<<<< HEAD
             size_t rc_count = 0;
             for (size_t i = 0; i < patterns.size(); ++i) {
               rc_count += UpdateDataForCascading(bt, patterns[i], versions[i]);
             }
             dbg(DBG_WARN, "WARNING: need to add %lu extra copy jobs (%lu remote copies) for cascading %s.\n", // NOLINT
                    patterns.size(), rc_count, xj->template_entry()->template_name().c_str());
+=======
+            std::cout << "WARNING: need to add " << patterns.size() << " extra copy jobs.\n";
+            for (size_t i = 0; i < patterns.size(); ++i) {
+              UpdateDataForCascading(bt, patterns[i], versions[i]);
+            }
+>>>>>>> f1e6c0c3cf78d856b02fd1ee190a6ae49f459ede
           }
         }
 
@@ -548,10 +555,18 @@ bool JobAssigner::AssignJob(JobEntry *job) {
   return false;
 }
 
+<<<<<<< HEAD
 size_t JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
                                           const BindingTemplate::PatternEntry *pattern,
                                           data_version_t new_version_diff) {
   size_t remote_copy_count = 0;
+=======
+bool JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
+                                         const BindingTemplate::PatternEntry *pattern,
+                                         data_version_t new_version_diff) {
+  std::cout << "OMID: Going to update!\n";
+
+>>>>>>> f1e6c0c3cf78d856b02fd1ee190a6ae49f459ede
   assert(pattern->version_type_ == BindingTemplate::REGULAR);
 
   SchedulerWorker* worker;
@@ -608,7 +623,11 @@ size_t JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
     LocalCopyData(worker, ldo, &from_instance, &target_instance, bt);
 
 
+<<<<<<< HEAD
     return remote_copy_count;
+=======
+    return true;
+>>>>>>> f1e6c0c3cf78d856b02fd1ee190a6ae49f459ede
   }
 
   PhysicalDataList instances_in_system;
@@ -616,7 +635,11 @@ size_t JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
   data_manager_->InstancesByVersion(ldo, target_version, &instances_in_system);
 
   if (instances_in_system.size() > 0) {
+<<<<<<< HEAD
     remote_copy_count = 1;
+=======
+    std::cout << "WARNING: Needed remote copy to make cascading work.\n";
+>>>>>>> f1e6c0c3cf78d856b02fd1ee190a6ae49f459ede
     PhysicalData from_instance = *instances_in_system.begin();
     worker_id_t sender_id = from_instance.worker();
     SchedulerWorker* worker_sender;
@@ -642,12 +665,20 @@ size_t JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
     // BINDING MEMOIZE - omidm
     RemoteCopyData(worker_sender, worker, ldo, &from_instance, &target_instance, bt);
 
+<<<<<<< HEAD
     return remote_copy_count;
+=======
+    return true;
+>>>>>>> f1e6c0c3cf78d856b02fd1ee190a6ae49f459ede
   }
 
 
   assert(false);
+<<<<<<< HEAD
   return remote_copy_count;
+=======
+  return false;
+>>>>>>> f1e6c0c3cf78d856b02fd1ee190a6ae49f459ede
 }
 
 
