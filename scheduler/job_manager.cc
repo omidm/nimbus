@@ -248,13 +248,16 @@ bool JobManager::AddComplexJobEntry(ComplexJobEntry* complex_job) {
   ShadowJobEntryList list;
   complex_job->OMIDGetParentShadowJobs(&list);
   // For now only one parent job per complex job is allowd!
-  assert(list.size() == 1);
-  ShadowJobEntry* sj = *(list.begin());
-  non_sterile_jobs_[sj->job_id()] = sj;
+  if (list.size() != 1) {
+    dbg(DBG_ERROR, "ERROR: there are not exactly one parent job in complex job!\n");
+    assert(false);
+  }
+  ShadowJobEntry* non_sterile_sj = *(list.begin());
+  non_sterile_jobs_[non_sterile_sj->job_id()] = non_sterile_sj;
 
   complex_jobs_[job_id] = complex_job;
 
-  // set parent and grand parent job names and parent lb_id for complex jobs.
+  // for complex jobs set parent/grand-parent job names and parent lb_id and cascading information.
   {
     JobEntry *parent_job = NULL;
     ComplexJobEntry *xj = NULL;
@@ -327,6 +330,7 @@ JobEntry* JobManager::AddMainJobEntry(const job_id_t& job_id) {
 
   jobs_ready_to_assign_[job_id] = job;
 
+  // set parent_job_name for non-sterile jobs.
   job->set_parent_job_name(NIMBUS_KERNEL_JOB_NAME);
 
   return job;
@@ -756,6 +760,9 @@ bool JobManager::RewindFromLastCheckpoint(checkpoint_id_t *checkpoint_id) {
 
       assert(!job->sterile());
       non_sterile_jobs_[(*iter)->job_id()] = job;
+
+      // set parent_job_name for non-sterile jobs.
+      job->set_parent_job_name(NIMBUS_KERNEL_JOB_NAME);
     }
   }
 
