@@ -99,7 +99,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
     write.clear();
     LoadLdoIdsInSet(&write, r, SAMPLE_BATCH_DATA_NAME, NULL);
     before.clear();
-    StageJobAndLoadBeforeSet(&before, GRADIENT_JOB_NAME, init_job_ids[i], read, write);
+    StageJobAndLoadBeforeSet(&before, INIT_JOB_NAME, init_job_ids[i], read, write);
     SerializeParameter(&par, i);
     SpawnComputeJob(INIT_JOB_NAME, init_job_ids[i], read, write, before, after, par, true, r); // NOLINT
   }
