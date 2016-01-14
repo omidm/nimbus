@@ -988,7 +988,7 @@ void JobManager::NotifyJobDone(job_id_t job_id) {
         last_checkpoint_time_ = time;
         checkpoint_id_t checkpoint_id;
         checkpoint_manager_.CreateNewCheckpoint(&checkpoint_id);
-        dbg(DBG_ERROR, "Checkpoint created %lu.\n", checkpoint_id);
+        dbg(DBG_ERROR, "Checkpointing initiated %lu.\n", checkpoint_id);
         JobEntryMap::iterator it = non_sterile_jobs_.begin();
         for (; it != non_sterile_jobs_.end(); ++it) {
           // TODO(omidm): these checks may not necessarily pass, need general way

@@ -144,13 +144,13 @@ void Init::Execute(Parameter params, const DataArray& da) {
   LoadParameter(&params, &base_val);
 
   assert(da.size() == 1);
-  SampleBatch *sb = reinterpret_cast<SampleBatch*>(da[0]); // NOLINT
-  assert(sb);
+  assert(da[0]->name() == SAMPLE_BATCH_DATA_NAME);
+  SampleBatch *sb = static_cast<SampleBatch*>(da[0]);
   assert(sb->sample_num() == PARTITION_SIZE);
 
   // omidm
   // double label = (base_val % 2);        // for +1 and 0 labels
-  double label = ((base_val % 2) *2) - 1;  // for +1 and -1 labels
+  double label = static_cast<double>((base_val % 2) *2) - 1;  // for +1 and -1 labels
   size_t dimension = sb->dimension();
   size_t needed_value = sb->sample_num() * dimension;
   size_t generated_value = 0;
@@ -195,7 +195,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     for (size_t i = 0; i < PARTITION_NUM; ++i) {
       GeometricRegion r(i * PARTITION_SIZE, 0, 0, PARTITION_SIZE, 1, 1);
       read.clear();
-      LoadLdoIdsInSet(&read, r, SAMPLE_BATCH_DATA_NAME, NULL);
+      LoadLdoIdsInSet(&read, r, SAMPLE_BATCH_DATA_NAME, WEIGHT_DATA_NAME, NULL);
       write.clear();
       LoadLdoIdsInSet(&write, r, WEIGHT_DATA_NAME, NULL);
       before.clear();
@@ -255,11 +255,20 @@ Job * Gradient::Clone() {
 
 void Gradient::Execute(Parameter params, const DataArray& da) {
   dbg(DBG_APP, "Executing the gradient job: %lu\n", id().elem());
-  assert(da.size() == 2);
-  SampleBatch *sb = reinterpret_cast<SampleBatch*>(da[0]); // NOLINT
-  assert(sb);
-  Weight *w = reinterpret_cast<Weight*>(da[1]); // NOLINT
-  assert(w);
+  assert(da.size() == 3);
+  Weight *w = NULL;
+  SampleBatch *sb = NULL;
+  if (da[0]->name() == SAMPLE_BATCH_DATA_NAME) {
+    assert(da[1]->name() == WEIGHT_DATA_NAME);
+    w = static_cast<Weight*>(da[1]);
+    sb = static_cast<SampleBatch*>(da[0]);
+  } else {
+    assert(da[0]->name() == WEIGHT_DATA_NAME);
+    assert(da[1]->name() == SAMPLE_BATCH_DATA_NAME);
+    w = static_cast<Weight*>(da[0]);
+    sb = static_cast<SampleBatch*>(da[1]);
+  }
+  assert(da[2]->name() == WEIGHT_DATA_NAME);
 
   std::vector<double> gradient(w->dimension(), 0);
   std::vector<Sample>::iterator iter = sb->samples()->begin();
@@ -288,19 +297,19 @@ Job * Reduce::Clone() {
 void Reduce::Execute(Parameter params, const DataArray& da) {
   dbg(DBG_APP, "Executing the reduce job: %lu\n", id().elem());
   assert(da.size() == 2 * PARTITION_NUM);
-  Weight *weight = reinterpret_cast<Weight*>(da[0]); // NOLINT
-  assert(weight);
+  Weight *weight = static_cast<Weight*>(da[0]);
+  assert(da[0]->name() == WEIGHT_DATA_NAME);
   std::vector<double> reduced = *(weight->vector());
 
   DataArray::const_iterator iter = da.begin();
   for (size_t i = 0; i < PARTITION_NUM; ++i, ++iter) {
-    Weight *w = reinterpret_cast<Weight*>(*iter); // NOLINT
-    assert(w);
+    Weight *w = static_cast<Weight*>(*iter);
+    assert((*iter)->name() == WEIGHT_DATA_NAME);
     VectorAddWithScale(&reduced, w->gradient(), 1);
   }
   for (size_t i = 0; i < PARTITION_NUM; ++i, ++iter) {
-    Weight *w = reinterpret_cast<Weight*>(*iter); // NOLINT
-    assert(w);
+    Weight *w = static_cast<Weight*>(*iter);
+    assert((*iter)->name() == WEIGHT_DATA_NAME);
     w->set_vector(reduced);
   }
   assert(iter == da.end());

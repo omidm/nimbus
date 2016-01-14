@@ -69,6 +69,7 @@ SampleBatch::SampleBatch(const size_t& dimension,
                          const size_t& sample_num)
   : dimension_(dimension),
     sample_num_(sample_num) {
+  set_name(SAMPLE_BATCH_DATA_NAME);
 }
 
 SampleBatch::~SampleBatch() {
@@ -132,7 +133,7 @@ bool SampleBatch::DeSerialize(const SerializedData& ser_data, Data** result) {
   SampleBatch* sb = new SampleBatch(dimension_, sample_num_);
   sb->Create();
   assert(size_t(sample_batch_msg.samples_size()) == sample_num_);
-  for (size_t i = 0; i < dimension_; i++) {
+  for (size_t i = 0; i < sample_num_; i++) {
     data_msgs::SampleMsg sample_msg = sample_batch_msg.samples(i);
     Sample sample(dimension_);
     sample.set_label(sample_msg.label());
@@ -162,6 +163,7 @@ std::vector<Sample>* SampleBatch::samples() {
 
 Weight::Weight(const size_t& dimension)
   : dimension_(dimension) {
+  set_name(WEIGHT_DATA_NAME);
 }
 
 Weight::~Weight() {
