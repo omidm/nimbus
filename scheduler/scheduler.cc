@@ -489,7 +489,7 @@ void Scheduler::ProcessWorkerDownCommand(WorkerDownCommand* cm) {
   checkpoint_id_t checkpoint_id = 0;
   job_manager_->RewindFromLastCheckpoint(&checkpoint_id);
 
-  job_assigner_->set_checkpoint_id(checkpoint_id);
+  job_assigner_->Reinitialize(checkpoint_id);
 
   PrepareRewindCommand command =
     PrepareRewindCommand(ID<worker_id_t>(1),

@@ -99,10 +99,6 @@ void JobAssigner::set_thread_num(size_t thread_num) {
   thread_num_ = thread_num;
 }
 
-void JobAssigner::set_checkpoint_id(checkpoint_id_t checkpoint_id) {
-  checkpoint_id_ = checkpoint_id;
-}
-
 void JobAssigner::set_fault_tolerance_active(bool flag) {
   fault_tolerance_active_ = flag;
 }
@@ -258,6 +254,15 @@ bool JobAssigner::QueryDataManagerForPatterns(
   physical_ids = result;
 
   return true;
+}
+
+void JobAssigner::Reinitialize(checkpoint_id_t checkpoint_id) {
+  checkpoint_id_ = checkpoint_id;
+  update_batch_size_ = 0;
+  batch_ldid_.clear();
+  batch_pdid_.clear();
+  batch_base_version_.clear();
+  batch_unit_diff_version_.clear();
 }
 
 void JobAssigner::FlushBatchUpdate() {

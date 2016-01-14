@@ -81,13 +81,13 @@ namespace nimbus {
     virtual void set_data_manager(DataManager *data_manager);
     virtual void set_load_balancer(LoadBalancer *load_balancer);
     virtual void set_thread_num(size_t thread_num);
-    virtual void set_checkpoint_id(checkpoint_id_t checkpoint_id);
     virtual void set_fault_tolerance_active(bool flag);
     virtual void set_scheduler(Scheduler *scheduler);
     virtual void set_ldo_map_p(const LdoMap* ldo_map_p);
     virtual void set_log_overhead(Log *log);
 
     virtual void AssignJobs(const JobEntryList& list);
+    virtual void Reinitialize(checkpoint_id_t checkpoint_id);
 
   protected:
     IDMaker *id_maker_;
@@ -221,7 +221,6 @@ namespace nimbus {
     std::vector<physical_data_id_t> batch_pdid_;
     std::vector<data_version_t> batch_base_version_;
     std::vector<data_version_t> batch_unit_diff_version_;
-    IDSet<job_id_t> list_job_read_;
     job_id_t last_complex_job_id_;
     boost::mutex batch_update_mutex_;
 

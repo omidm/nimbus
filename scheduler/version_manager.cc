@@ -811,13 +811,16 @@ bool VersionManager::CleanUp() {
 }
 
 void VersionManager::Reinitialize(const JobEntryList *list) {
-  FlushPendingBatch();
   snap_shot_pending_ = false;
   non_sterile_counter_ = 0;
   snap_shot_.clear();
   parent_map_.clear();
   child_counter_.clear();
   complex_jobs_.clear();
+
+  batch_size_ = 0;
+  batch_state_ = INIT;
+  base_batch_mbs_ = boost::shared_ptr<MetaBeforeSet>();
 
   {
     Index::iterator iter = index_.begin();
