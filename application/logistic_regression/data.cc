@@ -135,13 +135,11 @@ bool SampleBatch::DeSerialize(const SerializedData& ser_data, Data** result) {
   assert(size_t(sample_batch_msg.samples_size()) == sample_num_);
   for (size_t i = 0; i < sample_num_; i++) {
     data_msgs::SampleMsg sample_msg = sample_batch_msg.samples(i);
-    Sample sample(dimension_);
-    sample.set_label(sample_msg.label());
+    sb->samples_[i].set_label(sample_msg.label());
     assert(size_t(sample_msg.elems_size()) == dimension_);
     for (size_t j =0; j < dimension_; ++j) {
-      sample.vector()->operator[](j) = sample_msg.elems(j);
+      sb->samples_[i].vector()->operator[](j) = sample_msg.elems(j);
     }
-    sb->samples_[i] = sample;
   }
 
   *result = sb;
