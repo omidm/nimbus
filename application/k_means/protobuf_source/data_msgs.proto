@@ -1,0 +1,20 @@
+package data_msgs;
+
+message  SampleMsg{
+  repeated double elems  = 1;
+}
+
+message SampleBatchMsg{
+  repeated SampleMsg samples  = 1;
+}
+
+message  MeanMsg{
+  optional int64 scratch_weight  = 1;
+  repeated double vector_elems   = 2;
+  repeated double scratch_elems  = 3;
+}
+
+message  MeansMsg{
+  repeated MeanMsg means  = 1;
+}
+
