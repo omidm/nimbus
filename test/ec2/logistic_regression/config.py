@@ -19,7 +19,7 @@
 # US West (Oregon) Region
 EC2_LOCATION                    = 'us-west-2'
 UBUNTU_AMI                      = 'ami-fa9cf1ca'
-NIMBUS_AMI                      = 'ami-37202e07'
+NIMBUS_AMI                      = 'ami-10b1ab71'
 KEY_NAME                        = 'omidm-sing-key-pair-us-west-2'
 SECURITY_GROUP                  = 'nimbus_sg_uswest2'
 CONTROLLER_INSTANCE_TYPE        = 'c3.4xlarge'
