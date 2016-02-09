@@ -1,12 +1,19 @@
 
+# add subdirs space separated
+SUBDIRS = leveldb
 
-.PHONY: leveldb_t
+
+.PHONY: subdirs $(SUBDIRS) clean
+
+subdirs: $(SUBDIRS)
 
 all: leveldb_t
 
-leveldb_t:
-	cd leveldb && make -j 12 && cd ..
+$(SUBDIRS):
+	$(MAKE) -C $@
 
 clean:
-	cd leveldb; make clean; cd ..
+	for dir in $(SUBDIRS); do \
+    $(MAKE) -C $$dir clean; \
+  done
 
