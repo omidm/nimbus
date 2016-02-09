@@ -1,19 +1,19 @@
 
-all: extern lib
+# add subdirs space separated
+SUBDIRS = extern src
 
-NIMBUS_ROOT = .
-include $(NIMBUS_ROOT)/Makeinclude
+.PHONY: subdirs $(SUBDIRS) clean clean-src
 
-.PHONY: extern lib
+subdirs: $(SUBDIRS)
 
-lib:
-	cd src && make -j 12 && cd ..
+$(SUBDIRS):
+	$(MAKE) -C $@
 
-extern:
-	cd extern && make -j 12 && cd ..
+clean:
+	for dir in $(SUBDIRS); do \
+    $(MAKE) -C $$dir clean; \
+  done
 
-clean: clean-files
-	\rm -f */*.o */*~ */\#*
-	cd src; make clean; cd ..
-	cd extern; make clean; cd ..
+clean-src:
+	$(MAKE) -C src/ clean;
 

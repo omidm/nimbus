@@ -1,12 +1,13 @@
 
-all: protobuf
 
 TARGET = protobuf
 
+.PHONY: default $(TARGET) clean
+
+default: $(TARGET)
+
 NIMBUS_ROOT = ../../../..
 include $(NIMBUS_ROOT)/Makeinclude
-
-CFLAGS += -fPIC
 
 PDIR_SOURCE = ../protobuf_source/
 PDIR_COMPILED = ../protobuf_compiled/
@@ -17,7 +18,7 @@ PROTO_OBJECT_FILES = $(subst $(PDIR_SOURCE),$(PDIR_COMPILED),$(TEMP))
 
 $(PDIR_COMPILED)%.pb.o: %.proto
 	protoc --cpp_out=$(PDIR_COMPILED) $<
-	$(CPP) $(CFLAGS) $(IFLAGS) -c $(subst .o,.cc,$@) -o $@
+	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(IFLAGS) -c $(subst .o,.cc,$@) -o $@
 
 $(TARGET): $(PROTO_OBJECT_FILES)
 

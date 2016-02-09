@@ -1,24 +1,33 @@
-all: proto_t data_t
+
+
+TARGET = physbam
+
+# add subdirs space separated
+SUBDIRS = protobuf_source
+
+.PHONY: default check $(TARGET) $(SUBDIRS) clean
+
+default: check $(TARGET) $(SUBDIRS)
 
 NIMBUS_ROOT = ../../..
 include $(NIMBUS_ROOT)/Makeinclude
 
-CFLAGS += -fPIC
 CFILES = $(wildcard *.cc)
 HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
 
-PDIR_SOURCE = protobuf_source/
-
 IFLAGS += -I$(NIMBUS_ROOT)/application/physbam-lib/Public_Library
 
-proto_t:
-	cd $(PDIR_SOURCE) && make && cd ..
-
-data_t: proto_t $(OBJFILES) $(HFILES)
+$(TARGET): $(SUBDIRS) $(OBJFILES)
 
 %.o: %.cc
-	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
+	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(IFLAGS) -c $< -o $@ 
+
+$(SUBDIRS):
+	$(MAKE) -C $@
 
 clean: clean-files
-	cd $(PDIR_SOURCE) && make clean && cd ..
+	for dir in $(SUBDIRS); do \
+    $(MAKE) -C $$dir clean; \
+  done
+

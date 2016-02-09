@@ -1,25 +1,30 @@
-all: check worker_t worker_job_graph app_data_managers
+
+TARGET = worker
+
+# add subdirs space separated
+SUBDIRS = worker_job_graph app_data_managers
+
+.PHONY: default check $(TARGET) $(SUBDIRS) clean
+
+default: check $(TARGET) $(SUBDIRS)
 
 NIMBUS_ROOT = ../..
 include $(NIMBUS_ROOT)/Makeinclude
 
-CFLAGS += -fPIC
 CFILES = $(wildcard *.cc)
 HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
 
-worker_t: $(OBJFILES) $(HFILES)
+$(TARGET): $(OBJFILES)
 
 %.o: %.cc
-	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
+	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(IFLAGS) -c $< -o $@ 
 
-.PHONY: worker_job_graph app_data_managers
+$(SUBDIRS):
+	$(MAKE) -C $@
 
 clean: clean-files
-	make -C worker_job_graph clean && make -C app_data_managers clean
+	for dir in $(SUBDIRS); do \
+    $(MAKE) -C $$dir clean; \
+  done
 
-worker_job_graph:
-	make -C worker_job_graph
-
-app_data_managers:
-	make -C app_data_managers

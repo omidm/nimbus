@@ -1,30 +1,30 @@
-all: check data_t physbam app_data
+
+TARGET = data
+
+# add subdirs space separated
+SUBDIRS = physbam app_data
+
+.PHONY: default check $(TARGET) $(SUBDIRS) clean
+
+default: check $(TARGET) $(SUBDIRS)
 
 NIMBUS_ROOT = ../..
 include $(NIMBUS_ROOT)/Makeinclude
 
-CFLAGS += -fPIC
 CFILES = $(wildcard *.cc)
 HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
 
-PHYSBAM_CFILES = $(wildcard physbam/*.cc)
-PHYSBAM_OFILES = $(subst .cc,.o,$(PHYSBAM_CFILES))
-
-IFLAGS += -I$(NIMBUS_ROOT)/application/physbam-lib/Public_Library
-
-data_t: $(OBJFILES) $(HFILES)
+$(TARGET): $(OBJFILES)
 
 %.o: %.cc
-	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
+	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(IFLAGS) -c $< -o $@ 
+
+$(SUBDIRS):
+	$(MAKE) -C $@
 
 clean: clean-files
-	make -C physbam clean && make -C app_data clean
+	for dir in $(SUBDIRS); do \
+    $(MAKE) -C $$dir clean; \
+  done
 
-.PHONY: physbam app_data
-
-physbam: 
-	make -C physbam
-
-app_data:
-	make -C app_data

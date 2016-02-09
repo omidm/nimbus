@@ -242,7 +242,6 @@ template <class TS> class TranslatorPhysBAM {
                                 memcpy(&((*fa)(dim, destination_index)),  // NOLINT
                                        &(buffer[source_index]),
                                        sizeof(T) * range_z);
-
                             }  // read y for loop
                         }  // read x for loop
                     }  // for dim
@@ -511,8 +510,7 @@ template <class TS> class TranslatorPhysBAM {
                                 const TV_INT destination_index(dest_x, dest_y, dest_z);
                                 memcpy(&((*fa)(dim, destination_index)),  // NOLINT
                                        &(buffer[source_index]),
-                                       sizeof(bool) * range_z);
-
+                                       sizeof(bool) * range_z); // NOLINT
                             }  // read y for loop
                         }  // read x for loop
                     }  // for dim

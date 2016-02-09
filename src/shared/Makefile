@@ -1,23 +1,31 @@
-all: check proto_t shared_t 
+
+
+TARGET = shared
+
+# add subdirs space separated
+SUBDIRS = protobuf_source
+
+.PHONY: default check $(TARGET) $(SUBDIRS) clean
+
+default: check $(TARGET) $(SUBDIRS)
 
 NIMBUS_ROOT = ../..
 include $(NIMBUS_ROOT)/Makeinclude
 
-CFLAGS += -fPIC
-CFILES = $(wildcard *.cc) 
+CFILES = $(wildcard *.cc)
 HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
 
-PDIR_SOURCE = protobuf_source/
-
-shared_t: proto_t $(OBJFILES) $(HFILES)
-
-proto_t: 
-	cd $(PDIR_SOURCE) && make && cd ..
+$(TARGET): $(SUBDIRS) $(OBJFILES)
 
 %.o: %.cc
-	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
+	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(IFLAGS) -c $< -o $@ 
+
+$(SUBDIRS):
+	$(MAKE) -C $@
 
 clean: clean-files
-	cd $(PDIR_SOURCE) && make clean && cd ..
+	for dir in $(SUBDIRS); do \
+    $(MAKE) -C $$dir clean; \
+  done
 
