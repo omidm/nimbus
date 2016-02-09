@@ -2,4 +2,7 @@
 boto_test.py
 *.txt
 *.png
+*log*
+*.dot
+*.pdf
 
