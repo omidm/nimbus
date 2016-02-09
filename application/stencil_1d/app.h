@@ -43,8 +43,8 @@
 #define NIMBUS_APPLICATION_STENCIL_1D_APP_H_
 
 #include <iostream> // NOLINT
-#include "worker/application.h"
-#include "shared/nimbus_types.h"
+#include "src/worker/application.h"
+#include "src/shared/nimbus_types.h"
 
 using nimbus::Application;
 

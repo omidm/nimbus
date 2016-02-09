@@ -49,13 +49,13 @@
 #include <vector>
 #include <map>
 #include <set>
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
-#include "shared/scheduler_server.h"
-#include "shared/cluster.h"
-#include "shared/geometric_region.h"
-#include "shared/parser.h"
-#include "scheduler/scheduler.h"
+#include "src/shared/dbg.h"
+#include "src/shared/nimbus.h"
+#include "src/shared/scheduler_server.h"
+#include "src/shared/cluster.h"
+#include "src/shared/geometric_region.h"
+#include "src/shared/parser.h"
+#include "src/scheduler/scheduler.h"
 
 using namespace nimbus; // NOLINT
 

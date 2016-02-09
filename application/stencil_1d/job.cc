@@ -41,7 +41,7 @@
 #include "./job.h"
 #include "./data.h"
 #include "./utils.h"
-#include "shared/helpers.h"
+#include "src/shared/helpers.h"
 
 #define LOOP_COUNTER static_cast<Stencil1DApp*>(application())->counter_
 #define LOOP_CONDITION 0

@@ -49,22 +49,31 @@ endif
 # -I params for all cpp invocations
 IFLAGS   = -I/opt/local/include                 # Include MacPorts includes
 IFLAGS  += -I/usr/local/include                 # Include boost and protocol buffer headers
-IFLAGS  += -I${NIMBUS_ROOT}/leveldb/include     # Include leveldb headers
+IFLAGS  += -I${NIMBUS_ROOT}/extern/leveldb/include     # Include leveldb headers
 IFLAGS  += -I${NIMBUS_ROOT}                     # Include nimbus headers
 
 # -l params for linking invocation
-LFLAGS   =                                      
+LFLAGS   = -lnimbus -lboost_thread -lboost_system -lpthread -lprotobuf -lboost_program_options -ldl -lleveldb           
+
+# ifdef OS_DARWIN
+#   LINK_FLAG = -install_name @rpath/$(LIBRARY)
+# else
+#   LFLAGS += -lrt
+# endif
+
+# flags to defer linking, used to make shared libraries -omidm
+SHARED_FLAGS = -shared -fPIC
 
 # -L params for linking invocation
 LDFLAGS += -L/opt/local/lib                      # Link with MacPorts libraries
 LDFLAGS += -L/usr/local/lib                      # Link with boost and protocol buffer libraries
-LDFLAGS += -L${NIMBUS_ROOT}/leveldb/             # Link with Leveldb library
-LDFLAGS += -L${NIMBUS_ROOT}/                     # Link with Nimbus library
+LDFLAGS += -L${NIMBUS_ROOT}/extern/leveldb/             # Link with Leveldb library
+LDFLAGS += -L${NIMBUS_ROOT}/src/                     # Link with Nimbus library
 
 # -rpath tells executable where to look for libraries; without it executables
 # do not find Nimbus libraries. -pal
-LDFLAGS += -Wl,-rpath ${NIMBUS_ROOT}
-LDFLAGS += -Wl,-rpath ${NIMBUS_ROOT}/leveldb
+LDFLAGS += -Wl,-rpath ${NIMBUS_ROOT}/src/
+LDFLAGS += -Wl,-rpath ${NIMBUS_ROOT}/extern/leveldb
 
 # Checking rules
 NIMBUS_CCLINT = ${NIMBUS_ROOT}/tools/cpplint.py

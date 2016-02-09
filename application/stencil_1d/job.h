@@ -42,8 +42,8 @@
 #define NIMBUS_APPLICATION_STENCIL_1D_JOB_H_
 
 #include <iostream> // NOLINT
-#include "worker/physical_data_instance.h"
-#include "shared/nimbus.h"
+#include "src/worker/physical_data_instance.h"
+#include "src/shared/nimbus.h"
 #include "./app.h"
 
 #define INIT_JOB_NAME "init"

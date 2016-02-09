@@ -42,8 +42,8 @@
 #define NIMBUS_APPLICATION_STENCIL_1D_DATA_H_
 
 #include <iostream> // NOLINT
-#include "shared/nimbus.h"
-#include "protobuf_compiled/vector_msg.pb.h"
+#include "src/shared/nimbus.h"
+#include "./protobuf_compiled/vector_msg.pb.h"
 
 #define DATA_NAME "velocity"
 

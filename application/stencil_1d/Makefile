@@ -7,12 +7,10 @@ include $(NIMBUS_ROOT)/Makeinclude
 
 LIBRARY = libstencil_1d.so
 
-CFLAGS += -fPIC
 CFILES = $(wildcard *.cc)
 HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
-LFLAGS += -lboost_thread -lboost_system -lnimbus -lprotobuf
-SHARED_FLAGS = -shared -fPIC
+
 
 PDIR_SOURCE = protobuf_source/
 PDIR_COMPILED = protobuf_compiled/
@@ -27,10 +25,10 @@ endif
 application: $(LIBRARY)
 
 $(LIBRARY): proto_t $(OBJFILES) $(HFILES)
-	$(CPP) $(SHARED_FLAGS) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(PROTO_OBJECT_FILES) $(OBJFILES) -o $(LIBRARY) $(LINK_FLAG)
+	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(PROTO_OBJECT_FILES) $(OBJFILES) -o $(LIBRARY)
 
 %.o: %.cc
-	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
+	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(IFLAGS) -c $< -o $@ 
 
 proto_t:
 	cd $(PDIR_SOURCE); make; cd ..

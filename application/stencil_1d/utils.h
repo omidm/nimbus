@@ -45,9 +45,9 @@
 #include <iostream> // NOLINT
 #include <vector>
 #include <algorithm>
-#include "worker/application.h"
-#include "shared/nimbus_types.h"
-#include "shared/parameter.h"
+#include "src/worker/application.h"
+#include "src/shared/nimbus_types.h"
+#include "src/shared/parameter.h"
 #include "./data.h"
 
 using namespace nimbus; // NOLINT

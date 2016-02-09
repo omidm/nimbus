@@ -41,10 +41,10 @@
 #include <boost/program_options.hpp>
 #include <iostream> // NOLINT
 #include "./scheduler_v3.h"
-#include "shared/nimbus.h"
-#include "shared/nimbus_types.h"
-#include "shared/scheduler_command.h"
-#include "shared/parser.h"
+#include "src/shared/nimbus.h"
+#include "src/shared/nimbus_types.h"
+#include "src/shared/scheduler_command.h"
+#include "src/shared/parser.h"
 
 int main(int argc, char *argv[]) {
   namespace po = boost::program_options;

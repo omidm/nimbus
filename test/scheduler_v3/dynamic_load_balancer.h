@@ -49,21 +49,21 @@
 #include <vector>
 #include <string>
 #include <utility>
-#include "shared/nimbus_types.h"
-#include "scheduler/job_entry.h"
-#include "scheduler/job_profile.h"
-#include "scheduler/data_manager.h"
-#include "scheduler/job_manager.h"
-#include "scheduler/region_map.h"
-#include "scheduler/straggler_map.h"
-#include "scheduler/job_assigner.h"
-#include "scheduler/load_balancer.h"
-#include "scheduler/worker_monitor.h"
-#include "shared/cluster.h"
-#include "shared/id_maker.h"
-#include "shared/scheduler_server.h"
-#include "shared/geometric_region.h"
-#include "shared/graph.h"
+#include "src/shared/nimbus_types.h"
+#include "src/scheduler/job_entry.h"
+#include "src/scheduler/job_profile.h"
+#include "src/scheduler/data_manager.h"
+#include "src/scheduler/job_manager.h"
+#include "src/scheduler/region_map.h"
+#include "src/scheduler/straggler_map.h"
+#include "src/scheduler/job_assigner.h"
+#include "src/scheduler/load_balancer.h"
+#include "src/scheduler/worker_monitor.h"
+#include "src/shared/cluster.h"
+#include "src/shared/id_maker.h"
+#include "src/shared/scheduler_server.h"
+#include "src/shared/geometric_region.h"
+#include "src/shared/graph.h"
 
 namespace nimbus {
 

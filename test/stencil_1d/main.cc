@@ -41,9 +41,9 @@
 #include <boost/program_options.hpp>
 #include <iostream>  // NOLINT
 #include <sstream> // NOLINT
-#include "shared/nimbus.h"
-#include "../../application/stencil_1d/app.h"
-#include "worker/worker_manager.h"
+#include "src/shared/nimbus.h"
+#include "src/worker/worker_manager.h"
+#include "application/stencil_1d/app.h"
 
 using namespace nimbus; // NOLINT
 

@@ -8,7 +8,6 @@ all: check $(APPLICATION) $(TARGET)
 NIMBUS_ROOT = ../..
 include ${NIMBUS_ROOT}/Makeinclude
 
-IFLAGS += -I$(LDIR)
 H_FILES = $(wildcard *.h)
 CPP_FILES = $(wildcard *.cc)
 OBJECT_FILES = $(subst .cc,.o,$(CPP_FILES))
