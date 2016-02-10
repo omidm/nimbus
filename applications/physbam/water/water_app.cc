@@ -57,6 +57,130 @@
 #include "src/shared/timer.h"
 #include "stdio.h"
 
+
+#include <boost/program_options.hpp>
+extern "C" nimbus::Application * ApplicationBuilder(int argc, char *argv[]) {
+  namespace po = boost::program_options;
+
+  uint64_t scale;
+  uint64_t part_num_x;
+  uint64_t part_num_y;
+  uint64_t part_num_z;
+  uint64_t projection_part_num_x;
+  uint64_t projection_part_num_y;
+  uint64_t projection_part_num_z;
+  uint64_t last_frame;
+  uint64_t max_iterations;
+  uint64_t iteration_batch;
+  uint64_t smart_projection_level;
+  float water_level;
+
+  po::options_description desc("Water Application Options");
+  desc.add_options()
+    ("help,h", "produce help message")
+
+    // Optinal arguments
+    ("scale,s", po::value<uint64_t>(&scale), "scale of the simulation") //NOLINT
+    ("pnx", po::value<uint64_t>(&part_num_x), "partition number along x") //NOLINT
+    ("pny", po::value<uint64_t>(&part_num_y), "partition number along y") //NOLINT
+    ("pnz", po::value<uint64_t>(&part_num_z), "partition number along z") //NOLINT
+    ("ppnx", po::value<uint64_t>(&projection_part_num_x), "projection partition number along x") //NOLINT
+    ("ppny", po::value<uint64_t>(&projection_part_num_y), "projection partition number along y") //NOLINT
+    ("ppnz", po::value<uint64_t>(&projection_part_num_z), "projection partition number along z") //NOLINT
+    ("last_frame,e", po::value<uint64_t>(&last_frame), "last frame to compute") //NOLINT
+    ("maxi", po::value<uint64_t>(&max_iterations), "maximum projection iterations") //NOLINT
+    ("ibatch", po::value<uint64_t>(&iteration_batch), "projection iteration batch") //NOLINT
+    ("psl", po::value<uint64_t>(&smart_projection_level), "smart projection level") //NOLINT
+    ("wl", po::value<float>(&water_level), "initial water level, float between 0 and 1") //NOLINT
+    ("dpb", "deactivate projection bottleneck job")
+    ("dgw", "deactivate one global write per frame");
+
+  po::variables_map vm;
+  try {
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+  }
+  catch(std::exception& e) { // NOLINT
+    std::cerr << "ERROR: " << e.what() << "\n";
+    return NULL;
+  }
+
+  if (vm.count("help")) {
+    std::cout << desc << "\n";
+    return NULL;
+  }
+
+  try {
+    po::notify(vm);
+  }
+  catch(std::exception& e) { // NOLINT
+    std::cerr << "ERROR: " << e.what() << "\n";
+    return NULL;
+  }
+
+
+  application::WaterApp *app = new application::WaterApp();
+
+  if (vm.count("scale")) {
+    app->set_scale(scale);
+  }
+
+  if (vm.count("pnx")) {
+    app->set_part_num_x(part_num_x);
+  }
+
+  if (vm.count("pny")) {
+    app->set_part_num_y(part_num_y);
+  }
+
+  if (vm.count("pnz")) {
+    app->set_part_num_z(part_num_z);
+  }
+
+  if (vm.count("ppnx")) {
+    app->set_projection_part_num_x(projection_part_num_x);
+  }
+
+  if (vm.count("ppny")) {
+    app->set_projection_part_num_y(projection_part_num_y);
+  }
+
+  if (vm.count("ppnz")) {
+    app->set_projection_part_num_z(projection_part_num_z);
+  }
+
+  if (vm.count("last_frame")) {
+    app->set_last_frame(last_frame);
+  }
+
+  if (vm.count("psl")) {
+    app->set_smart_projection(smart_projection_level);
+  }
+
+  if (vm.count("wl")) {
+    app->set_water_level(water_level);
+  }
+
+  if (vm.count("maxi")) {
+    app->set_max_iterations(max_iterations);
+  }
+
+  if (vm.count("ibatch")) {
+    app->set_iteration_batch(iteration_batch);
+  }
+
+  if (vm.count("dpb")) {
+    app->set_spawn_projection_loop_bottleneck(false);
+  }
+
+  if (vm.count("dgw")) {
+    app->set_global_write(false);
+  }
+
+  return app;
+}
+
+
+
 namespace application {
 
 nimbus::PartitionHandler ph;
