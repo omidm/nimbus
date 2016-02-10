@@ -1,6 +1,6 @@
 
 # add subdirs space separated
-SUBDIRS = stencil_1d
+SUBDIRS = stencil_1d job_spawner
 
 .PHONY: subdirs $(SUBDIRS) clean
 

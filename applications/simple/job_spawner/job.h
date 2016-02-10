@@ -38,15 +38,15 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_JOB_SPAWNER_JOB_H_
-#define NIMBUS_APPLICATION_JOB_SPAWNER_JOB_H_
+#ifndef NIMBUS_APPLICATIONS_SIMPLE_JOB_SPAWNER_JOB_H_
+#define NIMBUS_APPLICATIONS_SIMPLE_JOB_SPAWNER_JOB_H_
 
 #include <unistd.h>
 #include <iostream> // NOLINT
-#include "worker/physical_data_instance.h"
-#include "shared/nimbus.h"
+#include "src/worker/physical_data_instance.h"
+#include "src/shared/nimbus.h"
 #include "./app.h"
-#include "shared/dbg.h"
+#include "src/shared/dbg.h"
 
 #define INIT_JOB_NAME "init"
 #define PRINT_JOB_NAME "print"
@@ -99,4 +99,4 @@ class Connector : public Job {
 };
 
 
-#endif  // NIMBUS_APPLICATION_JOB_SPAWNER_JOB_H_
+#endif  // NIMBUS_APPLICATIONS_SIMPLE_JOB_SPAWNER_JOB_H_

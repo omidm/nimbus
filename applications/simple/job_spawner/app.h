@@ -39,12 +39,12 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_JOB_SPAWNER_APP_H_
-#define NIMBUS_APPLICATION_JOB_SPAWNER_APP_H_
+#ifndef NIMBUS_APPLICATIONS_SIMPLE_JOB_SPAWNER_APP_H_
+#define NIMBUS_APPLICATIONS_SIMPLE_JOB_SPAWNER_APP_H_
 
 #include <iostream> // NOLINT
-#include "worker/application.h"
-#include "shared/nimbus_types.h"
+#include "src/worker/application.h"
+#include "src/shared/nimbus_types.h"
 
 using nimbus::Application;
 
@@ -71,4 +71,4 @@ class JobSpawnerApp : public Application {
 
 
 
-#endif  // NIMBUS_APPLICATION_JOB_SPAWNER_APP_H_
+#endif  // NIMBUS_APPLICATIONS_SIMPLE_JOB_SPAWNER_APP_H_

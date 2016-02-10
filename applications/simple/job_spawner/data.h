@@ -38,11 +38,11 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_JOB_SPAWNER_DATA_H_
-#define NIMBUS_APPLICATION_JOB_SPAWNER_DATA_H_
+#ifndef NIMBUS_APPLICATIONS_SIMPLE_JOB_SPAWNER_DATA_H_
+#define NIMBUS_APPLICATIONS_SIMPLE_JOB_SPAWNER_DATA_H_
 
 #include <iostream> // NOLINT
-#include "shared/nimbus.h"
+#include "src/shared/nimbus.h"
 #include "protobuf_compiled/vector_msg.pb.h"
 
 #define DATA_NAME "velocity"
@@ -69,4 +69,4 @@ class Vec : public Data {
     int *arr_;
 };
 
-#endif  // NIMBUS_APPLICATION_JOB_SPAWNER_DATA_H_
+#endif  // NIMBUS_APPLICATIONS_SIMPLE_JOB_SPAWNER_DATA_H_

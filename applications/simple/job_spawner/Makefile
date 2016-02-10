@@ -1,41 +1,41 @@
 
-all: check application
-# all: application
+TARGET = libjob_spawner.so
 
-NIMBUS_ROOT = ../..
+# add subdirs space separated
+SUBDIRS = protobuf_source
+
+.PHONY: default check $(TARGET) $(SUBDIRS) clean
+
+default: check $(TARGET) $(SUBDIRS)
+
+NIMBUS_ROOT = ../../..
 include $(NIMBUS_ROOT)/Makeinclude
 
-LIBRARY = libjob_spawner.so
-
-CFLAGS += -fPIC
 CFILES = $(wildcard *.cc)
 HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
-LFLAGS += -lboost_thread -lboost_system -lnimbus -lprotobuf
-SHARED_FLAGS = -shared -fPIC
 
 PDIR_SOURCE = protobuf_source/
 PDIR_COMPILED = protobuf_compiled/
 PROTO_FILES = $(wildcard $(PDIR_SOURCE)*.proto)
 TEMP_OBJECT_FILES = $(subst .proto,.pb.o,$(PROTO_FILES))
 PROTO_OBJECT_FILES = $(subst $(PDIR_SOURCE),$(PDIR_COMPILED),$(TEMP_OBJECT_FILES))
+OBJFILES += $(PROTO_OBJECT_FILES)
 
-ifdef OS_DARWIN
-  LINK_FLAG = -install_name @rpath/$(LIBRARY)
-endif
-
-application: $(LIBRARY)
-
-$(LIBRARY): proto_t $(OBJFILES) $(HFILES)
-	$(CPP) $(SHARED_FLAGS) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(PROTO_OBJECT_FILES) $(OBJFILES) -o $(LIBRARY) $(LINK_FLAG)
+$(TARGET): $(SUBDIRS) $(OBJFILES)
+	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(OBJFILES) -o $(TARGET)
 
 %.o: %.cc
-	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
+	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(IFLAGS) -c $< -o $@ 
 
-proto_t:
-	cd $(PDIR_SOURCE); make; cd ..
+%.o: $(SUBDIRS)
+
+$(SUBDIRS):
+	$(MAKE) -C $@
 
 clean: clean-files
-	\rm -f $(PDIR_COMPILED)*.pb.*
-	\rm -f $(LIBRARY)
+	for dir in $(SUBDIRS); do \
+    $(MAKE) -C $$dir clean; \
+  done
+	\rm -f $(TARGET)
 
