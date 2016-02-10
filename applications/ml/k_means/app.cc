@@ -38,9 +38,16 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
+#include <boost/program_options.hpp>
 #include "./app.h"
 #include "./job.h"
 #include "./data.h"
+
+#define DEFAULT_DIMENSION 10
+#define DEFAULT_CLUSTER_NUM 2
+#define DEFAULT_ITERATION_NUM 10
+#define DEFAULT_PARTITION_NUM 10
+#define DEFAULT_SAMPLE_NUM_M 1
 
 KMeans::KMeans(const size_t& dimension,
                const size_t& cluster_num,
@@ -99,5 +106,55 @@ void KMeans::Load() {
   RegisterData(SAMPLE_BATCH_DATA_NAME, new SampleBatch(dimension_, sample_num_per_partition_));
 };
 
+extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
+  namespace po = boost::program_options;
+
+  size_t dimension;
+  size_t cluster_num;
+  size_t iteration_num;
+  size_t partition_num;
+  size_t sample_num_m;
+
+
+  po::options_description desc("K-Means Options");
+  desc.add_options()
+    ("help,h", "produce help message")
+
+    // Optinal arguments
+    ("dimension,d", po::value<std::size_t>(&dimension)->default_value(DEFAULT_DIMENSION), "dimension of the sample vectors") // NOLINT
+    ("iteration,i", po::value<std::size_t>(&iteration_num)->default_value(DEFAULT_ITERATION_NUM), "number of iterations") // NOLINT
+    ("cn", po::value<std::size_t>(&cluster_num)->default_value(DEFAULT_CLUSTER_NUM), "number of clusters") // NOLINT
+    ("pn", po::value<std::size_t>(&partition_num)->default_value(DEFAULT_PARTITION_NUM), "number of partitions") // NOLINT
+    ("sn", po::value<std::size_t>(&sample_num_m)->default_value(DEFAULT_SAMPLE_NUM_M), "number of samples in Million"); // NOLINT
+
+  po::variables_map vm;
+  try {
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+  }
+  catch(std::exception& e) { // NOLINT
+    std::cerr << "ERROR: " << e.what() << "\n";
+    return NULL;
+  }
+
+  if (vm.count("help")) {
+    std::cout << desc << "\n";
+    return NULL;
+  }
+
+  try {
+    po::notify(vm);
+  }
+  catch(std::exception& e) { // NOLINT
+    std::cerr << "ERROR: " << e.what() << "\n";
+    return NULL;
+  }
+
+  KMeans *app = new KMeans(dimension,
+                           cluster_num,
+                           iteration_num,
+                           partition_num,
+                           sample_num_m);
+  return app;
+}
 
 

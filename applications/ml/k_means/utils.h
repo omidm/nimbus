@@ -38,15 +38,15 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_K_MEANS_UTILS_H_
-#define NIMBUS_APPLICATION_K_MEANS_UTILS_H_
+#ifndef NIMBUS_APPLICATIONS_ML_K_MEANS_UTILS_H_
+#define NIMBUS_APPLICATIONS_ML_K_MEANS_UTILS_H_
 
 #include <iostream> // NOLINT
 #include <vector>
 #include <algorithm>
-#include "worker/application.h"
-#include "shared/nimbus_types.h"
-#include "shared/parameter.h"
+#include "src/worker/application.h"
+#include "src/shared/nimbus_types.h"
+#include "src/shared/parameter.h"
 #include "./data.h"
 
 using namespace nimbus; // NOLINT
@@ -65,4 +65,4 @@ void VectorAddWithScale(std::vector<double>* acc,
                         const std::vector<double>* add,
                         const double& scale);
 
-#endif  // NIMBUS_APPLICATION_K_MEANS_UTILS_H_
+#endif  // NIMBUS_APPLICATIONS_ML_K_MEANS_UTILS_H_

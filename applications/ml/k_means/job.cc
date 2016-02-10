@@ -44,7 +44,7 @@
 #include "./job.h"
 #include "./data.h"
 #include "./utils.h"
-#include "shared/helpers.h"
+#include "src/shared/helpers.h"
 
 #define CLUSTER_NUM static_cast<KMeans*>(application())->cluster_num()
 #define ITERATION_NUM static_cast<KMeans*>(application())->iteration_num()
