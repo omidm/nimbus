@@ -38,6 +38,7 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
+#include <boost/program_options.hpp>
 #include <vector>
 #include "./app.h"
 #include "./job.h"
@@ -70,4 +71,49 @@ void Stencil1DApp::Load() {
 };
 
 
+extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
+  namespace po = boost::program_options;
+
+  size_t iter_num = 150;
+  size_t part_num = 4;
+  size_t chunk_per_part = 4;
+  size_t chunk_size = 5;
+  size_t bandwidth = 1;
+
+  po::options_description desc("Stencil 1D Options");
+  desc.add_options()
+    ("help,h", "produce help message")
+
+    // Optinal arguments
+    ("iter_num,i", po::value<size_t>(&iter_num), "number of iterations [default = 150]") //NOLINT
+    ("pn", po::value<size_t>(&part_num), "number of partitions [default = 4]") //NOLINT
+    ("cpp", po::value<size_t>(&chunk_per_part), "number of chunks per partition [default = 4]") //NOLINT
+    ("cs", po::value<size_t>(&chunk_size), "chunk size in cells [default = 5]") //NOLINT
+    ("bw", po::value<size_t>(&bandwidth), "ghost region bandwidth [default = 1]"); //NOLINT
+
+  po::variables_map vm;
+  try {
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+  }
+  catch(std::exception& e) { // NOLINT
+    std::cerr << "ERROR: " << e.what() << "\n";
+    return NULL;
+  }
+
+  if (vm.count("help")) {
+    std::cout << desc << "\n";
+    return NULL;
+  }
+
+  try {
+    po::notify(vm);
+  }
+  catch(std::exception& e) { // NOLINT
+    std::cerr << "ERROR: " << e.what() << "\n";
+    return NULL;
+  }
+
+  return new Stencil1DApp(
+      iter_num, part_num, chunk_per_part, chunk_size, bandwidth);
+}
 

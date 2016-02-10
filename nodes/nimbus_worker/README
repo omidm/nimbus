@@ -1,0 +1,77 @@
+------------------------------------------------------------------------------
+Author:	omidm@stanford.edy (Omid Mashayekhi)
+------------------------------------------------------------------------------
+
+This is a nimbus worker, to run nimbus application. worker is capable of
+getting the application library as input, and loading the application during
+the runtime. so, it is constraint to a specific application.
+
+------------------------------------------------------------------------------
+Build instructions:
+------------------------------------------------------------------------------
+1. issue make in the nimbus root directory:
+
+  $ cd ../../; make; cd -
+
+  
+2. create your application shared library so that it is passed to worker for
+   loading during the runtime. A couple of default application libraries are
+   built (e.g. atencil 1d), when building nimbus at the root folder.
+
+------------------------------------------------------------------------------
+Run/ Usage:
+------------------------------------------------------------------------------
+
+1. launch controller (refer to README in <NIMBUS-ROOT>/nodes/nimbus_controller).
+
+2. launch the worker in this directory:
+
+  $ ./nimbus_worker
+            -p <worker-listening-port>
+            --cip <controller-ip-address>  
+            --cport<controller-listening-port>
+            ...
+            [other worker option]
+            ...
+            -l </path/to/application-library>
+            [application options]
+
+  Nimbus Worker Options:
+    -h [ --help ]         produce help message
+    -p [ --port ] arg     listening port for data exchanger [REQUIRED]
+    --cport arg           controller listening port [REQUIRED]
+    --cip arg             controller ip address [REQUIRED]
+    -l [ --app_lib ] arg  application library [REQUIRED]
+    --ip arg              forced ip address of the worker, not known by controller
+    --othread arg         number of threads at worker for job execution
+    --det                 deactivate execution template
+
+------------------------------------------------------------------------------
+Example:
+------------------------------------------------------------------------------
+For example you can run stencil 1d application, first launch the controller:
+
+  $ cd ../; ../nimbu_controller -p 5900 -w 1 &; cd -
+
+Then launch the worker against the specific application by specifying the -l
+option. Application options follow the library name:
+
+  $ ./nimbus_worker -p 5901 --cip localhost --cport 5900 -l ../../application/stencil_1d/libstencil_1d.so -i 30
+ 
+  Stencil 1D Options:
+    -h [ --help ]         produce help message
+    -i [ --iter_num ] arg number of iterations [default = 150]
+    --pn arg              number of partitions [default = 4]
+    --cpp arg             number of chunks per partition [default = 4]
+    --cs arg              chunk size in cells [default = 5]
+    --bw arg              ghost region bandwidth [default = 1]
+
+
+
+------------------------------------------------------------------------------
+Notes:
+------------------------------------------------------------------------------
+1. you probably do not need to call this executable directly, there are scripts
+in the <NIMBUS-ROOT>/scripts/ that can be used to simplify the process.
+
+

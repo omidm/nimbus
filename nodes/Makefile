@@ -1,21 +1,16 @@
 
 # add subdirs space separated
-SUBDIRS = extern src nodes
+SUBDIRS = nimbus_worker
 
-.PHONY: subdirs $(SUBDIRS) clean clean-src
+.PHONY: subdirs $(SUBDIRS) clean
 
 subdirs: $(SUBDIRS)
 
 $(SUBDIRS):
 	$(MAKE) -C $@
 
-nodes: extern src
-
 clean:
 	for dir in $(SUBDIRS); do \
     $(MAKE) -C $$dir clean; \
   done
-
-clean-src:
-	$(MAKE) -C src/ clean;
 

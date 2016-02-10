@@ -65,6 +65,7 @@
 namespace nimbus {
 
 class Application;
+typedef Application *(*app_builder_t)(int argc, char *argv[]);
 typedef std::map<int, Application*> AppMap;
 
 // forward declaration

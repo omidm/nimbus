@@ -1,0 +1,5 @@
+nimbus_worker
+output*
+*.txt
+_db*
+*log*
