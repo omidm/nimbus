@@ -41,12 +41,12 @@
 
 #include <string>
 
-#include "application/water_multiple/parameters.h"
-#include "application/water_multiple/physbam_include.h"
-#include "application/water_multiple/projection/data_raw_array_m2c.h"
-#include "data/app_data/app_var.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
+#include "applications/physbam/water//parameters.h"
+#include "applications/physbam/water//physbam_include.h"
+#include "applications/physbam/water//projection/data_raw_array_m2c.h"
+#include "src/data/app_data/app_var.h"
+#include "src/shared/geometric_region.h"
+#include "src/worker/data.h"
 
 namespace application {
 

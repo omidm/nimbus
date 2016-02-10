@@ -38,18 +38,18 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/data_def.h"
-#include "application_utils/data_definer.h"
-#include "application/water_multiple/data_names.h"
-#include "application/water_multiple/parameters.h"
-#include "application/water_multiple/job_main.h"
-#include "application/water_multiple/job_names.h"
-#include "application/water_multiple/reg_def.h"
-#include "data/scratch_data_helper.h"
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
-#include "worker/job_query.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//data_def.h"
+#include "src/application_utils/data_definer.h"
+#include "applications/physbam/water//data_names.h"
+#include "applications/physbam/water//parameters.h"
+#include "applications/physbam/water//job_main.h"
+#include "applications/physbam/water//job_names.h"
+#include "applications/physbam/water//reg_def.h"
+#include "src/data/scratch_data_helper.h"
+#include "src/shared/dbg.h"
+#include "src/shared/nimbus.h"
+#include "src/worker/job_query.h"
 #include <vector>
 
 namespace application {

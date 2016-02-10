@@ -36,10 +36,10 @@
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#include "data/physbam/physbam_data.h"
-#include "shared/nimbus.h"
+#include "src/data/physbam/physbam_data.h"
+#include "src/shared/nimbus.h"
 #include "string.h"
-#include "application/water_multiple/data_compressed_scalar_array.h"
+#include "applications/physbam/water//data_compressed_scalar_array.h"
 
 namespace application {
 

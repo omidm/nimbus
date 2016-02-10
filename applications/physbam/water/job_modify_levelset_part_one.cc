@@ -41,14 +41,14 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/job_modify_levelset_part_one.h"
-#include "application/water_multiple/physbam_utils.h"
-#include "application/water_multiple/water_driver.h"
-#include "application/water_multiple/water_example.h"
-#include "data/physbam/physbam_data.h"
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//job_modify_levelset_part_one.h"
+#include "applications/physbam/water//physbam_utils.h"
+#include "applications/physbam/water//water_driver.h"
+#include "applications/physbam/water//water_example.h"
+#include "src/data/physbam/physbam_data.h"
+#include "src/shared/dbg.h"
+#include "src/shared/nimbus.h"
 #include <sstream>
 #include <string>
 

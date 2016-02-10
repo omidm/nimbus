@@ -40,7 +40,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_REDUCE_RHO_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_REDUCE_RHO_H_
 
-#include "shared/nimbus.h"
+#include "src/shared/nimbus.h"
 
 namespace application {
 

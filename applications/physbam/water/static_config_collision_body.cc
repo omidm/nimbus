@@ -36,9 +36,9 @@
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#include "application/water_multiple/physbam_utils.h"
+#include "applications/physbam/water//physbam_utils.h"
 
-#include "application/water_multiple/static_config_collision_body.h"
+#include "applications/physbam/water//static_config_collision_body.h"
 
 namespace application {
 

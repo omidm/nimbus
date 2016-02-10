@@ -38,17 +38,17 @@
 #include <sstream>
 #include <string>
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/physbam_utils.h"
-#include "application/water_multiple/projection/projection_driver.h"
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//physbam_utils.h"
+#include "applications/physbam/water//projection/projection_driver.h"
+#include "src/shared/dbg.h"
+#include "src/shared/nimbus.h"
 
-#include "data/scalar_data.h"
-#include "application/water_multiple/data_include.h"
-#include "worker/worker_thread.h"
+#include "src/data/scalar_data.h"
+#include "applications/physbam/water//data_include.h"
+#include "src/worker/worker_thread.h"
 
-#include "application/water_multiple/projection/job_projection_transform_pressure.h"
+#include "applications/physbam/water//projection/job_projection_transform_pressure.h"
 
 namespace application {
 

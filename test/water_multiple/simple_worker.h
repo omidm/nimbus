@@ -48,15 +48,15 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "shared/scheduler_client.h"
-#include "shared/serialized_data.h"
-#include "shared/cluster.h"
-#include "worker/data.h"
-#include "worker/job.h"
-#include "worker/application.h"
-#include "shared/parser.h"
-#include "shared/log.h"
-#include "worker/worker.h"
+#include "src/shared/scheduler_client.h"
+#include "src/shared/serialized_data.h"
+#include "src/shared/cluster.h"
+#include "src/worker/data.h"
+#include "src/worker/job.h"
+#include "src/worker/application.h"
+#include "src/shared/parser.h"
+#include "src/shared/log.h"
+#include "src/worker/worker.h"
 
 using namespace nimbus; // NOLINT
 

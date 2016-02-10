@@ -44,8 +44,8 @@
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_DATA_RAW_VECTOR_ND_H_
 
 #include <PhysBAM_Tools/Vectors/VECTOR_ND.h>
-#include "data/physbam/physbam_data.h"
-#include "shared/nimbus.h"
+#include "src/data/physbam/physbam_data.h"
+#include "src/shared/nimbus.h"
 
 namespace application {
 

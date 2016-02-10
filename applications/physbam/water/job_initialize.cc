@@ -35,15 +35,15 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/job_initialize.h"
-#include "application/water_multiple/physbam_utils.h"
-#include "application/water_multiple/water_driver.h"
-#include "application/water_multiple/water_example.h"
-#include "application/water_multiple/water_sources.h"
-#include "application/water_multiple/job_names.h"
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//job_initialize.h"
+#include "applications/physbam/water//physbam_utils.h"
+#include "applications/physbam/water//water_driver.h"
+#include "applications/physbam/water//water_example.h"
+#include "applications/physbam/water//water_sources.h"
+#include "applications/physbam/water//job_names.h"
+#include "src/shared/dbg.h"
+#include "src/shared/nimbus.h"
 
 namespace application {
 

@@ -42,18 +42,18 @@
 #include <sstream>
 #include <string>
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/physbam_utils.h"
-#include "application/water_multiple/water_app.h"
-#include "application/water_multiple/water_driver.h"
-#include "application/water_multiple/water_example.h"
-#include "application/water_multiple/water_sources.h"
-#include "data/physbam/translator_physbam.h"
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//physbam_utils.h"
+#include "applications/physbam/water//water_app.h"
+#include "applications/physbam/water//water_driver.h"
+#include "applications/physbam/water//water_example.h"
+#include "applications/physbam/water//water_sources.h"
+#include "src/data/physbam/translator_physbam.h"
+#include "src/shared/dbg.h"
+#include "src/shared/geometric_region.h"
+#include "src/shared/nimbus.h"
 
-#include "application/water_multiple/job_step_particles.h"
+#include "applications/physbam/water//job_step_particles.h"
 
 namespace application {
 

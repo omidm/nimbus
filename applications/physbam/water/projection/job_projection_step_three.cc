@@ -40,19 +40,19 @@
 
 #include <PhysBAM_Tools/Krylov_Solvers/PCG_SPARSE.h>
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/options.h"
-#include "application/water_multiple/physbam_utils.h"
-#include "application/water_multiple/projection/projection_driver.h"
-#include "application/water_multiple/water_driver.h"
-#include "application/water_multiple/water_example.h"
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//options.h"
+#include "applications/physbam/water//physbam_utils.h"
+#include "applications/physbam/water//projection/projection_driver.h"
+#include "applications/physbam/water//water_driver.h"
+#include "applications/physbam/water//water_example.h"
+#include "src/shared/dbg.h"
+#include "src/shared/nimbus.h"
 
-#include "data/scalar_data.h"
-#include "application/water_multiple/data_include.h"
-#include "worker/worker_thread.h"
-#include "application/water_multiple/projection/job_projection_step_three.h"
+#include "src/data/scalar_data.h"
+#include "applications/physbam/water//data_include.h"
+#include "src/worker/worker_thread.h"
+#include "applications/physbam/water//projection/job_projection_step_three.h"
 
 namespace application {
 

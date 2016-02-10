@@ -38,15 +38,15 @@
 
 #include <PhysBAM_Tools/Arrays_Computations/ARRAY_COPY.h>
 
-#include "application/water_multiple/app_utils.h"
+#include "applications/physbam/water//app_utils.h"
 
-#include "application/water_multiple/projection/data_sparse_matrix.h"
-#include "application/water_multiple/projection/data_raw_array_m2c.h"
-#include "application/water_multiple/projection/data_raw_grid_array.h"
-#include "application/water_multiple/projection/data_raw_vector_nd.h"
-#include "application/water_multiple/projection/projection_helper.h"
+#include "applications/physbam/water//projection/data_sparse_matrix.h"
+#include "applications/physbam/water//projection/data_raw_array_m2c.h"
+#include "applications/physbam/water//projection/data_raw_grid_array.h"
+#include "applications/physbam/water//projection/data_raw_vector_nd.h"
+#include "applications/physbam/water//projection/projection_helper.h"
 
-#include "application/water_multiple/projection/laplace_solver_wrapper.h"
+#include "applications/physbam/water//projection/laplace_solver_wrapper.h"
 
 namespace PhysBAM {
 

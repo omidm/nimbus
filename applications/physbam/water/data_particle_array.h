@@ -41,8 +41,8 @@
 
 #include <vector>
 
-#include "data/physbam/physbam_data.h"
-#include "shared/nimbus.h"
+#include "src/data/physbam/physbam_data.h"
+#include "src/shared/nimbus.h"
 
 namespace application {
 

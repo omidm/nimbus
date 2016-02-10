@@ -38,15 +38,15 @@
 #include <sstream>
 #include <string>
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/physbam_utils.h"
-#include "application/water_multiple/water_driver.h"
-#include "application/water_multiple/water_example.h"
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
-#include "worker/worker_thread.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//physbam_utils.h"
+#include "applications/physbam/water//water_driver.h"
+#include "applications/physbam/water//water_example.h"
+#include "src/shared/dbg.h"
+#include "src/shared/nimbus.h"
+#include "src/worker/worker_thread.h"
 
-#include "application/water_multiple/projection/job_projection_calculate_boundary_condition_part_one.h"
+#include "applications/physbam/water//projection/job_projection_calculate_boundary_condition_part_one.h"
 
 namespace application {
 

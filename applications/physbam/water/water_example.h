@@ -19,14 +19,14 @@
 #include <PhysBAM_Dynamics/Boundaries/BOUNDARY_PHI_WATER.h>
 #include <PhysBAM_Dynamics/Level_Sets/LEVELSET_CALLBACKS.h>
 #include <PhysBAM_Dynamics/Level_Sets/PARTICLE_LEVELSET_EVOLUTION_UNIFORM.h>
-#include "application/water_multiple/app_data_include.h"
-#include "application/water_multiple/app_data_face_array.h"
-#include "application/water_multiple/app_data_options.h"
-#include "application/water_multiple/nimbus_thread_queue.h"
-#include "application/water_multiple/options.h"
-#include "application/water_multiple/projection/laplace_solver_wrapper.h"
-#include "data/physbam/translator_physbam_old.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/water//app_data_include.h"
+#include "applications/physbam/water//app_data_face_array.h"
+#include "applications/physbam/water//app_data_options.h"
+#include "applications/physbam/water//nimbus_thread_queue.h"
+#include "applications/physbam/water//options.h"
+#include "applications/physbam/water//projection/laplace_solver_wrapper.h"
+#include "src/data/physbam/translator_physbam_old.h"
+#include "src/shared/nimbus.h"
 namespace PhysBAM{
 
 template<class T_GRID> class LEVELSET_MULTIPLE_UNIFORM;

@@ -36,8 +36,8 @@
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#include "application/water_multiple/physbam_include.h"
-#include "data/static_config/static_config_variable.h"
+#include "applications/physbam/water//physbam_include.h"
+#include "src/data/static_config/static_config_variable.h"
 
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_STATIC_CONFIG_COLLISION_BODY_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_STATIC_CONFIG_COLLISION_BODY_

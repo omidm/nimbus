@@ -42,11 +42,11 @@
 #include <string>
 
 #include <PhysBAM_Tools/Matrices/SPARSE_MATRIX_FLAT_NXN.h>
-#include "application/water_multiple/physbam_include.h"
-#include "application/water_multiple/projection/data_sparse_matrix.h"
-#include "data/app_data/app_var.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
+#include "applications/physbam/water//physbam_include.h"
+#include "applications/physbam/water//projection/data_sparse_matrix.h"
+#include "src/data/app_data/app_var.h"
+#include "src/shared/geometric_region.h"
+#include "src/worker/data.h"
 
 namespace application {
 

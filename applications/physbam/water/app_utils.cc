@@ -39,16 +39,16 @@
 #include <limits>
 #include <set>
 #include <string>
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/data_names.h"
-#include "application/water_multiple/options.h"
-#include "application/water_multiple/reg_def.h"
-#include "data/physbam/physbam_data.h"
-#include "data/physbam/protobuf_compiled/water_parameter.pb.h"
-#include "shared/logical_data_object.h"
-#include "shared/nimbus.h"
-#include "worker/job.h"
-#include "worker/physical_data_instance.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//data_names.h"
+#include "applications/physbam/water//options.h"
+#include "applications/physbam/water//reg_def.h"
+#include "src/data/physbam/physbam_data.h"
+#include "src/data/physbam/protobuf_compiled/water_parameter.pb.h"
+#include "src/shared/logical_data_object.h"
+#include "src/shared/nimbus.h"
+#include "src/worker/job.h"
+#include "src/worker/physical_data_instance.h"
 
 namespace application {
 

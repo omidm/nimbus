@@ -37,20 +37,20 @@
  */
 
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/physbam_utils.h"
-#include "application/water_multiple/job_names.h"
-#include "application/water_multiple/data_names.h"
-#include "application/water_multiple/reg_def.h"
-#include "application/water_multiple/water_example.h"
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
-#include "worker/job_query.h"
-#include "worker/worker_thread.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//physbam_utils.h"
+#include "applications/physbam/water//job_names.h"
+#include "applications/physbam/water//data_names.h"
+#include "applications/physbam/water//reg_def.h"
+#include "applications/physbam/water//water_example.h"
+#include "src/shared/dbg.h"
+#include "src/shared/nimbus.h"
+#include "src/worker/job_query.h"
+#include "src/worker/worker_thread.h"
 #include <sstream>
 #include <string>
 
-#include "application/water_multiple/job_loop_iteration_part_two.h"
+#include "applications/physbam/water//job_loop_iteration_part_two.h"
 
 namespace application {
 

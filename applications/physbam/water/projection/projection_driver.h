@@ -47,10 +47,10 @@
 #include <PhysBAM_Tools/Parallel_Computation/SPARSE_MATRIX_PARTITION.h>
 #include <PhysBAM_Tools/Parallel_Computation/MPI_UNIFORM_GRID.h>
 
-#include "data/physbam/translator_physbam_old.h"
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/nimbus_thread_queue.h"
-#include "application/water_multiple/options.h"
+#include "src/data/physbam/translator_physbam_old.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//nimbus_thread_queue.h"
+#include "applications/physbam/water//options.h"
 
 namespace PhysBAM {
 

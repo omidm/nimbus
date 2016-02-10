@@ -40,17 +40,17 @@
 #include <string>
 #include <vector>
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/data_names.h"
-#include "application/water_multiple/job_names.h"
-#include "application/water_multiple/physbam_utils.h"
-#include "application/water_multiple/reg_def.h"
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
-#include "worker/job_query.h"
-#include "worker/worker_thread.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//data_names.h"
+#include "applications/physbam/water//job_names.h"
+#include "applications/physbam/water//physbam_utils.h"
+#include "applications/physbam/water//reg_def.h"
+#include "src/shared/dbg.h"
+#include "src/shared/nimbus.h"
+#include "src/worker/job_query.h"
+#include "src/worker/worker_thread.h"
 
-#include "application/water_multiple/projection/job_projection_main.h"
+#include "applications/physbam/water//projection/job_projection_main.h"
 
 namespace application {
 

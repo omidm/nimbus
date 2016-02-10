@@ -39,14 +39,14 @@
 #include <string>
 #include <vector>
 
-#include "application/water_multiple/app_data_particle_levelset_evolution.h"
-#include "application/water_multiple/data_names.h"
-#include "application/water_multiple/physbam_include.h"
-#include "application/water_multiple/physbam_tools.h"
-#include "data/app_data/app_object.h"
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
+#include "applications/physbam/water//app_data_particle_levelset_evolution.h"
+#include "applications/physbam/water//data_names.h"
+#include "applications/physbam/water//physbam_include.h"
+#include "applications/physbam/water//physbam_tools.h"
+#include "src/data/app_data/app_object.h"
+#include "src/shared/dbg.h"
+#include "src/shared/geometric_region.h"
+#include "src/worker/data.h"
 
 namespace application {
 

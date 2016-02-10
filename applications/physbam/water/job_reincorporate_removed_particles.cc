@@ -41,14 +41,14 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/job_reincorporate_removed_particles.h"
-#include "application/water_multiple/physbam_utils.h"
-#include "application/water_multiple/water_driver.h"
-#include "application/water_multiple/water_example.h"
-#include "data/physbam/physbam_data.h"
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//job_reincorporate_removed_particles.h"
+#include "applications/physbam/water//physbam_utils.h"
+#include "applications/physbam/water//water_driver.h"
+#include "applications/physbam/water//water_example.h"
+#include "src/data/physbam/physbam_data.h"
+#include "src/shared/dbg.h"
+#include "src/shared/nimbus.h"
 #include <sstream>
 #include <string>
 

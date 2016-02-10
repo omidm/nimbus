@@ -18,7 +18,6 @@ H_FILES       = $(wildcard *.h)
 CPP_FILES     = $(wildcard *.cc)
 OBJECT_FILES  = $(subst .cc,.o,$(CPP_FILES))
 
-PHYSBAM_DIR    = $(NIMBUS_ROOT)/application/physbam-lib/Public_Library/
 APP_LIB        = -lwater_app
 debug: APP_LIB = -lwater_app-debug-debug
 
@@ -26,16 +25,14 @@ debug: APP_LIB = -lwater_app-debug-debug
 # ENTER application directory here #
 ####################################
 
-release: APP_DIR = $(NIMBUS_ROOT)/application/water_multiple/Build/Release
-debug:   APP_DIR = $(NIMBUS_ROOT)/application/water_multiple/Build/Debug
+release: APP_DIR = $(NIMBUS_ROOT)/applications/physbam/water/Build/Release
+debug:   APP_DIR = $(NIMBUS_ROOT)/applications/physbam/water/Build/Debug
 
 ####################
 # ENTER flags here #
 ####################
 
-IFLAGS  += -I$(LDIR)
-IFLAGS  += -I$(APP_DIR) -I$(PHYSBAM_DIR)
-LFLAGS  += -lnimbus -lprotobuf -lboost_thread -lboost_system -lpthread -lboost_program_options $(APP_LIB)
+LFLAGS  += $(APP_LIB)
 # LFLAGS  += -Wl,-Bstatic $(APP_LIB) -Wl,-Bdynamic -lnimbus -lprotobuf -lboost_thread-mt -lboost_system-mt -lpthread
 LDFLAGS += -L$(APP_DIR) -Wl,-rpath $(APP_DIR)
 

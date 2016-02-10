@@ -36,12 +36,12 @@
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#include "application/water_multiple/projection/translator_util.h"
-#include "data/physbam/physbam_data.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/water//projection/translator_util.h"
+#include "src/data/physbam/physbam_data.h"
+#include "src/shared/nimbus.h"
 #include <string>
 
-#include "application/water_multiple/projection/data_raw_vector_nd.h"
+#include "applications/physbam/water//projection/data_raw_vector_nd.h"
 
 namespace application {
 

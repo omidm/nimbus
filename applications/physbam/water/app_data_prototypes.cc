@@ -36,8 +36,8 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#include "application/water_multiple/app_data_prototypes.h"
-#include "application/water_multiple/parameters.h"
+#include "applications/physbam/water//app_data_prototypes.h"
+#include "applications/physbam/water//parameters.h"
 
 namespace application {
 

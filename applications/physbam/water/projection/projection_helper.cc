@@ -36,8 +36,8 @@
  * Author: Hang Qu<quhang@stanford.edu>
  */
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/projection/projection_helper.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//projection/projection_helper.h"
 
 namespace PhysBAM {
 

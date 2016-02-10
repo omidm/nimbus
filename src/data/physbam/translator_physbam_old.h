@@ -58,7 +58,6 @@
 #include "src/shared/log.h"
 #include "src/shared/nimbus_types.h"
 #include "src/shared/geometric_region.h"
-#include "src/stdio.h" // NOLINT
 #include "src/worker/physical_data_instance.h"
 #include "src/worker/worker.h"
 

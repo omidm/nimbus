@@ -61,7 +61,7 @@
 #include "src/data/physbam/physbam_data_with_meta.h"
 
 #include "src/shared/log.h"
-#include "src/shared/fast_log..h"
+#include "src/shared/fast_log.h"
 #include "src/shared/nimbus_types.h"
 #include "src/shared/geometric_region.h"
 #include "src/worker/physical_data_instance.h"

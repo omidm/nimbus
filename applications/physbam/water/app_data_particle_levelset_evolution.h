@@ -41,11 +41,11 @@
 
 #include <string>
 
-#include "application/water_multiple/physbam_include.h"
-#include "data/app_data/app_struct.h"
-#include "data/physbam/translator_physbam.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
+#include "applications/physbam/water//physbam_include.h"
+#include "src/data/app_data/app_struct.h"
+#include "src/data/physbam/translator_physbam.h"
+#include "src/shared/geometric_region.h"
+#include "src/worker/data.h"
 
 namespace application {
 

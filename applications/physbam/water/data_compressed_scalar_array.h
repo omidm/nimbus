@@ -43,8 +43,8 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_COMPRESSED_SCALAR_ARRAY_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_COMPRESSED_SCALAR_ARRAY_H_
 
-#include "data/physbam/physbam_data_with_meta.h"
-#include "shared/nimbus.h"
+#include "src/data/physbam/physbam_data_with_meta.h"
+#include "src/shared/nimbus.h"
 
 namespace application {
 

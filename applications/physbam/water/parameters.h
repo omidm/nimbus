@@ -41,10 +41,10 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_
 
-#include "application/water_multiple/physbam_include.h"
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
-#include "application_utils/partition_handler.h"
+#include "applications/physbam/water//physbam_include.h"
+#include "src/shared/dbg.h"
+#include "src/shared/geometric_region.h"
+#include "src/application_utils/partition_handler.h"
 
 #define APP_LOG DBG_TEMP
 #define APP_LOG_STR "temp"

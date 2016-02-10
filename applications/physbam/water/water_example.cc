@@ -18,21 +18,21 @@
 #include <PhysBAM_Fluids/PhysBAM_Incompressible/Incompressible_Flows/PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM.h>
 #include <PhysBAM_Dynamics/Geometry/GENERAL_GEOMETRY_FORWARD.h>
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/app_data_prototypes.h"
-#include "application/water_multiple/app_data_options.h"
-#include "application/water_multiple/data_include.h"
-#include "application/water_multiple/options.h"
-#include "application/water_multiple/parameters.h"
-#include "application/water_multiple/physbam_utils.h"
-#include "application/water_multiple/reg_def.h"
-#include "application/water_multiple/water_example.h"
-#include "data/physbam/translator_physbam_old.h"
-#include "data/scalar_data.h"
-#include "shared/nimbus.h"
-#include "shared/fast_log.hh"
-#include "worker/physical_data_instance.h"
-#include "worker/static_config_manager.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//app_data_prototypes.h"
+#include "applications/physbam/water//app_data_options.h"
+#include "applications/physbam/water//data_include.h"
+#include "applications/physbam/water//options.h"
+#include "applications/physbam/water//parameters.h"
+#include "applications/physbam/water//physbam_utils.h"
+#include "applications/physbam/water//reg_def.h"
+#include "applications/physbam/water//water_example.h"
+#include "src/data/physbam/translator_physbam_old.h"
+#include "src/data/scalar_data.h"
+#include "src/shared/nimbus.h"
+#include "src/shared/fast_log.h"
+#include "src/worker/physical_data_instance.h"
+#include "src/worker/static_config_manager.h"
 
 // TODO(quhang) In three places where nimbus_thread_queue is introduced.
 

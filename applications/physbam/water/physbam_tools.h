@@ -39,8 +39,8 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_TOOLS_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_TOOLS_H_
 
-#include "application/water_multiple/physbam_include.h"
-#include "shared/geometric_region.h"
+#include "applications/physbam/water//physbam_include.h"
+#include "src/shared/geometric_region.h"
 
 namespace application {
 

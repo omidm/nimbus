@@ -46,12 +46,12 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_UTILS_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_UTILS_H_
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/app_data_options.h"
-#include "application/water_multiple/options.h"
-#include "application/water_multiple/parameters.h"
-#include "shared/geometric_region.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//app_data_options.h"
+#include "applications/physbam/water//options.h"
+#include "applications/physbam/water//parameters.h"
+#include "src/shared/geometric_region.h"
+#include "src/shared/nimbus.h"
 
 namespace PhysBAM {
 template<typename TV> class WATER_DRIVER;

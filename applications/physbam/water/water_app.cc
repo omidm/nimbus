@@ -35,26 +35,26 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/app_data_include.h"
-#include "application/water_multiple/app_data_prototypes.h"
-#include "application/water_multiple/data_include.h"
-#include "application/water_multiple/parameters.h"
-#include "application/water_multiple/job_include.h"
-#include "application/water_multiple/reg_def.h"
-#include "application/water_multiple/water_app.h"
-#include "data/physbam/translator_physbam.h"
-#include "data/physbam/translator_physbam_old.h"
-#include "data/scalar_data.h"
-#include "data/scratch_data_helper.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//app_data_include.h"
+#include "applications/physbam/water//app_data_prototypes.h"
+#include "applications/physbam/water//data_include.h"
+#include "applications/physbam/water//parameters.h"
+#include "applications/physbam/water//job_include.h"
+#include "applications/physbam/water//reg_def.h"
+#include "applications/physbam/water//water_app.h"
+#include "src/data/physbam/translator_physbam.h"
+#include "src/data/physbam/translator_physbam_old.h"
+#include "src/data/scalar_data.h"
+#include "src/data/scratch_data_helper.h"
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>
 #include <PhysBAM_Tools/Read_Write/Utilities/FILE_UTILITIES.h>
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
-#include "shared/log.h"
-#include "shared/nimbus.h"
-#include "shared/timer.h"
+#include "src/shared/dbg.h"
+#include "src/shared/geometric_region.h"
+#include "src/shared/log.h"
+#include "src/shared/nimbus.h"
+#include "src/shared/timer.h"
 #include "stdio.h"
 
 namespace application {

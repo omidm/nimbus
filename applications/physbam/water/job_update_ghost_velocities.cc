@@ -42,15 +42,15 @@
 #include <sstream>
 #include <string>
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/physbam_utils.h"
-#include "application/water_multiple/water_driver.h"
-#include "application/water_multiple/water_example.h"
-#include "application/water_multiple/water_sources.h"
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//physbam_utils.h"
+#include "applications/physbam/water//water_driver.h"
+#include "applications/physbam/water//water_example.h"
+#include "applications/physbam/water//water_sources.h"
+#include "src/shared/dbg.h"
+#include "src/shared/nimbus.h"
 
-#include "application/water_multiple/job_update_ghost_velocities.h"
+#include "applications/physbam/water//job_update_ghost_velocities.h"
 
 namespace application {
 

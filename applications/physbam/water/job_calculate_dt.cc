@@ -36,19 +36,19 @@
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/job_calculate_dt.h"
-#include "application/water_multiple/physbam_utils.h"
-#include "application/water_multiple/water_driver.h"
-#include "application/water_multiple/water_example.h"
-#include "application/water_multiple/water_sources.h"
-#include "application/water_multiple/job_names.h"
-#include "application/water_multiple/data_names.h"
-#include "application/water_multiple/reg_def.h"
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
-#include "shared/fast_log.hh"
-#include "worker/job_query.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//job_calculate_dt.h"
+#include "applications/physbam/water//physbam_utils.h"
+#include "applications/physbam/water//water_driver.h"
+#include "applications/physbam/water//water_example.h"
+#include "applications/physbam/water//water_sources.h"
+#include "applications/physbam/water//job_names.h"
+#include "applications/physbam/water//data_names.h"
+#include "applications/physbam/water//reg_def.h"
+#include "src/shared/dbg.h"
+#include "src/shared/nimbus.h"
+#include "src/shared/fast_log.h"
+#include "src/worker/job_query.h"
 #include <sstream>
 #include <string>
 

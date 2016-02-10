@@ -8,16 +8,16 @@
 #include "stdio.h"
 #include "string.h"
 
-#include "application/water_multiple/water_app.h"
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/data_names.h"
-#include "application/water_multiple/parameters.h"
-#include "application/water_multiple/physbam_include.h"
-#include "application/water_multiple/water_driver.h"
-#include "application/water_multiple/water_example.h"
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/water//water_app.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//data_names.h"
+#include "applications/physbam/water//parameters.h"
+#include "applications/physbam/water//physbam_include.h"
+#include "applications/physbam/water//water_driver.h"
+#include "applications/physbam/water//water_example.h"
+#include "src/shared/dbg.h"
+#include "src/shared/geometric_region.h"
+#include "src/shared/nimbus.h"
 
 
 

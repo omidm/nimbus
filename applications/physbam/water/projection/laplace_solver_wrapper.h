@@ -52,7 +52,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_LAPLACE_SOLVER_WRAPPER_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_LAPLACE_SOLVER_WRAPPER_H_
 
-#include "application/water_multiple/app_utils.h"
+#include "applications/physbam/water//app_utils.h"
 
 namespace PhysBAM {
 

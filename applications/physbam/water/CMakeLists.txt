@@ -11,19 +11,19 @@ SET(PROJECT_NAME water_app)
 PROJECT(${PROJECT_NAME})
 
 #Set Nimbus root and prtobuf files directory
-SET(NIMBUS_ROOT ${PROJECT_SOURCE_DIR}/../..)
+SET(NIMBUS_ROOT ${PROJECT_SOURCE_DIR}/../../..)
 
 # Remove all the DBG lines during compile time.
 # add_definitions(-D_NIMBUS_NO_DBG)
 
 include_directories(${NIMBUS_ROOT})
-LINK_DIRECTORIES(${NIMBUS_ROOT})
+LINK_DIRECTORIES(${NIMBUS_ROOT}/src)
 
 ######################################################
 # Custom commands to autogenerate data_def           #
 # and reg_def                                        #
 ######################################################
-set(APPLICATION_UTILS_DIR "${NIMBUS_ROOT}/application_utils")
+set(APPLICATION_UTILS_DIR "${NIMBUS_ROOT}/src/application_utils")
 set(DATA_DEF_PRODUCER_PY "${APPLICATION_UTILS_DIR}/generate_data_def.py")
 set(REG_DEF_PRODUCER_PY "${APPLICATION_UTILS_DIR}/generate_region_def.py")
 set(DATA_DEF_CC "${PROJECT_SOURCE_DIR}/data_def.cc")
@@ -236,17 +236,19 @@ SET(${PROJECT_NAME}_h
 #List the libraries you want to link against - including a higher-level
 #library automatically includes the lower-level ones
 SET(LIBRARIES_TO_LINK PhysBAM_Rendering-OpenGL)
-SET(PROTO_LIB protobuf)
-SET(NIMBUS_LIB nimbus)
-SET(BOOST_THREAD boost_thread)
-SET(BOOST_SYSTEM boost_system)
-LIST(APPEND LIBRARIES_TO_LINK ${PROTO_LIB})
-LIST(APPEND LIBRARIES_TO_LINK ${NIMBUS_LIB})
-LIST(APPEND LIBRARIES_TO_LINK ${BOOST_THREAD})
-LIST(APPEND LIBRARIES_TO_LINK ${BOOST_SYSTEM})
+# The rest of the libraries, will be linked by the executable that uses the
+# shared library generated here. -omidm
+# SET(PROTO_LIB protobuf)
+# SET(NIMBUS_LIB nimbus)
+# SET(BOOST_THREAD boost_thread)
+# SET(BOOST_SYSTEM boost_system)
+# LIST(APPEND LIBRARIES_TO_LINK ${PROTO_LIB})
+# LIST(APPEND LIBRARIES_TO_LINK ${NIMBUS_LIB})
+# LIST(APPEND LIBRARIES_TO_LINK ${BOOST_THREAD})
+# LIST(APPEND LIBRARIES_TO_LINK ${BOOST_SYSTEM})
 
 #you can force app_data variables to be on or off here
 #SET(PHYSBAM_USE_CUDA ON CACHE BOOL ON FORCE)
 
-INCLUDE(${NIMBUS_ROOT}/application/physbam-lib/Scripts/CMake/Nimbus_Application_Library.cmake)
-include_directories(${NIMBUS_ROOT}/leveldb/include/)
+INCLUDE(${NIMBUS_ROOT}/applications/physbam/physbam-lib/Scripts/CMake/Nimbus_Application_Library.cmake)
+include_directories(${NIMBUS_ROOT}/extern/leveldb/include/)

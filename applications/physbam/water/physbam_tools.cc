@@ -36,7 +36,7 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "application/water_multiple/physbam_tools.h"
+#include "applications/physbam/water//physbam_tools.h"
 
 namespace application {
 

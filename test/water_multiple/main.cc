@@ -44,13 +44,13 @@
 #include <pthread.h>
 #include <string>
 
-#include "application/water_multiple/water_app.h"
-#include "shared/log.h"
-#include "shared/nimbus.h"
-#include "shared/nimbus_types.h"
+#include "applications/physbam/water/water_app.h"
+#include "src/shared/log.h"
+#include "src/shared/nimbus.h"
+#include "src/shared/nimbus_types.h"
+#include "src/worker/application.h"
+#include "src/worker/worker_manager.h"
 #include "simple_worker.h"
-#include "worker/application.h"
-#include "worker/worker_manager.h"
 
 
 int main(int argc, char *argv[]) {

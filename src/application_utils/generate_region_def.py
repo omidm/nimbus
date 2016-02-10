@@ -10,8 +10,8 @@ from optparse import OptionParser
 ## Parse the command line arguments ##
 
 cwd = os.getcwd()
-temp = cwd[cwd.find("nimbus/application/"):]
-curr_path = temp[temp.find("application/"):]
+temp = cwd[cwd.find("nimbus/applications/physbam"):]
+curr_path = temp[temp.find("applications/physbam"):]
 
 parser = OptionParser()
 parser.add_option("-i", "--input", dest="infile",
@@ -341,8 +341,8 @@ guard_str = "NIMBUS_%s_%s_H_" % \
         (curr_path.upper().replace('/', '_'), out_str.upper())
 out_h.write("#ifndef %s\n" % guard_str)
 out_h.write("#define %s\n\n" % guard_str)
-out_h.write("#include \"shared/geometric_region.h\"\n")
-out_h.write("#include \"shared/nimbus.h\"\n")
+out_h.write("#include \"src/shared/geometric_region.h\"\n")
+out_h.write("#include \"src/shared/nimbus.h\"\n")
 out_h.write("\nnamespace %s {\n\n" % namespace)
 out_h.write("// Bounding boxes (geometric regions) and helper functions for " + \
         "application use\n\n")
@@ -360,8 +360,8 @@ out_h.write("#endif // %s" % guard_str)
 # Code generation - .cc file
 
 out_cc.write("#include \"%s/%s\"\n\n" % (app_path, out_h_file))
-out_cc.write("#include \"shared/geometric_region.h\"\n")
-out_cc.write("#include \"shared/nimbus.h\"\n")
+out_cc.write("#include \"src/shared/geometric_region.h\"\n")
+out_cc.write("#include \"src/shared/nimbus.h\"\n")
 out_cc.write("\nnamespace %s {\n\n" % namespace)
 for rs in reg_map:
     for l in reg_map[rs]:

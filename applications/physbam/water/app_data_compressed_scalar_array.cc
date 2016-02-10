@@ -39,15 +39,15 @@
 #include <string>
 #include <boost/functional/hash.hpp>
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/physbam_include.h"
-#include "application/water_multiple/physbam_tools.h"
-#include "data/app_data/app_var.h"
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//physbam_include.h"
+#include "applications/physbam/water//physbam_tools.h"
+#include "src/data/app_data/app_var.h"
+#include "src/shared/dbg.h"
+#include "src/shared/geometric_region.h"
+#include "src/worker/data.h"
 
-#include "application/water_multiple/app_data_compressed_scalar_array.h"
+#include "applications/physbam/water//app_data_compressed_scalar_array.h"
 
 namespace application {
 

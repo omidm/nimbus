@@ -39,19 +39,19 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_INCLUDE_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_INCLUDE_H_
 
-#include "application/water_multiple/data_face_array.h"
-#include "application/water_multiple/data_names.h"
-#include "application/water_multiple/data_particle_array.h"
-#include "application/water_multiple/data_scalar_array.h"
-#include "application/water_multiple/data_compressed_scalar_array.h"
-#include "application/water_multiple/projection/data_raw_array_m2c.h"
-#include "application/water_multiple/projection/data_raw_grid_array.h"
-#include "application/water_multiple/projection/data_raw_vector_nd.h"
-#include "application/water_multiple/projection/data_sparse_matrix.h"
+#include "applications/physbam/water//data_face_array.h"
+#include "applications/physbam/water//data_names.h"
+#include "applications/physbam/water//data_particle_array.h"
+#include "applications/physbam/water//data_scalar_array.h"
+#include "applications/physbam/water//data_compressed_scalar_array.h"
+#include "applications/physbam/water//projection/data_raw_array_m2c.h"
+#include "applications/physbam/water//projection/data_raw_grid_array.h"
+#include "applications/physbam/water//projection/data_raw_vector_nd.h"
+#include "applications/physbam/water//projection/data_sparse_matrix.h"
 
-#include "application/water_multiple/static_config_valid_mask.h"
-#include "application/water_multiple/static_config_u_interface.h"
-#include "application/water_multiple/static_config_force.h"
-#include "application/water_multiple/static_config_collision_body.h"
+#include "applications/physbam/water//static_config_valid_mask.h"
+#include "applications/physbam/water//static_config_u_interface.h"
+#include "applications/physbam/water//static_config_force.h"
+#include "applications/physbam/water//static_config_collision_body.h"
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_INCLUDE_H_

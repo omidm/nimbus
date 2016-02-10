@@ -45,7 +45,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_MODIFY_LEVELSET_PART_TWO_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_MODIFY_LEVELSET_PART_TWO_H_
 
-#include "shared/nimbus.h"
+#include "src/shared/nimbus.h"
 
 namespace application {
 

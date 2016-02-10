@@ -38,9 +38,9 @@
 
 #include <PhysBAM_Tools/Parallel_Computation/THREAD_QUEUE.h>
 #include "pthread.h"
-#include "shared/nimbus.h"
+#include "src/shared/nimbus.h"
 
-#include "application/water_multiple/nimbus_thread_queue.h"
+#include "applications/physbam/water//nimbus_thread_queue.h"
 
 namespace nimbus {
 

@@ -36,12 +36,12 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "application/water_multiple/data_particle_array.h"
-#include "data/physbam/physbam_data.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/water//data_particle_array.h"
+#include "src/data/physbam/physbam_data.h"
+#include "src/shared/nimbus.h"
 #include "string.h"
 
-#include "shared/dbg.h"
+#include "src/shared/dbg.h"
 
 namespace application {
 

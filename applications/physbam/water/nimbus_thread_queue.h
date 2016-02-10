@@ -43,8 +43,8 @@
 #include <exception>
 #include <list>
 #include <vector>
-#include "shared/nimbus.h"
-#include "worker/task_thread_pool.h"
+#include "src/shared/nimbus.h"
+#include "src/worker/task_thread_pool.h"
 
 namespace nimbus {
 

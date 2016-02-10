@@ -38,21 +38,21 @@
 #include <string>
 #include <vector>
 
-#include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/app_data_particle_levelset_evolution.h"
-#include "application/water_multiple/data_particle_array.h"
-#include "application/water_multiple/job_synchronize_particles.h"
-#include "application/water_multiple/job_names.h"
-#include "application/water_multiple/options.h"
-#include "application/water_multiple/parameters.h"
-#include "application/water_multiple/physbam_include.h"
-#include "application/water_multiple/physbam_utils.h"
-#include "application/water_multiple/water_driver.h"
-#include "application/water_multiple/water_example.h"
-#include "data/physbam/translator_physbam.h"
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/water//app_utils.h"
+#include "applications/physbam/water//app_data_particle_levelset_evolution.h"
+#include "applications/physbam/water//data_particle_array.h"
+#include "applications/physbam/water//job_synchronize_particles.h"
+#include "applications/physbam/water//job_names.h"
+#include "applications/physbam/water//options.h"
+#include "applications/physbam/water//parameters.h"
+#include "applications/physbam/water//physbam_include.h"
+#include "applications/physbam/water//physbam_utils.h"
+#include "applications/physbam/water//water_driver.h"
+#include "applications/physbam/water//water_example.h"
+#include "src/data/physbam/translator_physbam.h"
+#include "src/shared/dbg.h"
+#include "src/shared/geometric_region.h"
+#include "src/shared/nimbus.h"
 
 namespace application {
 

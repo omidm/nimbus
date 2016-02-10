@@ -39,8 +39,8 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_
 
-#include "application/water_multiple/app_data_include.h"
-#include "application/water_multiple/parameters.h"
+#include "applications/physbam/water//app_data_include.h"
+#include "applications/physbam/water//parameters.h"
 
 namespace application {
 

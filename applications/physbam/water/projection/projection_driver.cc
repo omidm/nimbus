@@ -47,13 +47,13 @@
 #include <PhysBAM_Tools/Parallel_Computation/SPARSE_MATRIX_PARTITION.h>
 #include <PhysBAM_Tools/Vectors/SPARSE_VECTOR_ND.h>
 
-#include "application/water_multiple/app_data_prototypes.h"
-#include "application/water_multiple/data_include.h"
-#include "application/water_multiple/physbam_utils.h"
-#include "data/scalar_data.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/water//app_data_prototypes.h"
+#include "applications/physbam/water//data_include.h"
+#include "applications/physbam/water//physbam_utils.h"
+#include "src/data/scalar_data.h"
+#include "src/shared/nimbus.h"
 
-#include "application/water_multiple/projection/projection_driver.h"
+#include "applications/physbam/water//projection/projection_driver.h"
 
 namespace PhysBAM {
 
