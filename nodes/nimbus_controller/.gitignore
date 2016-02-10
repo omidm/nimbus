@@ -1,0 +1,4 @@
+nimbus_controller
+*.txt
+*log*
+checkdir

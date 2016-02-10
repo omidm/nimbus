@@ -33,7 +33,7 @@
  */
 
  /*
-  * A Nimbus worker for job spawner application. 
+  * This is the main file that launches a nimbus worker.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */

@@ -2,9 +2,7 @@
 Author:	omidm@stanford.edy (Omid Mashayekhi)
 ------------------------------------------------------------------------------
 
-This is a nimbus worker, to run nimbus application. worker is capable of
-getting the application library as input, and loading the application during
-the runtime. so, it is constraint to a specific application.
+this is a nimbus controller.
 
 ------------------------------------------------------------------------------
 Build instructions:
@@ -12,11 +10,6 @@ Build instructions:
 1. issue make in the nimbus root directory:
 
   $ cd ../../; make; cd -
-
-  
-2. create your application shared library so that it is passed to worker for
-   loading during the runtime. A couple of default application libraries are
-   built (e.g. atencil 1d), when building nimbus at the root folder.
 
 ------------------------------------------------------------------------------
 Run/ Usage:
@@ -27,29 +20,42 @@ Run/ Usage:
   $ export DBG="error"
   $ export TTIMER="l1"
 
-2. launch controller (refer to README in <NIMBUS-ROOT>/nodes/nimbus_controller).
+2. launch controller with the options:
 
-3. launch the worker in this directory:
-
-  $ ./nimbus_worker
-            -p <worker-listening-port>
-            --cip <controller-ip-address>  
-            --cport<controller-listening-port>
+  $ ./nimbus_controller
+            -p <controller-listening-port>
             ...
-            [other worker option]
+            [other controller option]
             ...
-            -l </path/to/application-library>
-            [application options]
 
-  Nimbus Worker Options:
-    -h [ --help ]         produce help message
-    -p [ --port ] arg     listening port for data exchanger [REQUIRED]
-    --cport arg           controller listening port [REQUIRED]
-    --cip arg             controller ip address [REQUIRED]
-    -l [ --app_lib ] arg  application library [REQUIRED]
-    --ip arg              forced ip address of the worker, not known by controller
-    --othread arg         number of threads at worker for job execution
-    --det                 deactivate execution template
+    Nimbus Controller Options:
+      -h [ --help ]                   produce help message
+      -p [ --port ] arg               listening port
+      -w [ --worker_num ] arg         number of initial workers
+      -a [ --assign_batch_size ] arg  maximum number of jobs in a batch assignment
+      -t [ --assign_thread_num ] arg  job assigner thread nums
+      -c [ --command_batch_size ] arg maximum number of commands in a batch 
+                                      processing
+      --lb_period arg                 query period for load balancing (seconds)
+      --ft_period arg                 checkpoint creation period for fault 
+                                      tolerance (seconds)
+      --split arg                     three space separated positive integres to 
+                                      sepcify the number of partitions per 
+                                      dimension: nx ny nz
+      --sub_split arg                 three space separated positive integres to 
+                                      sepcify the number of sub-partitions per 
+                                      dimension: nx ny nz
+      --region arg                    six space separated integres to sepcify the 
+                                      global region: x y z dx dy dz
+      --dct                           deactivate controller template
+      --dcm                           deactivate complex memoization
+      --dbm                           deactivate binding memoization
+      --dwt                           deactivate worker template
+      --dmr                           deactivate mega rcr job
+      --dcb                           deactivate cascaded binding
+      --alb                           activate load balancing
+      --aft                           activate fault tolerance
+
 
 ------------------------------------------------------------------------------
 Example:
@@ -73,11 +79,13 @@ option. Application options follow the library name:
     --cs arg              chunk size in cells [default = 5]
     --bw arg              ghost region bandwidth [default = 1]
 
+
 ------------------------------------------------------------------------------
-Notes:
+Note:
 ------------------------------------------------------------------------------
 
 1. you probably do not need to call this executable directly, there are scripts
 in the <NIMBUS-ROOT>/scripts/ that can be used to simplify the process.
+
 
 
