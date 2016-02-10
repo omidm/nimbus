@@ -69,7 +69,7 @@ Then launch the worker against the specific application by specifying the -l
 option. Application options follow the library name:
 
   $ export DBG="error"; export TTIMER="l1"
-  $ ./nimbus_worker -p 5901 --cip localhost --cport 5900 -l ../../application/stencil_1d/libstencil_1d.so -i 30
+  $ ./nimbus_worker -p 5901 --cip localhost --cport 5900 -l ../../applications/simple/stencil_1d/libstencil_1d.so -i 30
  
   Stencil 1D Options:
     -h [ --help ]         produce help message

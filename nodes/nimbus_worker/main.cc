@@ -71,6 +71,7 @@ int main(int argc, char *argv[]) {
 
     // Optinal arguments
     ("ip", po::value<std::string>(&ip_address), "forced ip address of the worker, not known by controller") // NOLINT
+    ("ithread", po::value<uint64_t>(&WorkerManager::inside_job_parallism), "number of threads within one job") //NOLINT
     ("othread", po::value<uint64_t>(&WorkerManager::across_job_parallism), "number of threads at worker for job execution") //NOLINT
     ("det", "deactivate execution template");
 
