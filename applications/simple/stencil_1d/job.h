@@ -38,8 +38,8 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_STENCIL_1D_JOB_H_
-#define NIMBUS_APPLICATION_STENCIL_1D_JOB_H_
+#ifndef NIMBUS_APPLICATIONS_SIMPLE_STENCIL_1D_JOB_H_
+#define NIMBUS_APPLICATIONS_SIMPLE_STENCIL_1D_JOB_H_
 
 #include <iostream> // NOLINT
 #include "src/worker/physical_data_instance.h"
@@ -90,4 +90,4 @@ class Stencil : public Job {
 
 
 
-#endif  // NIMBUS_APPLICATION_STENCIL_1D_JOB_H_
+#endif  // NIMBUS_APPLICATIONS_SIMPLE_STENCIL_1D_JOB_H_

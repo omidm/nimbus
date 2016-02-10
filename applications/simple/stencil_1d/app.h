@@ -39,8 +39,8 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_STENCIL_1D_APP_H_
-#define NIMBUS_APPLICATION_STENCIL_1D_APP_H_
+#ifndef NIMBUS_APPLICATIONS_SIMPLE_STENCIL_1D_APP_H_
+#define NIMBUS_APPLICATIONS_SIMPLE_STENCIL_1D_APP_H_
 
 #include <iostream> // NOLINT
 #include "src/worker/application.h"
@@ -64,4 +64,4 @@ class Stencil1DApp : public Application {
 
 
 
-#endif  // NIMBUS_APPLICATION_STENCIL_1D_APP_H_
+#endif  // NIMBUS_APPLICATIONS_SIMPLE_STENCIL_1D_APP_H_

@@ -1,5 +1,4 @@
 
-
 TARGET = protobuf
 
 .PHONY: default $(TARGET) clean
