@@ -38,13 +38,13 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_LOGISTIC_REGRESSION_APP_H_
-#define NIMBUS_APPLICATION_LOGISTIC_REGRESSION_APP_H_
+#ifndef NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_APP_H_
+#define NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_APP_H_
 
 #include <vector>
 #include <iostream> // NOLINT
-#include "worker/application.h"
-#include "shared/nimbus_types.h"
+#include "src/worker/application.h"
+#include "src/shared/nimbus_types.h"
 // #include "./job.h"
 #include "./data.h"
 
@@ -73,4 +73,4 @@ class LogisticRegression : public Application {
     size_t sample_num_per_partition_;
 };
 
-#endif  // NIMBUS_APPLICATION_LOGISTIC_REGRESSION_APP_H_
+#endif  // NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_APP_H_

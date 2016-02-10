@@ -88,7 +88,7 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
   size_t stage_num = 10;
   size_t job_length_usec = 0;
 
-  po::options_description desc("Stencil 1D Options");
+  po::options_description desc("Job Spawner Options");
   desc.add_options()
     ("help,h", "produce help message")
 

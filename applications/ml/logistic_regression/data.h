@@ -38,14 +38,14 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_LOGISTIC_REGRESSION_DATA_H_
-#define NIMBUS_APPLICATION_LOGISTIC_REGRESSION_DATA_H_
+#ifndef NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_DATA_H_
+#define NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_DATA_H_
 
 #include <assert.h>
 #include <vector>
 #include <string>
 #include <iostream> // NOLINT
-#include "shared/nimbus.h"
+#include "src/shared/nimbus.h"
 #include "protobuf_compiled/data_msgs.pb.h"
 
 #define WEIGHT_DATA_NAME "wight"
@@ -120,4 +120,4 @@ class Weight : public Data {
 };
 
 
-#endif  // NIMBUS_APPLICATION_LOGISTIC_REGRESSION_DATA_H_
+#endif  // NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_DATA_H_

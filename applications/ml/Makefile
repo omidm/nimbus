@@ -1,6 +1,6 @@
 
 # add subdirs space separated
-SUBDIRS = simple ml
+SUBDIRS = logistic_regression
 
 .PHONY: subdirs $(SUBDIRS) clean
 

@@ -44,7 +44,7 @@
 #include "./job.h"
 #include "./data.h"
 #include "./utils.h"
-#include "shared/helpers.h"
+#include "src/shared/helpers.h"
 
 #define ITERATION_NUM static_cast<LogisticRegression*>(application())->iteration_num()
 #define PARTITION_NUM static_cast<LogisticRegression*>(application())->partition_num()

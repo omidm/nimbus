@@ -38,12 +38,12 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_LOGISTIC_REGRESSION_JOB_H_
-#define NIMBUS_APPLICATION_LOGISTIC_REGRESSION_JOB_H_
+#ifndef NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_JOB_H_
+#define NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_JOB_H_
 
 #include <iostream> // NOLINT
-#include "worker/physical_data_instance.h"
-#include "shared/nimbus.h"
+#include "src/worker/physical_data_instance.h"
+#include "src/shared/nimbus.h"
 
 #define INIT_JOB_NAME "init"
 #define LOOP_JOB_NAME "__MARK_STAT_for_loop"
@@ -90,4 +90,4 @@ class Reduce : public Job {
 
 
 
-#endif  // NIMBUS_APPLICATION_LOGISTIC_REGRESSION_JOB_H_
+#endif  // NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_JOB_H_
