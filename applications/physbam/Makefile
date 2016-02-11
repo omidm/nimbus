@@ -44,14 +44,14 @@ water-nimbus-debug: physbam-lib-debug
 	$(MAKE) -C water/Build/Debug
 
 
-# CLEANSUBDIRS  = physbam-lib/Public_Library/Build/Release
-# CLEANSUBDIRS += physbam-lib/Public_Library/Build/Debug
-# CLEANSUBDIRS += physbam-app/water/Build/Release
-# CLEANSUBDIRS += physbam-app/water/Build/Debug
-# CLEANSUBDIRS += physbam-app/opengl_3d/Build/Release
-# CLEANSUBDIRS += physbam-app/opengl_3d/Build/Debug
-CLEANSUBDIRS = water/Build/Release
-# CLEANSUBDIRS += water/Build/Debug
+CLEANSUBDIRS  = physbam-lib/Public_Library/Build/Release
+CLEANSUBDIRS += physbam-lib/Public_Library/Build/Debug
+CLEANSUBDIRS += physbam-app/water/Build/Release
+CLEANSUBDIRS += physbam-app/water/Build/Debug
+CLEANSUBDIRS += physbam-app/opengl_3d/Build/Release
+CLEANSUBDIRS += physbam-app/opengl_3d/Build/Debug
+CLEANSUBDIRS += water/Build/Release
+CLEANSUBDIRS += water/Build/Debug
 
 .PHONY: $(CLEANSUBDIRS) clean
 
