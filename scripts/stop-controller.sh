@@ -34,7 +34,7 @@
 #  OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Starts Nimbus controller on the machine this script is executed on.
+# Stops Nimbus controller on the machine this script is executed on.
 
 # Author: Omid Mashayekhi <omidm@stanford.edu>
 
@@ -52,66 +52,28 @@ Cya='\x1B[0;36m';
 Whi='\x1B[0;37m';
 # **************************
 
-if [ -z "${NIMBUS_HOME}" ]; then
-  export NIMBUS_HOME="$(cd "`dirname "$0"`"/..; pwd)"
-fi
-
-if [ -z "${DBG}" ]; then
-  export DBG="error"
-fi
-
-if [ -z "${TTIMER}" ]; then
-  export TTIMER="l1"
-fi
-
-CONTROLLER_DIR="${NIMBUS_HOME}/nodes/nimbus_controller/"
 CONTROLLER_BIN="nimbus_controller"
 LOG_DIR="${NIMBUS_HOME}/logs"
 ARGS="$@"
 
+
+
 if [[ ${ARGS} = *--help* ]] || [[ ${ARGS} = *-h* ]]; then
-  echo -e "${Blu}Launches the nimbus controller on the machine this script is executed on."
-  echo -e "Usage: ./scripts/start-controller.sh <controller options>"
-  echo -e "           - worker number is set to 1 by default."
-  echo -e "           - listening port is set to 5900 by default.\n"
-  cd ${CONTROLLER_DIR}; "./${CONTROLLER_BIN}" -h 2>&1
+  echo -e "${Blu}Stops the nimbus controller on the machine this script is executed on."
+  echo -e "Usage: ./scripts/stop-controller.sh"
   echo -e "${RCol}"
   exit 1
 fi
 
-echo -e "${Blu}NIMBUS_HOME  ... \"${NIMBUS_HOME}\"${RCol}"
-echo -e "${Blu}DBG  ........... \"${DBG}\"${RCol}"
-echo -e "${Blu}TTIMER  ........ \"${TTIMER}\"${RCol}"
+# killall -v ${CONTROLLER_BIN} &> /dev/null
+killall -v ${CONTROLLER_BIN}
 
-worker_num_given=false
-for arg in ${ARGS}; do
-  if [ "--worker_num" == "${arg}" ] || [ "-w" == "${arg}" ]; then
-    worker_num_given=true
-    break
-  fi
-done
-if [ "${worker_num_given}" == "false" ]; then
-  ARGS="-w 1 "${ARGS}
+SUCCESS="$?"
+
+if [ ${SUCCESS} != "0" ]; then
+  echo -e "${Red}No controller found to stop!${RCol}"
+else
+  echo -e "${Gre}Stoped the controller.${RCol}"
 fi
-
-port_num_given=false
-for arg in ${ARGS}; do
-  if [ "--port" == "${arg}" ] || [ "-p" == "${arg}" ]; then
-    port_num_given=true
-    break
-  fi
-done
-if [ "${port_num_given}" == "false" ]; then
-  ARGS="-p 5900 "${ARGS}
-fi
-
-if [ -e "${LOG_DIR}/controller" ]; then
-  echo -e "${Yel}WARNING: found old controller log folder (only one older log is kept!)${RCol}"
-  rm -rf "${LOG_DIR}/controller-old"
-  mv "${LOG_DIR}/controller" "${LOG_DIR}/controller-old"
-fi
-mkdir -p "${LOG_DIR}/controller"
-
-cd ${CONTROLLER_DIR}; "./${CONTROLLER_BIN}" ${ARGS} 1>"${LOG_DIR}/controller/stdout" 2>"${LOG_DIR}/controller/stderr" &
-echo -e "${Gre}Launched controller with arguments \"${ARGS}\"; find stdout/stderr at: ${LOG_DIR}/controller${RCol}"
+# echo -e "${Gre}Launched controller with arguments \"${ARGS}\"; find stdout/stderr at: ${LOG_DIR}/controller${RCol}"
 
