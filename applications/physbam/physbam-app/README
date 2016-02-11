@@ -33,8 +33,8 @@ NOTE 2: to build in debug mode, replace "Release" with "Debug" in the
 
 NOTE 3: to compile the distributed version with MPI capabilities activated,
      when building the library you need to use following cmake configurations:
-     USE_OPENMPI  ->  ON
-     LAMMPI       ->  OFF
+     PHYSBAM_USE_OPENMPI  ->  ON
+     PHYSBAM_USE_LAMMPI   ->  OFF
 
 -------------------------------------------------------------------
 Running:

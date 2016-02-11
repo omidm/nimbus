@@ -293,7 +293,7 @@ bool kUseGlobalWrite;
         assert((part_num_x_ % projection_part_num_x_) == 0);
         assert((part_num_y_ % projection_part_num_y_) == 0);
         assert((part_num_z_ % projection_part_num_z_) == 0);
-        assert((water_level >= 0) && (water_level <= 1));
+        assert((water_level_ >= 0) && (water_level_ <= 1));
         kScale = scale_;
         kAppPartNumX = part_num_x_;
         kAppPartNumY = part_num_y_;

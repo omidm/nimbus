@@ -1,0 +1,30 @@
+-------------------------------------------------------------------
+Author: Omid Mashayekhi <omidm@stanford.edu>
+-------------------------------------------------------------------
+
+This folder hold the source files of diferent group of applications, structured
+as follows:
+
+  > ml/ 
+    machine learning applications including logistic regression and k-means.
+
+  > simple/
+    simple applications incliding stencil_1d and job spawner.
+
+  > physbam
+    physbam core library along with applications and eaither run standalone or
+    against nimbus.
+    
+  > graph/ 
+    graph applications and tools, currently page-rank and tools for
+    partitioning.
+
+
+-------------------------------------------------------------------
+Makefile
+-------------------------------------------------------------------
+
+The Makefile compiles the application bundle for ml/ and simple/ applications.
+Currently graph and physbam applications do not compile along the main build of
+Nimbus. Although, they have separte Makefiles and directives in the subfolders.
+

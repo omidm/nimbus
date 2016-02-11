@@ -1,0 +1,75 @@
+-------------------------------------------------------------------
+Author: Omid Mashayekhi <omidm@stanford.edu>
+-------------------------------------------------------------------
+
+This folder hold the source files related to physbam simulations. The file are
+structured as follows:
+
+  > physbam-lib/ 
+    The physbam core librray. To run any standalone physbam application or
+    against nimbus, you need to first build the librray. Refer to the README in
+    the subfolder on how to build the librray.
+
+  > physbam-app/ 
+    Physbam standalone applications. This folder has water and smoke simulation
+    as well as applications to view the simulation results. To build the
+    applications refer to the README file the subfolder.
+
+  > water/ 
+    The physbam water simulation bundle that runs againt nimbus. To make the
+    shared librray refrer to the README file in the subfolder.
+    
+  > smoke/ 
+    The physbam smoke simulation bundle that runs againt nimbus. To make the
+    shared librray refrer to the README file in the subfolder.
+
+
+-------------------------------------------------------------------
+Makefile
+-------------------------------------------------------------------
+
+The Makefile in this folder is meant to make the building process of the
+physbam applications against nimbus, easier. For detailed instructions refer to
+each subfolder README file for building directives.  The instructions in each
+subfolder use ccmakei (gui for cmake), however the Makefile here uses cmake
+directly.  For exaxmple you can directly set options and generate the Makefile
+using cmake for the physbam librray as follows:
+
+  $ cd physbam-lib/Public_Library
+  $ mkdir -p Build/Release
+	$ cd Build/Release
+  $ cmake -D PHYSBAM_USE_OPENMPI=ON -D PHYSBAM_USE_LAMMPI=OFF ../.. 
+
+To show and check the oprions:
+
+  $ cmake -LH ../..
+
+** NOTE: to make the core library, applications, and shared librraies for
+nimbus in the DEBUG mode, replace "Release" with "Debug" in all directives. For
+example instead of creating the path "Buil/Release", create "Build/Debug", etc.
+Also, note that the generated ecexutable/library name may differ when compiled
+in debug mode (e.g. Water vs Water-debug).
+
+
+The Makefile has following functionalities:
+
+  > make physbam-lib[-debug]
+    build the physbam core librray with openmpi active.
+
+  > make water-physbam[-debug]
+    builds the stanalone physbam water application executable.
+
+  > make water-nimbus[-debug]
+    builds the physbam water application shared library that works againsts
+    nimbus worker.
+
+  > make opengl_3d
+    builds the physbam app to view output of simulations.
+
+
+-------------------------------------------------------------------
+Running:
+-------------------------------------------------------------------
+
+Refer to the README files in each subfolder for details.
+
