@@ -39,6 +39,7 @@
   */
 
 #include "src/scheduler/scheduler.h"
+#include "src/scheduler/dynamic_load_balancer.h"
 
 #define HANDSHAKE_COMMAND_NUM 1
 
@@ -810,7 +811,7 @@ void Scheduler::CreateTemplateManager() {
 }
 
 void Scheduler::CreateLoadBalancer() {
-  load_balancer_ = new LoadBalancer();
+  load_balancer_ = new DynamicLoadBalancer();
 }
 
 void Scheduler::CreateJobAssigner() {

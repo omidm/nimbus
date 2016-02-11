@@ -57,7 +57,7 @@ Example:
 For example you can run stencil 1d application, first launch the controller:
 
   $ export DBG="error"; export TTIMER="l1"
-  $ cd ../; ../nimbus_controller -p 5900 -w 1 &; cd -
+  $ ../nimbus_controller/nimbus_controller -p 5900 -w 1 &
 
 Then launch the worker against the specific application by specifying the -l
 option. Application options follow the library name:
