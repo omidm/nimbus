@@ -32,7 +32,7 @@ OBJFILES += $(DATA_PROTO_OBJECT_FILES)
 $(TARGET): $(SUBDIRS)
 	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(OBJFILES) -o $(TARGET)
 
-clean:
+clean: clean-files
 	for dir in $(SUBDIRS); do \
     $(MAKE) -C $$dir clean; \
   done
