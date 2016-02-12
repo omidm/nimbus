@@ -93,7 +93,7 @@ ARGS="$@"
 
 
 if [[ ${ARGS} != *--help* ]] && [[ ${ARGS} != *-h* ]]; then
-  ${NIMBUS_HOME}/scripts/stop-controller.sh
+  ${NIMBUS_HOME}/scripts/stop-controller.sh > /dev/null
   ${NIMBUS_HOME}/scripts/start-controller.sh
   sleep 2
 fi

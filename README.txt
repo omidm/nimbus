@@ -1,5 +1,43 @@
 
 =============================================================================
+Nimbus Project
+=============================================================================
+
+Nimbus is a framework for cloud computing applications. It supports jobs with
+short tasks and hight task rates. The range of applications includes machine
+learning, physical simulations and graph processing.
+
+
+=============================================================================
+Build
+=============================================================================
+
+1. Refer to the installation dependcies section that follws, depending on your
+operating system (Linux or MacOSX)
+
+2. Issue make in the current directory. It builds the nimbus core librray,
+  external librray dependencies, Nimus executables along with a group of
+  applications.
+
+  $ (optional) make clean-hard
+  $ make
+
+
+=============================================================================
+Run Examples
+=============================================================================
+
+from the root directory you can use the "./scripts/run-examples.sh". For
+example you can run logistic regression example as follows:
+
+  $ ./scripts/run-examples.sh lr 
+
+To see other available examples through this script use the -h optin:
+  
+  $ ./scripts/run-examples.sh -h
+
+
+=============================================================================
 Nimbus Installation Dependencies - Linux
 =============================================================================
 
