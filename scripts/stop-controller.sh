@@ -65,8 +65,7 @@ if [[ ${ARGS} = *--help* ]] || [[ ${ARGS} = *-h* ]]; then
   exit 1
 fi
 
-# killall -v ${CONTROLLER_BIN} &> /dev/null
-killall -v ${CONTROLLER_BIN}
+killall -v ${CONTROLLER_BIN} &> /dev/null
 
 SUCCESS="$?"
 

@@ -66,14 +66,15 @@ fi
 
 CONTROLLER_DIR="${NIMBUS_HOME}/nodes/nimbus_controller/"
 CONTROLLER_BIN="nimbus_controller"
-LOG_DIR="${NIMBUS_HOME}/logs"
+LOG_DIR="${NIMBUS_HOME}/logs/controller"
+LOG_DIR_OLD="${NIMBUS_HOME}/logs/controller-old"
 ARGS="$@"
 
 if [[ ${ARGS} = *--help* ]] || [[ ${ARGS} = *-h* ]]; then
   echo -e "${Blu}Launches the nimbus controller on the machine this script is executed on."
   echo -e "Usage: ./scripts/start-controller.sh <controller options>"
   echo -e "           - worker number is set to 1 by default."
-  echo -e "           - listening port is set to 5900 by default.\n"
+  echo -e "           - controller listening port is set to 5900 by default.\n"
   cd ${CONTROLLER_DIR}; "./${CONTROLLER_BIN}" -h 2>&1
   echo -e "${RCol}"
   exit 1
@@ -105,13 +106,13 @@ if [ "${port_num_given}" == "false" ]; then
   ARGS="-p 5900 "${ARGS}
 fi
 
-if [ -e "${LOG_DIR}/controller" ]; then
+if [ -e "${LOG_DIR}" ]; then
   echo -e "${Yel}WARNING: found old controller log folder (only one older log is kept!)${RCol}"
-  rm -rf "${LOG_DIR}/controller-old"
-  mv "${LOG_DIR}/controller" "${LOG_DIR}/controller-old"
+  rm -rf "${LOG_DIR_OLD}"
+  mv "${LOG_DIR}" "${LOG_DIR_OLD}"
 fi
-mkdir -p "${LOG_DIR}/controller"
+mkdir -p "${LOG_DIR}"
 
-cd ${CONTROLLER_DIR}; "./${CONTROLLER_BIN}" ${ARGS} 1>"${LOG_DIR}/controller/stdout" 2>"${LOG_DIR}/controller/stderr" &
-echo -e "${Gre}Launched controller with arguments \"${ARGS}\"; find stdout/stderr at: ${LOG_DIR}/controller${RCol}"
+cd ${CONTROLLER_DIR}; "./${CONTROLLER_BIN}" ${ARGS} 1>"${LOG_DIR}/stdout" 2>"${LOG_DIR}/stderr" &
+echo -e "${Gre}Launched controller with arguments \"${ARGS}\"; find stdout/stderr at: ${LOG_DIR}${RCol}"
 

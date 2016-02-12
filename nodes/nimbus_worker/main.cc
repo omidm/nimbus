@@ -47,8 +47,6 @@
 using namespace nimbus; // NOLINT
 
 int main(int argc, char *argv[]) {
-  nimbus_initialize();
-
   namespace po = boost::program_options;
 
   port_t listening_port;
@@ -110,6 +108,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  nimbus_initialize();
 
   void * handle = dlopen(application_lib.c_str(), RTLD_LAZY);
   if (handle == NULL) {
