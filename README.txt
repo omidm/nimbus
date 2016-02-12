@@ -27,7 +27,8 @@ operating system (Linux or MacOSX)
 Run Examples
 =============================================================================
 
-from the root directory you can use the "./scripts/run-examples.sh". For
+1. You can run basic, one controller one worker, examples with a single script.
+From the root directory call "./scripts/run-examples.sh". For
 example you can run logistic regression example as follows:
 
   $ ./scripts/run-examples.sh lr 
@@ -36,6 +37,30 @@ To see other available examples through this script use the -h optin:
   
   $ ./scripts/run-examples.sh -h
 
+
+2. You can run more complex examples easily with one controller against
+multiple workers. use the scripts to luanch controller and workers from the
+root directory. To launch the controller against two worker:
+
+  $ ./scripts/start-controller.sh -w 2
+
+This script starts the controller locally and redirects the controller
+stdout/stderr to files in "logs/" folder. If you want to flush the logs in to
+current console use the -- flush option. There are numerous options that you
+can use for the controller. for the entite list, issue:
+
+  $ ./scripts/start-controller.sh -h
+
+Then, luanch the two workers to run for exampale the k-means application:
+
+  $ ./scripts/start-workers.sh 2 -l applications/ml/k_means/libk_means.so
+
+This script launched two worker, and redirect their stdout/stderr to the log
+files. To print the logs in currebt console use the --flush option. Also,
+workers have multiple options, to see the complete list:
+
+  $ ./scripts/start-workers.sh -h
+  
 
 =============================================================================
 Nimbus Installation Dependencies - Linux
