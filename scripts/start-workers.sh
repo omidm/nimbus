@@ -56,6 +56,7 @@ function print_usage {
   echo -e "${Blu}Usage:"
   echo -e "${Blu}./scripts/start-workers.sh"
   echo -e "                    [number-of-workers-to-launch]"
+  echo -e "                    --flush [to redirect stdout/stderr to current console]"
   echo -e "                    ... <worker options> ... "
   echo -e "                    -l [path/to/application-bundle]"
   echo -e "                    ... <application options> ... "
@@ -90,6 +91,7 @@ re='^[0-9]+$'
 
 if ! [[ "$1" =~ $re ]]; then
   if [[ ${ARGS} = *--help* ]] || [[ ${ARGS} = *-h* ]]; then
+    echo -e "${Blu}Launches the nimbus workers on the machine this script is executed on.${RCol}"
     print_usage
     exit 0
   else
@@ -105,6 +107,7 @@ ARGS="$@"
 
 if [[ ${ARGS} != *--app_lib* ]] && [[ ${ARGS} != *-l* ]]; then
   if [[ ${ARGS} = *--help* ]] || [[ ${ARGS} = *-h* ]]; then
+    echo -e "${Blu}Launches the nimbus workers on the machine this script is executed on.${RCol}"
     print_usage
     exit 0
   else
@@ -115,7 +118,7 @@ if [[ ${ARGS} != *--app_lib* ]] && [[ ${ARGS} != *-l* ]]; then
 fi
 
 NEW_ARGS=""
-PORT_NUM=5901
+PORT_NUM=5900
 
 controller_ip_given=false
 for arg in ${ARGS}; do
@@ -139,6 +142,7 @@ if [ "${controller_port_given}" == "false" ]; then
   NEW_ARGS=" --cport 5900 "${NEW_ARGS}
 fi
 
+FLUSH=false
 
 while (( "$#" )); do
   if [ "--port" == "$1" ] || [ "-p" == "$1" ]; then
@@ -155,6 +159,9 @@ while (( "$#" )); do
     shift
     NEW_ARGS="${NEW_ARGS} ${NIMBUS_HOME}/$1"
     shift
+  elif [ "--flush" == "$1" ]; then
+    FLUSH=true
+    shift
   else
     NEW_ARGS="${NEW_ARGS} $1"
     shift
@@ -166,18 +173,25 @@ echo -e "${Blu}DBG  ........... \"${DBG}\"${RCol}"
 echo -e "${Blu}TTIMER  ........ \"${TTIMER}\"${RCol}"
 
 
-if [ -e "${LOG_DIR}" ]; then
-  echo -e "${Yel}WARNING: found old worker log folder (only one older log is kept!)${RCol}"
-  rm -rf "${LOG_DIR_OLD}"
-  mv "${LOG_DIR}" "${LOG_DIR_OLD}"
+if [ "${FLUSH}" == "false" ]; then
+  if [ -e "${LOG_DIR}" ]; then
+    echo -e "${Yel}WARNING: found old worker log folder (only one older log is kept!)${RCol}"
+    rm -rf "${LOG_DIR_OLD}"
+    mv "${LOG_DIR}" "${LOG_DIR_OLD}"
+  fi
+  mkdir -p "${LOG_DIR}"
 fi
-mkdir -p "${LOG_DIR}"
 
 
 for i in $(seq ${WORKER_NUM}); do
   mkdir -p "${LOG_DIR}/$i"
   W_ARGS="--port $((${PORT_NUM}+${i})) ${NEW_ARGS}"
-  cd ${WORKER_DIR}; "./${WORKER_BIN}" ${W_ARGS} 1>"${LOG_DIR}/$i/stdout" 2>"${LOG_DIR}/$i/stderr" &
-  echo -e "${Gre}Launched worker with arguments \"${W_ARGS}\"; find stdout/stderr at: ${LOG_DIR}/$i/${RCol}"
+  if [ "${FLUSH}" == "false" ]; then
+    cd ${WORKER_DIR}; "./${WORKER_BIN}" ${W_ARGS} 1>"${LOG_DIR}/$i/stdout" 2>"${LOG_DIR}/$i/stderr" &
+    echo -e "${Gre}Launched worker with arguments \"${W_ARGS}\"; find stdout/stderr at: ${LOG_DIR}/$i/.${RCol}"
+  else
+    cd ${WORKER_DIR}; "./${WORKER_BIN}" ${W_ARGS} 2>&1 &
+    echo -e "${Gre}Launched worker with arguments \"${W_ARGS}\".${RCol}"
+  fi
 done
 

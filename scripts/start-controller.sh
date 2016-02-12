@@ -52,6 +52,18 @@ Cya='\x1B[0;36m';
 Whi='\x1B[0;37m';
 # **************************
 
+function print_usage {
+  echo -e "${Blu}Usage:"
+  echo -e "./scripts/start-controller.sh"
+  echo -e "                    --flush [to redirect stdout/stderr to current console]"
+  echo -e "                    <controller options>"
+  cd ${CONTROLLER_DIR}; "./${CONTROLLER_BIN}" -h 2>&1
+  echo -e ">> worker number is set to 1 by default."
+  echo -e ">> controller listening port is set to 5900 by default.\n"
+  echo -e "${RCol}"
+}
+
+
 if [ -z "${NIMBUS_HOME}" ]; then
   export NIMBUS_HOME="$(cd "`dirname "$0"`"/..; pwd)"
 fi
@@ -71,12 +83,8 @@ LOG_DIR_OLD="${NIMBUS_HOME}/logs/controller-old"
 ARGS="$@"
 
 if [[ ${ARGS} = *--help* ]] || [[ ${ARGS} = *-h* ]]; then
-  echo -e "${Blu}Launches the nimbus controller on the machine this script is executed on."
-  echo -e "Usage: ./scripts/start-controller.sh <controller options>"
-  echo -e "           - worker number is set to 1 by default."
-  echo -e "           - controller listening port is set to 5900 by default.\n"
-  cd ${CONTROLLER_DIR}; "./${CONTROLLER_BIN}" -h 2>&1
-  echo -e "${RCol}"
+  echo -e "${Blu}Launches the nimbus controller on the machine this script is executed on.${RCol}"
+  print_usage
   exit 1
 fi
 
@@ -106,13 +114,33 @@ if [ "${port_num_given}" == "false" ]; then
   ARGS="-p 5900 "${ARGS}
 fi
 
-if [ -e "${LOG_DIR}" ]; then
-  echo -e "${Yel}WARNING: found old controller log folder (only one older log is kept!)${RCol}"
-  rm -rf "${LOG_DIR_OLD}"
-  mv "${LOG_DIR}" "${LOG_DIR_OLD}"
-fi
-mkdir -p "${LOG_DIR}"
+NEW_ARGS=""
+FLUSH=false
 
-cd ${CONTROLLER_DIR}; "./${CONTROLLER_BIN}" ${ARGS} 1>"${LOG_DIR}/stdout" 2>"${LOG_DIR}/stderr" &
-echo -e "${Gre}Launched controller with arguments \"${ARGS}\"; find stdout/stderr at: ${LOG_DIR}${RCol}"
+for arg in ${ARGS}; do
+  if [ "--flush" == "${arg}" ]; then
+    FLUSH=true
+  else
+    NEW_ARGS="${NEW_ARGS} ${arg}"
+    shift
+  fi
+done
+
+
+if [ "${FLUSH}" == "false" ]; then
+  if [ -e "${LOG_DIR}" ]; then
+    echo -e "${Yel}WARNING: found old controller log folder (only one older log is kept!)${RCol}"
+    rm -rf "${LOG_DIR_OLD}"
+    mv "${LOG_DIR}" "${LOG_DIR_OLD}"
+  fi
+  mkdir -p "${LOG_DIR}"
+fi
+
+if [ "${FLUSH}" == "false" ]; then
+  cd ${CONTROLLER_DIR}; "./${CONTROLLER_BIN}" ${NEW_ARGS} 1>"${LOG_DIR}/stdout" 2>"${LOG_DIR}/stderr" &
+  echo -e "${Gre}Launched controller with arguments \"${NEW_ARGS}\"; find stdout/stderr at: ${LOG_DIR}${RCol}"
+else
+  cd ${CONTROLLER_DIR}; "./${CONTROLLER_BIN}" ${NEW_ARGS} 2>&1 &
+  echo -e "${Gre}Launched controller with arguments \"${NEW_ARGS}\"${RCol}"
+fi
 
