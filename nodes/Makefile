@@ -1,6 +1,6 @@
 
 # add subdirs space separated
-SUBDIRS = nimbus_worker
+SUBDIRS = nimbus_worker nimbus_controller
 
 .PHONY: subdirs $(SUBDIRS) clean
 
