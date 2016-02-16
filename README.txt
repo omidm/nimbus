@@ -39,25 +39,29 @@ To see other available examples through this script use the -h optin:
 
 
 2. You can run more complex examples easily with one controller against
-multiple workers. use the scripts to luanch controller and workers from the
-root directory. To launch the controller against two worker:
+multiple workers. Use the scripts to launch controller and workers from the
+root directory. To launch the controller against two worker, and split the app
+domain along x-axis, issue:
 
-  $ ./scripts/start-controller.sh -w 2
+  $ ./scripts/start-controller.sh -w 2 --split 2 1 1
 
 This script starts the controller locally and redirects the controller
-stdout/stderr to files in "logs/" folder. If you want to flush the logs in to
-current console use the -- flush option. There are numerous options that you
-can use for the controller. for the entite list, issue:
+stdout/stderr to files in "logs/" folder. If you want to run the controller in
+the foreground and flush the logs in to current console use the --fg option.
+There are numerous options that you can use for the controller. For the entire
+list, issue:
 
   $ ./scripts/start-controller.sh -h
 
-Then, luanch the two workers to run for exampale the k-means application:
+Now you need to launch the workers to run against the controller. To launch the
+two workers to run for example the k-means application, issue:
 
   $ ./scripts/start-workers.sh 2 -l applications/ml/k_means/libk_means.so
 
-This script launched two worker, and redirect their stdout/stderr to the log
-files. To print the logs in currebt console use the --flush option. Also,
-workers have multiple options, to see the complete list:
+This script launches two workers, and redirects their stdout/stderr to the log
+files. To print the logs in the console use the --fg option; in case of multiple
+workers it opens a terminal for each worker. Also, workers have multiple
+options, to see the complete list:
 
   $ ./scripts/start-workers.sh -h
   

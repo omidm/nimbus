@@ -55,7 +55,7 @@ Whi='\x1B[0;37m';
 function print_usage {
   echo -e "${Blu}Usage:"
   echo -e "./scripts/start-controller.sh"
-  echo -e "                    --flush [to redirect stdout/stderr to current console]"
+  echo -e "                    --fg [to run in foreground and redirect stdout/stderr to current console]"
   echo -e "                    <controller options>"
   cd ${CONTROLLER_DIR}; "./${CONTROLLER_BIN}" -h 2>&1
   echo -e ">> worker number is set to 1 by default."
@@ -118,7 +118,7 @@ NEW_ARGS=""
 FLUSH=false
 
 for arg in ${ARGS}; do
-  if [ "--flush" == "${arg}" ]; then
+  if [ "--fg" == "${arg}" ]; then
     FLUSH=true
   else
     NEW_ARGS="${NEW_ARGS} ${arg}"

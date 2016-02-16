@@ -56,17 +56,18 @@ function print_usage {
   echo -e "${Blu}Usage:"
   echo -e "${Blu}./scripts/start-workers.sh"
   echo -e "                    [number-of-workers-to-launch]"
-  echo -e "                    --flush [to redirect stdout/stderr to current console]"
+  echo -e "                    --fg [to run in foreground and redirect stdout/stderr to the console.]"
   echo -e "                    ... <worker options> ... "
   echo -e "                    -l/--app_lib [path/to/application-bundle]"
   echo -e "                    ... <application options> ... "
   cd ${WORKER_DIR}; "./${WORKER_BIN}" -h 2>&1
-  echo -e ">> worker listening ports are set to (--port/-p arg)+n, where n is [1 to worker_num]."
-  echo -e "   default --port/-p is 5900, so default worker ports are 5901, 5902, ..."
+  echo -e ">> worker listening ports are set to (--port/-p arg)+n, where n is [0 to worker_num)."
+  echo -e "   default --port/-p is 5901, so default worker ports are 5901, 5902, ..."
   echo -e ">> controller listening port is set to 5900 by default."
   echo -e ">> controller ip is set to \"localhost\" by default."
   echo -e "\n>> to get the application options pass -h, after -l/--app_lib option."
-  echo -e "     and for simplicity also use --flush option to dump the help in console."
+  echo -e "     and for simplicity also use --fg option to dump the help in console."
+  echo -e ">> if launching more than one worker with --fg, each worker runs in a separate console with xterm."
   echo -e "${RCol}"
 }
 
@@ -158,7 +159,7 @@ fi
 
 idx=0
 FLUSH=false
-PORT_NUM=5900
+PORT_NUM=5901
 while (( "$#" )); do
   if ([ "--port" == "$1" ] || [ "-p" == "$1" ]) && [ "${idx}" -lt "${pivot_idx}" ]; then
     shift
@@ -179,11 +180,11 @@ while (( "$#" )); do
     NEW_ARGS="${NEW_ARGS} ${NIMBUS_HOME}/$1"
     shift
     idx=$((${idx}+1))
-  elif [ "--flush" == "$1" ] && [ "${idx}" -lt "${pivot_idx}" ]; then
+  elif [ "--fg" == "$1" ] && [ "${idx}" -lt "${pivot_idx}" ]; then
     FLUSH=true
     if [ "${WORKER_NUM}" != "1" ]; then
-      echo -e "${Red}ERROR: if the --flush is active you can only launch one worker!${RCol}"
-      exit 1
+      echo -e "${Yel}WARNING: launching more than one worker with flag --fg!${RCol}"
+      echo -e "${Yel}         will launch each worker in a separate console with xterm.${RCol}"
     fi
     shift
     idx=$((${idx}+1))
@@ -211,13 +212,17 @@ fi
 
 for i in $(seq ${WORKER_NUM}); do
   mkdir -p "${LOG_DIR}/$i"
-  W_ARGS="--port $((${PORT_NUM}+${i})) ${NEW_ARGS}"
+  W_ARGS="--port $((${PORT_NUM}+$((${i}-1)))) ${NEW_ARGS}"
   if [ "${FLUSH}" == "false" ]; then
     cd ${WORKER_DIR}; "./${WORKER_BIN}" ${W_ARGS} 1>"${LOG_DIR}/$i/stdout" 2>"${LOG_DIR}/$i/stderr" &
     echo -e "${Gre}Launched worker with arguments \"${W_ARGS}\"; find stdout/stderr at: ${LOG_DIR}/$i/.${RCol}"
   else
     echo -e "${Gre}Launching worker with arguments \"${W_ARGS}\".${RCol}"
-    cd ${WORKER_DIR}; "./${WORKER_BIN}" ${W_ARGS} 2>&1
+    if [ "${WORKER_NUM}" != "1" ]; then
+      cd ${WORKER_DIR}; xterm -hold -e "./${WORKER_BIN}" ${W_ARGS} 2>&1 &
+    else
+      cd ${WORKER_DIR}; "./${WORKER_BIN}" ${W_ARGS} 2>&1
+    fi
   fi
 done
 
