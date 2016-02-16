@@ -98,20 +98,34 @@ if [[ ${ARGS} != *--help* ]] && [[ ${ARGS} != *-h* ]]; then
   sleep 2
 fi
 
-if [[ ${EXAMPLE} == "stencil_1d" ]]; then
-  ${NIMBUS_HOME}/scripts/start-workers.sh 1 --flush -l applications/simple/stencil_1d/libstencil_1d.so ${ARGS}
-elif [[ ${EXAMPLE} == "job_spawner" ]]; then
-  ${NIMBUS_HOME}/scripts/start-workers.sh 1 --flush -l applications/simple/job_spawner/libjob_spawner.so ${ARGS}
-elif [[ ${EXAMPLE} == "lr" ]]; then
-  ${NIMBUS_HOME}/scripts/start-workers.sh 1 --flush -l applications/ml/logistic_regression/liblogistic_regression.so ${ARGS}
-elif [[ ${EXAMPLE} == "k-means" ]]; then
-  ${NIMBUS_HOME}/scripts/start-workers.sh 1 --flush -l applications/ml/k_means/libk_means.so ${ARGS}
+if [[ ${ARGS} != *--help* ]] && [[ ${ARGS} != *-h* ]]; then
+  if [[ ${EXAMPLE} == "stencil_1d" ]]; then
+    ${NIMBUS_HOME}/scripts/start-workers.sh 1 --flush -l applications/simple/stencil_1d/libstencil_1d.so ${ARGS}
+  elif [[ ${EXAMPLE} == "job_spawner" ]]; then
+    ${NIMBUS_HOME}/scripts/start-workers.sh 1 --flush -l applications/simple/job_spawner/libjob_spawner.so ${ARGS}
+  elif [[ ${EXAMPLE} == "lr" ]]; then
+    ${NIMBUS_HOME}/scripts/start-workers.sh 1 --flush -l applications/ml/logistic_regression/liblogistic_regression.so ${ARGS}
+  elif [[ ${EXAMPLE} == "k-means" ]]; then
+    ${NIMBUS_HOME}/scripts/start-workers.sh 1 --flush -l applications/ml/k_means/libk_means.so ${ARGS}
+  else
+    echo -e "${Red}ERROR: unknown application name!${RCol}"
+    ${NIMBUS_HOME}/scripts/stop-controller.sh
+    print_usage
+    exit 1
+  fi
 else
-  echo -e "${Red}ERROR: unknown application name!${RCol}"
-  ${NIMBUS_HOME}/scripts/stop-controller.sh
-  print_usage
-  exit 1
+  if [[ ${EXAMPLE} == "stencil_1d" ]]; then
+    ${NIMBUS_HOME}/scripts/start-workers.sh 1 --flush -l applications/simple/stencil_1d/libstencil_1d.so ${ARGS} | grep -v ERROR
+  elif [[ ${EXAMPLE} == "job_spawner" ]]; then
+    ${NIMBUS_HOME}/scripts/start-workers.sh 1 --flush -l applications/simple/job_spawner/libjob_spawner.so ${ARGS} | grep -v ERROR
+  elif [[ ${EXAMPLE} == "lr" ]]; then
+    ${NIMBUS_HOME}/scripts/start-workers.sh 1 --flush -l applications/ml/logistic_regression/liblogistic_regression.so ${ARGS} | grep -v ERROR
+  elif [[ ${EXAMPLE} == "k-means" ]]; then
+    ${NIMBUS_HOME}/scripts/start-workers.sh 1 --flush -l applications/ml/k_means/libk_means.so ${ARGS} | grep -v ERROR
+  else
+    echo -e "${Red}ERROR: unknown application name!${RCol}"
+    ${NIMBUS_HOME}/scripts/stop-controller.sh
+    print_usage
+    exit 1
+  fi
 fi
-
-exit 0
-
