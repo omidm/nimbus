@@ -140,7 +140,7 @@ if [ "${FLUSH}" == "false" ]; then
   cd ${CONTROLLER_DIR}; "./${CONTROLLER_BIN}" ${NEW_ARGS} 1>"${LOG_DIR}/stdout" 2>"${LOG_DIR}/stderr" &
   echo -e "${Gre}Launched controller with arguments \"${NEW_ARGS}\"; find stdout/stderr at: ${LOG_DIR}${RCol}"
 else
-  cd ${CONTROLLER_DIR}; "./${CONTROLLER_BIN}" ${NEW_ARGS} 2>&1 &
-  echo -e "${Gre}Launched controller with arguments \"${NEW_ARGS}\"${RCol}"
+  echo -e "${Gre}Launching controller with arguments \"${NEW_ARGS}\"${RCol}"
+  cd ${CONTROLLER_DIR}; "./${CONTROLLER_BIN}" ${NEW_ARGS} 2>&1
 fi
 

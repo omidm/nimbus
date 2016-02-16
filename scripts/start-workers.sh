@@ -58,13 +58,15 @@ function print_usage {
   echo -e "                    [number-of-workers-to-launch]"
   echo -e "                    --flush [to redirect stdout/stderr to current console]"
   echo -e "                    ... <worker options> ... "
-  echo -e "                    -l [path/to/application-bundle]"
+  echo -e "                    -l/--app_lib [path/to/application-bundle]"
   echo -e "                    ... <application options> ... "
   cd ${WORKER_DIR}; "./${WORKER_BIN}" -h 2>&1
-  echo -e ">> worker listening port is set to 5900+n by default."
+  echo -e ">> worker listening ports are set to (--port/-p arg)+n, where n is [1 to worker_num]."
+  echo -e "   default --port/-p is 5900, so default worker ports are 5901, 5902, ..."
   echo -e ">> controller listening port is set to 5900 by default."
   echo -e ">> controller ip is set to \"localhost\" by default."
-  echo -e "\n>> to get the application options after --app_lib(-l) option pass -h."
+  echo -e "\n>> to get the application options pass -h, after -l/--app_lib option."
+  echo -e "     and for simplicity also use --flush option to dump the help in console."
   echo -e "${RCol}"
 }
 
@@ -116,55 +118,79 @@ if [[ ${ARGS} != *--app_lib* ]] && [[ ${ARGS} != *-l* ]]; then
     exit 1
   fi
 fi
+# the args befor/after --applib(-l) are worker/application args.
+pivot_idx=0
+for arg in ${ARGS}; do
+  if [[ "-l" == "${arg}" ]] || [[ "--app_lib" == "${arg}" ]]; then
+    break
+  fi
+  pivot_idx=$((${pivot_idx}+1))
+done
 
 NEW_ARGS=""
-PORT_NUM=5900
 
+idx=0
 controller_ip_given=false
 for arg in ${ARGS}; do
-  if [ "--cip" == "${arg}" ]; then
+  if [ "--cip" == "${arg}" ] && [ "${idx}" -lt "${pivot_idx}" ]; then
     controller_ip_given=true
     break
   fi
+  idx=$((${idx}+1))
 done
 if [ "${controller_ip_given}" == "false" ]; then
   NEW_ARGS=" --cip localhost "${NEW_ARGS}
 fi
 
+idx=0
 controller_port_given=false
 for arg in ${ARGS}; do
-  if [ "--cport" == "${arg}" ]; then
+  if [ "--cport" == "${arg}" ] && [ "${idx}" -lt "${pivot_idx}" ]; then
     controller_port_given=true
     break
   fi
+  idx=$((${idx}+1))
 done
 if [ "${controller_port_given}" == "false" ]; then
   NEW_ARGS=" --cport 5900 "${NEW_ARGS}
 fi
 
-FLUSH=false
 
+idx=0
+FLUSH=false
+PORT_NUM=5900
 while (( "$#" )); do
-  if [ "--port" == "$1" ] || [ "-p" == "$1" ]; then
+  if ([ "--port" == "$1" ] || [ "-p" == "$1" ]) && [ "${idx}" -lt "${pivot_idx}" ]; then
     shift
+    idx=$((${idx}+1))
     if ! [[ "$1" =~ $re ]]; then
-      echo -e "${Red}ERROR: the port argument should be a number you gave \"$1\"!${RCol}"
+      echo -e "${Red}ERROR: the port argument should be a number, you gave \"$1\"!${RCol}"
       print_usage
+      exit 1
     else
       PORT_NUM=$1
     fi
     shift
+    idx=$((${idx}+1))
   elif [ "--app_lib" == "$1" ] || [ "-l" == "$1" ]; then
     NEW_ARGS="${NEW_ARGS} $1"
     shift
+    idx=$((${idx}+1))
     NEW_ARGS="${NEW_ARGS} ${NIMBUS_HOME}/$1"
     shift
-  elif [ "--flush" == "$1" ]; then
+    idx=$((${idx}+1))
+  elif [ "--flush" == "$1" ] && [ "${idx}" -lt "${pivot_idx}" ]; then
     FLUSH=true
+    if [ "${WORKER_NUM}" != "1" ]; then
+      echo -e "${Red}ERROR: if the --flush is active you can only launch one worker!${RCol}"
+      exit 1
+    fi
     shift
+    idx=$((${idx}+1))
   else
     NEW_ARGS="${NEW_ARGS} $1"
     shift
+    idx=$((${idx}+1))
   fi
 done
 
@@ -190,8 +216,8 @@ for i in $(seq ${WORKER_NUM}); do
     cd ${WORKER_DIR}; "./${WORKER_BIN}" ${W_ARGS} 1>"${LOG_DIR}/$i/stdout" 2>"${LOG_DIR}/$i/stderr" &
     echo -e "${Gre}Launched worker with arguments \"${W_ARGS}\"; find stdout/stderr at: ${LOG_DIR}/$i/.${RCol}"
   else
-    cd ${WORKER_DIR}; "./${WORKER_BIN}" ${W_ARGS} 2>&1 &
-    echo -e "${Gre}Launched worker with arguments \"${W_ARGS}\".${RCol}"
+    echo -e "${Gre}Launching worker with arguments \"${W_ARGS}\".${RCol}"
+    cd ${WORKER_DIR}; "./${WORKER_BIN}" ${W_ARGS} 2>&1
   fi
 done
 
