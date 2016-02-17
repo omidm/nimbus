@@ -2,7 +2,7 @@
 # add subdirs space separated
 SUBDIRS = extern src nodes applications
 
-.PHONY: default $(SUBDIRS) physbam clean clean-hard
+.PHONY: default $(SUBDIRS) physbam test clean clean-hard clean-logs
 
 default: $(SUBDIRS)
 
@@ -15,9 +15,13 @@ applications: extern src
 physbam: src
 	$(MAKE) -C applications/physbam
 
+
+test: extern src nodes applications
+	scripts/test-stencil_1d.sh
+
 # add subdirs space separated
 CLEAN_SUBDIRS = src nodes applications
-clean:
+clean: clean-logs
 	for dir in $(CLEAN_SUBDIRS); do \
     $(MAKE) -C $$dir clean; \
   done
@@ -25,8 +29,17 @@ clean:
 
 # add subdirs space separated
 CLEAN_H_SUBDIRS = extern src nodes applications applications/physbam
-clean-hard:
-	for dir in $(CLEAN_SUBDIRS); do \
+clean-hard: clean-logs
+	for dir in $(CLEAN_H_SUBDIRS); do \
     $(MAKE) -C $$dir clean; \
   done
+
+
+# add subdirs space separated
+CLEAN_L_SUBDIRS = nodes/nimbus_controller nodes/nimbus_worker
+clean-logs:
+	for dir in $(CLEAN_L_SUBDIRS); do \
+    $(MAKE) -C $$dir clean-logs; \
+  done
+	\rm -rf logs/
 

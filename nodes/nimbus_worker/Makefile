@@ -25,4 +25,5 @@ clean-logs:
 	\rm -f *log*
 	\rm -f *.txt
 	\rm -rf _db_*
+	\rm -rf output/
 

@@ -22,6 +22,14 @@ operating system (Linux or MacOSX)
   $ (optional) make clean-hard
   $ make
 
+3. You can run end-to-end tests, as follows:
+  
+  $ make test
+
+4. If you also need to build physbam applications, issue:
+  
+  $ make physbam
+
 
 =============================================================================
 Run Examples
