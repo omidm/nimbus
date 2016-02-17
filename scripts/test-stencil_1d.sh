@@ -86,7 +86,6 @@ function run_experiment {
   ${NIMBUS_HOME}/scripts/stop-workers.sh &> /dev/null
   ${NIMBUS_HOME}/scripts/stop-controller.sh &> /dev/null
   ${NIMBUS_HOME}/scripts/start-controller.sh $1 &> /dev/null
-  sleep 2
   ${NIMBUS_HOME}/scripts/start-workers.sh $2 -l applications/simple/stencil_1d/libstencil_1d.so $3 &> /dev/null
   
   start_time=$(date +%s)

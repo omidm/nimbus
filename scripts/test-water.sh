@@ -102,7 +102,6 @@ echo -e "${Cya}Ruunnig water simulation with two workers against nimbus controll
 ${NIMBUS_HOME}/scripts/stop-workers.sh &> /dev/null
 ${NIMBUS_HOME}/scripts/stop-controller.sh &> /dev/null
 ${NIMBUS_HOME}/scripts/start-controller.sh ${CONTROLLER_ARGS} &> /dev/null
-sleep 2
 ${NIMBUS_HOME}/scripts/start-workers.sh ${WORKER_ARGS} -l applications/physbam/water/libwater_app.so ${WATEER_ARGS} &> /dev/null
 
 start_time=$(date +%s)

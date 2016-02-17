@@ -342,13 +342,26 @@ void SchedulerClient::HandleWrite(const boost::system::error_code& error,
 
 
 void SchedulerClient::CreateNewConnections() {
-  std::cout << "Opening connections." << std::endl;
+  dbg(DBG_NET, "Attempting to open a connection to server.\n");
   tcp::resolver resolver(*io_service_);
   tcp::resolver::query query(scheduler_ip_,
       boost::to_string(scheduler_port_));
   tcp::resolver::iterator iterator = resolver.resolve(query);
-  boost::system::error_code error = boost::asio::error::host_not_found;
-  socket_->connect(*iterator, error);
+
+  while (true) {
+    boost::system::error_code error = boost::asio::error::host_not_found;
+    socket_->connect(*iterator, error);
+    if (error) {
+      dbg(DBG_ERROR, "Could not connect to server: %s , retrying in 1 second ... \n", error.message().c_str()); // NOLINT
+      delete socket_;
+      socket_ = new tcp::socket(*io_service_);
+      sleep(1);
+    } else {
+      dbg(DBG_NET, "Successfully connected to the server.\n");
+      break;
+    }
+  }
+
   // Set the tcp send and receive buf size.
   // Note: you may have to increase the OS limits first.
   // Look at the nimbus/scripts/configure_tcp.sh for help.

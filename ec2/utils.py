@@ -28,7 +28,6 @@ REL_WORKER_PATH                 = 'nodes/nimbus_worker/'
 def start_experiment(controller_ip, controller_p_ip, worker_ips, worker_p_ips):
   worker_num = len(worker_ips)
   start_controller(controller_ip, worker_num);
-  time.sleep(5)
 
   idx = 0;
   for idx in range(0, len(worker_ips)):
