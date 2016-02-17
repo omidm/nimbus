@@ -2,7 +2,7 @@
 # add subdirs space separated
 SUBDIRS = extern src nodes applications
 
-.PHONY: default $(SUBDIRS) physbam test clean clean-hard clean-logs
+.PHONY: default $(SUBDIRS) physbam clean clean-hard clean-logs
 
 default: $(SUBDIRS)
 
@@ -15,9 +15,6 @@ applications: extern src
 physbam: src
 	$(MAKE) -C applications/physbam
 
-
-test: extern src nodes applications
-	scripts/test-stencil_1d.sh
 
 # add subdirs space separated
 CLEAN_SUBDIRS = src nodes applications
@@ -42,4 +39,15 @@ clean-logs:
     $(MAKE) -C $$dir clean-logs; \
   done
 	\rm -rf logs/
+
+
+.PHONY: test test-basic test-water
+
+test-basic: extern src nodes applications
+	scripts/test-stencil_1d.sh
+
+test-water: extern src nodes applications
+	scripts/test-water.sh
+
+test: test-basic test-water
 

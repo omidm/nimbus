@@ -62,7 +62,9 @@ function print_usage {
   echo -e "${RCol}"
 }
 
-
+CHUNK_NUM=16
+BATCH_NUM=6
+THREAD_NUM=16
 TIME_OUT_T=10
 
 if [ -z "${NIMBUS_HOME}" ]; then
@@ -80,6 +82,7 @@ fi
 
 # run_experiment controller_args worker_args app_args
 function run_experiment {
+  make ${NIMBUS_HOME}/ clean-logs &> /dev/null
   ${NIMBUS_HOME}/scripts/stop-workers.sh &> /dev/null
   ${NIMBUS_HOME}/scripts/stop-controller.sh &> /dev/null
   ${NIMBUS_HOME}/scripts/start-controller.sh $1 &> /dev/null
@@ -91,7 +94,7 @@ function run_experiment {
   progress_bar="waiting ..."
   success=0
   while [ "$((${end_time}-${start_time}))" -lt "${TIME_OUT_T}" ]; do
-    success=$(cat ${NIMBUS_HOME}/logs/workers/*/stdout | grep -c "FINAL HASH")
+    success=$(cat ${NIMBUS_HOME}/logs/controller/stdout | grep -c "Simulation Terminated")
     if [ ${success} == "1" ]; then
       end_time=$(date +%s)
       break
@@ -138,88 +141,94 @@ echo -e "${Cya}    a. single-threaded controller${RCol}"
 echo -e "${Cya}    b. one single-threaded worker${RCol}"
 echo -e "${Cya}    c. one application partition${RCol}"
 echo -e "${Cya}    d. without any templates${RCol}"
-run_experiment "--dct" "1" "--pn 1 --cpp 16" 
+run_experiment "--dct" "1" "--pn 1 --cpp ${CHUNK_NUM}" 
 correct_hash=$(get_final_hash)
+if ! [ -z ${correct_hash} ]; then
+  echo -e "${Gre}[ SUCCESS ] got the hash value of ${correct_hash}.${RCol}"
+else
+  echo -e "${Gre}[ FAILED  ] could not get the hash value!.${RCol}"
+  exit 1
+fi
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
 echo -e "${Cya}    a. single-threaded controller${RCol}"
 echo -e "${Cya}    b. one single-threaded worker${RCol}"
-echo -e "${Cya}    c. 16 application partitions${RCol}"
+echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
 echo -e "${Cya}    d. without any templates${RCol}"
-run_experiment "--dct" "1" "--pn 16 --cpp 1" 
+run_experiment "--dct" "1" "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
 echo -e "${Cya}    a. multi-threaded controller${RCol}"
 echo -e "${Cya}    b. one single-threaded worker${RCol}"
-echo -e "${Cya}    c. 16 application partitions${RCol}"
+echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
 echo -e "${Cya}    d. without any templates${RCol}"
-run_experiment "-t 8 -a 6 --dct" "1" "--pn 16 --cpp 1" 
+run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM} --dct" "1" "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
 echo -e "${Cya}    a. multi-threaded controller${RCol}"
 echo -e "${Cya}    b. one single-threaded worker${RCol}"
-echo -e "${Cya}    c. 16 application partitions${RCol}"
+echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
 echo -e "${Cya}    d. with only controller templates${RCol}"
-run_experiment "-t 8 -a 6 --dbm" "1" "--pn 16 --cpp 1" 
+run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM} --dbm" "1" "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
 echo -e "${Cya}    a. multi-threaded controller${RCol}"
 echo -e "${Cya}    b. one single-threaded worker${RCol}"
-echo -e "${Cya}    c. 16 application partitions${RCol}"
+echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
 echo -e "${Cya}    d. with controller and worker templates${RCol}"
-run_experiment "-t 8 -a 6" "1 --det " "--pn 16 --cpp 1" 
+run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM}" "1 --det " "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
 echo -e "${Cya}    a. multi-threaded controller${RCol}"
 echo -e "${Cya}    b. one single-threaded worker${RCol}"
-echo -e "${Cya}    c. 16 application partitions${RCol}"
+echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
 echo -e "${Cya}    d. with controller, worker, and execution templates${RCol}"
-run_experiment "-t 8 -a 6" "1" "--pn 16 --cpp 1" 
+run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM}" "1" "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
 echo -e "${Cya}    a. multi-threaded controller${RCol}"
 echo -e "${Cya}    b. two single-threaded worker${RCol}"
-echo -e "${Cya}    c. 16 application partitions${RCol}"
+echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
 echo -e "${Cya}    d. with controller, worker, and execution templates${RCol}"
-run_experiment "-t 8 -a 6 -w 2 --split 2 1 1" "2" "--pn 16 --cpp 1" 
+run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM} -w 2 --split 2 1 1" "2" "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
 echo -e "${Cya}    a. multi-threaded controller${RCol}"
 echo -e "${Cya}    b. four single-threaded worker${RCol}"
-echo -e "${Cya}    c. 16 application partitions${RCol}"
+echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
 echo -e "${Cya}    d. with controller, worker, and execution templates${RCol}"
-run_experiment "-t 8 -a 6 -w 4 --split 4 1 1" "4" "--pn 16 --cpp 1" 
+run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM} -w 4 --split 4 1 1" "4" "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
 echo -e "${Cya}    a. multi-threaded controller${RCol}"
 echo -e "${Cya}    b. one multi-threaded worker${RCol}"
-echo -e "${Cya}    c. 16 application partitions${RCol}"
+echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
 echo -e "${Cya}    d. with controller, worker, and execution templates${RCol}"
-run_experiment "-t 8 -a 6" "1 --othread 16" "--pn 16 --cpp 1" 
+run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM}" "1 --othread ${THREAD_NUM}" "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
 echo -e "${Cya}    a. multi-threaded controller${RCol}"
 echo -e "${Cya}    b. four multi-threaded worker${RCol}"
-echo -e "${Cya}    c. 16 application partitions${RCol}"
+echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
 echo -e "${Cya}    d. with controller, worker, and execution templates${RCol}"
-run_experiment "-t 8 -a 6 -w 4 --split 4 1 1" "4 --othread 16" "--pn 16 --cpp 1" 
+run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM} -w 4 --split 4 1 1" "4 --othread ${THREAD_NUM}" "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
 

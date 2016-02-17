@@ -77,9 +77,28 @@ if [ -z "${TTIMER}" ]; then
   export TTIMER="l1"
 fi
 
-echo -e "${Cya}Ruunnig water simulation with two workers against nimbus controller:${RCol}"
+echo -e "${Red}WARNING: this test requires building physbam librray and applications first.${RCol}"
+echo -e "${Red}         if not built yet, you can issue \'make physbam\' in the nimbus root.${RCol}"
+echo -e "${Red}         it is not automated since physbam Makefile is flaky and it may build${RCol}"
+echo -e "${Red}         everything from scratch again, even after successful build.${RCol}"
+
+
+echo -e "${Cya}Checking that old output files are removed:${RCol}"
 
 make ${NIMBUS_HOME}/ clean-logs &> /dev/null
+
+FOLDER=$(ls ${NIMBUS_HOME}/nodes/nimbus_worker/output/ 2>/dev/null)
+
+if [ -z "${FOLDER}"]; then
+  echo -e "${Gre}[ SUCCESS ] no old output file found${RCol}"
+else
+  echo -e "${Red}[ FAILED  ] seems that there are still old output files!${RCol}"
+  exit 1
+fi
+
+
+echo -e "${Cya}Ruunnig water simulation with two workers against nimbus controller:${RCol}"
+
 ${NIMBUS_HOME}/scripts/stop-workers.sh &> /dev/null
 ${NIMBUS_HOME}/scripts/stop-controller.sh &> /dev/null
 ${NIMBUS_HOME}/scripts/start-controller.sh ${CONTROLLER_ARGS} &> /dev/null
@@ -160,8 +179,10 @@ echo -e "${Gre}[ VISUAL CHECK ] by default it starts playing simulation and ther
 
 echo -e "${Gre}[ VISUAL CHECK ] window closes in 10 seconds!${RCol}"
 sleep 10
-# xdotool windowactivate --sync ${WINDOWID} key --clearmodifiers --delay 100 alt+F4
-wmctrl -c "opengl"
+xdotool windowactivate --sync ${WINDOWID} key --clearmodifiers --delay 100 alt+F4
+
+# if running the test over ssh -X use this command to close!
+# wmctrl -c "opengl"
 
 exit 0
 
