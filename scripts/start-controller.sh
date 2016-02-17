@@ -42,18 +42,18 @@
 # Text Reset
 RCol='\x1B[0m'    
 # Regular           
-Bla='\x1B[0;30m';
-Red='\x1B[0;31m';
-Gre='\x1B[0;32m';
-Yel='\x1B[0;33m';
-Blu='\x1B[0;34m';
-Pur='\x1B[0;35m';
-Cya='\x1B[0;36m';
-Whi='\x1B[0;37m';
+Bla='\x1B[0;90m';
+Red='\x1B[0;91m';
+Gre='\x1B[0;92m';
+Yel='\x1B[0;93m';
+Blu='\x1B[0;94m';
+Pur='\x1B[0;95m';
+Cya='\x1B[0;96m';
+Whi='\x1B[0;97m';
 # **************************
 
 function print_usage {
-  echo -e "${Blu}Usage:"
+  echo -e "${Cya}Usage:"
   echo -e "./scripts/start-controller.sh"
   echo -e "                    --fg [to run in foreground and redirect stdout/stderr to current console]"
   echo -e "                    <controller options>"
@@ -83,14 +83,14 @@ LOG_DIR_OLD="${NIMBUS_HOME}/logs/controller-old"
 ARGS="$@"
 
 if [[ ${ARGS} = *--help* ]] || [[ ${ARGS} = *-h* ]]; then
-  echo -e "${Blu}Launches the nimbus controller on the machine this script is executed on.${RCol}"
+  echo -e "${Cya}Launches the nimbus controller on the machine this script is executed on.${RCol}"
   print_usage
   exit 1
 fi
 
-echo -e "${Blu}NIMBUS_HOME  ... \"${NIMBUS_HOME}\"${RCol}"
-echo -e "${Blu}DBG  ........... \"${DBG}\"${RCol}"
-echo -e "${Blu}TTIMER  ........ \"${TTIMER}\"${RCol}"
+echo -e "${Cya}NIMBUS_HOME  ... \"${NIMBUS_HOME}\"${RCol}"
+echo -e "${Cya}DBG  ........... \"${DBG}\"${RCol}"
+echo -e "${Cya}TTIMER  ........ \"${TTIMER}\"${RCol}"
 
 worker_num_given=false
 for arg in ${ARGS}; do

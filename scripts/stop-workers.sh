@@ -42,14 +42,14 @@
 # Text Reset
 RCol='\x1B[0m'    
 # Regular           
-Bla='\x1B[0;30m';
-Red='\x1B[0;31m';
-Gre='\x1B[0;32m';
-Yel='\x1B[0;33m';
-Blu='\x1B[0;34m';
-Pur='\x1B[0;35m';
-Cya='\x1B[0;36m';
-Whi='\x1B[0;37m';
+Bla='\x1B[0;90m';
+Red='\x1B[0;91m';
+Gre='\x1B[0;92m';
+Yel='\x1B[0;93m';
+Blu='\x1B[0;94m';
+Pur='\x1B[0;95m';
+Cya='\x1B[0;96m';
+Whi='\x1B[0;97m';
 # **************************
 
 CONTROLLER_BIN="nimbus_worker"
@@ -59,7 +59,7 @@ ARGS="$@"
 
 
 if [[ ${ARGS} = *--help* ]] || [[ ${ARGS} = *-h* ]]; then
-  echo -e "${Blu}Stops the nimbus workers on the machine this script is executed on."
+  echo -e "${Cya}Stops the nimbus workers on the machine this script is executed on."
   echo -e "Usage: ./scripts/stop-workers.sh"
   echo -e "${RCol}"
   exit 1

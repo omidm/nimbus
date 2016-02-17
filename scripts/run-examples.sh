@@ -42,18 +42,18 @@
 # Text Reset
 RCol='\x1B[0m'    
 # Regular           
-Bla='\x1B[0;30m';
-Red='\x1B[0;31m';
-Gre='\x1B[0;32m';
-Yel='\x1B[0;33m';
-Blu='\x1B[0;34m';
-Pur='\x1B[0;35m';
-Cya='\x1B[0;36m';
-Whi='\x1B[0;37m';
+Bla='\x1B[0;90m';
+Red='\x1B[0;91m';
+Gre='\x1B[0;92m';
+Yel='\x1B[0;93m';
+Blu='\x1B[0;94m';
+Pur='\x1B[0;95m';
+Cya='\x1B[0;96m';
+Whi='\x1B[0;97m';
 # **************************
 
 function print_usage {
-  echo -e "${Blu}Usage:"
+  echo -e "${Cya}Usage:"
   echo -e "./scripts/run-examples.sh"
   echo -e "                    <example-name>"
   echo -e "                    [example options]"
@@ -75,13 +75,6 @@ if [ -z "${TTIMER}" ]; then
   export TTIMER="l1"
 fi
 
-CONTROLLER_DIR="${NIMBUS_HOME}/nodes/nimbus_controller/"
-CONTROLLER_BIN="nimbus_controller"
-LOG_DIR="${NIMBUS_HOME}/logs/controller"
-LOG_DIR_OLD="${NIMBUS_HOME}/logs/controller-old"
-ARGS="$@"
-
-
 if [[ "$#" == "0" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
   print_usage
   exit 1
@@ -93,6 +86,7 @@ ARGS="$@"
 
 
 if [[ ${ARGS} != *--help* ]] && [[ ${ARGS} != *-h* ]]; then
+  ${NIMBUS_HOME}/scripts/stop-workers.sh > /dev/null
   ${NIMBUS_HOME}/scripts/stop-controller.sh > /dev/null
   ${NIMBUS_HOME}/scripts/start-controller.sh
   sleep 2

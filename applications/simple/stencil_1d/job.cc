@@ -33,11 +33,13 @@
  */
 
 /*
- * Job classes for job spawner application.
+ * Job classes for stencil 1d application.
  *
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
+#include <boost/functional/hash.hpp>
+#include <sstream>
 #include "./job.h"
 #include "./data.h"
 #include "./utils.h"
@@ -59,12 +61,12 @@ Main::Main(Application* app) {
 };
 
 Job * Main::Clone() {
-  std::cout << "Cloning main job!\n";
+  dbg(DBG_APP, "Cloning main job!\n");
   return new Main(application());
 };
 
 void Main::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the main job\n";
+  dbg(DBG_APP, "Executing the main job\n");
   assert(CHUNK_SIZE > (2 * BANDWIDTH));
   assert(CHUNK_NUM >= PART_NUM);
   assert(CHUNK_NUM % PART_NUM == 0);
@@ -141,12 +143,12 @@ ForLoop::ForLoop(Application* app) {
 };
 
 Job * ForLoop::Clone() {
-  std::cout << "Cloning forLoop job!\n";
+  dbg(DBG_APP, "Cloning forLoop job!\n");
   return new ForLoop(application());
 };
 
 void ForLoop::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the forLoop job: " << id().elem() << std::endl;
+  dbg(DBG_APP, "Executing the forLoop job: %lu\n", id().elem());
 
   IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
@@ -188,6 +190,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
       before.clear();
       StageJobAndLoadBeforeSet(&before, PRINT_JOB_NAME, print_job_ids[i], read, write);
       after.clear();
+      SerializeParameter(&par, 0);
       SpawnComputeJob(PRINT_JOB_NAME, print_job_ids[i], read, write, before, after, par, true, region); // NOLINT
     }
 
@@ -218,6 +221,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     write.clear();
     before.clear();
     after.clear();
+    SerializeParameter(&par, 1);
     SpawnComputeJob(PRINT_JOB_NAME, print_job_id[0], read, write, before, after, par, true);
 
     EndTemplate("for_loop_end");
@@ -230,12 +234,12 @@ Init::Init() {
 };
 
 Job * Init::Clone() {
-  std::cout << "Cloning init job!\n";
+  dbg(DBG_APP, "Cloning init job!\n");
   return new Init();
 };
 
 void Init::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the init job: " << id().elem() << std::endl;
+  dbg(DBG_APP, "Executing the init job: %lu\n", id().elem());
   std::vector<int> read_data;
   std::vector<int> write_data;
   LoadDataFromNimbus(this, da, &read_data);
@@ -254,21 +258,32 @@ Print::Print() {
 };
 
 Job * Print::Clone() {
-  std::cout << "Cloning print job!\n";
+  dbg(DBG_APP, "Cloning print job!\n");
   return new Print();
 };
 
 void Print::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the print job: " << id().elem() << std::endl;
+  dbg(DBG_APP, "Executing the print job: %lu\n", id().elem());
   std::vector<int> read_data;
   std::vector<int> write_data;
   LoadDataFromNimbus(this, da, &read_data);
 
-  std::cout << "OUTPUT: ";
+  std::stringstream ss("");
   for (size_t i = 0; i < read_data.size(); ++i) {
-      std::cout << read_data[i] << ", ";
+    ss << read_data[i] << ", ";
   }
-  std::cout << std::endl;
+  boost::hash<std::string> string_hash;
+  int hash = string_hash(ss.str().c_str());
+
+  size_t final_print;
+  LoadParameter(&params, &final_print);
+  if (final_print) {
+    dbg(DBG_APP, "FINAL RESULT: %s\n", ss.str().c_str());
+    std:: cout << "FINAL HASH: " << hash << std::endl;
+  } else {
+    dbg(DBG_APP, "PARTIAL RESULT: %s\n", ss.str().c_str());
+    std:: cout << "PARTIAL HASH: " << hash << std::endl;
+  }
 
   SaveDataToNimbus(this, da, &write_data);
 };
@@ -278,12 +293,12 @@ Stencil::Stencil(Application* app) {
 };
 
 Job * Stencil::Clone() {
-  std::cout << "Cloning stencil job!\n";
+  dbg(DBG_APP, "Cloning stencil job!\n");
   return new Stencil(application());
 };
 
 void Stencil::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the stencil job: " << id().elem() << std::endl;
+  dbg(DBG_APP, "Executing the stencil job: %lu\n", id().elem());
   std::vector<int> read_data;
   std::vector<int> write_data;
   LoadDataFromNimbus(this, da, &read_data);
