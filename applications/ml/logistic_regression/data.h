@@ -49,6 +49,7 @@
 #include "protobuf_compiled/data_msgs.pb.h"
 
 #define WEIGHT_DATA_NAME "wight"
+#define SCRATCH_WEIGHT_DATA_NAME "scratch_wight"
 #define SAMPLE_BATCH_DATA_NAME "sample_batch"
 
 using namespace nimbus; // NOLINT
@@ -96,7 +97,8 @@ class SampleBatch : public Data {
 
 class Weight : public Data {
   public:
-    explicit Weight(const size_t& dimension);
+    explicit Weight(const size_t& dimension,
+                    const std::string& name);
     virtual ~Weight();
 
     virtual void Create();

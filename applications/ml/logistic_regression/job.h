@@ -48,7 +48,9 @@
 #define INIT_JOB_NAME "init"
 #define LOOP_JOB_NAME "__MARK_STAT_for_loop"
 #define GRADIENT_JOB_NAME "gradient"
-#define REDUCE_JOB_NAME "reduce"
+#define REDUCE_L1_JOB_NAME "reduce_l1"
+#define REDUCE_L2_JOB_NAME "reduce_l2"
+#define REDUCE_L3_JOB_NAME "reduce_l3"
 
 using namespace nimbus; // NOLINT
 
@@ -80,14 +82,25 @@ class Gradient : public Job {
     virtual Job * Clone();
 };
 
-class Reduce : public Job {
+class ReduceL1 : public Job {
   public:
-    explicit Reduce(Application* app);
+    explicit ReduceL1(Application* app);
     virtual void Execute(Parameter params, const DataArray& da);
     virtual Job * Clone();
 };
 
+class ReduceL2 : public Job {
+  public:
+    explicit ReduceL2(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
 
-
+class ReduceL3 : public Job {
+  public:
+    explicit ReduceL3(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
 
 #endif  // NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_JOB_H_

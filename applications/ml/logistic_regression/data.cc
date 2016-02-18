@@ -159,9 +159,10 @@ std::vector<Sample>* SampleBatch::samples() {
 }
 
 
-Weight::Weight(const size_t& dimension)
+Weight::Weight(const size_t& dimension,
+               const std::string& name)
   : dimension_(dimension) {
-  set_name(WEIGHT_DATA_NAME);
+  set_name(name);
 }
 
 Weight::~Weight() {
@@ -178,7 +179,7 @@ void Weight::Destroy() {
 }
 
 Data* Weight::Clone() {
-  return new Weight(dimension_);
+  return new Weight(dimension_, name());
 }
 
 void Weight::Copy(Data* from) {
@@ -223,7 +224,7 @@ bool Weight::DeSerialize(const SerializedData& ser_data, Data** result) {
   data_msgs::WeightMsg weight_msg;
   std::string str(ser_data.data_ptr_raw(), ser_data.size());
   weight_msg.ParseFromString(str);
-  Weight* w = new Weight(dimension_);
+  Weight* w = new Weight(dimension_, name());
   w->Create();
   assert(size_t(weight_msg.vector_elems_size()) == dimension_);
   for (size_t i = 0; i < dimension_; i++) {
