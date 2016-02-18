@@ -52,8 +52,10 @@ class WorkerThreadComputation : public WorkerThread {
   virtual void Run();
 
   pthread_cond_t thread_can_start;
-  Job* next_job_to_run;
-  bool job_assigned;
+  // Job* next_job_to_run;
+  // bool job_assigned;
+  JobList job_list_to_run_;
+  bool job_list_assigned_;
   int used_parallelism;
 
  private:

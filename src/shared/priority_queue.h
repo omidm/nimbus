@@ -67,6 +67,9 @@ class PriorityQueue {
     PriorityQueue();
     virtual ~PriorityQueue();
 
+    size_t l_size() const;
+    size_t h_size() const;
+
     bool empty() const;
     reference front();
     const_reference front() const;
@@ -86,6 +89,16 @@ PriorityQueue<T>::PriorityQueue() {
 
 template<typename T>
 PriorityQueue<T>::~PriorityQueue() {
+}
+
+template<typename T>
+size_t PriorityQueue<T>::l_size() const {
+  return l_queue_.size();
+}
+
+template<typename T>
+size_t PriorityQueue<T>::h_size() const {
+  return h_queue_.size();
 }
 
 template<typename T>

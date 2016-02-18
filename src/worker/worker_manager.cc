@@ -161,23 +161,27 @@ Job* WorkerManager::NextComputationJobToRun(
   ongoing_parallelism_ -= worker_thread->used_parallelism;
   busy_worker_thread_computation_list_.remove(worker_thread);
   idle_worker_thread_computation_list_.push_back(worker_thread);
-  worker_thread->job_assigned = false;
+  // worker_thread->job_assigned = false;
+  worker_thread->job_list_assigned_ = false;
   pthread_mutex_unlock(&scheduling_critical_section_lock_);
 
   TriggerScheduling();
 
   pthread_mutex_lock(&scheduling_critical_section_lock_);
-  while (!worker_thread->job_assigned) {
+  // while (!worker_thread->job_assigned) {
+  while (!worker_thread->job_list_assigned_) {
     pthread_cond_wait(&worker_thread->thread_can_start,
                       &scheduling_critical_section_lock_);
   }
-  worker_thread->job_assigned = false;
-  Job* temp = worker_thread->next_job_to_run;
-  assert(temp != NULL);
-  worker_thread->next_job_to_run = NULL;
+  // worker_thread->job_assigned = false;
+  worker_thread->job_list_assigned_ = false;
+  // Job* temp = worker_thread->next_job_to_run;
+  // assert(temp != NULL);
+  // worker_thread->next_job_to_run = NULL;
   pthread_mutex_unlock(&scheduling_critical_section_lock_);
 
-  return temp;
+  // return temp;
+  return NULL;
 }
 
 bool WorkerManager::SendCommand(SchedulerCommand* command) {
@@ -226,16 +230,31 @@ void WorkerManager::ScheduleComputationJobs() {
     idle_worker_thread_computation_list_.pop_front();
     busy_worker_thread_computation_list_.push_back(worker_thread);
 
-    assert(!worker_thread->job_assigned);
-    worker_thread->next_job_to_run =
-        computation_job_list_.front();
-    computation_job_list_.pop_front();
-    worker_thread->job_assigned = true;
+    // assert(!worker_thread->job_assigned);
+    assert(!worker_thread->job_list_assigned_);
+
+    // worker_thread->next_job_to_run =
+    //     computation_job_list_.front();
+    // computation_job_list_.pop_front();
+    assert(worker_thread->job_list_to_run_.size() == 0);
+    size_t batch_size =
+      size_t(double(computation_job_list_.h_size()) / (double)(WorkerManager::across_job_parallism)); // NOLINT
+    if (batch_size == 0) {
+      batch_size = 1;
+    }
+    for (size_t i = 0; i < batch_size; ++i) {
+      worker_thread->job_list_to_run_.push_back(computation_job_list_.front());
+      computation_job_list_.pop_front();
+    }
+
+    // worker_thread->job_assigned = true;
+    worker_thread->job_list_assigned_ = true;
 
     task_thread_pool_.FreeTaskThreads(worker_thread->allocated_threads);
     worker_thread->allocated_threads.clear();
     if (inside_job_parallism >= 2 ||
-        worker_thread->next_job_to_run->SupportMultiThread()) {
+        // worker_thread->next_job_to_run->SupportMultiThread()) {
+        false) {
       bool status =
           task_thread_pool_.AllocateTaskThreads(
               inside_job_parallism, &worker_thread->allocated_threads);

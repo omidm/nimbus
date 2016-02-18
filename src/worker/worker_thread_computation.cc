@@ -52,8 +52,9 @@ namespace nimbus {
 WorkerThreadComputation::WorkerThreadComputation(WorkerManager* worker_manager)
     : WorkerThread(worker_manager) {
   pthread_cond_init(&thread_can_start, NULL);
-  next_job_to_run = NULL;
-  job_assigned = false;
+  // next_job_to_run = NULL;
+  // job_assigned = false;
+  job_list_assigned_ = false;
   used_parallelism = 0;
 }
 
@@ -66,14 +67,27 @@ void WorkerThreadComputation::Run() {
   timer::StartTimer(timer::kTotal);
   Job* job;
   while (true) {
-    job = worker_manager_->NextComputationJobToRun(this);
-    assert(job != NULL);
-    job->set_worker_thread(this);
-    ExecuteJob(job);
-    job->set_worker_thread(NULL);
-    assert(worker_manager_ != NULL);
-    bool success_flag = worker_manager_->FinishJob(job);
-    assert(success_flag);
+    // job = worker_manager_->NextComputationJobToRun(this);
+    // assert(job != NULL);
+    // job->set_worker_thread(this);
+    // ExecuteJob(job);
+    // job->set_worker_thread(NULL);
+    // assert(worker_manager_ != NULL);
+    // bool success_flag = worker_manager_->FinishJob(job);
+    // assert(success_flag);
+    worker_manager_->NextComputationJobToRun(this);
+    assert(job_list_to_run_.size() > 0);
+    JobList::iterator iter = job_list_to_run_.begin();
+    for (; iter != job_list_to_run_.end(); ++iter) {
+      Job *job = *iter;
+      job->set_worker_thread(this);
+      ExecuteJob(job);
+      job->set_worker_thread(NULL);
+      assert(worker_manager_ != NULL);
+      bool success_flag = worker_manager_->FinishJob(job);
+      assert(success_flag);
+    }
+    job_list_to_run_.clear();
   }
 }
 
