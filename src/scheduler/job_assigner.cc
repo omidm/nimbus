@@ -572,7 +572,8 @@ size_t JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
 
   PhysicalData target_instance;
   if (!data_manager_->GetInstance(ldo, pattern->pdid_, &target_instance)) {
-      dbg(DBG_ERROR, "ERROR: could find pdid %lu.\n", pattern->pdid_);
+      dbg(DBG_ERROR, "ERROR: could not find pdid %lu.\n", pattern->pdid_);
+      assert(false);
   }
   assert(target_instance.id() == pattern->pdid_);
   assert(target_instance.worker() == pattern->worker_id_);

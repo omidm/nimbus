@@ -15,7 +15,7 @@
 # US West (Oregon) Region
 EC2_LOCATION                    = 'us-west-2'
 UBUNTU_AMI                      = 'ami-fa9cf1ca'
-NIMBUS_AMI                      = 'ami-66af4c06'
+NIMBUS_AMI                      = 'ami-451ffc25' # 'ami-86d437e6' # 'ami-9a05e6fa' # 'ami-451ffc25'
 CONTROLLER_INSTANCE_TYPE        = 'c3.4xlarge'
 WORKER_INSTANCE_TYPE            = 'c3.2xlarge'
 PLACEMENT                       = 'us-west-2c' # None
@@ -24,7 +24,7 @@ SECURITY_GROUP                  = 'nimbus_sg_uswest2'
 KEY_NAME                        = 'omidm-sing-key-pair-us-west-2'
 PRIVATE_KEY                     = '/home/omidm/.ssh/' + KEY_NAME + '.pem'
 CONTROLLER_NUM                  = 1
-WORKER_NUM                      = 2
+WORKER_NUM                      = 8
 
 
 #Environment variables
@@ -47,30 +47,39 @@ ACTIVATE_FT                     = False
 LB_PERIOD                       = 60
 FT_PERIOD                       = 600
 FIRST_PORT                      = 5800
-SPLIT_ARGS                      = str(WORKER_NUM) + ' 1 1'
+SPLIT_ARGS                      = '2 2 2' # str(WORKER_NUM) + ' 1 1' '2 2 2' '4 4 4'
 
 
 # Worker configurations
 OTHREAD_NUM                     = 8
-APPLICATION                     = 'lr' # 'k-means' 'water' 
+APPLICATION                     = 'water' # 'lr' 'k-means' 'water' 
+DEACTIVATE_EXECUTION_TEMPLATE   = False
 RUN_WITH_TASKSET                = False
 WORKER_TASKSET                  = '0-1,4-5' # '0-3,8-11'
 
 
 # Application configurations
+# lr and k-means
 DIMENSION                       = 10
 ITERATION_NUM                   = 30
 PARTITION_NUM                   = 2000
 SAMPLE_NUM_M                    = 100
+REDUCTION_PARTITION_NUM         = WORKER_NUM
 
-
-# LR
-LR_APP_OPTIONS  = ' '
-LR_APP_OPTIONS += ' -d ' + str(DIMENSION)
-LR_APP_OPTIONS += ' -i ' + str(ITERATION_NUM)
-LR_APP_OPTIONS += ' --sn ' + str(SAMPLE_NUM_M)
-LR_APP_OPTIONS += ' --pn ' + str(PARTITION_NUM)
-LR_REL_APP_PATH = 'applications/ml/logistic_regression/liblogistic_regression.so' 
-
+# water
+SIMULATION_SCALE                = 512
+PART_X                          = 4
+PART_Y                          = 4
+PART_Z                          = 4
+PROJ_PART_X                     = 4
+PROJ_PART_Y                     = 4
+PROJ_PART_Z                     = 4
+FRAME_NUMBER                    = 1
+ITERATION_BATCH                 = 1
+MAX_ITERATION                   = 100
+WATER_LEVEL                     = 0.35
+PROJECTION_SMART_LEVEL          = 0
+NO_PROJ_BOTTLENECK              = False
+GLOBAL_WRITE                    = False
 
 

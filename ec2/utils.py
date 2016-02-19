@@ -25,6 +25,38 @@ REL_CONTROLLER_PATH             = 'nodes/nimbus_controller/'
 REL_WORKER_PATH                 = 'nodes/nimbus_worker/'
 
 
+# Forming the worker arguments based on options
+
+# lr
+LR_APP_OPTIONS  = ' '
+LR_APP_OPTIONS += ' -d ' + str(config.DIMENSION)
+LR_APP_OPTIONS += ' -i ' + str(config.ITERATION_NUM)
+LR_APP_OPTIONS += ' --sn ' + str(config.SAMPLE_NUM_M)
+LR_APP_OPTIONS += ' --pn ' + str(config.PARTITION_NUM)
+LR_APP_OPTIONS += ' --rpn ' + str(config.REDUCTION_PARTITION_NUM)
+LR_REL_APP_PATH = 'applications/ml/logistic_regression/liblogistic_regression.so' 
+
+# water
+WATER_APP_OPTIONS  = ' '
+WATER_APP_OPTIONS += ' -s ' + str(config.SIMULATION_SCALE)
+WATER_APP_OPTIONS += ' -e ' + str(config.FRAME_NUMBER)
+WATER_APP_OPTIONS += ' --pnx ' + str(config.PART_X)
+WATER_APP_OPTIONS += ' --pny ' + str(config.PART_Y)
+WATER_APP_OPTIONS += ' --pnz ' + str(config.PART_Z)
+WATER_APP_OPTIONS += ' --ppnx ' + str(config.PROJ_PART_X)
+WATER_APP_OPTIONS += ' --ppny ' + str(config.PROJ_PART_Y)
+WATER_APP_OPTIONS += ' --ppnz ' + str(config.PROJ_PART_Z)
+WATER_APP_OPTIONS += ' --maxi ' + str(config.MAX_ITERATION)
+WATER_APP_OPTIONS += ' --psl ' + str(config.PROJECTION_SMART_LEVEL)
+WATER_APP_OPTIONS += ' --wl ' + str(config.WATER_LEVEL)
+WATER_APP_OPTIONS += ' --ibatch ' + str(config.ITERATION_BATCH)
+if not config.GLOBAL_WRITE:
+  WATER_APP_OPTIONS += ' --dgw '
+if config.NO_PROJ_BOTTLENECK:
+  WATER_APP_OPTIONS += ' --dpb '
+WATER_REL_APP_PATH = 'applications/physbam/water/libwater_app.so'
+
+
 def start_experiment(controller_ip, controller_p_ip, worker_ips, worker_p_ips):
   worker_num = len(worker_ips)
   start_controller(controller_ip, worker_num);
@@ -96,9 +128,14 @@ def start_worker(controller_p_ip, worker_ip, worker_p_ip, num):
   worker_command += ' --cip ' + controller_p_ip
   worker_command += ' --cport ' + str(config.FIRST_PORT)
   worker_command += ' --othread ' + str(config.OTHREAD_NUM)
+  if config.DEACTIVATE_EXECUTION_TEMPLATE:
+    worker_command += ' --det '
   if (config.APPLICATION == 'lr'):
-    worker_command += ' -l ' + str(config.LR_REL_APP_PATH)
-    worker_command += ' ' + str(config.LR_APP_OPTIONS)
+    worker_command += ' -l ' + str(LR_REL_APP_PATH)
+    worker_command += ' ' + str(LR_APP_OPTIONS)
+  elif (config.APPLICATION == 'water'):
+    worker_command += ' -l ' + str(WATER_REL_APP_PATH)
+    worker_command += ' ' + str(WATER_APP_OPTIONS)
   else:
     print "ERROR: unknown application: " + config.APPLICATION
     exit(0)
