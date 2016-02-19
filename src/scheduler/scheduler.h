@@ -132,6 +132,7 @@ class Scheduler {
     virtual void ProcessDefineDataCommand(DefineDataCommand* cm);
     virtual void ProcessHandshakeCommand(HandshakeCommand* cm);
     virtual void ProcessJobDoneCommand(JobDoneCommand* cm);
+    virtual void ProcessMegaJobDoneCommand(MegaJobDoneCommand* cm);
     virtual void ProcessDefinePartitionCommand(DefinePartitionCommand* cm);
     virtual void ProcessTerminateCommand(TerminateCommand* cm);
     virtual void ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm);

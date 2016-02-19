@@ -120,6 +120,7 @@ message SchedulerPBuf{
      RESPOND_STAT           = 35;
      PRINT_STAT             = 36;
      MEGA_RCR               = 37;
+     MEGA_JOB_DONE          = 38;
   }
   required Type type = 1;
 
@@ -161,6 +162,7 @@ message SchedulerPBuf{
   optional RespondStatPBuf respond_stat                    = 35;
   optional PrintStatPBuf print_stat                        = 36;
   optional MegaRCRPBuf mega_rcr                            = 37;
+  optional MegaJobDonePBuf mega_job_done                   = 38;
 }
 
 message AddComputeJobPBuf {
@@ -344,6 +346,10 @@ message MegaRCRPBuf {
   optional uint64 job_id                = 1;
   optional JobIDVector receive_job_ids  = 2; 
   optional PhyIDVector to_phy_ids       = 3; 
+}
+
+message MegaJobDonePBuf {
+  optional JobIDVector job_ids     = 1; 
 }
 
 message LocalCopyPBuf {

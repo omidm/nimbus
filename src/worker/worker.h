@@ -216,7 +216,7 @@ class Worker {
   virtual void ProcessRCREvent(const WorkerDataExchanger::Event& event);
   virtual void ProcessMegaRCREvent(const WorkerDataExchanger::Event& event);
 
-  virtual void SendJobDoneAndDeleteJob(Job* job, bool template_job);
+  virtual void SendJobDoneAndDeleteJob(Job* job);
 
   virtual void ClearBlockedJobs();
   virtual bool AllReadyJobsAreDone();

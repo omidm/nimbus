@@ -331,6 +331,9 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::JOB_DONE:
       ProcessJobDoneCommand(reinterpret_cast<JobDoneCommand*>(cm));
       break;
+    case SchedulerCommand::MEGA_JOB_DONE:
+      ProcessMegaJobDoneCommand(reinterpret_cast<MegaJobDoneCommand*>(cm));
+      break;
     case SchedulerCommand::DEFINE_PARTITION:
       ProcessDefinePartitionCommand(reinterpret_cast<DefinePartitionCommand*>(cm));
       break;
@@ -553,6 +556,13 @@ void Scheduler::ProcessRespondStatCommand(RespondStatCommand* cm) {
   std::cout << "Stat Block: " << cm->block_time() / (double)1000000000 << std::endl; // NOLINT
   std::cout << "Stat Idle:  " << cm->idle_time() / (double)1000000000 << std::endl; // NOLINT
   std::cout << "*******************************" << cm->worker_id() << std::endl; // NOLINT
+}
+
+void Scheduler::ProcessMegaJobDoneCommand(MegaJobDoneCommand* cm) {
+  std::vector<job_id_t>::const_iterator iter = cm->job_ids_p()->begin();
+  for (; iter != cm->job_ids_p()->end(); ++iter) {
+    job_manager_->NotifyJobDone(*iter);
+  }
 }
 
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
@@ -899,6 +909,7 @@ void Scheduler::LoadWorkerCommands() {
   worker_command_table_[SchedulerCommand::DEFINE_DATA]        = new DefineDataCommand();
   worker_command_table_[SchedulerCommand::HANDSHAKE]          = new HandshakeCommand();
   worker_command_table_[SchedulerCommand::JOB_DONE]           = new JobDoneCommand();
+  worker_command_table_[SchedulerCommand::MEGA_JOB_DONE]      = new MegaJobDoneCommand();
   worker_command_table_[SchedulerCommand::DEFINE_PARTITION]   = new DefinePartitionCommand();
   worker_command_table_[SchedulerCommand::TERMINATE]          = new TerminateCommand();
   worker_command_table_[SchedulerCommand::PROFILE]            = new ProfileCommand();

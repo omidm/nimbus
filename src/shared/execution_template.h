@@ -103,6 +103,8 @@ class ExecutionTemplate {
                      bool &prepare_rewind_phase,
                      bool append);
 
+    bool GenerateMegaJobDoneCommand(MegaJobDoneCommand **cm);
+
     void ProcessReceiveEvent(const WorkerDataExchanger::Event& event,
                              JobList *ready_jobs,
                              bool append);
@@ -318,6 +320,8 @@ class ExecutionTemplate {
 
     JobIdPtrMap outer_job_id_map_;
     JobIdPtrList outer_job_id_list_;
+
+    JobIdPtrList compute_job_id_list_;
 
     JobTemplateMap job_templates_;
     JobTemplateVector job_templates_list_;

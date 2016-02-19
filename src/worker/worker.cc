@@ -957,7 +957,8 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
 
 void Worker::NotifyLocalJobDone(Job* job) {
   bool template_job = false;
-  bool sent_job_done = false;
+  bool need_to_send_job_done = true;
+  MegaJobDoneCommand *mega_job_done_comm = NULL;
   {
     timer::StartTimer(timer::kJobGraph3);
     boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
@@ -973,6 +974,7 @@ void Worker::NotifyLocalJobDone(Job* job) {
       JobList ready_jobs;
       if (et->MarkJobDone(shadow_job_id, &ready_jobs, prepare_rewind_phase_, false)) {
         assert(ready_jobs.size() == 0);
+        et->GenerateMegaJobDoneCommand(&mega_job_done_comm);
         std::map<template_id_t, ExecutionTemplate*>::iterator iter =
           active_execution_templates_.find(et->template_generation_id());
         assert(iter != active_execution_templates_.end());
@@ -1020,26 +1022,33 @@ void Worker::NotifyLocalJobDone(Job* job) {
       // vertex->entry()->set_job(NULL);
     }
 
-    // If in the prepare rewind phase, then send job done within the lock to
-    // make sure that the job done is sent before prepare rewind command. For
-    // other case job done sending does not need to be protected so for the
-    // sake of performance do it out of the locked section. -omidm
+    // If in the prepare rewind phase, then there is no need to send the job
+    // done command. because we do not need to make progress anymore. Note that
+    // if you decided to send the job done, then make sure that it is sent
+    // within the lock to make sure that the job done is sent before prepare
+    // rewind command. For other case job done sending does not need to be
+    // protected so for the sake of performance do it out of the locked
+    // section. -omidm
     if (prepare_rewind_phase_) {
-      sent_job_done = true;
-      SendJobDoneAndDeleteJob(job, template_job);
+      need_to_send_job_done = false;
     }
 
     job_graph_cond_.notify_all();
   }
 
-  if (!sent_job_done) {
-    SendJobDoneAndDeleteJob(job, template_job);
+  if (need_to_send_job_done) {
+    if (!template_job)
+      SendJobDoneAndDeleteJob(job);
+    else if (mega_job_done_comm != NULL) {
+      client_->SendCommand(mega_job_done_comm);
+      delete mega_job_done_comm;
+    }
   }
 
   timer::StopTimer(timer::kJobGraph3);
 }
 
-void Worker::SendJobDoneAndDeleteJob(Job* job, bool template_job) {
+void Worker::SendJobDoneAndDeleteJob(Job* job) {
   Parameter params;
   SaveDataJob *j = dynamic_cast<SaveDataJob*>(job); // NOLINT
   if (j != NULL) {
@@ -1051,9 +1060,7 @@ void Worker::SendJobDoneAndDeleteJob(Job* job, bool template_job) {
     client_->SendCommand(&cm);
   }
 
-  if  (!template_job) {
-    delete job;
-  }
+  delete job;
 }
 
 void Worker::NotifyJobDone(job_id_t job_id, bool final) {

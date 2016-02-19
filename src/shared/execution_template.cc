@@ -146,6 +146,10 @@ bool ExecutionTemplate::Finalize() {
   JobTemplateMap::iterator iter = job_templates_.begin();
   for (; iter != job_templates_.end(); ++iter) {
     JobTemplate *jt = iter->second;
+    if (jt->type_ == COMPUTE) {
+      compute_job_id_list_.push_back(jt->job_id_ptr_);
+    }
+
     job_templates_list_.push_back(jt);
     if (jt->dependency_num_ == 0) {
       seed_job_templates_.push_back(jt);
@@ -327,6 +331,22 @@ bool ExecutionTemplate::MarkJobDone(const job_id_t& shadow_job_id,
 
   return et_complete;
 }
+
+bool ExecutionTemplate::GenerateMegaJobDoneCommand(MegaJobDoneCommand **cm) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  assert(finalized_);
+  std::vector<job_id_t> job_ids;
+
+  JobIdPtrList::iterator iter = compute_job_id_list_.begin();
+  for (; iter != compute_job_id_list_.end(); ++iter) {
+    job_ids.push_back(*(*iter));
+  }
+
+  *cm = new MegaJobDoneCommand(job_ids);
+  return true;
+}
+
+
 
 void ExecutionTemplate::ProcessReceiveEvent(const WorkerDataExchanger::Event& e,
                                             JobList *ready_jobs,

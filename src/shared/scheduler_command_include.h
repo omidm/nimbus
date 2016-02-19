@@ -52,6 +52,7 @@
 #include "src/shared/remote_copy_send_command.h"
 #include "src/shared/remote_copy_receive_command.h"
 #include "src/shared/mega_rcr_command.h"
+#include "src/shared/mega_job_done_command.h"
 #include "src/shared/local_copy_command.h"
 #include "src/shared/job_done_command.h"
 #include "src/shared/define_data_command.h"
