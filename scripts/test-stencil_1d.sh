@@ -123,6 +123,7 @@ function check_hash {
   local final_hash=$(grep "FINAL HASH" logs/workers/*/stdout  | sed 's/.*FINAL HASH: //')
   if [ "${final_hash}" == "$1" ]; then
     echo -e "${Gre}[ SUCCESS ] hash value matches!${RCol}"
+    make ${NIMBUS_HOME}/ clean-logs &> /dev/null
   else
     echo -e "${Red}[ FAILED  ] hash value does not match! [${final_hash} != $1]${RCol}"
     exit 1
@@ -136,10 +137,9 @@ if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
 fi
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
-echo -e "${Cya}    a. single-threaded controller${RCol}"
-echo -e "${Cya}    b. one single-threaded worker${RCol}"
-echo -e "${Cya}    c. one application partition${RCol}"
-echo -e "${Cya}    d. without any templates${RCol}"
+echo -e "${Cya}CONTROLLER  : single-threaded w/o templates${RCol}"
+echo -e "${Cya}WORKERS     : one, single-threaded w/o templates${RCol}"
+echo -e "${Cya}APPLICATION : one application partition${RCol}"
 run_experiment "--dct" "1" "--pn 1 --cpp ${CHUNK_NUM}" 
 correct_hash=$(get_final_hash)
 if ! [ -z ${correct_hash} ]; then
@@ -151,82 +151,89 @@ fi
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
-echo -e "${Cya}    a. single-threaded controller${RCol}"
-echo -e "${Cya}    b. one single-threaded worker${RCol}"
-echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
-echo -e "${Cya}    d. without any templates${RCol}"
+echo -e "${Cya}CONTROLLER  : single-threaded w/o templates${RCol}"
+echo -e "${Cya}WORKERS     : one, single-threaded w/o templates${RCol}"
+echo -e "${Cya}APPLICATION : ${CHUNK_NUM} application partition${RCol}"
 run_experiment "--dct" "1" "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
-echo -e "${Cya}    a. multi-threaded controller${RCol}"
-echo -e "${Cya}    b. one single-threaded worker${RCol}"
-echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
-echo -e "${Cya}    d. without any templates${RCol}"
+echo -e "${Cya}CONTROLLER  : multi-threaded w/o templates${RCol}"
+echo -e "${Cya}WORKERS     : one, single-threaded w/o templates${RCol}"
+echo -e "${Cya}APPLICATION : ${CHUNK_NUM} application partition${RCol}"
 run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM} --dct" "1" "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
-echo -e "${Cya}    a. multi-threaded controller${RCol}"
-echo -e "${Cya}    b. one single-threaded worker${RCol}"
-echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
-echo -e "${Cya}    d. with only controller templates${RCol}"
+echo -e "${Cya}CONTROLLER  : multi-threaded w/ controller template${RCol}"
+echo -e "${Cya}WORKERS     : one, single-threaded w/o templates${RCol}"
+echo -e "${Cya}APPLICATION : ${CHUNK_NUM} application partition${RCol}"
 run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM} --dbm" "1" "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
-echo -e "${Cya}    a. multi-threaded controller${RCol}"
-echo -e "${Cya}    b. one single-threaded worker${RCol}"
-echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
-echo -e "${Cya}    d. with controller and worker templates${RCol}"
+echo -e "${Cya}CONTROLLER  : multi-threaded w/ controller template and binding memoization${RCol}"
+echo -e "${Cya}WORKERS     : one, single-threaded w/o templates${RCol}"
+echo -e "${Cya}APPLICATION : ${CHUNK_NUM} application partition${RCol}"
+run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM} --dcb --dwt" "1" "--pn ${CHUNK_NUM} --cpp 1" 
+check_hash "${correct_hash}"
+
+
+echo -e "${Cya}Ruunnig experiment for:${RCol}"
+echo -e "${Cya}CONTROLLER  : multi-threaded w/ controller template and cascaded binding${RCol}"
+echo -e "${Cya}WORKERS     : one, single-threaded w/o templates${RCol}"
+echo -e "${Cya}APPLICATION : ${CHUNK_NUM} application partition${RCol}"
+run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM} --dwt" "1" "--pn ${CHUNK_NUM} --cpp 1" 
+check_hash "${correct_hash}"
+
+
+echo -e "${Cya}Ruunnig experiment for:${RCol}"
+echo -e "${Cya}CONTROLLER  : multi-threaded w/ controller template and cascaded binding${RCol}"
+echo -e "${Cya}WORKERS     : one, single-threaded w/ worker template${RCol}"
+echo -e "${Cya}APPLICATION : ${CHUNK_NUM} application partition${RCol}"
 run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM}" "1 --det " "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
-echo -e "${Cya}    a. multi-threaded controller${RCol}"
-echo -e "${Cya}    b. one single-threaded worker${RCol}"
-echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
-echo -e "${Cya}    d. with controller, worker, and execution templates${RCol}"
+echo -e "${Cya}CONTROLLER  : multi-threaded w/ controller template and cascaded binding${RCol}"
+echo -e "${Cya}WORKERS     : one, single-threaded w/ worker and execution template${RCol}"
+echo -e "${Cya}APPLICATION : ${CHUNK_NUM} application partition${RCol}"
 run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM}" "1" "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
-echo -e "${Cya}    a. multi-threaded controller${RCol}"
-echo -e "${Cya}    b. two single-threaded worker${RCol}"
-echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
-echo -e "${Cya}    d. with controller, worker, and execution templates${RCol}"
+echo -e "${Cya}CONTROLLER  : multi-threaded w/ controller template and cascaded binding${RCol}"
+echo -e "${Cya}WORKERS     : two, single-threaded w/ worker and execution template${RCol}"
+echo -e "${Cya}APPLICATION : ${CHUNK_NUM} application partition${RCol}"
 run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM} -w 2 --split 2 1 1" "2" "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
-echo -e "${Cya}    a. multi-threaded controller${RCol}"
-echo -e "${Cya}    b. four single-threaded worker${RCol}"
-echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
-echo -e "${Cya}    d. with controller, worker, and execution templates${RCol}"
+echo -e "${Cya}CONTROLLER  : multi-threaded w/ controller template and cascaded binding${RCol}"
+echo -e "${Cya}WORKERS     : four, single-threaded w/ worker and execution template${RCol}"
+echo -e "${Cya}APPLICATION : ${CHUNK_NUM} application partition${RCol}"
 run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM} -w 4 --split 4 1 1" "4" "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
-echo -e "${Cya}    a. multi-threaded controller${RCol}"
-echo -e "${Cya}    b. one multi-threaded worker${RCol}"
-echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
-echo -e "${Cya}    d. with controller, worker, and execution templates${RCol}"
+echo -e "${Cya}CONTROLLER  : multi-threaded w/ controller template and cascaded binding${RCol}"
+echo -e "${Cya}WORKERS     : one, multi-threaded w/ worker and execution template${RCol}"
+echo -e "${Cya}APPLICATION : ${CHUNK_NUM} application partition${RCol}"
 run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM}" "1 --othread ${THREAD_NUM}" "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
-echo -e "${Cya}    a. multi-threaded controller${RCol}"
-echo -e "${Cya}    b. four multi-threaded worker${RCol}"
-echo -e "${Cya}    c. ${CHUNK_NUM} application partitions${RCol}"
-echo -e "${Cya}    d. with controller, worker, and execution templates${RCol}"
+echo -e "${Cya}CONTROLLER  : multi-threaded w/ controller template and cascaded binding${RCol}"
+echo -e "${Cya}WORKERS     : four, multi-threaded w/ worker and execution template${RCol}"
+echo -e "${Cya}APPLICATION : ${CHUNK_NUM} application partition${RCol}"
 run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM} -w 4 --split 4 1 1" "4 --othread ${THREAD_NUM}" "--pn ${CHUNK_NUM} --cpp 1" 
 check_hash "${correct_hash}"
 
