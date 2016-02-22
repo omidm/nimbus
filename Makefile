@@ -44,7 +44,7 @@ clean-logs:
 .PHONY: test test-basic test-water
 
 test-basic: extern src nodes applications
-	scripts/test-stencil_1d.sh
+	scripts/test-stencil-basic.sh
 
 test-water: extern src nodes applications
 	scripts/test-water.sh

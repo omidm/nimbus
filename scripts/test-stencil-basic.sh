@@ -53,12 +53,13 @@ Whi='\x1B[0;97m';
 # **************************
 
 function print_usage {
-  echo -e "${Cya}Runs comprehenvive tests for controller/worker"
+  echo -e "${Cya}Runs comprehensive tests for controller/worker"
   echo -e "${Cya}against stencil_1d application, tests include: "
-  echo -e "   1. XXXX:"
-  echo -e "   2. YYYY:"
+  echo -e "   1. single and multiple application partitions."
+  echo -e "   2. multi-threaded controller and workers."
+  echo -e "   3. different components of templates."
   echo -e "\nUsage:"
-  echo -e "./scripts/test-stencil_1d.sh"
+  echo -e "./scripts/test-stencil-basic.sh"
   echo -e "${RCol}"
 }
 

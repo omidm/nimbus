@@ -77,10 +77,10 @@ if [ -z "${TTIMER}" ]; then
   export TTIMER="l1"
 fi
 
-echo -e "${Red}WARNING: this test requires building physbam librray and applications first.${RCol}"
-echo -e "${Red}         if not built yet, you can issue \'make physbam\' in the nimbus root.${RCol}"
-echo -e "${Red}         it is not automated since physbam Makefile is flaky and it may build${RCol}"
-echo -e "${Red}         everything from scratch again, even after successful build.${RCol}"
+echo -e "${Yel}WARNING: this test requires building physbam librray and applications first.${RCol}"
+echo -e "${Yel}         if not built yet, you can issue \'make physbam\' in the nimbus root.${RCol}"
+echo -e "${Yel}         it is not automated since physbam Makefile is flaky and it may build${RCol}"
+echo -e "${Yel}         everything from scratch again, even after successful build.${RCol}"
 
 
 echo -e "${Cya}Checking that old output files are removed:${RCol}"
@@ -176,9 +176,10 @@ echo -e "${Gre}[ VISUAL CHECK ] hit p (play/stop play), s (step forward), ctrl+s
 echo -e "${Gre}[ VISUAL CHECK ] by default it starts playing simulation and there are 10 frames!${RCol}"
 
 
-echo -e "${Gre}[ VISUAL CHECK ] window closes in 10 seconds!${RCol}"
+echo -e "${Gre}[ VISUAL CHECK ] window closes and the logs are cleaned in 10 seconds!${RCol}"
 sleep 10
 xdotool windowactivate --sync ${WINDOWID} key --clearmodifiers --delay 100 alt+F4
+make ${NIMBUS_HOME}/ clean-logs &> /dev/null
 
 # if running the test over ssh -X use this command to close!
 # wmctrl -c "opengl"
