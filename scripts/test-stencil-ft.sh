@@ -52,12 +52,13 @@ Cya='\x1B[0;96m';
 Whi='\x1B[0;97m';
 # **************************
 
-function print_usage {
-  echo -e "${Cya}Runs fault tolerance tests against stencil_1d application."
-  echo -e "\nUsage:"
-  echo -e "./scripts/test-stencil-ft.sh"
-  echo -e "${RCol}"
-}
+source scripts/test-utils.sh
+
+
+DESC="Runs fault tolerance tests against stencil_1d application."
+USAGE="./scripts/test-stencil-ft.sh"
+
+print_help "${DESC}" "${USAGE}" "$1"
 
 ITER_NUM=500
 CHUNK_NUM=16
@@ -69,147 +70,19 @@ FT_PERIOD=2
 FAULT_DELAY=5
 CHKP_NUM=2 # FAULT_DELAY / FT_PERIOD
 
+
 CONTROLLER_ARGS="-t ${THREAD_NUM} -a ${BATCH_NUM} -w 4 --split 4 1 1"
 CONTROLLER_ARGS_FT="--aft --ft_period ${FT_PERIOD} -t ${THREAD_NUM} -a ${BATCH_NUM} -w 4 --split 4 1 1"
 WORKER_ARGS="4 --othread ${THREAD_NUM}"
 APPLICATION_ARGS="-i ${ITER_NUM} --pn ${CHUNK_NUM} --cpp 1"
-
-
-
-if [ -z "${NIMBUS_HOME}" ]; then
-  export NIMBUS_HOME="$(cd "`dirname "$0"`"/..; pwd)"
-fi
-
-if [ -z "${DBG}" ]; then
-  export DBG="error"
-fi
-
-if [ -z "${TTIMER}" ]; then
-  export TTIMER="l1"
-fi
-
-
-# start_experiment controller_args worker_args app_args
-function start_experiment {
-  make ${NIMBUS_HOME}/ clean-logs &> /dev/null
-  ${NIMBUS_HOME}/scripts/stop-workers.sh &> /dev/null
-  ${NIMBUS_HOME}/scripts/stop-controller.sh &> /dev/null
-  ${NIMBUS_HOME}/scripts/start-controller.sh $1 &> /dev/null
-  ${NIMBUS_HOME}/scripts/start-workers.sh $2 -l applications/simple/stencil_1d/libstencil_1d.so $3 &> /dev/null
-}
-
-# wait_with_bar seconds
-function wait_with_bar {
-  progress_bar="waiting ..."
-  for i in $(seq $1)
-  do
-    echo -ne "${Yel}${progress_bar} \r${RCol}"
-    progress_bar=${progress_bar}"."
-    sleep 1
-  done
-}
-
-# wait_to_finish
-function wait_to_finish {
-  start_time=$(date +%s)
-  end_time=$(date +%s)
-  progress_bar="waiting ..."
-  success=0
-  while [ "$((${end_time}-${start_time}))" -lt "${TIME_OUT_T}" ]; do
-    success=$(cat ${NIMBUS_HOME}/logs/controller/stdout | grep -c "Simulation Terminated")
-    if [ ${success} == "1" ]; then
-      end_time=$(date +%s)
-      break
-    else
-      end_time=$(date +%s)
-      echo -ne "${Yel}${progress_bar} \r${RCol}"
-      progress_bar=${progress_bar}"."
-      sleep 1
-    fi
-  done
-  
-  if [ ${success} != "1" ]; then
-    echo -e "${Red}[ TIMEOUT ] experiment did not finish before time out!${RCol}"
-    exit 1
-  fi
-}
-
-function get_final_hash {
-  sync
-  local final_hash=$(grep "FINAL HASH" logs/workers/*/stdout  | sed 's/.*FINAL HASH: //')
-  echo "${final_hash}"
-}
-
-# check_hash correct_hash
-function check_hash {
-  sync
-  local final_hash=$(grep "FINAL HASH" logs/workers/*/stdout  | sed 's/.*FINAL HASH: //')
-  if [ "${final_hash}" == "$1" ]; then
-    echo -e "${Gre}[ SUCCESS ] hash value matches!${RCol}"
-  else
-    echo -e "${Red}[ FAILED  ] hash value does not match! [${final_hash} != $1]${RCol}"
-    exit 1
-  fi
-}
-
-function kill_one_worker {
-  WORKER_PIDS=$(ps -fu $USER| grep "nimbus_worker" | grep -v "grep" | awk '{print $2}')
-  for pid in ${WORKER_PIDS}
-  do
-    echo -e "${Cya}Killing nimbus worker with pid: ${pid}${RCol}"
-    kill ${pid}
-    break
-  done
-}
-
-function pause_controller {
-  CONTROLLER_PID=$(ps -fu $USER| grep "nimbus_controller" | grep -v "grep" | awk '{print $2}')
-  echo -e "${Cya}Pausing nimbus controller with pid: ${CONTROLLER_PID}${RCol}"
-  kill -STOP ${CONTROLLER_PID}
-}
-
-function resume_controller {
-  CONTROLLER_PID=$(ps -fu $USER| grep "nimbus_controller" | grep -v "grep" | awk '{print $2}')
-  echo -e "${Cya}Resuming nimbus controller with pid: ${CONTROLLER_PID}${RCol}"
-  kill -CONT ${CONTROLLER_PID}
-}
-
-
-# check_checkpoints min_count
-function check_checkpoints {
-  local count=$(cat ${NIMBUS_HOME}/logs/controller/stdout | grep -c "Checkpoint")
-  if [ ${count} -lt "$1" ]; then
-    echo -e "${Red}[ FAILED  ] controller did not make enough checkpoints, only ${count}!${RCol}"
-  else
-    echo -e "${Gre}[ SUCCESS ] controller made ${count} checkpoints.${RCol}"
-  fi
-}
-
-# check_rewinding count
-function check_rewinding {
-  local count=$(cat ${NIMBUS_HOME}/logs/controller/stdout | grep -c "Rewind")
-  if [ ${count} == "$1" ]; then
-    echo -e "${Gre}[ SUCCESS ] controller performd $1 rewindings.${RCol}"
-  else
-    echo -e "${Red}[ FAILED  ] controller did not perform enough rewinding, only ${count}!${RCol}"
-    exit 1
-  fi
-}
-
-
-
-if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
-  print_usage
-  exit 0
-fi
+APPLICATION_LIB="applications/simple/stencil_1d/libstencil_1d.so"
 
 
 echo -e "${Cya}Ruunnig the base experiment without faults:${RCol}"
 while true; do
-  start_experiment "${CONTROLLER_ARGS}" "${WORKER_ARGS}" "${APPLICATION_ARGS}"
-  wait_to_finish
+  start_experiment "${CONTROLLER_ARGS}" "${WORKER_ARGS}" "${APPLICATION_LIB}" "${APPLICATION_ARGS}"
+  wait_to_succeed basic_completion_check ${TIME_OUT_T}
  
-  ELAPSED=$((${end_time}-${start_time}))
   NORM_ELAPSED=${ELAPSED}
   if [ "${ELAPSED}" -gt "4" ]; then
     NORM_ELAPSED=$((${ELAPSED}-4))
@@ -224,17 +97,12 @@ while true; do
     break
   fi
 done
-base_hash=$(get_final_hash)
-if ! [ -z ${base_hash} ]; then
-  echo -e "${Gre}[ SUCCESS ] got the hash value of ${base_hash}.${RCol}"
-else
-  echo -e "${Red}[ FAILED  ] could not get the hash value!.${RCol}"
-  exit 1
-fi
+get_hash "FINAL HASH"
+correct_hash=${HASH}
 
 
 echo -e "${Cya}Ruunnig the experiment with faults:${RCol}"
-start_experiment "${CONTROLLER_ARGS_FT}" "${WORKER_ARGS}" "${APPLICATION_ARGS}"
+start_experiment "${CONTROLLER_ARGS_FT}" "${WORKER_ARGS}" "${APPLICATION_LIB}" "${APPLICATION_ARGS}"
 
 echo -e "${Cya}Waiting ${FAULT_DELAY} seconds before killing the first worker...${RCol}"
 wait_with_bar ${FAULT_DELAY}
@@ -257,15 +125,13 @@ check_checkpoints $((3*${CHKP_NUM}))
 kill_one_worker
 resume_controller
 
-wait_to_finish
-ELAPSED=$((${end_time}-${start_time}+3*${FAULT_DELAY}))
-echo -e "${Gre}[ SUCCESS ] experiment with fault finished in ${ELAPSED} seconds.${RCol}"
+wait_to_succeed basic_completion_check ${TIME_OUT_T}
+echo -e "${Gre}[ SUCCESS ] experiment with fault finished in $((${ELAPSED}+3*${FAULT_DELAY})) seconds.${RCol}"
 check_rewinding 3
-check_hash "${base_hash}"
+check_hash "FINAL HASH" "${correct_hash}"
 
 
-
-make ${NIMBUS_HOME}/ clean-logs &> /dev/null
+clean_logs
 echo -e "${Gre}\n[ PASSED  ] stencil fault tolerance test passed successfuly!${RCol}"
 exit 0
 

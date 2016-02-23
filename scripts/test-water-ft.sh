@@ -52,12 +52,13 @@ Cya='\x1B[0;96m';
 Whi='\x1B[0;97m';
 # **************************
 
-function print_usage {
-  echo -e "${Cya}Runs water simulation againts nimbus with two workers."
-  echo -e "\nUsage:"
-  echo -e "./scripts/test-water.sh"
-  echo -e "${RCol}"
-}
+source scripts/test-utils.sh
+
+
+DESC="Runs water simulation againts nimbus with two workers and checks fault tolerance."
+USAGE="./scripts/test-water-ft"
+
+print_help "${DESC}" "${USAGE}" "$1"
 
 
 TIME_OUT_T=100
@@ -67,100 +68,8 @@ CHKP_NUM=2 # FAULT_DELAY / FT_PERIOD
 
 CONTROLLER_ARGS="--aft --ft_period ${FT_PERIOD} -t 4 -a 6 -w 2 --split 1 2 1 --dcb"
 WORKER_ARGS="2 --othread 2 "
-WATER_ARGS="--wl 0.35 -e 10"
-
-if [ -z "${NIMBUS_HOME}" ]; then
-  export NIMBUS_HOME="$(cd "`dirname "$0"`"/..; pwd)"
-fi
-
-if [ -z "${DBG}" ]; then
-  export DBG="error"
-fi
-
-if [ -z "${TTIMER}" ]; then
-  export TTIMER="l1"
-fi
-
-
-# wait_with_bar seconds
-function wait_with_bar {
-  progress_bar="waiting ..."
-  for i in $(seq $1)
-  do
-    echo -ne "${Yel}${progress_bar} \r${RCol}"
-    progress_bar=${progress_bar}"."
-    sleep 1
-  done
-}
-
-# wait_to_finish
-function wait_to_finish {
-  start_time=$(date +%s)
-  end_time=$(date +%s)
-  progress_bar="waiting ..."
-  success=0
-  while [ "$((${end_time}-${start_time}))" -lt "${TIME_OUT_T}" ]; do
-    success=$(cat ${NIMBUS_HOME}/logs/controller/stdout | grep -c "Simulation Terminated")
-    if [ ${success} == "1" ]; then
-      end_time=$(date +%s)
-      break
-    else
-      end_time=$(date +%s)
-      echo -ne "${Yel}${progress_bar} \r${RCol}"
-      progress_bar=${progress_bar}"."
-      sleep 1
-    fi
-  done
-  
-  if [ ${success} != "1" ]; then
-    echo -e "${Red}[ TIMEOUT ] experiment did not finish before time out!${RCol}"
-    exit 1
-  fi
-}
-
-function kill_one_worker {
-  WORKER_PIDS=$(ps -fu $USER| grep "nimbus_worker" | grep -v "grep" | awk '{print $2}')
-  for pid in ${WORKER_PIDS}
-  do
-    echo -e "${Cya}Killing nimbus worker with pid: ${pid}${RCol}"
-    kill ${pid}
-    break
-  done
-}
-
-function pause_controller {
-  CONTROLLER_PID=$(ps -fu $USER| grep "nimbus_controller" | grep -v "grep" | awk '{print $2}')
-  echo -e "${Cya}Pausing nimbus controller with pid: ${CONTROLLER_PID}${RCol}"
-  kill -STOP ${CONTROLLER_PID}
-}
-
-function resume_controller {
-  CONTROLLER_PID=$(ps -fu $USER| grep "nimbus_controller" | grep -v "grep" | awk '{print $2}')
-  echo -e "${Cya}Resuming nimbus controller with pid: ${CONTROLLER_PID}${RCol}"
-  kill -CONT ${CONTROLLER_PID}
-}
-
-
-# check_checkpoints min_count
-function check_checkpoints {
-  local count=$(cat ${NIMBUS_HOME}/logs/controller/stdout | grep -c "Checkpoint")
-  if [ ${count} -lt "$1" ]; then
-    echo -e "${Red}[ FAILED  ] controller did not make enough checkpoints, only ${count}!${RCol}"
-  else
-    echo -e "${Gre}[ SUCCESS ] controller made ${count} checkpoints.${RCol}"
-  fi
-}
-
-# check_rewinding count
-function check_rewinding {
-  local count=$(cat ${NIMBUS_HOME}/logs/controller/stdout | grep -c "Rewind")
-  if [ ${count} == "$1" ]; then
-    echo -e "${Gre}[ SUCCESS ] controller performd $1 rewindings.${RCol}"
-  else
-    echo -e "${Red}[ FAILED  ] controller did not perform enough rewinding, only ${count}!${RCol}"
-    exit 1
-  fi
-}
+APPLICATION_ARGS="--wl 0.35 -e 10"
+APPLICATION_LIB="applications/physbam/water/libwater_app.so"
 
 
 echo -e "${Yel}[ WARNING ] this test requires building physbam librray and applications first.${RCol}"
@@ -185,10 +94,7 @@ fi
 
 echo -e "${Cya}Ruunnig water simulation with two workers against nimbus controller:${RCol}"
 
-${NIMBUS_HOME}/scripts/stop-workers.sh &> /dev/null
-${NIMBUS_HOME}/scripts/stop-controller.sh &> /dev/null
-${NIMBUS_HOME}/scripts/start-controller.sh ${CONTROLLER_ARGS} &> /dev/null
-${NIMBUS_HOME}/scripts/start-workers.sh ${WORKER_ARGS} -l applications/physbam/water/libwater_app.so ${WATEER_ARGS} &> /dev/null
+start_experiment "${CONTROLLER_ARGS}" "${WORKER_ARGS}" "${APPLICATION_LIB}" "${APPLICATION_ARGS}"
 
 echo -e "${Cya}Waiting ${FAULT_DELAY} seconds before killing one worker...${RCol}"
 wait_with_bar ${FAULT_DELAY}
@@ -196,9 +102,8 @@ pause_controller
 check_checkpoints ${CHKP_NUM}
 kill_one_worker
 resume_controller
-wait_to_finish
-ELAPSED=$((${end_time}-${start_time}+${FAULT_DELAY}))
-echo -e "${Gre}[ SUCCESS ] experiment finished in ${ELAPSED} seconds.${RCol}"
+wait_to_succeed basic_completion_check ${TIME_OUT_T}
+echo -e "${Gre}[ SUCCESS ] experiment finished in $((${ELAPSED}+${FAULT_DELAY})) seconds.${RCol}"
 check_rewinding 1
 
 
@@ -220,37 +125,21 @@ if ! [ -z ${SSH_TTY} ]; then
 fi
 
 ${NIMBUS_HOME}/applications/physbam/physbam-app/opengl_3d/opengl_3d ${NIMBUS_HOME}/nodes/nimbus_worker/output/ &> /dev/null &
+function window_check {
+  local WINDOWID=$(xdotool search --name opengl_3d*)
+  if ! [ -z ${WINDOWID} ]; then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+wait_to_succeed window_check 10
 
 WINDOWID=$(xdotool search --name opengl_3d*)
-
-TIME_OUT_T=10
-start_time=$(date +%s)
-end_time=$(date +%s)
-progress_bar="waiting to open the opengl_3d window ..."
-while [ "$((${end_time}-${start_time}))" -lt "${TIME_OUT_T}" ]; do
-  WINDOWID=$(xdotool search --name opengl_3d*)
-  if ! [ -z ${WINDOWID} ]; then
-    end_time=$(date +%s)
-    break
-  else
-    end_time=$(date +%s)
-    echo -ne "${Yel}${progress_bar} \r${RCol}"
-    progress_bar=${progress_bar}"."
-    sleep 1
-  fi
-done
-if ! [ -z ${WINDOWID} ]; then
-  echo -e "${Gre}[ SUCCESS ] a window dispalying simulation should have been opened!${RCol}"
-else
-  echo -e "${Red}[ TIMEOUT ] window did not open before time out!${RCol}"
-  exit 1
-fi
-
 xdotool key --window ${WINDOWID} "p"
 
 echo -e "${Gre}[ VISUAL CHECK ] hit p (play/stop play), s (step forward), ctrl+s (step backward) ${RCol}"
 echo -e "${Gre}[ VISUAL CHECK ] by default it starts playing simulation and there are 10 frames!${RCol}"
-
 
 echo -e "${Gre}[ VISUAL CHECK ] window closes and the logs are cleaned in 10 seconds!${RCol}"
 wait_with_bar 10
@@ -259,6 +148,8 @@ if [ -z ${SSH_TTY} ]; then
 else
   wmctrl -c "opengl"
 fi
-make ${NIMBUS_HOME}/ clean-logs &> /dev/null
+
+clean_logs
 exit 0
+
 
