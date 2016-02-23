@@ -155,6 +155,9 @@ fi
 
 
 echo -e "${Cya}Displaying the results:${RCol}"
+if ! [ -z ${SSH_TTY} ]; then
+  echo -e "${Yel}[ WARNING ] this is a ssh session, some visual functionality may not work.${RCol}"
+fi
 
 ${NIMBUS_HOME}/applications/physbam/physbam-app/opengl_3d/opengl_3d ${NIMBUS_HOME}/nodes/nimbus_worker/output/ &> /dev/null &
 
@@ -193,7 +196,6 @@ wait_with_bar 10
 if [ -z ${SSH_TTY} ]; then
   xdotool windowactivate --sync ${WINDOWID} key --clearmodifiers --delay 100 alt+F4
 else
-  echo -e "${Yel}[ WARNING ] this is an ssh session, some visual functionality may not work.${RCol}"
   wmctrl -c "opengl"
 fi
 make ${NIMBUS_HOME}/ clean-logs &> /dev/null

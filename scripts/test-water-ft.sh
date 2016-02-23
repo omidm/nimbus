@@ -197,7 +197,7 @@ check_checkpoints ${CHKP_NUM}
 kill_one_worker
 resume_controller
 wait_to_finish
-ELAPSED=$((${end_time}-${start_time}+3*${FAULT_DELAY}))
+ELAPSED=$((${end_time}-${start_time}+${FAULT_DELAY}))
 echo -e "${Gre}[ SUCCESS ] experiment finished in ${ELAPSED} seconds.${RCol}"
 check_rewinding 1
 
@@ -215,6 +215,9 @@ fi
 
 
 echo -e "${Cya}Displaying the results:${RCol}"
+if ! [ -z ${SSH_TTY} ]; then
+  echo -e "${Yel}[ WARNING ] this is a ssh session, some visual functionality may not work.${RCol}"
+fi
 
 ${NIMBUS_HOME}/applications/physbam/physbam-app/opengl_3d/opengl_3d ${NIMBUS_HOME}/nodes/nimbus_worker/output/ &> /dev/null &
 
@@ -254,7 +257,6 @@ wait_with_bar 10
 if [ -z ${SSH_TTY} ]; then
   xdotool windowactivate --sync ${WINDOWID} key --clearmodifiers --delay 100 alt+F4
 else
-  echo -e "${Yel}[ WARNING ] this is an ssh session, some visual functionality may not work.${RCol}"
   wmctrl -c "opengl"
 fi
 make ${NIMBUS_HOME}/ clean-logs &> /dev/null
