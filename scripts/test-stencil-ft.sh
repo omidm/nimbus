@@ -145,7 +145,7 @@ function kill_one_worker {
   WORKER_PIDS=$(ps -fu $USER| grep "nimbus_worker" | grep -v "grep" | awk '{print $2}')
   for pid in ${WORKER_PIDS}
   do
-    echo -e "${Yel}    killing nimbus worker with pid: ${pid}${RCol}"
+    echo -e "${Cya}Killing nimbus worker with pid: ${pid}${RCol}"
     kill ${pid}
     break
   done
@@ -153,13 +153,13 @@ function kill_one_worker {
 
 function pause_controller {
   CONTROLLER_PID=$(ps -fu $USER| grep "nimbus_controller" | grep -v "grep" | awk '{print $2}')
-  echo -e "${Yel}    pausing nimbus controller with pid: ${CONTROLLER_PID}${RCol}"
+  echo -e "${Cya}Pausing nimbus controller with pid: ${CONTROLLER_PID}${RCol}"
   kill -STOP ${CONTROLLER_PID}
 }
 
 function resume_controller {
   CONTROLLER_PID=$(ps -fu $USER| grep "nimbus_controller" | grep -v "grep" | awk '{print $2}')
-  echo -e "${Yel}    resuming nimbus controller with pid: ${CONTROLLER_PID}${RCol}"
+  echo -e "${Cya}Resuming nimbus controller with pid: ${CONTROLLER_PID}${RCol}"
   kill -CONT ${CONTROLLER_PID}
 }
 
@@ -225,21 +225,21 @@ fi
 echo -e "${Cya}Ruunnig the experiment with faults:${RCol}"
 start_experiment "${CONTROLLER_ARGS_FT}" "${WORKER_ARGS}" "${APPLICATION_ARGS}"
 
-echo -e "${Yel}    waiting ${FAULT_DELAY} seconds before killing first worker...${RCol}"
+echo -e "${Cya}Waiting ${FAULT_DELAY} seconds before killing the first worker...${RCol}"
 sleep ${FAULT_DELAY}
 pause_controller
 check_checkpoints ${CHKP_NUM}
 kill_one_worker
 resume_controller
 
-echo -e "${Yel}    waiting ${FAULT_DELAY} seconds before killing second worker...${RCol}"
+echo -e "${Cya}Waiting ${FAULT_DELAY} seconds before killing the second worker...${RCol}"
 sleep ${FAULT_DELAY}
 pause_controller
 check_checkpoints $((2*${CHKP_NUM}))
 kill_one_worker
 resume_controller
 
-echo -e "${Yel}    waiting ${FAULT_DELAY} seconds before killing third worker...${RCol}"
+echo -e "${Cya}Waiting ${FAULT_DELAY} seconds before killing the third worker...${RCol}"
 sleep ${FAULT_DELAY}
 pause_controller
 check_checkpoints $((3*${CHKP_NUM}))
