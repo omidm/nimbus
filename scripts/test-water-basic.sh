@@ -77,6 +77,43 @@ if [ -z "${TTIMER}" ]; then
   export TTIMER="l1"
 fi
 
+# wait_with_bar seconds
+function wait_with_bar {
+  progress_bar="waiting ..."
+  for i in $(seq $1)
+  do
+    echo -ne "${Yel}${progress_bar} \r${RCol}"
+    progress_bar=${progress_bar}"."
+    sleep 1
+  done
+}
+
+# wait_to_finish
+function wait_to_finish {
+  start_time=$(date +%s)
+  end_time=$(date +%s)
+  progress_bar="waiting ..."
+  success=0
+  while [ "$((${end_time}-${start_time}))" -lt "${TIME_OUT_T}" ]; do
+    success=$(cat ${NIMBUS_HOME}/logs/controller/stdout | grep -c "Simulation Terminated")
+    if [ ${success} == "1" ]; then
+      end_time=$(date +%s)
+      break
+    else
+      end_time=$(date +%s)
+      echo -ne "${Yel}${progress_bar} \r${RCol}"
+      progress_bar=${progress_bar}"."
+      sleep 1
+    fi
+  done
+  
+  if [ ${success} != "1" ]; then
+    echo -e "${Red}[ TIMEOUT ] experiment did not finish before time out!${RCol}"
+    exit 1
+  fi
+}
+
+
 echo -e "${Yel}[ WARNING ] this test requires building physbam librray and applications first.${RCol}"
 echo -e "${Yel}            if not built yet, you can issue \'make physbam\' in the nimbus root.${RCol}"
 echo -e "${Yel}            it is not automated since physbam Makefile is flaky and it may build${RCol}"
@@ -103,31 +140,7 @@ ${NIMBUS_HOME}/scripts/stop-workers.sh &> /dev/null
 ${NIMBUS_HOME}/scripts/stop-controller.sh &> /dev/null
 ${NIMBUS_HOME}/scripts/start-controller.sh ${CONTROLLER_ARGS} &> /dev/null
 ${NIMBUS_HOME}/scripts/start-workers.sh ${WORKER_ARGS} -l applications/physbam/water/libwater_app.so ${WATEER_ARGS} &> /dev/null
-
-start_time=$(date +%s)
-end_time=$(date +%s)
-progress_bar="waiting ..."
-success=0
-while [ "$((${end_time}-${start_time}))" -lt "${TIME_OUT_T}" ]; do
-  success=$(cat ${NIMBUS_HOME}/logs/controller/stdout | grep -c "Simulation Terminated")
-  if [ ${success} == "1" ]; then
-    end_time=$(date +%s)
-    break
-  else
-    end_time=$(date +%s)
-    echo -ne "${Yel}${progress_bar} \r${RCol}"
-    progress_bar=${progress_bar}"."
-    sleep 1
-  fi
-done
-
-if [ ${success} == "1" ]; then
-  echo -e "${Gre}[ SUCCESS ] finished in $((${end_time}-${start_time})) seconds.${RCol}"
-else
-  echo -e "${Red}[ TIMEOUT ] experiment did not finish before time out!${RCol}"
-  exit 1
-fi
-
+wait_to_finish
 
 echo -e "${Cya}Checking the simulation output:${RCol}"
 
@@ -175,14 +188,14 @@ xdotool key --window ${WINDOWID} "p"
 echo -e "${Gre}[ VISUAL CHECK ] hit p (play/stop play), s (step forward), ctrl+s (step backward) ${RCol}"
 echo -e "${Gre}[ VISUAL CHECK ] by default it starts playing simulation and there are 10 frames!${RCol}"
 
-
 echo -e "${Gre}[ VISUAL CHECK ] window closes and the logs are cleaned in 10 seconds!${RCol}"
-sleep 10
-xdotool windowactivate --sync ${WINDOWID} key --clearmodifiers --delay 100 alt+F4
+wait_with_bar 10
+if [ -z ${SSH_TTY} ]; then
+  xdotool windowactivate --sync ${WINDOWID} key --clearmodifiers --delay 100 alt+F4
+else
+  echo -e "${Yel}[ WARNING ] this is an ssh session, some visual functionality may not work.${RCol}"
+  wmctrl -c "opengl"
+fi
 make ${NIMBUS_HOME}/ clean-logs &> /dev/null
-
-# if running the test over ssh -X use this command to close!
-# wmctrl -c "opengl"
-
 exit 0
 

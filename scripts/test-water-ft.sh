@@ -34,7 +34,7 @@
 #  OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Runs fault tolerance test against stencil 1D application.
+# Test written for water simulation against Nimbus.
 
 # Author: Omid Mashayekhi <omidm@stanford.edu>
 
@@ -53,28 +53,21 @@ Whi='\x1B[0;97m';
 # **************************
 
 function print_usage {
-  echo -e "${Cya}Runs fault tolerance tests against stencil_1d application."
+  echo -e "${Cya}Runs water simulation againts nimbus with two workers."
   echo -e "\nUsage:"
-  echo -e "./scripts/test-stencil-ft.sh"
+  echo -e "./scripts/test-water.sh"
   echo -e "${RCol}"
 }
 
-ITER_NUM=500
-CHUNK_NUM=16
-BATCH_NUM=6
-THREAD_NUM=16
-TIME_OUT_T=60
-BASE_LENGTH=20
-FT_PERIOD=2
-FAULT_DELAY=5
+
+TIME_OUT_T=100
+FT_PERIOD=15
+FAULT_DELAY=40
 CHKP_NUM=2 # FAULT_DELAY / FT_PERIOD
 
-CONTROLLER_ARGS="-t ${THREAD_NUM} -a ${BATCH_NUM} -w 4 --split 4 1 1"
-CONTROLLER_ARGS_FT="--aft --ft_period ${FT_PERIOD} -t ${THREAD_NUM} -a ${BATCH_NUM} -w 4 --split 4 1 1"
-WORKER_ARGS="4 --othread ${THREAD_NUM}"
-APPLICATION_ARGS="-i ${ITER_NUM} --pn ${CHUNK_NUM} --cpp 1"
-
-
+CONTROLLER_ARGS="--aft --ft_period ${FT_PERIOD} -t 4 -a 6 -w 2 --split 1 2 1 --dcb"
+WORKER_ARGS="2 --othread 2 "
+WATER_ARGS="--wl 0.35 -e 10"
 
 if [ -z "${NIMBUS_HOME}" ]; then
   export NIMBUS_HOME="$(cd "`dirname "$0"`"/..; pwd)"
@@ -88,15 +81,6 @@ if [ -z "${TTIMER}" ]; then
   export TTIMER="l1"
 fi
 
-
-# start_experiment controller_args worker_args app_args
-function start_experiment {
-  make ${NIMBUS_HOME}/ clean-logs &> /dev/null
-  ${NIMBUS_HOME}/scripts/stop-workers.sh &> /dev/null
-  ${NIMBUS_HOME}/scripts/stop-controller.sh &> /dev/null
-  ${NIMBUS_HOME}/scripts/start-controller.sh $1 &> /dev/null
-  ${NIMBUS_HOME}/scripts/start-workers.sh $2 -l applications/simple/stencil_1d/libstencil_1d.so $3 &> /dev/null
-}
 
 # wait_with_bar seconds
 function wait_with_bar {
@@ -130,24 +114,6 @@ function wait_to_finish {
   
   if [ ${success} != "1" ]; then
     echo -e "${Red}[ TIMEOUT ] experiment did not finish before time out!${RCol}"
-    exit 1
-  fi
-}
-
-function get_final_hash {
-  sync
-  local final_hash=$(grep "FINAL HASH" logs/workers/*/stdout  | sed 's/.*FINAL HASH: //')
-  echo "${final_hash}"
-}
-
-# check_hash correct_hash
-function check_hash {
-  sync
-  local final_hash=$(grep "FINAL HASH" logs/workers/*/stdout  | sed 's/.*FINAL HASH: //')
-  if [ "${final_hash}" == "$1" ]; then
-    echo -e "${Gre}[ SUCCESS ] hash value matches!${RCol}"
-  else
-    echo -e "${Red}[ FAILED  ] hash value does not match! [${final_hash} != $1]${RCol}"
     exit 1
   fi
 }
@@ -197,76 +163,100 @@ function check_rewinding {
 }
 
 
+echo -e "${Yel}[ WARNING ] this test requires building physbam librray and applications first.${RCol}"
+echo -e "${Yel}            if not built yet, you can issue \'make physbam\' in the nimbus root.${RCol}"
+echo -e "${Yel}            it is not automated since physbam Makefile is flaky and it may build${RCol}"
+echo -e "${Yel}            everything from scratch again, even after successful build.${RCol}"
 
-if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
-  print_usage
-  exit 0
-fi
 
+echo -e "${Cya}Checking that old output files are removed:${RCol}"
 
-echo -e "${Cya}Ruunnig the base experiment without faults:${RCol}"
-while true; do
-  start_experiment "${CONTROLLER_ARGS}" "${WORKER_ARGS}" "${APPLICATION_ARGS}"
-  wait_to_finish
- 
-  ELAPSED=$((${end_time}-${start_time}))
-  NORM_ELAPSED=${ELAPSED}
-  if [ "${ELAPSED}" -gt "4" ]; then
-    NORM_ELAPSED=$((${ELAPSED}-4))
-  fi
-  if [ ${ELAPSED} -lt "${BASE_LENGTH}" ]; then
-    echo -e "${Yel}[ WARNING ] base experiment with ${ITER_NUM} iterations was only ${ELAPSED} (<${BASE_LENGTH}) seconds!${RCol}"
-    ITER_NUM=$((((${BASE_LENGTH}-${ELAPSED})*(${ITER_NUM}/${NORM_ELAPSED}))+${ITER_NUM}))
-    echo -e "${Yel}[ WARNING ] retrying the experiment with ${ITER_NUM} iterations to get the minimum length ... ${RCol}"
-    APPLICATION_ARGS="-i ${ITER_NUM} --pn ${CHUNK_NUM} --cpp 1"
-  else
-    echo -e "${Gre}[ SUCCESS ] base experiment finished in ${ELAPSED} seconds.${RCol}"
-    break
-  fi
-done
-base_hash=$(get_final_hash)
-if ! [ -z ${base_hash} ]; then
-  echo -e "${Gre}[ SUCCESS ] got the hash value of ${base_hash}.${RCol}"
+make ${NIMBUS_HOME}/ clean-logs &> /dev/null
+
+FOLDER=$(ls ${NIMBUS_HOME}/nodes/nimbus_worker/output/ 2>/dev/null)
+
+if [ -z "${FOLDER}"]; then
+  echo -e "${Gre}[ SUCCESS ] no old output file found${RCol}"
 else
-  echo -e "${Red}[ FAILED  ] could not get the hash value!.${RCol}"
+  echo -e "${Red}[ FAILED  ] seems that there are still old output files!${RCol}"
   exit 1
 fi
 
 
-echo -e "${Cya}Ruunnig the experiment with faults:${RCol}"
-start_experiment "${CONTROLLER_ARGS_FT}" "${WORKER_ARGS}" "${APPLICATION_ARGS}"
+echo -e "${Cya}Ruunnig water simulation with two workers against nimbus controller:${RCol}"
 
-echo -e "${Cya}Waiting ${FAULT_DELAY} seconds before killing the first worker...${RCol}"
+${NIMBUS_HOME}/scripts/stop-workers.sh &> /dev/null
+${NIMBUS_HOME}/scripts/stop-controller.sh &> /dev/null
+${NIMBUS_HOME}/scripts/start-controller.sh ${CONTROLLER_ARGS} &> /dev/null
+${NIMBUS_HOME}/scripts/start-workers.sh ${WORKER_ARGS} -l applications/physbam/water/libwater_app.so ${WATEER_ARGS} &> /dev/null
+
+echo -e "${Cya}Waiting ${FAULT_DELAY} seconds before killing one worker...${RCol}"
 wait_with_bar ${FAULT_DELAY}
 pause_controller
 check_checkpoints ${CHKP_NUM}
 kill_one_worker
 resume_controller
-
-echo -e "${Cya}Waiting ${FAULT_DELAY} seconds before killing the second worker...${RCol}"
-wait_with_bar ${FAULT_DELAY}
-pause_controller
-check_checkpoints $((2*${CHKP_NUM}))
-kill_one_worker
-resume_controller
-
-echo -e "${Cya}Waiting ${FAULT_DELAY} seconds before killing the third worker...${RCol}"
-wait_with_bar ${FAULT_DELAY}
-pause_controller
-check_checkpoints $((3*${CHKP_NUM}))
-kill_one_worker
-resume_controller
-
 wait_to_finish
 ELAPSED=$((${end_time}-${start_time}+3*${FAULT_DELAY}))
-echo -e "${Gre}[ SUCCESS ] experiment with fault finished in ${ELAPSED} seconds.${RCol}"
-check_rewinding 3
-check_hash "${base_hash}"
+echo -e "${Gre}[ SUCCESS ] experiment finished in ${ELAPSED} seconds.${RCol}"
+check_rewinding 1
 
 
+echo -e "${Cya}Checking the simulation output:${RCol}"
 
+FOLDER_COUNT=$(ls ${NIMBUS_HOME}/nodes/nimbus_worker/output/ 2>/dev/null | wc -w)
+
+if [ "${FOLDER_COUNT}" == "12" ]; then
+  echo -e "${Gre}[ SUCCESS ] output file seems complete!${RCol}"
+else
+  echo -e "${Red}[ FAILED  ] output file does not seem complete!${RCol}"
+  exit 1
+fi
+
+
+echo -e "${Cya}Displaying the results:${RCol}"
+
+${NIMBUS_HOME}/applications/physbam/physbam-app/opengl_3d/opengl_3d ${NIMBUS_HOME}/nodes/nimbus_worker/output/ &> /dev/null &
+
+WINDOWID=$(xdotool search --name opengl_3d*)
+
+TIME_OUT_T=10
+start_time=$(date +%s)
+end_time=$(date +%s)
+progress_bar="waiting to open the opengl_3d window ..."
+while [ "$((${end_time}-${start_time}))" -lt "${TIME_OUT_T}" ]; do
+  WINDOWID=$(xdotool search --name opengl_3d*)
+  if ! [ -z ${WINDOWID} ]; then
+    end_time=$(date +%s)
+    break
+  else
+    end_time=$(date +%s)
+    echo -ne "${Yel}${progress_bar} \r${RCol}"
+    progress_bar=${progress_bar}"."
+    sleep 1
+  fi
+done
+if ! [ -z ${WINDOWID} ]; then
+  echo -e "${Gre}[ SUCCESS ] a window dispalying simulation should have been opened!${RCol}"
+else
+  echo -e "${Red}[ TIMEOUT ] window did not open before time out!${RCol}"
+  exit 1
+fi
+
+xdotool key --window ${WINDOWID} "p"
+
+echo -e "${Gre}[ VISUAL CHECK ] hit p (play/stop play), s (step forward), ctrl+s (step backward) ${RCol}"
+echo -e "${Gre}[ VISUAL CHECK ] by default it starts playing simulation and there are 10 frames!${RCol}"
+
+
+echo -e "${Gre}[ VISUAL CHECK ] window closes and the logs are cleaned in 10 seconds!${RCol}"
+wait_with_bar 10
+if [ -z ${SSH_TTY} ]; then
+  xdotool windowactivate --sync ${WINDOWID} key --clearmodifiers --delay 100 alt+F4
+else
+  echo -e "${Yel}[ WARNING ] this is an ssh session, some visual functionality may not work.${RCol}"
+  wmctrl -c "opengl"
+fi
 make ${NIMBUS_HOME}/ clean-logs &> /dev/null
-echo -e "${Gre}\n[ PASSED  ] stencil fault tolerance test passed successfuly!${RCol}"
 exit 0
-
 

@@ -49,6 +49,7 @@ test-stencil: extern src nodes applications
 
 test-water: extern src nodes applications
 	scripts/test-water-basic.sh
+	scripts/test-water-ft.sh
 
 test: test-stencil test-water
 

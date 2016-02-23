@@ -34,7 +34,8 @@
 #  OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Starts Nimbus controller on the machine this script is executed on.
+# Checks controller and worker basic functionalities against stencil 1D
+# application.
 
 # Author: Omid Mashayekhi <omidm@stanford.edu>
 
