@@ -124,7 +124,6 @@ function check_hash {
   local final_hash=$(grep "FINAL HASH" logs/workers/*/stdout  | sed 's/.*FINAL HASH: //')
   if [ "${final_hash}" == "$1" ]; then
     echo -e "${Gre}[ SUCCESS ] hash value matches!${RCol}"
-    make ${NIMBUS_HOME}/ clean-logs &> /dev/null
   else
     echo -e "${Red}[ FAILED  ] hash value does not match! [${final_hash} != $1]${RCol}"
     exit 1
@@ -137,7 +136,7 @@ if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
   exit 0
 fi
 
-echo -e "${Cya}Ruunnig experiment for:${RCol}"
+echo -e "${Cya}Ruunnig the base experiment:${RCol}"
 echo -e "${Cya}CONTROLLER  : single-threaded w/o templates${RCol}"
 echo -e "${Cya}WORKERS     : one, single-threaded w/o templates${RCol}"
 echo -e "${Cya}APPLICATION : one application partition${RCol}"
@@ -146,7 +145,7 @@ correct_hash=$(get_final_hash)
 if ! [ -z ${correct_hash} ]; then
   echo -e "${Gre}[ SUCCESS ] got the hash value of ${correct_hash}.${RCol}"
 else
-  echo -e "${Gre}[ FAILED  ] could not get the hash value!.${RCol}"
+  echo -e "${Red}[ FAILED  ] could not get the hash value!.${RCol}"
   exit 1
 fi
 
@@ -239,7 +238,8 @@ run_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM} -w 4 --split 4 1 1" "4 --othrea
 check_hash "${correct_hash}"
 
 
-echo -e "${Gre}\n[ PASSED  ] all tests passed successfuly!${RCol}"
+make ${NIMBUS_HOME}/ clean-logs &> /dev/null
+echo -e "${Gre}\n[ PASSED  ] all stencil basic tests passed successfuly!${RCol}"
 exit 0
 
 

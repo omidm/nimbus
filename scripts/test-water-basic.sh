@@ -77,10 +77,10 @@ if [ -z "${TTIMER}" ]; then
   export TTIMER="l1"
 fi
 
-echo -e "${Yel}WARNING: this test requires building physbam librray and applications first.${RCol}"
-echo -e "${Yel}         if not built yet, you can issue \'make physbam\' in the nimbus root.${RCol}"
-echo -e "${Yel}         it is not automated since physbam Makefile is flaky and it may build${RCol}"
-echo -e "${Yel}         everything from scratch again, even after successful build.${RCol}"
+echo -e "${Yel}[ WARNING ] this test requires building physbam librray and applications first.${RCol}"
+echo -e "${Yel}            if not built yet, you can issue \'make physbam\' in the nimbus root.${RCol}"
+echo -e "${Yel}            it is not automated since physbam Makefile is flaky and it may build${RCol}"
+echo -e "${Yel}            everything from scratch again, even after successful build.${RCol}"
 
 
 echo -e "${Cya}Checking that old output files are removed:${RCol}"
