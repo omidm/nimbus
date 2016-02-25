@@ -54,6 +54,7 @@ ComputeJobCommand::ComputeJobCommand(const std::string& job_name,
                                      const IDSet<physical_data_id_t>& read,
                                      const IDSet<physical_data_id_t>& write, // NOLINT
                                      const IDSet<job_id_t>& before,
+                                     const IDSet<job_id_t>& extra_dependency,
                                      const IDSet<job_id_t>& after,
                                      const ID<job_id_t>& future_job_id,
                                      const bool& sterile,
@@ -64,6 +65,7 @@ ComputeJobCommand::ComputeJobCommand(const std::string& job_name,
     read_set_(read),
     write_set_(write),
     before_set_(before),
+    extra_dependency_(extra_dependency),
     after_set_(after),
     future_job_id_(future_job_id),
     sterile_(sterile),
@@ -127,6 +129,7 @@ std::string ComputeJobCommand::ToString() {
   str += ("read:" + read_set_.ToNetworkData() + ",");
   str += ("write:" + write_set_.ToNetworkData() + ",");
   str += ("before:" + before_set_.ToNetworkData() + ",");
+  str += ("extra-dependency:" + extra_dependency_.ToNetworkData() + ",");
   str += ("after:" + after_set_.ToNetworkData() + ",");
   str += ("future-job-id:" + future_job_id_.ToNetworkData() + ",");
   str += ("params:" + params_.ToNetworkData() + ",");
@@ -175,8 +178,16 @@ IDSet<job_id_t> ComputeJobCommand::before_set() {
   return before_set_;
 }
 
+IDSet<job_id_t> ComputeJobCommand::extra_dependency() {
+  return extra_dependency_;
+}
+
 IDSet<job_id_t>* ComputeJobCommand::before_set_p() {
   return &before_set_;
+}
+
+IDSet<job_id_t>* ComputeJobCommand::extra_dependency_p() {
+  return &extra_dependency_;
 }
 
 Parameter ComputeJobCommand::params() {
@@ -201,6 +212,7 @@ bool ComputeJobCommand::ReadFromProtobuf(const ExecuteComputeJobPBuf& buf) {
   read_set_.ConvertFromRepeatedField(buf.read_set().ids());
   write_set_.ConvertFromRepeatedField(buf.write_set().ids());
   before_set_.ConvertFromRepeatedField(buf.before_set().ids());
+  extra_dependency_.ConvertFromRepeatedField(buf.extra_dependency().ids());
   after_set_.ConvertFromRepeatedField(buf.after_set().ids());
   future_job_id_.set_elem(buf.future_job_id());
   sterile_ = buf.sterile();
@@ -216,6 +228,7 @@ bool ComputeJobCommand::WriteToProtobuf(ExecuteComputeJobPBuf* buf) {
   read_set().ConvertToRepeatedField(buf->mutable_read_set()->mutable_ids());
   write_set().ConvertToRepeatedField(buf->mutable_write_set()->mutable_ids());
   before_set().ConvertToRepeatedField(buf->mutable_before_set()->mutable_ids());
+  extra_dependency().ConvertToRepeatedField(buf->mutable_extra_dependency()->mutable_ids());
   after_set().ConvertToRepeatedField(buf->mutable_after_set()->mutable_ids());
   buf->set_future_job_id(future_job_id().elem());
   buf->set_sterile(sterile());

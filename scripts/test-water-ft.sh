@@ -66,7 +66,7 @@ FT_PERIOD=15
 FAULT_DELAY=40
 CHKP_NUM=2 # FAULT_DELAY / FT_PERIOD
 
-CONTROLLER_ARGS="--aft --ft_period ${FT_PERIOD} -t 4 -a 6 -w 2 --split 1 2 1 --dcb"
+CONTROLLER_ARGS="--aft --ft_period ${FT_PERIOD} -t 4 -a 6 -w 2 --split 1 2 1"
 WORKER_ARGS="2 --othread 2 "
 APPLICATION_ARGS="--wl 0.35 -e 10"
 APPLICATION_LIB="applications/physbam/water/libwater_app.so"

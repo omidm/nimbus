@@ -53,10 +53,12 @@ RemoteCopyReceiveCommand::RemoteCopyReceiveCommand() {
 
 RemoteCopyReceiveCommand::RemoteCopyReceiveCommand(const ID<job_id_t>& job_id,
                                                    const ID<physical_data_id_t>& to_physical_data_id, // NOLINT
-                                                   const IDSet<job_id_t>& before)
+                                                   const IDSet<job_id_t>& before,
+                                                   const IDSet<job_id_t>& extra_dependency)
 : job_id_(job_id),
   to_physical_data_id_(to_physical_data_id),
-  before_set_(before) {
+  before_set_(before),
+  extra_dependency_(extra_dependency) {
   name_ = REMOTE_RECEIVE_NAME;
   type_ = REMOTE_RECEIVE;
 }
@@ -111,6 +113,7 @@ std::string RemoteCopyReceiveCommand::ToString() {
   str += ("job-id:" + job_id_.ToNetworkData() + ",");
   str += ("to-physical-data-id:" + to_physical_data_id_.ToNetworkData() + ",");
   str += ("before:" + before_set_.ToNetworkData());
+  str += ("extra_dependency:" + extra_dependency_.ToNetworkData());
   return str;
 }
 
@@ -130,10 +133,19 @@ IDSet<job_id_t>* RemoteCopyReceiveCommand::before_set_p() {
   return &before_set_;
 }
 
+IDSet<job_id_t> RemoteCopyReceiveCommand::extra_dependency() {
+  return extra_dependency_;
+}
+
+IDSet<job_id_t>* RemoteCopyReceiveCommand::extra_dependency_p() {
+  return &extra_dependency_;
+}
+
 bool RemoteCopyReceiveCommand::ReadFromProtobuf(const RemoteCopyReceivePBuf& buf) {
   job_id_.set_elem(buf.job_id());
   to_physical_data_id_.set_elem(buf.physical_id());
   before_set_.ConvertFromRepeatedField(buf.before_set().ids());
+  extra_dependency_.ConvertFromRepeatedField(buf.extra_dependency().ids());
   return true;
 }
 
@@ -141,6 +153,7 @@ bool RemoteCopyReceiveCommand::WriteToProtobuf(RemoteCopyReceivePBuf* buf) {
   buf->set_job_id(job_id().elem());
   buf->set_physical_id(to_physical_data_id().elem());
   before_set_.ConvertToRepeatedField(buf->mutable_before_set()->mutable_ids());
+  extra_dependency_.ConvertToRepeatedField(buf->mutable_extra_dependency()->mutable_ids());
   return true;
 }
 

@@ -53,12 +53,14 @@ SpawnCommandTemplateCommand::SpawnCommandTemplateCommand() {
 SpawnCommandTemplateCommand::SpawnCommandTemplateCommand(const std::string& command_template_name,
                                                    const std::vector<job_id_t>& inner_job_ids,
                                                    const std::vector<job_id_t>& outer_job_ids,
+                                                   const IDSet<job_id_t>& extra_dependency,
                                                    const std::vector<Parameter>& parameters,
                                                    const std::vector<physical_data_id_t>& phy_ids,
                                                    const template_id_t& template_generation_id)
   : command_template_name_(command_template_name),
     inner_job_ids_(inner_job_ids),
     outer_job_ids_(outer_job_ids),
+    extra_dependency_(extra_dependency),
     parameters_(parameters),
     phy_ids_(phy_ids),
     template_generation_id_(template_generation_id) {
@@ -143,6 +145,14 @@ template_id_t SpawnCommandTemplateCommand::template_generation_id() {
   return template_generation_id_;
 }
 
+IDSet<job_id_t> SpawnCommandTemplateCommand::extra_dependency() {
+  return extra_dependency_;
+}
+
+IDSet<job_id_t>* SpawnCommandTemplateCommand::extra_dependency_p() {
+  return &extra_dependency_;
+}
+
 bool SpawnCommandTemplateCommand::ReadFromProtobuf(const SpawnCommandTemplatePBuf& buf) {
   command_template_name_ = buf.command_template_name();
 
@@ -162,6 +172,9 @@ bool SpawnCommandTemplateCommand::ReadFromProtobuf(const SpawnCommandTemplatePBu
       outer_job_ids_.push_back(*it);
     }
   }
+
+  extra_dependency_.ConvertFromRepeatedField(buf.extra_dependency().ids());
+
   {
     parameters_.clear();
     typename google::protobuf::RepeatedPtrField<std::string >::const_iterator it =
@@ -206,6 +219,9 @@ bool SpawnCommandTemplateCommand::WriteToProtobuf(SpawnCommandTemplatePBuf* buf)
       b->Add(*it);
     }
   }
+
+  extra_dependency().ConvertToRepeatedField(buf->mutable_extra_dependency()->mutable_ids());
+
   {
     ParameterVector *b = buf->mutable_parameters();
     std::vector<Parameter>::iterator it = parameters_.begin();

@@ -57,6 +57,7 @@ class SpawnCommandTemplateCommand : public SchedulerCommand {
     SpawnCommandTemplateCommand(const std::string& command_template_name,
                                 const std::vector<job_id_t>& inner_job_ids,
                                 const std::vector<job_id_t>& outer_job_ids,
+                                const IDSet<job_id_t>& extra_dependency,
                                 const std::vector<Parameter>& parameters,
                                 const std::vector<physical_data_id_t>& phy_ids,
                                 const template_id_t& template_generation_id);
@@ -74,11 +75,14 @@ class SpawnCommandTemplateCommand : public SchedulerCommand {
     std::vector<Parameter> parameters();
     std::vector<physical_data_id_t> phy_ids();
     template_id_t template_generation_id();
+    IDSet<job_id_t> extra_dependency();
+    IDSet<job_id_t>* extra_dependency_p();
 
   private:
     std::string command_template_name_;
     std::vector<job_id_t> inner_job_ids_;
     std::vector<job_id_t> outer_job_ids_;
+    IDSet<job_id_t> extra_dependency_;
     std::vector<Parameter> parameters_;
     std::vector<physical_data_id_t> phy_ids_;
     template_id_t template_generation_id_;

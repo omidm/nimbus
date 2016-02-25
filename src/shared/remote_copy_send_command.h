@@ -58,7 +58,8 @@ class RemoteCopySendCommand : public SchedulerCommand {
                           const ID<worker_id_t>& to_worker_id,
                           const std::string to_ip,
                           const ID<port_t>& to_port,
-                          const IDSet<job_id_t>& before);
+                          const IDSet<job_id_t>& before,
+                          const IDSet<job_id_t>& extra_dependency);
     ~RemoteCopySendCommand();
 
     virtual SchedulerCommand* Clone();
@@ -76,6 +77,8 @@ class RemoteCopySendCommand : public SchedulerCommand {
     ID<port_t> to_port();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t>* before_set_p();
+    IDSet<job_id_t> extra_dependency();
+    IDSet<job_id_t>* extra_dependency_p();
 
   private:
     ID<job_id_t> job_id_;
@@ -86,6 +89,7 @@ class RemoteCopySendCommand : public SchedulerCommand {
     std::string to_ip_;
     ID<port_t> to_port_;
     IDSet<job_id_t> before_set_;
+    IDSet<job_id_t> extra_dependency_;
 
     bool ReadFromProtobuf(const RemoteCopySendPBuf& buf);
     bool WriteToProtobuf(RemoteCopySendPBuf* buf);

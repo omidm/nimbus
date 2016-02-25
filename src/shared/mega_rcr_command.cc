@@ -53,10 +53,12 @@ MegaRCRCommand::MegaRCRCommand() {
 
 MegaRCRCommand::MegaRCRCommand(const ID<job_id_t>& job_id,
                                const std::vector<job_id_t>& receive_job_ids,
-                               const std::vector<physical_data_id_t>& to_physical_data_ids)
+                               const std::vector<physical_data_id_t>& to_physical_data_ids,
+                               const IDSet<job_id_t>& extra_dependency)
 : job_id_(job_id),
   receive_job_ids_(receive_job_ids),
-  to_physical_data_ids_(to_physical_data_ids) {
+  to_physical_data_ids_(to_physical_data_ids),
+  extra_dependency_(extra_dependency) {
   name_ = MEGA_RCR_NAME;
   type_ = MEGA_RCR;
 }
@@ -133,6 +135,14 @@ const std::vector<physical_data_id_t>* MegaRCRCommand::to_physical_data_ids_p() 
   return &to_physical_data_ids_;
 }
 
+IDSet<job_id_t> MegaRCRCommand::extra_dependency() {
+  return extra_dependency_;
+}
+
+IDSet<job_id_t>* MegaRCRCommand::extra_dependency_p() {
+  return &extra_dependency_;
+}
+
 bool MegaRCRCommand::ReadFromProtobuf(const MegaRCRPBuf& buf) {
   job_id_.set_elem(buf.job_id());
 
@@ -153,6 +163,8 @@ bool MegaRCRCommand::ReadFromProtobuf(const MegaRCRPBuf& buf) {
       to_physical_data_ids_.push_back(*it);
     }
   }
+
+  extra_dependency_.ConvertFromRepeatedField(buf.extra_dependency().ids());
 
   return true;
 }
@@ -177,6 +189,8 @@ bool MegaRCRCommand::WriteToProtobuf(MegaRCRPBuf* buf) {
       b->Add(*it);
     }
   }
+
+  extra_dependency_.ConvertToRepeatedField(buf->mutable_extra_dependency()->mutable_ids());
 
   return true;
 }

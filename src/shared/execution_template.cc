@@ -171,6 +171,7 @@ bool ExecutionTemplate::Finalize() {
 
 bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
                                     const std::vector<job_id_t>& outer_job_ids,
+                                    const IDSet<job_id_t>& extra_dependency,
                                     const std::vector<Parameter>& parameters,
                                     const std::vector<physical_data_id_t>& physical_ids,
                                     const WorkerDataExchanger::EventList& pending_events,
@@ -188,6 +189,7 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
     pending_instantiate_ = true;
     pending_inner_job_ids_ = inner_job_ids;
     pending_outer_job_ids_ = outer_job_ids;
+    pending_extra_dependency_ = extra_dependency;
     pending_parameters_ = parameters;
     pending_physical_ids_ = physical_ids;
     pending_template_generation_id_ = template_generation_id;
@@ -201,7 +203,14 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
   assert(inner_job_ids.size() == inner_job_id_list_.size());
   assert(outer_job_ids.size() == outer_job_id_list_.size());
   assert(physical_ids.size() == phy_id_list_.size());
+  assert(blocked_on_extra_dependency_.size() == 0);
   // assert(seed_job_templates_.size() > 0);
+
+  extra_dependency_ = extra_dependency;
+  if (extra_dependency_.size() != 0) {
+    dbg(DBG_WARN, "WARNING: extra dependency size of %lu for %s!\n",
+        extra_dependency_.size(), execution_template_name_.c_str());
+  }
 
   template_generation_id_ = template_generation_id;
   job_done_counter_ = copy_job_num_ + compute_job_num_;
@@ -251,8 +260,12 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
     for (; iter != seed_job_templates_.end(); ++iter) {
       JobTemplate *jt = *iter;
       jt->Refresh(parameters_, template_generation_id_);
-      ready_jobs->push_back((jt->job_));
-      ++counter;
+      if (extra_dependency_.size() == 0) {
+        ready_jobs->push_back((jt->job_));
+        ++counter;
+      } else {
+        blocked_on_extra_dependency_.push_back((jt->job_));
+      }
     }
   }
 
@@ -275,10 +288,13 @@ bool ExecutionTemplate::InstantiatePending(const WorkerDataExchanger::EventList&
   assert(pending_instantiate_);
   assert(job_done_counter_ == 0);
   assert(ready_job_counter_ == 0);
+  assert(extra_dependency_.size() == 0);
+  assert(blocked_on_extra_dependency_.size() == 0);
   pending_instantiate_ = false;
 
   Instantiate(pending_inner_job_ids_,
               pending_outer_job_ids_,
+              pending_extra_dependency_,
               pending_parameters_,
               pending_physical_ids_,
               pending_events,
@@ -288,11 +304,12 @@ bool ExecutionTemplate::InstantiatePending(const WorkerDataExchanger::EventList&
   return true;
 }
 
-bool ExecutionTemplate::MarkJobDone(const job_id_t& shadow_job_id,
-                                    JobList *ready_jobs,
-                                    bool &prepare_rewind_phase,
-                                    bool append) {
+bool ExecutionTemplate::MarkInnerJobDone(const job_id_t& shadow_job_id,
+                                         JobList *ready_jobs,
+                                         bool &prepare_rewind_phase,
+                                         bool append) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  assert(extra_dependency_.size() == 0);
   assert(finalized_);
   if (!append) {
     ready_jobs->clear();
@@ -331,6 +348,44 @@ bool ExecutionTemplate::MarkJobDone(const job_id_t& shadow_job_id,
 
   return et_complete;
 }
+
+
+void ExecutionTemplate::NotifyJobDone(const job_id_t& job_id,
+                                      JobList *ready_jobs,
+                                      bool &prepare_rewind_phase,
+                                      bool append) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  assert(finalized_);
+  if (!append) {
+    ready_jobs->clear();
+  }
+
+  if (prepare_rewind_phase) {
+    return;
+  }
+
+  pending_extra_dependency_.remove(job_id);
+
+  if (extra_dependency_.size() == 0) {
+    return;
+  }
+
+  size_t counter = 0;
+  extra_dependency_.remove(job_id);
+  if (extra_dependency_.size() == 0) {
+    JobList::iterator iter = blocked_on_extra_dependency_.begin();
+    for (; iter != blocked_on_extra_dependency_.end(); ++iter) {
+      ready_jobs->push_back(*iter);
+      ++counter;
+    }
+    blocked_on_extra_dependency_.clear();
+  }
+
+  ready_job_counter_ += counter;
+
+  return;
+}
+
 
 bool ExecutionTemplate::GenerateMegaJobDoneCommand(MegaJobDoneCommand **cm) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
@@ -374,8 +429,12 @@ void ExecutionTemplate::ProcessReceiveEvent(const WorkerDataExchanger::Event& e,
     --(jt->dependency_counter_);
     if (jt->dependency_counter_ == 0) {
       jt->Refresh(parameters_, template_generation_id_);
-      ready_jobs->push_back(rcr);
-      ++counter;
+      if (extra_dependency_.size() == 0) {
+        ready_jobs->push_back(rcr);
+        ++counter;
+      } else {
+        blocked_on_extra_dependency_.push_back(rcr);
+      }
     }
   } else {
     iter = job_templates_.find(e.mega_rcr_job_id_);
@@ -390,8 +449,12 @@ void ExecutionTemplate::ProcessReceiveEvent(const WorkerDataExchanger::Event& e,
     --(jt->dependency_counter_);
     if (jt->dependency_counter_ == 0) {
       jt->Refresh(parameters_, template_generation_id_);
-      ready_jobs->push_back(mrcr);
-      ++counter;
+      if (extra_dependency_.size() == 0) {
+        ready_jobs->push_back(mrcr);
+        ++counter;
+      } else {
+        blocked_on_extra_dependency_.push_back(mrcr);
+      }
     }
   }
 

@@ -116,6 +116,7 @@ bool CommandTemplate::Finalize() {
 
 bool CommandTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
                                   const std::vector<job_id_t>& outer_job_ids,
+                                  const IDSet<job_id_t>& extra_dependency,
                                   const std::vector<Parameter>& parameters,
                                   const std::vector<physical_data_id_t>& physical_ids,
                                   SchedulerClient *client) {
@@ -162,22 +163,27 @@ bool CommandTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
         assert(cc->param_index_ < parameters.size());
         PushComputeJobCommand(cc,
                               parameters[cc->param_index_],
+                              extra_dependency,
                               client);
         break;
       case LC:
         PushLocalCopyCommand(reinterpret_cast<LocalCopyCommandTemplate*>(ct),
+                             extra_dependency,
                              client);
         break;
       case RCS:
         PushRemoteCopySendCommand(reinterpret_cast<RemoteCopySendCommandTemplate*>(ct),
+                                  extra_dependency,
                                   client);
         break;
       case RCR:
         PushRemoteCopyReceiveCommand(reinterpret_cast<RemoteCopyReceiveCommandTemplate*>(ct),
+                                     extra_dependency,
                                      client);
         break;
       case MEGA_RCR:
         PushMegaRCRCommand(reinterpret_cast<MegaRCRCommandTemplate*>(ct),
+                           extra_dependency,
                            client);
         break;
       default:
@@ -191,6 +197,7 @@ bool CommandTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
 
 void CommandTemplate::PushComputeJobCommand(ComputeJobCommandTemplate* command,
                                             const Parameter& parameter,
+                                            const IDSet<job_id_t>& extra_dependency,
                                             SchedulerClient *client) {
   std::string job_name = command->job_name_;
   ID<job_id_t> job_id(*(command->job_id_ptr_));
@@ -230,6 +237,7 @@ void CommandTemplate::PushComputeJobCommand(ComputeJobCommandTemplate* command,
                           read_set,
                           write_set,
                           before_set,
+                          extra_dependency,
                           after_set,
                           future_job_id,
                           command->sterile_,
@@ -240,6 +248,7 @@ void CommandTemplate::PushComputeJobCommand(ComputeJobCommandTemplate* command,
 }
 
 void CommandTemplate::PushLocalCopyCommand(LocalCopyCommandTemplate* command,
+                                           const IDSet<job_id_t>& extra_dependency,
                                            SchedulerClient *client) {
   ID<job_id_t> job_id(*(command->job_id_ptr_));
   ID<physical_data_id_t> from_data_id(*(command->from_physical_data_id_ptr_));
@@ -258,12 +267,14 @@ void CommandTemplate::PushLocalCopyCommand(LocalCopyCommandTemplate* command,
     new LocalCopyCommand(job_id,
                         from_data_id,
                         to_data_id,
-                        before_set);
+                        before_set,
+                        extra_dependency);
 
   client->PushCommandToTheQueue(cm);
 }
 
 void CommandTemplate::PushRemoteCopySendCommand(RemoteCopySendCommandTemplate* command,
+                                                const IDSet<job_id_t>& extra_dependency,
                                                 SchedulerClient *client) {
   ID<job_id_t> job_id(*(command->job_id_ptr_));
   ID<job_id_t> receive_job_id(*(command->receive_job_id_ptr_));
@@ -290,12 +301,14 @@ void CommandTemplate::PushRemoteCopySendCommand(RemoteCopySendCommandTemplate* c
                              to_worker_id,
                              to_ip,
                              to_port,
-                             before_set);
+                             before_set,
+                             extra_dependency);
 
   client->PushCommandToTheQueue(cm);
 }
 
 void CommandTemplate::PushRemoteCopyReceiveCommand(RemoteCopyReceiveCommandTemplate* command,
+                                                   const IDSet<job_id_t>& extra_dependency,
                                                    SchedulerClient *client) {
   ID<job_id_t> job_id(*(command->job_id_ptr_));
   ID<physical_data_id_t> to_data_id(*(command->to_physical_data_id_ptr_));
@@ -312,12 +325,14 @@ void CommandTemplate::PushRemoteCopyReceiveCommand(RemoteCopyReceiveCommandTempl
   RemoteCopyReceiveCommand *cm =
     new RemoteCopyReceiveCommand(job_id,
                                 to_data_id,
-                                before_set);
+                                before_set,
+                                extra_dependency);
 
   client->PushCommandToTheQueue(cm);
 }
 
 void CommandTemplate::PushMegaRCRCommand(MegaRCRCommandTemplate* command,
+                                         const IDSet<job_id_t>& extra_dependency,
                                          SchedulerClient *client) {
   ID<job_id_t> job_id(*(command->job_id_ptr_));
 
@@ -340,7 +355,8 @@ void CommandTemplate::PushMegaRCRCommand(MegaRCRCommandTemplate* command,
   MegaRCRCommand *cm =
     new MegaRCRCommand(job_id,
                        receive_job_ids,
-                       to_phy_ids);
+                       to_phy_ids,
+                       extra_dependency);
 
   client->PushCommandToTheQueue(cm);
 }

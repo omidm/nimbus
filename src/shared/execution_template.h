@@ -89,6 +89,7 @@ class ExecutionTemplate {
 
     bool Instantiate(const std::vector<job_id_t>& inner_job_ids,
                      const std::vector<job_id_t>& outer_job_ids,
+                     const IDSet<job_id_t>& extra_dependency,
                      const std::vector<Parameter>& parameters,
                      const std::vector<physical_data_id_t>& physical_ids,
                      const WorkerDataExchanger::EventList& pending_events,
@@ -98,10 +99,15 @@ class ExecutionTemplate {
     bool InstantiatePending(const WorkerDataExchanger::EventList& pending_events,
                             JobList *ready_jobs);
 
-    bool MarkJobDone(const job_id_t& shadow_job_id,
-                     JobList *ready_jobs,
-                     bool &prepare_rewind_phase,
-                     bool append);
+    bool MarkInnerJobDone(const job_id_t& shadow_job_id,
+                          JobList *ready_jobs,
+                          bool &prepare_rewind_phase,
+                          bool append);
+
+    void NotifyJobDone(const job_id_t& job_id,
+                       JobList *ready_jobs,
+                       bool &prepare_rewind_phase,
+                       bool append);
 
     bool GenerateMegaJobDoneCommand(MegaJobDoneCommand **cm);
 
@@ -321,6 +327,9 @@ class ExecutionTemplate {
     JobIdPtrMap outer_job_id_map_;
     JobIdPtrList outer_job_id_list_;
 
+    IDSet<job_id_t> extra_dependency_;
+    JobList blocked_on_extra_dependency_;
+
     JobIdPtrList compute_job_id_list_;
 
     JobTemplateMap job_templates_;
@@ -334,6 +343,7 @@ class ExecutionTemplate {
     bool pending_instantiate_;
     std::vector<job_id_t> pending_inner_job_ids_;
     std::vector<job_id_t> pending_outer_job_ids_;
+    IDSet<job_id_t> pending_extra_dependency_;
     std::vector<Parameter> pending_parameters_;
     std::vector<physical_data_id_t> pending_physical_ids_;
     template_id_t pending_template_generation_id_;

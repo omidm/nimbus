@@ -467,12 +467,22 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
   job->set_id(cm->job_id());
   job->set_read_set(cm->read_set());
   job->set_write_set(cm->write_set());
-  job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
   job->set_future_job_id(cm->future_job_id());
   job->set_sterile(cm->sterile());
   job->set_region(cm->region());
   job->set_parameters(cm->params());
+
+  if (cm->extra_dependency_p()->size() != 0) {
+    IDSet<job_id_t> extended_before_set = cm->before_set();
+    IDSet<job_id_t>::ConstIter iter = cm->extra_dependency_p()->begin();
+    for (; iter != cm->extra_dependency_p()->end(); ++iter) {
+      extended_before_set.insert(*iter);
+    }
+    job->set_before_set(extended_before_set);
+  } else {
+    job->set_before_set(cm->before_set());
+  }
 
   if (filling_execution_template_) {
     std::map<std::string, ExecutionTemplate*>::iterator iter =
@@ -522,7 +532,17 @@ void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
   IDSet<physical_data_id_t> read_set;
   read_set.insert(cm->from_physical_data_id().elem());
   job->set_read_set(read_set);
-  job->set_before_set(cm->before_set());
+
+  if (cm->extra_dependency_p()->size() != 0) {
+    IDSet<job_id_t> extended_before_set = cm->before_set();
+    IDSet<job_id_t>::ConstIter iter = cm->extra_dependency_p()->begin();
+    for (; iter != cm->extra_dependency_p()->end(); ++iter) {
+      extended_before_set.insert(*iter);
+    }
+    job->set_before_set(extended_before_set);
+  } else {
+    job->set_before_set(cm->before_set());
+  }
 
   if (filling_execution_template_) {
     std::map<std::string, ExecutionTemplate*>::iterator iter =
@@ -541,7 +561,17 @@ void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {
   IDSet<physical_data_id_t> write_set;
   write_set.insert(cm->to_physical_data_id().elem());
   job->set_write_set(write_set);
-  job->set_before_set(cm->before_set());
+
+  if (cm->extra_dependency_p()->size() != 0) {
+    IDSet<job_id_t> extended_before_set = cm->before_set();
+    IDSet<job_id_t>::ConstIter iter = cm->extra_dependency_p()->begin();
+    for (; iter != cm->extra_dependency_p()->end(); ++iter) {
+      extended_before_set.insert(*iter);
+    }
+    job->set_before_set(extended_before_set);
+  } else {
+    job->set_before_set(cm->before_set());
+  }
 
   if (filling_execution_template_) {
     std::map<std::string, ExecutionTemplate*>::iterator iter =
@@ -559,6 +589,8 @@ void Worker::ProcessMegaRCRCommand(MegaRCRCommand* cm) {
                              cm->to_physical_data_ids());
   job->set_name("MegaRCR");
   job->set_id(cm->job_id());
+
+  job->set_before_set(cm->extra_dependency());
 
   if (filling_execution_template_) {
     std::map<std::string, ExecutionTemplate*>::iterator iter =
@@ -636,7 +668,17 @@ void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
   IDSet<physical_data_id_t> write_set;
   write_set.insert(cm->to_physical_data_id().elem());
   job->set_write_set(write_set);
-  job->set_before_set(cm->before_set());
+
+  if (cm->extra_dependency_p()->size() != 0) {
+    IDSet<job_id_t> extended_before_set = cm->before_set();
+    IDSet<job_id_t>::ConstIter iter = cm->extra_dependency_p()->begin();
+    for (; iter != cm->extra_dependency_p()->end(); ++iter) {
+      extended_before_set.insert(*iter);
+    }
+    job->set_before_set(extended_before_set);
+  } else {
+    job->set_before_set(cm->before_set());
+  }
 
   if (filling_execution_template_) {
     std::map<std::string, ExecutionTemplate*>::iterator iter =
@@ -727,6 +769,29 @@ void Worker::ProcessSpawnCommandTemplateCommand(SpawnCommandTemplateCommand* com
   assert(iter != execution_templates_.end());
   ExecutionTemplate *et = iter->second;
 
+  // Prune the extra dependency.
+  IDSet<job_id_t> extra_dependency;
+  {
+    IDSet<job_id_t>::ConstIter it = command->extra_dependency_p()->begin();
+    for (; it != command->extra_dependency_p()->end(); ++it) {
+      job_id_t before_job_id = *it;
+      // Only copy jobs are in extra dependency. -omidm
+      assert(IDMaker::SchedulerProducedJobID(before_job_id));
+      // TODO(omidm): what if this is too small, controller do not support after
+      // map and before set clean up for worker template!!!
+      if (InFinishHintSet(before_job_id)) {
+        continue;
+      }
+      if (worker_job_graph_.HasVertex(before_job_id)) {
+        WorkerJobVertex* before_job_vertex = NULL;
+        worker_job_graph_.GetVertex(before_job_id, &before_job_vertex);
+        if (before_job_vertex->entry()->get_state() != WorkerJobEntry::FINISH) {
+          extra_dependency.insert(before_job_id);
+        }
+      }
+    }
+  }
+
   JobList ready_jobs;
   template_id_t tgi = command->template_generation_id();
   EventMap::iterator it = pending_events_.find(tgi);
@@ -734,6 +799,7 @@ void Worker::ProcessSpawnCommandTemplateCommand(SpawnCommandTemplateCommand* com
     bool instantiated =
       et->Instantiate(command->inner_job_ids(),
                       command->outer_job_ids(),
+                      extra_dependency,
                       command->parameters(),
                       command->phy_ids(),
                       it->second,
@@ -746,6 +812,7 @@ void Worker::ProcessSpawnCommandTemplateCommand(SpawnCommandTemplateCommand* com
     WorkerDataExchanger::EventList empty_pending_events;
     et->Instantiate(command->inner_job_ids(),
                     command->outer_job_ids(),
+                    extra_dependency,
                     command->parameters(),
                     command->phy_ids(),
                     empty_pending_events,
@@ -972,7 +1039,7 @@ void Worker::NotifyLocalJobDone(Job* job) {
       ExecutionTemplate *et = job->execution_template();
       assert(et);
       JobList ready_jobs;
-      if (et->MarkJobDone(shadow_job_id, &ready_jobs, prepare_rewind_phase_, false)) {
+      if (et->MarkInnerJobDone(shadow_job_id, &ready_jobs, prepare_rewind_phase_, false)) {
         assert(ready_jobs.size() == 0);
         et->GenerateMegaJobDoneCommand(&mega_job_done_comm);
         std::map<template_id_t, ExecutionTemplate*>::iterator iter =
@@ -1009,6 +1076,30 @@ void Worker::NotifyLocalJobDone(Job* job) {
         assert(false);
         return;
       }
+
+      // if it is a copy job, signal execution templates! -omidm
+      if (IDMaker::SchedulerProducedJobID(job_id)) {
+        if (active_execution_templates_.size() > 0) {
+          JobList ready_jobs;
+          {
+            std::map<template_id_t, ExecutionTemplate*>::iterator iter =
+              active_execution_templates_.begin();
+            for (; iter != active_execution_templates_.end(); ++iter) {
+              iter->second->NotifyJobDone(job_id, &ready_jobs, prepare_rewind_phase_, true);
+            }
+          }
+          {
+            JobList::iterator iter = ready_jobs.begin();
+            for (; iter != ready_jobs.end(); ++iter) {
+              ResolveDataArray(*iter);
+            }
+          }
+          bool success_flag = worker_manager_->PushJobList(&ready_jobs);
+          assert(success_flag);
+        }
+      }
+
+
       WorkerJobVertex* vertex = NULL;
       worker_job_graph_.GetVertex(job_id, &vertex);
       assert(vertex->incoming_edges()->empty());

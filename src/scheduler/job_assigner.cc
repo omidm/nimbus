@@ -182,13 +182,18 @@ void JobAssigner::AssignJobs(const JobEntryList& list) {
 bool JobAssigner::QueryDataManagerForPatterns(
                       ComplexJobEntry* job,
                       const BindingTemplate *binding_template,
-                      const std::vector<physical_data_id_t>*& physical_ids) {
+                      const std::vector<physical_data_id_t>*& physical_ids,
+                      BindingTemplate::ExtraDependency *extra_dependency) {
+  extra_dependency->clear();
   if (job->cascaded_bound()) {
     if (dm_query_cache_.Query(binding_template->record_name(), physical_ids)) {
       std::cout << "COMPLEX: Hit DM Query Cache.\n";
       return true;
     }
   }
+
+  size_t extra_lc = 0;
+  size_t extra_rc = 0;
 
   std::vector<physical_data_id_t> *result =
     new std::vector<physical_data_id_t>();
@@ -217,8 +222,13 @@ bool JobAssigner::QueryDataManagerForPatterns(
     data_manager_->AllInstances(ldo, &instances);
 
     // For now we assume that binding for template does not require creating
-    // new instances -omidm
+    // new instances. The template has already been executed on the workers and
+    // so there are anough instances to hold the data for each worker. However,
+    // they may not have the right version. This will be solved by adding extra
+    // local/remote copy jobs, as outer dependency. -omidm
     assert(instances.size() >= ldid_count);
+    BindingTemplate::PatternList unresolved_patterns;
+    std::vector<size_t> rel_unresolved_position;
 
     data_version_t base_version;
     if (!job->vmap_read()->query_entry(ldid, &base_version)) {
@@ -244,10 +254,114 @@ bool JobAssigner::QueryDataManagerForPatterns(
         }
       }
 
-      assert(found);
+      // assert(found);
+      if (!found) {
+        unresolved_patterns.push_back(pattern);
+        rel_unresolved_position.push_back(i);
+      }
       ++iter;
     }
+
+    size_t urp_count = unresolved_patterns.size();
+    if (urp_count != 0) {
+      ConstPhysicalDataPList instances_ref;
+      FlushBatchUpdate();
+      data_manager_->AllInstances(ldo, &instances_ref);
+
+      BindingTemplate::PatternList::iterator upiter = unresolved_patterns.begin();
+      size_t idx = 0;
+      for (; upiter != unresolved_patterns.end(); ++upiter, ++idx) {
+        BindingTemplate::PatternEntry *pattern = (*upiter);
+        assert(pattern->version_type_ == BindingTemplate::REGULAR);
+
+        data_version_t version = pattern->version_diff_from_base_ + base_version;
+
+        PhysicalData target_pd;
+        bool found_target = false;
+        for (ConstPhysicalDataPList::iterator pi = instances.begin();
+             pi != instances.end(); ++pi) {
+          if ((*pi)->worker() == pattern->worker_id_) {
+            found_target = true;
+            target_pd = *(*pi);
+            instances.erase(pi);
+            break;
+          }
+        }
+        // we assume no create data is required, look at the comment above. -omidm
+        assert(found_target);
+
+        PhysicalData ref_pd;
+        bool found_ref = false;
+        for (ConstPhysicalDataPList::iterator pi = instances_ref.begin();
+             pi != instances_ref.end(); ++pi) {
+          if (((*pi)->worker() == pattern->worker_id_) &&
+              ((*pi)->version() == version)) {
+            found_ref = true;
+            ref_pd = *(*pi);
+            break;
+          }
+        }
+        // if ref is not found at local worker.
+        if (!found_ref) {
+          for (ConstPhysicalDataPList::iterator pi = instances_ref.begin();
+               pi != instances_ref.end(); ++pi) {
+            if ((*pi)->version() == version) {
+              found_ref = true;
+              ref_pd = *(*pi);
+              break;
+            }
+          }
+        }
+        assert(found_ref);
+
+        assert(ref_pd.id() != target_pd.id());
+
+        if (ref_pd.worker() == target_pd.worker()) {
+          ++extra_lc;
+          SchedulerWorker* worker;
+          if (!server_->GetSchedulerWorkerById(worker, pattern->worker_id_)) {
+            dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", pattern->worker_id_);
+            assert(false);
+          }
+
+          LocalCopyData(worker, ldo, &ref_pd, &target_pd, NULL);
+          extra_dependency->operator[](worker->worker_id()).insert(target_pd.last_job_write());
+        } else {
+          ++extra_rc;
+          SchedulerWorker* worker_sender;
+          if (!server_->GetSchedulerWorkerById(worker_sender, ref_pd.worker())) {
+            dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", ref_pd.worker());
+            assert(false);
+          }
+          SchedulerWorker* worker_receiver;
+          if (!server_->GetSchedulerWorkerById(worker_receiver, target_pd.worker())) {
+            dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", target_pd.worker());
+            assert(false);
+          }
+
+          job_id_t send_id =
+            RemoteCopyData(worker_sender, worker_receiver, ldo, &ref_pd, &target_pd, NULL);
+          extra_dependency->operator[](worker_receiver->worker_id()).insert(target_pd.last_job_write()); // NOLINT
+          extra_dependency->operator[](worker_sender->worker_id()).insert(send_id);
+        }
+
+        // loading the results vector.
+        std::vector<physical_data_id_t>::reverse_iterator riter = result->rbegin();
+        size_t offset_from_end =
+          ldid_count - urp_count + idx - rel_unresolved_position[idx];
+        for (size_t i = 0; i < offset_from_end; ++i) {
+          riter++;
+        }
+        result->insert(riter.base(), target_pd.id());
+      }  // for (upiter, idx)
+    }  // if (urp_count != 0)
+
     ++it;
+  }
+
+  if ((extra_rc + extra_lc) != 0) {
+    dbg(DBG_WARN, "WARNING: needed %lu extra local copy, and %lu extra remote copy to fit the binding template %s!\n", // NOLINT
+        extra_lc, extra_rc, binding_template->record_name().c_str());
   }
 
   dm_query_cache_.Learn(binding_template->record_name(), result);
@@ -400,8 +514,9 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
   id_maker_->GetNewJobID(&copy_job_ids, copy_job_num);
 
   const std::vector<physical_data_id_t> *physical_ids;
+  BindingTemplate::ExtraDependency extra_dependency;
   log.log_StartTimer();
-  QueryDataManagerForPatterns(job, bt, physical_ids);
+  QueryDataManagerForPatterns(job, bt, physical_ids, &extra_dependency);
   log.log_StopTimer();
   std::cout << "COMPLEX: QueryDataManager: "
     << job->template_entry()->template_name()
@@ -412,6 +527,7 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
                   job->parameters(),
                   copy_job_ids,
                   physical_ids,
+                  extra_dependency,
                   ++template_generation_id_,
                   server_);
   log.log_StopTimer();
@@ -484,6 +600,7 @@ bool JobAssigner::AssignJob(JobEntry *job) {
 
       ID<job_id_t> job_id(job->job_id());
       ID<job_id_t> future_job_id(job->future_job_id());
+      IDSet<job_id_t> extra_dependency;
       IDSet<physical_data_id_t> read_set, write_set;
       // TODO(omidm): check the return value of the following methods.
       job->GetPhysicalReadSet(&read_set);
@@ -493,6 +610,7 @@ bool JobAssigner::AssignJob(JobEntry *job) {
                            read_set,
                            write_set,
                            job->before_set(),
+                           extra_dependency,
                            job->after_set(),
                            future_job_id,
                            job->sterile(),
@@ -1283,12 +1401,12 @@ bool JobAssigner::CreateDataAtWorker(SchedulerWorker* worker,
   return true;
 }
 
-bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
-                                 SchedulerWorker* to_worker,
-                                 LogicalDataObject* ldo,
-                                 PhysicalData* from_data,
-                                 PhysicalData* to_data,
-                                 BindingTemplate *bt) {
+job_id_t JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
+                                     SchedulerWorker* to_worker,
+                                     LogicalDataObject* ldo,
+                                     PhysicalData* from_data,
+                                     PhysicalData* to_data,
+                                     BindingTemplate *bt) {
   assert(from_worker->worker_id() == from_data->worker());
   assert(to_worker->worker_id() == to_data->worker());
 
@@ -1297,6 +1415,7 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   job_id_t receive_id = j[0];
   job_id_t send_id = j[1];
   IDSet<job_id_t> before;
+  IDSet<job_id_t> extra_dependency;
   // JobEntry *job;
 
   // Receive part
@@ -1322,7 +1441,8 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   if (bt) {
     RemoteCopyReceiveCommand cm_r(ID<job_id_t>(receive_id),
                                   ID<physical_data_id_t>(to_data->id()),
-                                  before);
+                                  before,
+                                  extra_dependency);
     bt->AddRemoteCopyReceiveCommand(&cm_r, to_worker->worker_id());
   }
   // BINDING MEMOIZE - omidm
@@ -1330,7 +1450,8 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   job_manager_->UpdateBeforeSet(&before);
   RemoteCopyReceiveCommand cm_r(ID<job_id_t>(receive_id),
                                 ID<physical_data_id_t>(to_data->id()),
-                                before);
+                                before,
+                                extra_dependency);
   server_->SendCommand(to_worker, &cm_r);
 
   // Notify assignment to job manager.
@@ -1364,7 +1485,8 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
                                ID<worker_id_t>(to_worker->worker_id()),
                                to_worker->ip(),
                                ID<port_t>(to_worker->port()),
-                               before);
+                               before,
+                               extra_dependency);
     bt->AddRemoteCopySendCommand(&cm_s, from_worker->worker_id());
   }
   // BINDING MEMOIZE - omidm
@@ -1377,7 +1499,8 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
                              ID<worker_id_t>(to_worker->worker_id()),
                              to_worker->ip(),
                              ID<port_t>(to_worker->port()),
-                             before);
+                             before,
+                             extra_dependency);
   server_->SendCommand(from_worker, &cm_s);
 
   // Notify assignment to job manager.
@@ -1389,7 +1512,7 @@ bool JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   *from_data = from_data_new;
   *to_data = to_data_new;
 
-  return true;
+  return send_id;
 }
 
 bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
@@ -1403,6 +1526,7 @@ bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
   std::vector<job_id_t> j;
   id_maker_->GetNewJobID(&j, 1);
   IDSet<job_id_t> before;
+  IDSet<job_id_t> extra_dependency;
 
   // Update the job table.
   // JobEntry *job = job_manager_->AddLocalCopyJobEntry(j[0]);
@@ -1432,7 +1556,8 @@ bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
     LocalCopyCommand cm_c(ID<job_id_t>(j[0]),
                           ID<physical_data_id_t>(from_data->id()),
                           ID<physical_data_id_t>(to_data->id()),
-                          before);
+                          before,
+                          extra_dependency);
     bt->AddLocalCopyCommand(&cm_c, worker->worker_id());
   }
   // BINDING MEMOIZE - omidm
@@ -1441,7 +1566,8 @@ bool JobAssigner::LocalCopyData(SchedulerWorker* worker,
   LocalCopyCommand cm_c(ID<job_id_t>(j[0]),
                         ID<physical_data_id_t>(from_data->id()),
                         ID<physical_data_id_t>(to_data->id()),
-                        before);
+                        before,
+                        extra_dependency);
   server_->SendCommand(worker, &cm_c);
 
   // Notify assignment to job manager.
@@ -1473,6 +1599,7 @@ bool JobAssigner::SendComputeJobToWorker(SchedulerWorker* worker,
     ID<job_id_t> job_id(job->job_id());
     ID<job_id_t> future_job_id(job->future_job_id());
     IDSet<physical_data_id_t> read_set, write_set;
+    IDSet<job_id_t> extra_dependency;
     // TODO(omidm): check the return value of the following methods.
     job->GetPhysicalReadSet(&read_set);
     job->GetPhysicalWriteSet(&write_set);
@@ -1481,6 +1608,7 @@ bool JobAssigner::SendComputeJobToWorker(SchedulerWorker* worker,
                          read_set,
                          write_set,
                          job->before_set(),
+                         extra_dependency,
                          job->after_set(),
                          future_job_id,
                          job->sterile(),

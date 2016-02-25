@@ -58,7 +58,8 @@ class LocalCopyCommand : public SchedulerCommand {
     LocalCopyCommand(const ID<job_id_t>& job_id,
                      const ID<physical_data_id_t>& from_physical_data_id,
                      const ID<physical_data_id_t>& to_physical_data_id,
-                     const IDSet<job_id_t>& before);
+                     const IDSet<job_id_t>& before,
+                     const IDSet<job_id_t>& extra_dependency);
     ~LocalCopyCommand();
 
     virtual SchedulerCommand* Clone();
@@ -71,12 +72,15 @@ class LocalCopyCommand : public SchedulerCommand {
     ID<physical_data_id_t> to_physical_data_id();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t>* before_set_p();
+    IDSet<job_id_t> extra_dependency();
+    IDSet<job_id_t>* extra_dependency_p();
 
   private:
     ID<job_id_t> job_id_;
     ID<physical_data_id_t> from_physical_data_id_;
     ID<physical_data_id_t> to_physical_data_id_;
     IDSet<job_id_t> before_set_;
+    IDSet<job_id_t> extra_dependency_;
 
     bool ReadFromProtobuf(const LocalCopyPBuf& buf);
     bool WriteToProtobuf(LocalCopyPBuf* buf);

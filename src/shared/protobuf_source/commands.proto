@@ -232,9 +232,10 @@ message SpawnCommandTemplatePBuf {
   optional string command_template_name  = 1;
   optional JobIDVector inner_job_ids     = 2; 
   optional JobIDVector outer_job_ids     = 3; 
-  optional ParameterVector parameters    = 4; 
-  optional PhyIDVector phy_ids           = 5; 
-  optional uint64 template_generation_id = 6; 
+  optional JobIDSet extra_dependency     = 4;
+  optional ParameterVector parameters    = 5; 
+  optional PhyIDVector phy_ids           = 6; 
+  optional uint64 template_generation_id = 7; 
 }
 
 message SubmitComputeJobPBuf {
@@ -310,11 +311,12 @@ message ExecuteComputeJobPBuf {
   optional PhysicalIDSet read_set     = 3;
   optional PhysicalIDSet write_set    = 4;
   optional JobIDSet before_set        = 5;
-  optional JobIDSet after_set         = 6;
-  optional uint64 future_job_id       = 7; 
-  optional bool sterile               = 8;
-  optional bytes params               = 9;
-  optional GeometricRegionPBuf region = 10;
+  optional JobIDSet extra_dependency  = 6;
+  optional JobIDSet after_set         = 7;
+  optional uint64 future_job_id       = 8; 
+  optional bool sterile               = 9;
+  optional bytes params               = 10;
+  optional GeometricRegionPBuf region = 11;
 }
 
 message CreateDataPBuf {
@@ -326,26 +328,29 @@ message CreateDataPBuf {
 }
 
 message RemoteCopySendPBuf {
-  optional uint64 job_id           = 1;
-  optional uint64 receive_job_id   = 2;
-  optional uint64 mega_rcr_job_id  = 3;
-  optional uint64 from_physical_id = 4;
-  optional uint64 to_worker_id     = 5;
-  optional string to_ip            = 6;
-  optional uint32 to_port          = 7;
-  optional JobIDSet before_set     = 8;
+  optional uint64 job_id              = 1;
+  optional uint64 receive_job_id      = 2;
+  optional uint64 mega_rcr_job_id     = 3;
+  optional uint64 from_physical_id    = 4;
+  optional uint64 to_worker_id        = 5;
+  optional string to_ip               = 6;
+  optional uint32 to_port             = 7;
+  optional JobIDSet before_set        = 8;
+  optional JobIDSet extra_dependency  = 9;
 }
 
 message RemoteCopyReceivePBuf {
-  optional uint64 job_id          = 1;
-  optional uint64 physical_id     = 2;
-  optional JobIDSet before_set    = 3;
+  optional uint64 job_id              = 1;
+  optional uint64 physical_id         = 2;
+  optional JobIDSet before_set        = 3;
+  optional JobIDSet extra_dependency  = 4;
 }
 
 message MegaRCRPBuf {
   optional uint64 job_id                = 1;
   optional JobIDVector receive_job_ids  = 2; 
   optional PhyIDVector to_phy_ids       = 3; 
+  optional JobIDSet extra_dependency    = 4;
 }
 
 message MegaJobDonePBuf {
@@ -353,10 +358,11 @@ message MegaJobDonePBuf {
 }
 
 message LocalCopyPBuf {
-  optional uint64 job_id           = 1;
-  optional uint64 from_physical_id = 2;
-  optional uint64 to_physical_id   = 3;
-  optional JobIDSet before_set     = 4;
+  optional uint64 job_id              = 1;
+  optional uint64 from_physical_id    = 2;
+  optional uint64 to_physical_id      = 3;
+  optional JobIDSet before_set        = 4;
+  optional JobIDSet extra_dependency  = 5;
 }
 
 message SaveDataPBuf {

@@ -54,7 +54,8 @@ class MegaRCRCommand : public SchedulerCommand {
     MegaRCRCommand();
     MegaRCRCommand(const ID<job_id_t>& job_id,
                    const std::vector<job_id_t>& receive_job_ids,
-                   const std::vector<physical_data_id_t>& to_physical_data_ids);
+                   const std::vector<physical_data_id_t>& to_physical_data_ids,
+                   const IDSet<job_id_t>& extra_dependency);
 
     ~MegaRCRCommand();
 
@@ -68,11 +69,14 @@ class MegaRCRCommand : public SchedulerCommand {
     const std::vector<job_id_t>* receive_job_ids_p();
     std::vector<physical_data_id_t> to_physical_data_ids();
     const std::vector<physical_data_id_t>* to_physical_data_ids_p();
+    IDSet<job_id_t> extra_dependency();
+    IDSet<job_id_t>* extra_dependency_p();
 
   private:
     ID<job_id_t> job_id_;
     std::vector<job_id_t> receive_job_ids_;
     std::vector<physical_data_id_t> to_physical_data_ids_;
+    IDSet<job_id_t> extra_dependency_;
 
     bool ReadFromProtobuf(const MegaRCRPBuf& buf);
     bool WriteToProtobuf(MegaRCRPBuf* buf);

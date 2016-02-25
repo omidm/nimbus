@@ -58,14 +58,16 @@ RemoteCopySendCommand::RemoteCopySendCommand(const ID<job_id_t>& job_id,
                                              const ID<physical_data_id_t>& from_physical_data_id,
                                              const ID<worker_id_t>& to_worker_id,
                                              const std::string to_ip, const ID<port_t>& to_port,
-                                             const IDSet<job_id_t>& before)
+                                             const IDSet<job_id_t>& before,
+                                             const IDSet<job_id_t>& extra_dependency)
   : job_id_(job_id),
     receive_job_id_(receive_job_id),
     mega_rcr_job_id_(mega_rcr_job_id),
     from_physical_data_id_(from_physical_data_id),
     to_worker_id_(to_worker_id),
     to_ip_(to_ip), to_port_(to_port),
-    before_set_(before) {
+    before_set_(before),
+    extra_dependency_(extra_dependency) {
   name_ = REMOTE_SEND_NAME;
   type_ = REMOTE_SEND;
 }
@@ -125,6 +127,7 @@ std::string RemoteCopySendCommand::ToString() {
   str += ("to-ip:" + to_ip_ + ",");
   str += ("to-port:" + to_port_.ToNetworkData() + ",");
   str += ("before:" + before_set_.ToNetworkData());
+  str += ("extra_dependency:" + extra_dependency_.ToNetworkData());
   return str;
 }
 
@@ -164,6 +167,14 @@ IDSet<job_id_t>* RemoteCopySendCommand::before_set_p() {
   return &before_set_;
 }
 
+IDSet<job_id_t> RemoteCopySendCommand::extra_dependency() {
+  return extra_dependency_;
+}
+
+IDSet<job_id_t>* RemoteCopySendCommand::extra_dependency_p() {
+  return &extra_dependency_;
+}
+
 bool RemoteCopySendCommand::ReadFromProtobuf(const RemoteCopySendPBuf& buf) {
   job_id_.set_elem(buf.job_id());
   receive_job_id_.set_elem(buf.receive_job_id());
@@ -173,6 +184,7 @@ bool RemoteCopySendCommand::ReadFromProtobuf(const RemoteCopySendPBuf& buf) {
   to_ip_ = buf.to_ip();
   to_port_.set_elem(buf.to_port());
   before_set_.ConvertFromRepeatedField(buf.before_set().ids());
+  extra_dependency_.ConvertFromRepeatedField(buf.extra_dependency().ids());
   return true;
 }
 
@@ -185,5 +197,6 @@ bool RemoteCopySendCommand::WriteToProtobuf(RemoteCopySendPBuf* buf) {
   buf->set_to_ip(to_ip());
   buf->set_to_port(to_port().elem());
   before_set_.ConvertToRepeatedField(buf->mutable_before_set()->mutable_ids());
+  extra_dependency_.ConvertToRepeatedField(buf->mutable_extra_dependency()->mutable_ids());
   return true;
 }

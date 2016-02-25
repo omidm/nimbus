@@ -57,6 +57,7 @@ class ComputeJobCommand : public SchedulerCommand {
                       const IDSet<physical_data_id_t>& read,
                       const IDSet<physical_data_id_t>& write,
                       const IDSet<job_id_t>& before,
+                      const IDSet<job_id_t>& extra_dependency,
                       const IDSet<job_id_t>& after,
                       const ID<job_id_t>& future_job_id,
                       const bool& sterile,
@@ -77,6 +78,8 @@ class ComputeJobCommand : public SchedulerCommand {
     IDSet<physical_data_id_t>* write_set_p();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t>* before_set_p();
+    IDSet<job_id_t> extra_dependency();
+    IDSet<job_id_t>* extra_dependency_p();
     IDSet<job_id_t> after_set();
     IDSet<job_id_t>* after_set_p();
     ID<job_id_t> future_job_id();
@@ -90,6 +93,7 @@ class ComputeJobCommand : public SchedulerCommand {
     IDSet<physical_data_id_t> read_set_;
     IDSet<physical_data_id_t> write_set_;
     IDSet<job_id_t> before_set_;
+    IDSet<job_id_t> extra_dependency_;
     IDSet<job_id_t> after_set_;
     ID<job_id_t> future_job_id_;
     bool sterile_;

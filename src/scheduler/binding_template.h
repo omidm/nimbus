@@ -86,10 +86,13 @@ class BindingTemplate {
 
     bool Finalize(const std::vector<job_id_t>& compute_job_ids);
 
+    typedef boost::unordered_map<worker_id_t, IDSet<job_id_t> > ExtraDependency;
+
     bool Instantiate(const std::vector<job_id_t>& compute_job_ids,
                      const std::vector<Parameter>& parameters,
                      const std::vector<job_id_t>& copy_job_ids,
                      const std::vector<physical_data_id_t> *physical_ids,
+                     const ExtraDependency& extra_dependency,
                      const template_id_t& template_generation_id,
                      SchedulerServer *server);
 
@@ -184,6 +187,7 @@ class BindingTemplate {
         CommandTemplateType type_;
         JobIdPtr job_id_ptr_;
         JobIdPtrSet before_set_ptr_;
+        worker_id_t worker_id_;
     };
 
     typedef std::list<CommandTemplate*> CommandTemplateList;
@@ -206,11 +210,11 @@ class BindingTemplate {
             after_set_ptr_(after_set_ptr),
             future_job_id_ptr_(future_job_id_ptr),
             sterile_(sterile),
-            region_(region),
-            worker_id_(worker_id) {
+            region_(region) {
               type_ = COMPUTE;
               job_id_ptr_ = job_id_ptr;
               before_set_ptr_ = before_set_ptr;
+              worker_id_ = worker_id;
             }
 
         ~ComputeJobCommandTemplate() {}
@@ -222,7 +226,6 @@ class BindingTemplate {
         JobIdPtr future_job_id_ptr_;
         bool sterile_;
         GeometricRegion region_;
-        worker_id_t worker_id_;
         size_t param_index_;
     };
 
@@ -234,18 +237,17 @@ class BindingTemplate {
                                  const JobIdPtrSet& before_set_ptr,
                                  const worker_id_t& worker_id)
           : from_physical_data_id_ptr_(from_physical_data_id_ptr),
-            to_physical_data_id_ptr_(to_physical_data_id_ptr),
-            worker_id_(worker_id) {
+            to_physical_data_id_ptr_(to_physical_data_id_ptr) {
               type_ = LC;
               job_id_ptr_ = job_id_ptr;
               before_set_ptr_ = before_set_ptr;
+              worker_id_ = worker_id;
             }
 
         ~LocalCopyCommandTemplate() {}
 
         PhyIdPtr from_physical_data_id_ptr_;
         PhyIdPtr to_physical_data_id_ptr_;
-        worker_id_t worker_id_;
     };
 
 
@@ -265,11 +267,11 @@ class BindingTemplate {
             from_physical_data_id_ptr_(from_physical_data_id_ptr),
             to_worker_id_(to_worker_id),
             to_ip_(to_ip),
-            to_port_(to_port),
-            worker_id_(worker_id) {
+            to_port_(to_port) {
               type_ = RCS;
               job_id_ptr_ = job_id_ptr;
               before_set_ptr_ = before_set_ptr;
+              worker_id_ = worker_id;
             }
 
         ~RemoteCopySendCommandTemplate() {}
@@ -280,7 +282,6 @@ class BindingTemplate {
         ID<worker_id_t> to_worker_id_;
         std::string to_ip_;
         ID<port_t> to_port_;
-        worker_id_t worker_id_;
     };
 
     class RemoteCopyReceiveCommandTemplate : public CommandTemplate {
@@ -289,17 +290,16 @@ class BindingTemplate {
                                          PhyIdPtr to_physical_data_id_ptr,
                                          const JobIdPtrSet& before_set_ptr,
                                          const worker_id_t& worker_id)
-          : to_physical_data_id_ptr_(to_physical_data_id_ptr),
-            worker_id_(worker_id) {
+          : to_physical_data_id_ptr_(to_physical_data_id_ptr) {
               type_ = RCR;
               job_id_ptr_ = job_id_ptr;
               before_set_ptr_ = before_set_ptr;
+              worker_id_ = worker_id;
             }
 
         ~RemoteCopyReceiveCommandTemplate() {}
 
         PhyIdPtr to_physical_data_id_ptr_;
-        worker_id_t worker_id_;
     };
 
     class MegaRCRCommandTemplate : public CommandTemplate {
@@ -309,17 +309,16 @@ class BindingTemplate {
                                const std::vector<PhyIdPtr>& to_physical_data_id_ptrs,
                                const worker_id_t& worker_id)
           : rcr_job_id_ptrs_(rcr_job_id_ptrs),
-            to_physical_data_id_ptrs_(to_physical_data_id_ptrs),
-            worker_id_(worker_id) {
+            to_physical_data_id_ptrs_(to_physical_data_id_ptrs) {
               type_ = MEGA_RCR;
               job_id_ptr_ = job_id_ptr;
+              worker_id_ = worker_id;
             }
 
         ~MegaRCRCommandTemplate() {}
 
         JobIdPtrList rcr_job_id_ptrs_;
         PhyIdPtrList to_physical_data_id_ptrs_;
-        worker_id_t worker_id_;
     };
 
     bool finalized_;
@@ -388,23 +387,29 @@ class BindingTemplate {
     void SendCommandTemplateFinalizeToWorkers(SchedulerServer *server);
 
     void SpawnCommandTemplateAtWorkers(const std::vector<Parameter>& parameters,
+                                       const ExtraDependency& extra_dependency,
                                        SchedulerServer *server,
                                        const template_id_t& template_generation_id);
 
     void SendComputeJobCommand(ComputeJobCommandTemplate* command,
                                const Parameter& parameter,
+                               const IDSet<job_id_t>& extra_dependency,
                                SchedulerServer *server);
 
     void SendLocalCopyCommand(LocalCopyCommandTemplate* command,
+                              const IDSet<job_id_t>& extra_dependency,
                               SchedulerServer *server);
 
     void SendRemoteCopySendCommand(RemoteCopySendCommandTemplate* command,
+                                   const IDSet<job_id_t>& extra_dependency,
                                    SchedulerServer *server);
 
     void SendMegaRCRCommand(MegaRCRCommandTemplate* command,
+                            const IDSet<job_id_t>& extra_dependency,
                             SchedulerServer *server);
 
     void SendRemoteCopyReceiveCommand(RemoteCopyReceiveCommandTemplate* command,
+                                      const IDSet<job_id_t>& extra_dependency,
                                       SchedulerServer *server);
 };
 }  // namespace nimbus

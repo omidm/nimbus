@@ -125,11 +125,13 @@ class SchedulerClient {
       CommandTemplateSeed(CommandTemplate *command_template,
                           const std::vector<job_id_t>& inner_job_ids,
                           const std::vector<job_id_t>& outer_job_ids,
+                          const IDSet<job_id_t>& extra_dependency,
                           const std::vector<Parameter>& parameters,
                           const std::vector<physical_data_id_t>& physical_ids)
         : command_template_(command_template),
           inner_job_ids_(inner_job_ids),
           outer_job_ids_(outer_job_ids),
+          extra_dependency_(extra_dependency),
           parameters_(parameters),
           physical_ids_(physical_ids) {}
       ~CommandTemplateSeed() {}
@@ -137,6 +139,7 @@ class SchedulerClient {
       CommandTemplate *command_template_;
       std::vector<job_id_t> inner_job_ids_;
       std::vector<job_id_t> outer_job_ids_;
+      IDSet<job_id_t> extra_dependency_;
       std::vector<Parameter> parameters_;
       std::vector<physical_data_id_t> physical_ids_;
   };

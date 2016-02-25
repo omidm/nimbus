@@ -57,11 +57,13 @@ LocalCopyCommand::LocalCopyCommand() {
 LocalCopyCommand::LocalCopyCommand(const ID<job_id_t>& job_id,
                                    const ID<physical_data_id_t>& from_physical_data_id,
                                    const ID<physical_data_id_t>& to_physical_data_id,
-                                   const IDSet<job_id_t>& before)
+                                   const IDSet<job_id_t>& before,
+                                   const IDSet<job_id_t>& extra_dependency)
   : job_id_(job_id),
     from_physical_data_id_(from_physical_data_id),
     to_physical_data_id_(to_physical_data_id),
-    before_set_(before) {
+    before_set_(before),
+    extra_dependency_(extra_dependency) {
   name_ = LOCAL_COPY_NAME;
   type_ = LOCAL_COPY;
 }
@@ -117,6 +119,7 @@ std::string LocalCopyCommand::ToString() {
   str += ("from-physical-data-id:" + from_physical_data_id_.ToNetworkData() + ",");
   str += ("to-physical-data-id:" + to_physical_data_id_.ToNetworkData() + ",");
   str += ("before:" + before_set_.ToNetworkData());
+  str += ("extra_dependency:" + extra_dependency_.ToNetworkData());
   return str;
 }
 
@@ -140,11 +143,20 @@ IDSet<job_id_t>* LocalCopyCommand::before_set_p() {
   return &before_set_;
 }
 
+IDSet<job_id_t> LocalCopyCommand::extra_dependency() {
+  return extra_dependency_;
+}
+
+IDSet<job_id_t>* LocalCopyCommand::extra_dependency_p() {
+  return &extra_dependency_;
+}
+
 bool LocalCopyCommand::ReadFromProtobuf(const LocalCopyPBuf& buf) {
   job_id_.set_elem(buf.job_id());
   from_physical_data_id_.set_elem(buf.from_physical_id());
   to_physical_data_id_.set_elem(buf.to_physical_id());
   before_set_.ConvertFromRepeatedField(buf.before_set().ids());
+  extra_dependency_.ConvertFromRepeatedField(buf.extra_dependency().ids());
   return true;
 }
 
@@ -153,5 +165,6 @@ bool LocalCopyCommand::WriteToProtobuf(LocalCopyPBuf* buf) {
   buf->set_from_physical_id(from_physical_data_id().elem());
   buf->set_to_physical_id(to_physical_data_id().elem());
   before_set_.ConvertToRepeatedField(buf->mutable_before_set()->mutable_ids());
+  extra_dependency_.ConvertToRepeatedField(buf->mutable_extra_dependency()->mutable_ids());
   return true;
 }

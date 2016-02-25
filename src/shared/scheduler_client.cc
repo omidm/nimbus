@@ -261,6 +261,7 @@ void SchedulerClient::HandleSpawnCommandTemplateCommand(SpawnCommandTemplateComm
       new CommandTemplateSeed(iter->second,
                               cm->inner_job_ids(),
                               cm->outer_job_ids(),
+                              cm->extra_dependency(),
                               cm->parameters(),
                               cm->phy_ids());
     {
@@ -271,6 +272,7 @@ void SchedulerClient::HandleSpawnCommandTemplateCommand(SpawnCommandTemplateComm
   } else {
   iter->second->Instantiate(cm->inner_job_ids(),
                             cm->outer_job_ids(),
+                            cm->extra_dependency(),
                             cm->parameters(),
                             cm->phy_ids(),
                             this);
@@ -411,6 +413,7 @@ void SchedulerClient::CommandTemplateThread() {
 
     cts->command_template_->Instantiate(cts->inner_job_ids_,
                                         cts->outer_job_ids_,
+                                        cts->extra_dependency_,
                                         cts->parameters_,
                                         cts->physical_ids_,
                                         this);

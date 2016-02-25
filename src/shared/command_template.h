@@ -85,6 +85,7 @@ class CommandTemplate {
 
     bool Instantiate(const std::vector<job_id_t>& inner_job_ids,
                      const std::vector<job_id_t>& outer_job_ids,
+                     const IDSet<job_id_t>& extra_dependency,
                      const std::vector<Parameter>& parameters,
                      const std::vector<physical_data_id_t>& physical_ids,
                      SchedulerClient *client);
@@ -291,18 +292,23 @@ class CommandTemplate {
 
     void PushComputeJobCommand(ComputeJobCommandTemplate* command,
                                const Parameter& parameter,
+                               const IDSet<job_id_t>& extra_dependency,
                                SchedulerClient *client);
 
     void PushLocalCopyCommand(LocalCopyCommandTemplate* command,
+                              const IDSet<job_id_t>& extra_dependency,
                               SchedulerClient *client);
 
     void PushRemoteCopySendCommand(RemoteCopySendCommandTemplate* command,
+                                   const IDSet<job_id_t>& extra_dependency,
                                    SchedulerClient *client);
 
     void PushRemoteCopyReceiveCommand(RemoteCopyReceiveCommandTemplate* command,
+                                      const IDSet<job_id_t>& extra_dependency,
                                       SchedulerClient *client);
 
     void PushMegaRCRCommand(MegaRCRCommandTemplate* command,
+                            const IDSet<job_id_t>& extra_dependency,
                             SchedulerClient *client);
 };
 }  // namespace nimbus

@@ -136,12 +136,12 @@ namespace nimbus {
                                     LogicalDataObject* ldo,
                                     PhysicalData* created_data);
 
-    virtual bool RemoteCopyData(SchedulerWorker* from_worker,
-                                SchedulerWorker* to_worker,
-                                LogicalDataObject* ldo,
-                                PhysicalData* from_data,
-                                PhysicalData* to_data,
-                                BindingTemplate *bt = NULL);
+    virtual job_id_t RemoteCopyData(SchedulerWorker* from_worker,
+                                    SchedulerWorker* to_worker,
+                                    LogicalDataObject* ldo,
+                                    PhysicalData* from_data,
+                                    PhysicalData* to_data,
+                                    BindingTemplate *bt = NULL);
 
     virtual bool LocalCopyData(SchedulerWorker* worker,
                                LogicalDataObject* ldo,
@@ -182,7 +182,8 @@ namespace nimbus {
     virtual bool QueryDataManagerForPatterns(
                     ComplexJobEntry* job,
                     const BindingTemplate *binding_template,
-                    const std::vector<physical_data_id_t>*& physical_ids);
+                    const std::vector<physical_data_id_t>*& physical_ids,
+                    BindingTemplate::ExtraDependency *extra_dependency);
 
     class DataManagerQueryCache {
       public:

@@ -424,7 +424,7 @@ void GeometricRegion::FillInValues(const GeometricRegionPBuf* msg) {
 std::string GeometricRegion::ToNetworkData() const {
   std::string str;
   char buf[2048];
-  snprintf(buf, sizeof(buf), "bbox:%ld,%ld,%ld,%ld,%ld,%ld",
+  snprintf(buf, sizeof(buf), "bbox:%d,%d,%d,%d,%d,%d",
            x_, y_, z_, dx_, dy_, dz_);
   str += buf;
   return str;

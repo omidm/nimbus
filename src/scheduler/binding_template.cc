@@ -581,6 +581,7 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
                                   const std::vector<Parameter>& parameters,
                                   const std::vector<job_id_t>& copy_job_ids,
                                   const std::vector<physical_data_id_t> *physical_ids,
+                                  const ExtraDependency& extra_dependency,
                                   const template_id_t& template_generation_id,
                                   SchedulerServer *server) {
   Log log(Log::NO_FILE);
@@ -625,7 +626,7 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
 
 
   if (established_command_template_) {
-    SpawnCommandTemplateAtWorkers(parameters, server, template_generation_id);
+    SpawnCommandTemplateAtWorkers(parameters, extra_dependency, server, template_generation_id);
     return true;
   }
 
@@ -634,31 +635,44 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
     SendCommandTemplateHeaderToWorkers(server);
   }
 
-  ComputeJobCommandTemplate *cc;
   CommandTemplateList::iterator iter = command_templates_.begin();
   for (; iter != command_templates_.end(); ++iter) {
     CommandTemplate *ct = *iter;
+    ComputeJobCommandTemplate *cc = NULL;
+    IDSet<job_id_t> ed;
+    {
+      ExtraDependency::const_iterator it =
+        extra_dependency.find(ct->worker_id_);
+      if (it != extra_dependency.end()) {
+        ed = it->second;
+      }
+    }
     switch (ct->type_) {
       case COMPUTE:
         cc = reinterpret_cast<ComputeJobCommandTemplate*>(ct);
         SendComputeJobCommand(cc,
                               parameters[cc->param_index_],
+                              ed,
                               server);
         break;
       case LC:
         SendLocalCopyCommand(reinterpret_cast<LocalCopyCommandTemplate*>(ct),
+                             ed,
                              server);
         break;
       case RCS:
         SendRemoteCopySendCommand(reinterpret_cast<RemoteCopySendCommandTemplate*>(ct),
+                                  ed,
                                   server);
         break;
       case RCR:
         SendRemoteCopyReceiveCommand(reinterpret_cast<RemoteCopyReceiveCommandTemplate*>(ct),
+                                     ed,
                                      server);
         break;
       case MEGA_RCR:
         SendMegaRCRCommand(reinterpret_cast<MegaRCRCommandTemplate*>(ct),
+                           ed,
                            server);
         break;
       default:
@@ -735,6 +749,7 @@ void BindingTemplate::SendCommandTemplateFinalizeToWorkers(SchedulerServer *serv
 }
 
 void BindingTemplate::SpawnCommandTemplateAtWorkers(const std::vector<Parameter>& parameters,
+                                                    const ExtraDependency& extra_dependency,
                                                     SchedulerServer *server,
                                                     const template_id_t& template_generation_id) {
   std::set<worker_id_t>::iterator iter = worker_ids_.begin();
@@ -780,9 +795,19 @@ void BindingTemplate::SpawnCommandTemplateAtWorkers(const std::vector<Parameter>
       }
     }
 
+    IDSet<job_id_t> ed;
+    {
+      ExtraDependency::const_iterator it =
+        extra_dependency.find(w_id);
+      if (it != extra_dependency.end()) {
+        ed = it->second;
+      }
+    }
+
     SpawnCommandTemplateCommand cm(record_name_,
                                    inner_job_ids,
                                    outer_job_ids,
+                                   ed,
                                    params,
                                    phy_ids,
                                    template_generation_id);
@@ -797,6 +822,7 @@ void BindingTemplate::SpawnCommandTemplateAtWorkers(const std::vector<Parameter>
 
 void BindingTemplate::SendComputeJobCommand(ComputeJobCommandTemplate* command,
                                             const Parameter& parameter,
+                                            const IDSet<job_id_t>& extra_dependency,
                                             SchedulerServer *server) {
   std::string job_name = command->job_name_;
   ID<job_id_t> job_id(*(command->job_id_ptr_));
@@ -835,6 +861,7 @@ void BindingTemplate::SendComputeJobCommand(ComputeJobCommandTemplate* command,
                        read_set,
                        write_set,
                        before_set,
+                       extra_dependency,
                        after_set,
                        future_job_id,
                        command->sterile_,
@@ -849,6 +876,7 @@ void BindingTemplate::SendComputeJobCommand(ComputeJobCommandTemplate* command,
 }
 
 void BindingTemplate::SendLocalCopyCommand(LocalCopyCommandTemplate* command,
+                                           const IDSet<job_id_t>& extra_dependency,
                                            SchedulerServer *server) {
   ID<job_id_t> job_id(*(command->job_id_ptr_));
   ID<physical_data_id_t> from_data_id(*(command->from_physical_data_id_ptr_));
@@ -866,7 +894,8 @@ void BindingTemplate::SendLocalCopyCommand(LocalCopyCommandTemplate* command,
   LocalCopyCommand cm_c(job_id,
                         from_data_id,
                         to_data_id,
-                        before_set);
+                        before_set,
+                        extra_dependency);
 
   SchedulerWorker *worker;
   if (!server->GetSchedulerWorkerById(worker, command->worker_id_)) {
@@ -876,6 +905,7 @@ void BindingTemplate::SendLocalCopyCommand(LocalCopyCommandTemplate* command,
 }
 
 void BindingTemplate::SendRemoteCopySendCommand(RemoteCopySendCommandTemplate* command,
+                                                const IDSet<job_id_t>& extra_dependency,
                                                 SchedulerServer *server) {
   ID<job_id_t> job_id(*(command->job_id_ptr_));
   ID<job_id_t> receive_job_id(*(command->receive_job_id_ptr_));
@@ -901,7 +931,8 @@ void BindingTemplate::SendRemoteCopySendCommand(RemoteCopySendCommandTemplate* c
                              to_worker_id,
                              to_ip,
                              to_port,
-                             before_set);
+                             before_set,
+                             extra_dependency);
 
   SchedulerWorker *worker;
   if (!server->GetSchedulerWorkerById(worker, command->worker_id_)) {
@@ -911,6 +942,7 @@ void BindingTemplate::SendRemoteCopySendCommand(RemoteCopySendCommandTemplate* c
 }
 
 void BindingTemplate::SendRemoteCopyReceiveCommand(RemoteCopyReceiveCommandTemplate* command,
+                                                   const IDSet<job_id_t>& extra_dependency,
                                                    SchedulerServer *server) {
   ID<job_id_t> job_id(*(command->job_id_ptr_));
   ID<physical_data_id_t> to_data_id(*(command->to_physical_data_id_ptr_));
@@ -926,7 +958,8 @@ void BindingTemplate::SendRemoteCopyReceiveCommand(RemoteCopyReceiveCommandTempl
 
   RemoteCopyReceiveCommand cm_r(job_id,
                                 to_data_id,
-                                before_set);
+                                before_set,
+                                extra_dependency);
 
   SchedulerWorker *worker;
   if (!server->GetSchedulerWorkerById(worker, command->worker_id_)) {
@@ -936,6 +969,7 @@ void BindingTemplate::SendRemoteCopyReceiveCommand(RemoteCopyReceiveCommandTempl
 }
 
 void BindingTemplate::SendMegaRCRCommand(MegaRCRCommandTemplate* command,
+                                         const IDSet<job_id_t>& extra_dependency,
                                          SchedulerServer *server) {
   ID<job_id_t> job_id(*(command->job_id_ptr_));
 
@@ -957,7 +991,8 @@ void BindingTemplate::SendMegaRCRCommand(MegaRCRCommandTemplate* command,
 
   MegaRCRCommand cm_r(job_id,
                       receive_job_ids,
-                      to_physical_data_ids);
+                      to_physical_data_ids,
+                      extra_dependency);
 
   SchedulerWorker *worker;
   if (!server->GetSchedulerWorkerById(worker, command->worker_id_)) {
