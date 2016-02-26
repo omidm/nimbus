@@ -61,5 +61,9 @@ function print_usage {
 
 for i in $(seq $2); do
   $1
+  exit_status=$?
+  if ! [ ${exit_status} == "0" ] ; then
+    exit ${exit_status}
+  fi
 done
                              
