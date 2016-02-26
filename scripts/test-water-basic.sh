@@ -129,7 +129,7 @@ echo -e "${Gre}[ VISUAL CHECK ] hit p (play/stop play), s (step forward), ctrl+s
 echo -e "${Gre}[ VISUAL CHECK ] by default it starts playing simulation and there are 10 frames!${RCol}"
 
 echo -e "${Gre}[ VISUAL CHECK ] window closes and the logs are cleaned in 10 seconds!${RCol}"
-wait_with_bar 10
+count_down 10
 if [ -z ${SSH_TTY} ]; then
   xdotool windowactivate --sync ${WINDOWID} key --clearmodifiers --delay 100 alt+F4
 else

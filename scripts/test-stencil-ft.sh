@@ -105,21 +105,21 @@ echo -e "${Cya}Ruunnig the experiment with faults:${RCol}"
 start_experiment "${CONTROLLER_ARGS_FT}" "${WORKER_ARGS}" "${APPLICATION_LIB}" "${APPLICATION_ARGS}"
 
 echo -e "${Cya}Waiting ${FAULT_DELAY} seconds before killing the first worker...${RCol}"
-wait_with_bar ${FAULT_DELAY}
+count_down ${FAULT_DELAY}
 pause_controller
 check_checkpoints ${CHKP_NUM}
 kill_one_worker
 resume_controller
 
 echo -e "${Cya}Waiting ${FAULT_DELAY} seconds before killing the second worker...${RCol}"
-wait_with_bar ${FAULT_DELAY}
+count_down ${FAULT_DELAY}
 pause_controller
 check_checkpoints $((2*${CHKP_NUM}))
 kill_one_worker
 resume_controller
 
 echo -e "${Cya}Waiting ${FAULT_DELAY} seconds before killing the third worker...${RCol}"
-wait_with_bar ${FAULT_DELAY}
+count_down ${FAULT_DELAY}
 pause_controller
 check_checkpoints $((3*${CHKP_NUM}))
 kill_one_worker

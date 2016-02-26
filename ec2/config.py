@@ -15,7 +15,7 @@
 # US West (Oregon) Region
 EC2_LOCATION                    = 'us-west-2'
 UBUNTU_AMI                      = 'ami-fa9cf1ca'
-NIMBUS_AMI                      = 'ami-451ffc25' # 'ami-86d437e6' # 'ami-9a05e6fa' # 'ami-451ffc25'
+NIMBUS_AMI                      = 'ami-f65bb996' # 'ami-86d437e6' # 'ami-9a05e6fa' # 'ami-451ffc25'
 CONTROLLER_INSTANCE_TYPE        = 'c3.4xlarge'
 WORKER_INSTANCE_TYPE            = 'c3.2xlarge'
 PLACEMENT                       = 'us-west-2c' # None
@@ -24,12 +24,12 @@ SECURITY_GROUP                  = 'nimbus_sg_uswest2'
 KEY_NAME                        = 'omidm-sing-key-pair-us-west-2'
 PRIVATE_KEY                     = '/home/omidm/.ssh/' + KEY_NAME + '.pem'
 CONTROLLER_NUM                  = 1
-WORKER_NUM                      = 8
+WORKER_NUM                      = 25
 
 
 #Environment variables
-DBG_MODE                        = 'error'
-TTIMER_LEVEL                    = 'l1' 
+DBG_MODE                        = 'warn' # 'error'
+TTIMER_LEVEL                    = 'l1'  # 'l0'
 
 
 # Controller configurations
@@ -47,12 +47,12 @@ ACTIVATE_FT                     = False
 LB_PERIOD                       = 60
 FT_PERIOD                       = 600
 FIRST_PORT                      = 5800
-SPLIT_ARGS                      = '2 2 2' # str(WORKER_NUM) + ' 1 1' '2 2 2' '4 4 4'
+SPLIT_ARGS                      = str(WORKER_NUM) + ' 1 1' # str(WORKER_NUM) + ' 1 1' '2 2 2' '4 4 4'
 
 
 # Worker configurations
 OTHREAD_NUM                     = 8
-APPLICATION                     = 'water' # 'lr' 'k-means' 'water' 
+APPLICATION                     = 'lr' # 'lr' 'k-means' 'water' 
 DEACTIVATE_EXECUTION_TEMPLATE   = False
 RUN_WITH_TASKSET                = False
 WORKER_TASKSET                  = '0-1,4-5' # '0-3,8-11'

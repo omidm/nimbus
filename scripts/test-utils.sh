@@ -87,6 +87,15 @@ function wait_with_bar {
   done
 }
 
+# count_doun seconds
+function count_down {
+  for i in $(seq $1)
+  do
+    echo -ne "${Yel}$(($1-${i}+1)) second(s) remaining ... \r${RCol}"
+    sleep 1
+  done
+}
+
 function basic_completion_check {
   local count=$(cat ${NIMBUS_HOME}/logs/controller/stdout | grep -c "Simulation Terminated")
   if [ ${count} == "1" ]; then
@@ -180,7 +189,7 @@ function pause_controller {
 function resume_controller {
   local CONTROLLER_PID=$(ps -fu $USER| grep "nimbus_controller" | grep -v "grep" | awk '{print $2}')
   if ! [ -z ${CONTROLLER_PID} ]; then
-    echo -e "${Cya}Pausing nimbus controller with pid: ${CONTROLLER_PID}${RCol}"
+    echo -e "${Cya}Resuming nimbus controller with pid: ${CONTROLLER_PID}${RCol}"
     kill -CONT ${CONTROLLER_PID}
   else
     echo -e "${Red}[ FAILED  ] could not resume the controller.${RCol}"
