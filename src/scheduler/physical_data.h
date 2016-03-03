@@ -65,6 +65,7 @@ namespace nimbus {
     physical_data_id_t id() const;
     worker_id_t worker() const;
     data_version_t version() const;
+    bool pending_reduce() const;
     IDSet<job_id_t> list_job_read() const;
     const IDSet<job_id_t>* list_job_read_p() const;
     IDSet<job_id_t>* list_job_read_p();
@@ -73,6 +74,7 @@ namespace nimbus {
     void set_id(physical_data_id_t id);
     void set_worker(worker_id_t worker);
     void set_version(data_version_t v);
+    void set_pending_reduce(bool flag);
     void set_list_job_read(IDSet<job_id_t> list_job_read);
     void set_last_job_write(job_id_t id);
 
@@ -85,6 +87,7 @@ namespace nimbus {
     physical_data_id_t id_;
     worker_id_t worker_;
     data_version_t version_;
+    bool pending_reduce_;
     IDSet<job_id_t> list_job_read_;
     job_id_t last_job_write_;
   };

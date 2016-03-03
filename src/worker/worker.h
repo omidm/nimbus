@@ -114,6 +114,7 @@ class Worker {
   // virtual void ExecuteJob(Job* job);
   virtual void ProcessSchedulerCommand(SchedulerCommand* command);
   virtual void ProcessComputeJobCommand(ComputeJobCommand* command);
+  virtual void ProcessCombineJobCommand(CombineJobCommand* command);
   virtual void ProcessCreateDataCommand(CreateDataCommand* command);
   virtual void ProcessRemoteCopySendCommand(RemoteCopySendCommand* command);
   virtual void ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* command);

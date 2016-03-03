@@ -143,13 +143,16 @@ void Application::SpawnComputeJob(const std::string& name,
                                   const job_id_t& id,
                                   const IDSet<logical_data_id_t>& read,
                                   const IDSet<logical_data_id_t>& write,
+                                  const IDSet<logical_data_id_t>& scratch,
+                                  const IDSet<logical_data_id_t>& reduce,
                                   const IDSet<job_id_t>& before,
                                   const IDSet<job_id_t>& after,
                                   const job_id_t& parent_id,
                                   const job_id_t& future_id,
                                   const bool& sterile,
                                   const GeometricRegion& region,
-                                  const Parameter& params) {
+                                  const Parameter& params,
+                                  const CombinerVector& combiners) {
   // static double construct_time = 0;
   // struct timespec start_time;
   // clock_gettime(CLOCK_REALTIME, &start_time);
@@ -158,13 +161,16 @@ void Application::SpawnComputeJob(const std::string& name,
                             ID<job_id_t>(id),
                             read,
                             write,
+                            scratch,
+                            reduce,
                             before,
                             after,
                             ID<job_id_t>(parent_id),
                             ID<job_id_t>(future_id),
                             sterile,
                             region,
-                            params);
+                            params,
+                            combiners);
 
   // struct timespec t;
   // clock_gettime(CLOCK_REALTIME, &t);

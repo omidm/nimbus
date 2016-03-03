@@ -245,6 +245,7 @@ bool JobAssigner::QueryDataManagerForPatterns(
       ConstPhysicalDataPList::iterator pi = instances.begin();
       for (; pi != instances.end(); ++pi) {
         if (((*pi)->worker() == pattern->worker_id_) &&
+            (!(*pi)->pending_reduce()) &&
             (((*pi)->version() == version) ||
              (pattern->version_type_ == BindingTemplate::WILD_CARD))) {
           found = true;
@@ -280,7 +281,8 @@ bool JobAssigner::QueryDataManagerForPatterns(
         bool found_target = false;
         for (ConstPhysicalDataPList::iterator pi = instances.begin();
              pi != instances.end(); ++pi) {
-          if ((*pi)->worker() == pattern->worker_id_) {
+          if (((*pi)->worker() == pattern->worker_id_) &&
+              (!(*pi)->pending_reduce())) {
             found_target = true;
             target_pd = *(*pi);
             instances.erase(pi);
@@ -295,6 +297,7 @@ bool JobAssigner::QueryDataManagerForPatterns(
         for (ConstPhysicalDataPList::iterator pi = instances_ref.begin();
              pi != instances_ref.end(); ++pi) {
           if (((*pi)->worker() == pattern->worker_id_) &&
+              (!(*pi)->pending_reduce()) &&
               ((*pi)->version() == version)) {
             found_ref = true;
             ref_pd = *(*pi);
@@ -305,7 +308,8 @@ bool JobAssigner::QueryDataManagerForPatterns(
         if (!found_ref) {
           for (ConstPhysicalDataPList::iterator pi = instances_ref.begin();
                pi != instances_ref.end(); ++pi) {
-            if ((*pi)->version() == version) {
+            if (((*pi)->version() == version) &&
+                (!(*pi)->pending_reduce())) {
               found_ref = true;
               ref_pd = *(*pi);
               break;
@@ -377,6 +381,7 @@ void JobAssigner::Reinitialize(checkpoint_id_t checkpoint_id) {
   batch_pdid_.clear();
   batch_base_version_.clear();
   batch_unit_diff_version_.clear();
+  batch_version_type_.clear();
 }
 
 void JobAssigner::FlushBatchUpdate() {
@@ -389,12 +394,21 @@ void JobAssigner::FlushBatchUpdate() {
     list_job_read.insert(last_complex_job_id_);
 
     for (size_t i = 0; i < batch_ldid_.size(); ++i) {
-      if (!data_manager_->UpdateVersionAndAccessRecord(
-            batch_ldid_[i],
-            batch_pdid_[i],
-            batch_base_version_[i] + update_batch_size_ * batch_unit_diff_version_[i],
-            list_job_read,
-            last_complex_job_id_)) {
+      data_version_t version;
+      BindingTemplate::VersionType vt = batch_version_type_[i];
+      assert(vt != BindingTemplate::WILD_CARD);
+      if (vt == BindingTemplate::REGULAR) {
+        version = batch_base_version_[i] + update_batch_size_ * batch_unit_diff_version_[i];
+      } else {
+        assert(vt == BindingTemplate::SCRATCH);
+        version = NIMBUS_UNDEFINED_DATA_VERSION;
+      }
+
+      if (!data_manager_->UpdateVersionAndAccessRecord(batch_ldid_[i],
+                                                       batch_pdid_[i],
+                                                       version,
+                                                       list_job_read,
+                                                       last_complex_job_id_)) {
         assert(false);
       }
     }
@@ -404,6 +418,7 @@ void JobAssigner::FlushBatchUpdate() {
     batch_pdid_.clear();
     batch_base_version_.clear();
     batch_unit_diff_version_.clear();
+    batch_version_type_.clear();
   }
 }
 
@@ -442,6 +457,7 @@ bool JobAssigner::UpdateDataManagerByPatterns(
         batch_pdid_.push_back(physical_ids->operator[](physical_ids_idx));
         batch_base_version_.push_back(base_version);
         batch_unit_diff_version_.push_back(pe->version_diff_from_base_);
+        batch_version_type_.push_back(pe->version_type_);
 
         ++physical_ids_idx;
       }
@@ -467,12 +483,19 @@ bool JobAssigner::UpdateDataManagerByPatterns(
   size_t physical_ids_idx = 0;
   BindingTemplate::PatternList::const_iterator iter = patterns->begin();
   for (; iter != patterns->end(); ++iter) {
+    data_version_t version;
     BindingTemplate::PatternEntry *pe = *iter;
-    data_version_t base_version;
-    if (!job->vmap_read()->query_entry(pe->ldid_, &base_version)) {
-      assert(false);
+    assert(pe->version_type_ != BindingTemplate::WILD_CARD);
+    if (pe->version_type_ == BindingTemplate::REGULAR) {
+      data_version_t base_version;
+      if (!job->vmap_read()->query_entry(pe->ldid_, &base_version)) {
+        assert(false);
+      }
+      version = base_version + pe->version_diff_from_base_;
+    } else {
+      assert(pe->version_type_ == BindingTemplate::SCRATCH);
+      version = NIMBUS_UNDEFINED_DATA_VERSION;
     }
-    data_version_t version = base_version + pe->version_diff_from_base_;
 
     if (!data_manager_->UpdateVersionAndAccessRecord(pe->ldid_,
                                                      physical_ids->operator[](physical_ids_idx),
@@ -601,14 +624,18 @@ bool JobAssigner::AssignJob(JobEntry *job) {
       ID<job_id_t> job_id(job->job_id());
       ID<job_id_t> future_job_id(job->future_job_id());
       IDSet<job_id_t> extra_dependency;
-      IDSet<physical_data_id_t> read_set, write_set;
+      IDSet<physical_data_id_t> read_set, write_set, scratch_set, reduce_set;
       // TODO(omidm): check the return value of the following methods.
       job->GetPhysicalReadSet(&read_set);
       job->GetPhysicalWriteSet(&write_set);
+      job->GetPhysicalScratchSet(&scratch_set);
+      job->GetPhysicalReduceSet(&reduce_set);
       ComputeJobCommand cm(job->job_name(),
                            job_id,
                            read_set,
                            write_set,
+                           scratch_set,
+                           reduce_set,
                            job->before_set(),
                            extra_dependency,
                            job->after_set(),
@@ -650,7 +677,7 @@ bool JobAssigner::AssignJob(JobEntry *job) {
           if (patterns.size() != 0) {
             size_t rc_count = 0;
             for (size_t i = 0; i < patterns.size(); ++i) {
-              rc_count += UpdateDataForCascading(bt, patterns[i], versions[i]);
+              rc_count += UpdateDataForCascading(bt, xj, patterns[i], versions[i]);
             }
             dbg(DBG_WARN, "WARNING: need to add %lu extra copy jobs (%lu remote copies) for cascading %s.\n", // NOLINT
                    patterns.size(), rc_count, xj->template_entry()->template_name().c_str());
@@ -672,10 +699,12 @@ bool JobAssigner::AssignJob(JobEntry *job) {
 }
 
 size_t JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
+                                           ComplexJobEntry *complex_job,
                                           const BindingTemplate::PatternEntry *pattern,
                                           data_version_t new_version_diff) {
   size_t remote_copy_count = 0;
-  assert(pattern->version_type_ == BindingTemplate::REGULAR);
+  assert((pattern->version_type_ == BindingTemplate::REGULAR) ||
+          (pattern->version_type_ == BindingTemplate::SCRATCH));
 
   SchedulerWorker* worker;
   if (!server_->GetSchedulerWorkerById(worker, pattern->worker_id_)) {
@@ -693,18 +722,34 @@ size_t JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
       dbg(DBG_ERROR, "ERROR: could not find pdid %lu.\n", pattern->pdid_);
       assert(false);
   }
+  assert(!target_instance.pending_reduce());
   assert(target_instance.id() == pattern->pdid_);
   assert(target_instance.worker() == pattern->worker_id_);
-  assert(pattern->version_diff_from_base_ < new_version_diff);
-  data_version_t target_version =
-    target_instance.version() + (new_version_diff - pattern->version_diff_from_base_);
 
-  JobEntryList list;
-  VersionedLogicalData vld(pattern->ldid_, target_instance.version());
-  job_manager_->GetJobsNeedDataVersion(&list, vld);
-  assert(list.size() == 0);
+  data_version_t base_version;
+  if (!job_manager_->ResolveJobDataVersionsForSingleEntry(complex_job,
+                                                     pattern->ldid_,
+                                                     &base_version)) {
+    assert(false);
+  }
+  data_version_t target_version = base_version + new_version_diff;
+  if (pattern->version_type_ == BindingTemplate::REGULAR) {
+    assert(target_instance.version() != target_version);
 
-
+    JobEntryList list;
+    VersionedLogicalData vld(pattern->ldid_, target_instance.version());
+    job_manager_->GetJobsNeedDataVersion(&list, vld);
+    if (list.size() != 0) {
+      dbg(DBG_ERROR, "ERROR: ldid %lu with version %lu is still needed (base version %lu, new version diff %lu).\n", // NOLINT
+          pattern->ldid_, target_instance.version(), base_version, new_version_diff);
+      JobEntryList::iterator iter = list.begin();
+      for (; iter != list.end(); ++iter) {
+        dbg(DBG_ERROR, "ERROR: job %s (id: %lu) needs the data!",
+            (*iter)->job_name().c_str(), (*iter)->job_id());
+      }
+      assert(false);
+    }
+  }
 
   PhysicalDataList instances_at_worker;
   FlushBatchUpdate();
@@ -725,6 +770,7 @@ size_t JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
                         BindingTemplate::REGULAR,
                         new_version_diff);
     bt->UpdateDataObject(target_instance.id(),
+                         BindingTemplate::REGULAR,
                          new_version_diff);
     // BINDING MEMOIZE - omidm
 
@@ -760,6 +806,7 @@ size_t JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
                         BindingTemplate::REGULAR,
                         new_version_diff);
     bt->UpdateDataObject(target_instance.id(),
+                         BindingTemplate::REGULAR,
                          new_version_diff);
     // BINDING MEMOIZE - omidm
 
@@ -780,7 +827,11 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
                                             logical_data_id_t l_id) {
   bool reading = job->read_set_p()->contains(l_id);
   bool writing = job->write_set_p()->contains(l_id);
-  assert(reading || writing);
+  bool scratching = job->scratch_set_p()->contains(l_id);
+  bool reducing = job->reduce_set_p()->contains(l_id);
+  assert(!(reading && reducing));
+  assert(!(writing && scratching));
+  assert(reading || writing || reducing || scratching);
 
   LogicalDataObject* ldo =
     const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(l_id));
@@ -823,7 +874,202 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     }
   }
 
+  if (reducing) {
+    // TODO(omidm): complete implementation for multiple workers!
+
+    PhysicalDataList all_instances;
+    boost::unordered_map<worker_id_t, PhysicalDataList> scratch_instances;
+    FlushBatchUpdate();
+    data_manager_->AllInstances(ldo, &all_instances);
+    {
+      PhysicalDataList::iterator iter = all_instances.begin();
+      for (; iter != all_instances.end(); ++iter) {
+        if (iter->pending_reduce()) {
+          scratch_instances[iter->worker()].push_back(*iter);
+        }
+      }
+    }
+    assert(scratch_instances.size() >= 1);
+
+    bool combiner_active = false;
+    std::string combiner;
+    {
+      CombinerMap::const_iterator iter = job->combiner_map_p()->find(ldo->id());
+      if (iter != job->combiner_map_p()->end()) {
+        combiner = iter->second;
+        combiner_active = true;
+      }
+    }
+
+    PhysicalDataList final_reduction_list;
+    boost::unordered_map<worker_id_t, PhysicalDataList>::iterator worker_iter =
+      scratch_instances.begin();
+    for (; worker_iter != scratch_instances.end(); ++worker_iter) {
+      SchedulerWorker *local_worker;
+      if (!server_->GetSchedulerWorkerById(local_worker, worker_iter->first)) {
+        dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", worker_iter->first);
+        assert(false);
+      }
+
+      PhysicalDataList worker_scratch_list = worker_iter->second;
+
+      if (combiner_active) {
+        PhysicalData combine_dest;
+
+        LocalCombineData(job, combiner, local_worker, ldo, &worker_scratch_list, &combine_dest, bt);
+
+        PhysicalData target_instance = combine_dest;
+        if (local_worker->worker_id() != worker->worker_id()) {
+          GetFreeDataAtWorker(worker, ldo, &target_instance);
+
+          // BINDING MEMOIZE - omidm
+          if (memoize_binding) {
+            bt->TrackDataObject(worker->worker_id(),
+                                l_id,
+                                target_instance.id(),
+                                BindingTemplate::WILD_CARD,
+                                0);
+            bt->TrackDataObject(local_worker->worker_id(),
+                                l_id,
+                                combine_dest.id(),
+                                BindingTemplate::SCRATCH,
+                                0);
+            bt->UpdateDataObject(target_instance.id(),
+                                 BindingTemplate::SCRATCH,
+                                 0);
+          }
+          // BINDING MEMOIZE - omidm
+
+          // BINDING MEMOIZE - omidm
+          RemoteCopyData(local_worker, worker, ldo, &combine_dest, &target_instance, bt);
+        }
+
+        final_reduction_list.push_back(target_instance);
+      } else {
+        PhysicalDataList::iterator scratch_iter = worker_scratch_list.begin();
+        for (; scratch_iter != worker_scratch_list.end(); ++scratch_iter) {
+          PhysicalData scratch_instance = *scratch_iter;
+          PhysicalData target_instance = scratch_instance;
+          if (local_worker->worker_id() != worker->worker_id()) {
+            GetFreeDataAtWorker(worker, ldo, &target_instance);
+
+            // BINDING MEMOIZE - omidm
+            if (memoize_binding) {
+              bt->TrackDataObject(worker->worker_id(),
+                                  l_id,
+                                  target_instance.id(),
+                                  BindingTemplate::WILD_CARD,
+                                  0);
+              bt->TrackDataObject(local_worker->worker_id(),
+                                  l_id,
+                                  scratch_iter->id(),
+                                  BindingTemplate::SCRATCH,
+                                  0);
+              bt->UpdateDataObject(target_instance.id(),
+                                   BindingTemplate::SCRATCH,
+                                   0);
+            }
+            // BINDING MEMOIZE - omidm
+
+            // BINDING MEMOIZE - omidm
+            RemoteCopyData(local_worker, worker, ldo, &scratch_instance, &target_instance, bt);
+          }
+
+          final_reduction_list.push_back(target_instance);
+        }
+      }
+    }
+
+    assert(final_reduction_list.size() >= 1);
+    PhysicalDataList::iterator iter = final_reduction_list.begin();
+
+    // the first instance also holds the scratch results.
+    if (writing || scratching) {
+      assert(worker->worker_id() == iter->worker());
+      assert((iter->pending_reduce()));  // TODO(omidm): CHECK!
+      assert(iter->version() == NIMBUS_UNDEFINED_DATA_VERSION);
+      PhysicalData pd_new = *iter;
+
+      if (writing) {
+        pd_new.set_pending_reduce(false);
+        data_version_t v_out;
+        job->vmap_write()->query_entry(ldo->id(), &v_out);
+        pd_new.set_version(v_out);
+        pd_new.set_last_job_write(job->job_id());
+        pd_new.clear_list_job_read();
+        pd_new.add_to_list_job_read(job->job_id());
+
+        job->before_set_p()->insert(iter->list_job_read());
+        job->before_set_p()->insert(iter->last_job_write());
+
+        // Update data table.
+        FlushBatchUpdate();
+        data_manager_->UpdatePhysicalInstance(ldo, *iter, pd_new);
+        dm_query_cache_.Invalidate();
+
+        // BINDING MEMOIZE - omidm
+        if (memoize_binding) {
+          bt->UpdateDataObject(iter->id(),
+                               BindingTemplate::REGULAR,
+                               version_diff + 1);
+        }
+        // BINDING MEMOIZE - omidm
+      } else {
+        assert(scratching);
+        pd_new.set_pending_reduce(true);
+        pd_new.set_version(NIMBUS_UNDEFINED_DATA_VERSION);
+        pd_new.set_last_job_write(job->job_id());
+        pd_new.clear_list_job_read();
+        pd_new.add_to_list_job_read(job->job_id());
+
+        job->before_set_p()->insert(iter->list_job_read());
+        job->before_set_p()->insert(iter->last_job_write());
+
+        // Update data table.
+        FlushBatchUpdate();
+        data_manager_->UpdatePhysicalInstance(ldo, *iter, pd_new);
+        dm_query_cache_.Invalidate();
+
+        // BINDING MEMOIZE - omidm
+        if (memoize_binding) {
+          bt->UpdateDataObject(iter->id(),
+                               BindingTemplate::SCRATCH,
+                               0);
+        }
+        // BINDING MEMOIZE - omidm
+      }
+
+      job->add_physical_reduce_set_entry(iter->id());
+      job->set_physical_table_entry(ldo->id(), iter->id());
+
+      ++iter;
+    }
+
+    // the rest of the instances are only read.
+    for (; iter != final_reduction_list.end(); ++iter) {
+      assert(worker->worker_id() == iter->worker());
+      assert((iter->pending_reduce()));
+      assert(iter->version() == NIMBUS_UNDEFINED_DATA_VERSION);
+
+      PhysicalData pd_new = *iter;
+      pd_new.set_pending_reduce(false);
+      pd_new.add_to_list_job_read(job->job_id());
+
+      job->before_set_p()->insert(iter->last_job_write());
+
+      job->add_physical_reduce_set_entry(iter->id());
+
+      // Update data table.
+      FlushBatchUpdate();
+      data_manager_->UpdatePhysicalInstance(ldo, *iter, pd_new);
+      dm_query_cache_.Invalidate();
+    }
+
+    return true;
+  }
+
   if (!reading) {
+    assert(writing || scratching);
     PhysicalData target_instance;
     GetFreeDataAtWorker(worker, ldo, &target_instance);
 
@@ -847,9 +1093,16 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
 
     // BINDING MEMOIZE - omidm
     if (memoize_binding) {
-      assert(writing);
-      bt->UpdateDataObject(target_instance.id(),
-                           version_diff + 1);
+      if (writing) {
+        bt->UpdateDataObject(target_instance.id(),
+                             BindingTemplate::REGULAR,
+                             version_diff + 1);
+      } else {
+        assert(scratching);
+        bt->UpdateDataObject(target_instance.id(),
+                             BindingTemplate::SCRATCH,
+                             0);
+      }
     }
     // BINDING MEMOIZE - omidm
 
@@ -865,7 +1118,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
   VersionedLogicalData vld(l_id, version);
   job_manager_->GetJobsNeedDataVersion(&list, vld);
   assert(list.size() >= 1);
-  bool writing_needed_version = (list.size() > 1) && writing;
+  bool changing_needed_version = (list.size() > 1) && (writing || scratching);
 
 
   if (instances_at_worker.size() > 1) {
@@ -910,6 +1163,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
                             BindingTemplate::REGULAR,
                             version_diff);
         bt->UpdateDataObject(target_instance.id(),
+                             BindingTemplate::REGULAR,
                              version_diff);
       }
       // BINDING MEMOIZE - omidm
@@ -924,7 +1178,12 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     if (memoize_binding) {
       if (writing) {
         bt->UpdateDataObject(target_instance.id(),
+                             BindingTemplate::REGULAR,
                              version_diff + 1);
+      } else if (scratching) {
+        bt->UpdateDataObject(target_instance.id(),
+                             BindingTemplate::SCRATCH,
+                             0);
       }
     }
     // BINDING MEMOIZE - omidm
@@ -933,7 +1192,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
   }
 
 
-  if ((instances_at_worker.size() == 1) && !writing_needed_version) {
+  if ((instances_at_worker.size() == 1) && !changing_needed_version) {
     PhysicalData target_instance;
 
     if (!job_manager_->CausingUnwantedSerialization(job, l_id, *instances_at_worker.begin(), memoize_binding)) { //NOLINT
@@ -965,6 +1224,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
                             BindingTemplate::REGULAR,
                             version_diff);
         bt->UpdateDataObject(target_instance.id(),
+                             BindingTemplate::REGULAR,
                              version_diff);
       }
       // BINDING MEMOIZE - omidm
@@ -979,7 +1239,12 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     if (memoize_binding) {
       if (writing) {
         bt->UpdateDataObject(target_instance.id(),
+                             BindingTemplate::REGULAR,
                              version_diff + 1);
+      } else if (scratching) {
+        bt->UpdateDataObject(target_instance.id(),
+                             BindingTemplate::SCRATCH,
+                             0);
       }
     }
     // BINDING MEMOIZE - omidm
@@ -988,7 +1253,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
   }
 
 
-  if ((instances_at_worker.size() == 1) && writing_needed_version) {
+  if ((instances_at_worker.size() == 1) && changing_needed_version) {
     PhysicalData target_instance;
 
     if (!job_manager_->CausingUnwantedSerialization(job, l_id, *instances_at_worker.begin(), memoize_binding)) { // NOLINT
@@ -1009,6 +1274,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
                             BindingTemplate::WILD_CARD,
                             0);
         bt->UpdateDataObject(copy_data.id(),
+                             BindingTemplate::REGULAR,
                              version_diff);
       }
       // BINDING MEMOIZE - omidm
@@ -1032,6 +1298,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
                             BindingTemplate::REGULAR,
                             version_diff);
         bt->UpdateDataObject(target_instance.id(),
+                             BindingTemplate::REGULAR,
                              version_diff);
       }
       // BINDING MEMOIZE - omidm
@@ -1046,7 +1313,12 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     if (memoize_binding) {
       if (writing) {
         bt->UpdateDataObject(target_instance.id(),
+                             BindingTemplate::REGULAR,
                              version_diff + 1);
+      } else if (scratching) {
+        bt->UpdateDataObject(target_instance.id(),
+                             BindingTemplate::SCRATCH,
+                             0);
       }
     }
     // BINDING MEMOIZE - omidm
@@ -1096,6 +1368,7 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
                           BindingTemplate::REGULAR,
                           version_diff);
       bt->UpdateDataObject(target_instance.id(),
+                           BindingTemplate::REGULAR,
                            version_diff);
     }
     // BINDING MEMOIZE - omidm
@@ -1109,7 +1382,12 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     if (memoize_binding) {
       if (writing) {
         bt->UpdateDataObject(target_instance.id(),
+                             BindingTemplate::REGULAR,
                              version_diff + 1);
+      } else if (scratching) {
+        bt->UpdateDataObject(target_instance.id(),
+                             BindingTemplate::SCRATCH,
+                             0);
       }
     }
     // BINDING MEMOIZE - omidm
@@ -1157,10 +1435,21 @@ bool JobAssigner::AllocateLdoInstanceToJob(JobEntry* job,
   assert(job->versioned());
   PhysicalData pd_new = pd;
 
+  // Order of the if-blocks matter!!!! -omidm
+
   if (job->write_set_p()->contains(ldo->id())) {
     data_version_t v_out;
     job->vmap_write()->query_entry(ldo->id(), &v_out);
     pd_new.set_version(v_out);
+    pd_new.set_last_job_write(job->job_id());
+    pd_new.clear_list_job_read();
+    job->before_set_p()->insert(pd.list_job_read());
+    job->before_set_p()->insert(pd.last_job_write());
+  }
+
+  if (job->scratch_set_p()->contains(ldo->id())) {
+    pd_new.set_pending_reduce(true);
+    pd_new.set_version(NIMBUS_UNDEFINED_DATA_VERSION);
     pd_new.set_last_job_write(job->job_id());
     pd_new.clear_list_job_read();
     job->before_set_p()->insert(pd.list_job_read());
@@ -1174,6 +1463,9 @@ bool JobAssigner::AllocateLdoInstanceToJob(JobEntry* job,
     pd_new.add_to_list_job_read(job->job_id());
     job->before_set_p()->insert(pd.last_job_write());
   }
+
+
+  assert(!(job->reduce_set_p()->contains(ldo->id())));
 
   job->set_physical_table_entry(ldo->id(), pd.id());
 
@@ -1352,6 +1644,9 @@ size_t JobAssigner::GetObsoleteLdoInstancesAtWorker(SchedulerWorker* worker,
   data_manager_->InstancesByWorker(ldo, worker->worker_id(), &pv);
   PhysicalDataList::iterator iter = pv.begin();
   for (; iter != pv.end(); ++iter) {
+    if (iter->pending_reduce()) {
+      continue;
+    }
     JobEntryList list;
     VersionedLogicalData vld(ldo->id(), iter->version());
     if (job_manager_->GetJobsNeedDataVersion(&list, vld) == 0) {
@@ -1401,6 +1696,116 @@ bool JobAssigner::CreateDataAtWorker(SchedulerWorker* worker,
   return true;
 }
 
+
+
+bool JobAssigner::LocalCombineData(JobEntry* ref_job,
+                                   const std::string& combiner,
+                                   SchedulerWorker* worker,
+                                   LogicalDataObject* ldo,
+                                   PhysicalDataList* scratch_sources,
+                                   PhysicalData* combine_dest,
+                                   BindingTemplate *bt) {
+  std::vector<job_id_t> j;
+  id_maker_->GetNewJobID(&j, 1);
+  job_id_t combine_id = j[0];
+
+  IDSet<job_id_t> before_set;
+  IDSet<job_id_t> extra_dependency;
+  IDSet<physical_data_id_t> scratch_set, reduce_set;
+
+  // Update the job table.
+  // job = job_manager_->AddLocalCombine(...);
+
+  PhysicalDataList pd_new_list;
+  {
+    assert(scratch_sources->size() >= 1);
+    PhysicalDataList::iterator iter = scratch_sources->begin();
+    // the first instance also holds the scratch results.
+    {
+      assert(worker->worker_id() == iter->worker());
+      assert(iter->pending_reduce());
+      assert(iter->version() == NIMBUS_UNDEFINED_DATA_VERSION);
+
+      PhysicalData pd_new = *iter;
+      pd_new.set_pending_reduce(true);
+      pd_new.set_version(NIMBUS_UNDEFINED_DATA_VERSION);
+      pd_new.set_last_job_write(combine_id);
+      pd_new.clear_list_job_read();
+      pd_new.add_to_list_job_read(combine_id);
+
+      before_set.insert(iter->list_job_read());
+      before_set.insert(iter->last_job_write());
+
+      reduce_set.insert(iter->id());
+      scratch_set.insert(iter->id());
+
+      pd_new_list.push_back(pd_new);
+
+      // Update data table.
+      FlushBatchUpdate();
+      data_manager_->UpdatePhysicalInstance(ldo, *iter, pd_new);
+      dm_query_cache_.Invalidate();
+    }
+
+    // the rest of the instances are only read.
+    ++iter;
+    for (; iter != scratch_sources->end(); ++iter) {
+      assert(worker->worker_id() == iter->worker());
+      assert(iter->pending_reduce());
+      assert(iter->version() == NIMBUS_UNDEFINED_DATA_VERSION);
+
+      PhysicalData pd_new = *iter;
+      pd_new.set_pending_reduce(false);
+      pd_new.set_version(NIMBUS_UNDEFINED_DATA_VERSION);
+      pd_new.add_to_list_job_read(combine_id);
+
+      before_set.insert(iter->last_job_write());
+
+      reduce_set.insert(iter->id());
+
+      pd_new_list.push_back(pd_new);
+
+      // Update data table.
+      FlushBatchUpdate();
+      data_manager_->UpdatePhysicalInstance(ldo, *iter, pd_new);
+      dm_query_cache_.Invalidate();
+    }
+  }
+
+
+  if (bt) {
+    CombineJobCommand cm(combiner,
+                         ID<job_id_t>(combine_id),
+                         scratch_set,
+                         reduce_set,
+                         before_set,
+                         extra_dependency,
+                         ref_job->region());
+    bt->AddCombineJobCommand(&cm, worker->worker_id());
+  }
+
+
+  job_manager_->UpdateBeforeSet(&before_set);
+
+  CombineJobCommand cm(combiner,
+                       ID<job_id_t>(combine_id),
+                       scratch_set,
+                       reduce_set,
+                       before_set,
+                       extra_dependency,
+                       ref_job->region());
+  dbg(DBG_SCHED, "Sending  combine job %lu to worker %lu.\n", combine_id, worker->worker_id());
+  server_->SendCommand(worker, &cm);
+
+
+  *scratch_sources = pd_new_list;
+  *combine_dest = *(pd_new_list.begin());
+
+  return true;
+}
+
+
+
 job_id_t JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
                                      SchedulerWorker* to_worker,
                                      LogicalDataObject* ldo,
@@ -1425,6 +1830,7 @@ job_id_t JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
 
   // Update data table.
   PhysicalData to_data_new = *to_data;
+  to_data_new.set_pending_reduce(from_data->pending_reduce());
   to_data_new.set_version(from_data->version());
   to_data_new.set_last_job_write(receive_id);
   to_data_new.clear_list_job_read();
@@ -1468,6 +1874,7 @@ job_id_t JobAssigner::RemoteCopyData(SchedulerWorker* from_worker,
   // Update data table.
   PhysicalData from_data_new = *from_data;
   from_data_new.add_to_list_job_read(send_id);
+  from_data_new.set_pending_reduce(false);
   FlushBatchUpdate();
   data_manager_->UpdatePhysicalInstance(ldo, *from_data, from_data_new);
   dm_query_cache_.Invalidate();
@@ -1598,15 +2005,19 @@ bool JobAssigner::SendComputeJobToWorker(SchedulerWorker* worker,
   if ((job->job_type() == JOB_COMP) || (job->job_type() == JOB_SHDW)) {
     ID<job_id_t> job_id(job->job_id());
     ID<job_id_t> future_job_id(job->future_job_id());
-    IDSet<physical_data_id_t> read_set, write_set;
+    IDSet<physical_data_id_t> read_set, write_set, scratch_set, reduce_set;
     IDSet<job_id_t> extra_dependency;
     // TODO(omidm): check the return value of the following methods.
     job->GetPhysicalReadSet(&read_set);
     job->GetPhysicalWriteSet(&write_set);
+    job->GetPhysicalScratchSet(&scratch_set);
+    job->GetPhysicalReduceSet(&reduce_set);
     ComputeJobCommand cm(job->job_name(),
                          job_id,
                          read_set,
                          write_set,
+                         scratch_set,
+                         reduce_set,
                          job->before_set(),
                          extra_dependency,
                          job->after_set(),

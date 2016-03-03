@@ -283,6 +283,21 @@ bool VersionManager::ResolveJobDataVersionsForPattern(JobEntry *job,
   return true;
 }
 
+bool VersionManager::ResolveJobDataVersionsForSingleEntry(JobEntry *job,
+                                                          const logical_data_id_t& ldid,
+                                                          data_version_t *version) {
+  FlushPendingBatch();
+  if (job->vmap_read()->query_entry(ldid, version)) {
+    return true;
+  }
+  if (LookUpVersion(job, ldid, version)) {
+    job->vmap_read()->set_entry(ldid, *version);
+    return true;
+  } else {
+    return false;
+  }
+}
+
 bool VersionManager::MemoizeVersionsForTemplate(JobEntry *job) {
   FlushPendingBatch();
   TemplateJobEntry* tj = job->template_job();

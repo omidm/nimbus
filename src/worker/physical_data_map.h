@@ -55,6 +55,8 @@ class PhysicalDataMap {
   enum AccessPattern {
     READ,
     WRITE,
+    SCRATCH,
+    REDUCE,
     INIT
   };
   explicit PhysicalDataMap();

@@ -104,6 +104,33 @@ class Job {
                          const GeometricRegion& region = GeometricRegion(),
                          const job_id_t& future_job_id = 0);
 
+    bool SpawnComputeJob(const std::string& name,
+                         const job_id_t& id,
+                         const IDSet<logical_data_id_t>& read,
+                         const IDSet<logical_data_id_t>& write,
+                         const IDSet<logical_data_id_t>& scratch,
+                         const IDSet<logical_data_id_t>& reduce,
+                         const IDSet<job_id_t>& before,
+                         const IDSet<job_id_t>& after,
+                         const Parameter& params,
+                         const bool& sterile = false,
+                         const GeometricRegion& region = GeometricRegion(),
+                         const job_id_t& future_job_id = 0);
+
+    bool SpawnComputeJob(const std::string& name,
+                         const job_id_t& id,
+                         const IDSet<logical_data_id_t>& read,
+                         const IDSet<logical_data_id_t>& write,
+                         const IDSet<logical_data_id_t>& scratch,
+                         const IDSet<logical_data_id_t>& reduce,
+                         const IDSet<job_id_t>& before,
+                         const IDSet<job_id_t>& after,
+                         const Parameter& params,
+                         const std::string& combiner,
+                         const bool& sterile = false,
+                         const GeometricRegion& region = GeometricRegion(),
+                         const job_id_t& future_job_id = 0);
+
     bool SpawnCopyJob(const job_id_t& id,
                       const logical_data_id_t& from_logical_id,
                       const logical_data_id_t& to_logical_id,
@@ -158,6 +185,15 @@ class Job {
                                   const IDSet<logical_data_id_t>& write,
                                   const bool barrier = false);
 
+    bool StageJobAndLoadBeforeSet(IDSet<job_id_t> *before_set,
+                                  const std::string& name,
+                                  const job_id_t& id,
+                                  const IDSet<logical_data_id_t>& read,
+                                  const IDSet<logical_data_id_t>& write,
+                                  const IDSet<logical_data_id_t>& scratch,
+                                  const IDSet<logical_data_id_t>& reduce,
+                                  const bool barrier = false);
+
     bool MarkEndOfStage();
 
     void StartTemplate(const std::string& template_name);
@@ -170,8 +206,12 @@ class Job {
     ID<job_id_t> id() const;
     IDSet<physical_data_id_t> read_set() const;
     IDSet<physical_data_id_t> write_set() const;
+    IDSet<physical_data_id_t> scratch_set() const;
+    IDSet<physical_data_id_t> reduce_set() const;
     const IDSet<physical_data_id_t>& get_read_set() const;
     const IDSet<physical_data_id_t>& get_write_set() const;
+    const IDSet<physical_data_id_t>& get_scratch_set() const;
+    const IDSet<physical_data_id_t>& get_reduce_set() const;
     IDSet<job_id_t> before_set() const;
     const IDSet<job_id_t>* before_set_p() const;
     IDSet<job_id_t> after_set() const;
@@ -193,6 +233,8 @@ class Job {
     void set_id(const ID<job_id_t>& id);
     void set_read_set(const IDSet<physical_data_id_t>& read_set);
     void set_write_set(const IDSet<physical_data_id_t>& write_set);
+    void set_scratch_set(const IDSet<physical_data_id_t>& scratch_set);
+    void set_reduce_set(const IDSet<physical_data_id_t>& reduce_set);
     void set_before_set(const IDSet<job_id_t>& before_set);
     void set_after_set(const IDSet<job_id_t>& after_set);
     void set_parameters(const Parameter& parameters);
@@ -244,6 +286,8 @@ class Job {
     ID<job_id_t> id_;
     IDSet<physical_data_id_t> read_set_;
     IDSet<physical_data_id_t> write_set_;
+    IDSet<physical_data_id_t> scratch_set_;
+    IDSet<physical_data_id_t> reduce_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
     ID<job_id_t> future_job_id_;

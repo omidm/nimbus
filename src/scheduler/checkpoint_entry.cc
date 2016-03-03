@@ -61,13 +61,16 @@ bool CheckpointEntry::AddJob(const JobEntry *job) {
                         job->job_id(),
                         job->read_set(),
                         job->write_set(),
+                        job->scratch_set(),
+                        job->reduce_set(),
                         job->before_set(),
                         job->after_set(),
                         job->parent_job_id(),
                         job->future_job_id(),
                         job->sterile(),
                         job->region(),
-                        job->params());
+                        job->params(),
+                        job->combiner_map());
 
   jobs_[j->job_id()] = j;
 

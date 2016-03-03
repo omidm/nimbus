@@ -133,25 +133,31 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
                                          const job_id_t& job_id,
                                          const IDSet<logical_data_id_t>& read_set,
                                          const IDSet<logical_data_id_t>& write_set,
+                                         const IDSet<logical_data_id_t>& scratch_set,
+                                         const IDSet<logical_data_id_t>& reduce_set,
                                          const IDSet<job_id_t>& before_set,
                                          const IDSet<job_id_t>& after_set,
                                          const job_id_t& parent_job_id,
                                          const job_id_t& future_job_id,
                                          const bool& sterile,
                                          const GeometricRegion& region,
-                                         const Parameter& params) {
+                                         const Parameter& params,
+                                         const CombinerMap& combiner_map) {
   JobEntry* job =
     new ComputeJobEntry(job_name,
                         job_id,
                         read_set,
                         write_set,
+                        scratch_set,
+                        reduce_set,
                         before_set,
                         after_set,
                         parent_job_id,
                         future_job_id,
                         sterile,
                         region,
-                        params);
+                        params,
+                        combiner_map);
 
   if (!AddJobEntryToJobGraph(job_id, job)) {
     // TODO(omidm): for now there are no future jobs!
@@ -165,10 +171,13 @@ JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
       job->set_job_name(job_name);
       job->set_read_set(read_set);
       job->set_write_set(write_set);
+      job->set_scratch_set(scratch_set);
+      job->set_reduce_set(reduce_set);
       job->set_before_set(before_set, true);
       job->set_after_set(after_set);
       job->set_parent_job_id(parent_job_id, true);
       job->set_params(params);
+      job->set_combiner_map(combiner_map);
       job->set_sterile(sterile);
       job->set_region(region);
       job->set_future(false);
@@ -619,6 +628,23 @@ bool JobManager::GetBaseVersionMapFromJob(job_id_t job_id,
   return false;
 }
 
+bool JobManager::ResolveJobDataVersionsForSingleEntry(JobEntry *job,
+                        const logical_data_id_t& ldid,
+                        data_version_t *version) {
+  if (!job->IsReadyForCompleteVersioning()) {
+    dbg(DBG_ERROR, "ERROR: job %lu is not reaqdy for complete versioing.\n", job->job_id());
+    assert(false);
+    return false;
+  }
+
+  if (version_manager_.ResolveJobDataVersionsForSingleEntry(job, ldid, version)) {
+    return true;
+  } else {
+    dbg(DBG_ERROR, "ERROR: could not version job %lu for given pattern.\n", job->job_id());
+    assert(false);
+    return false;
+  }
+}
 
 bool JobManager::ResolveJobDataVersionsForPattern(JobEntry *job,
                         const BindingTemplate::PatternList* patterns) {
@@ -734,13 +760,16 @@ bool JobManager::RewindFromLastCheckpoint(checkpoint_id_t *checkpoint_id) {
                             (*iter)->job_id(),
                             (*iter)->read_set(),
                             (*iter)->write_set(),
+                            (*iter)->scratch_set(),
+                            (*iter)->reduce_set(),
                             empty_set,
                             empty_set,
                             NIMBUS_KERNEL_JOB_ID,
                             (*iter)->future_job_id(),
                             (*iter)->sterile(),
                             (*iter)->region(),
-                            (*iter)->params());
+                            (*iter)->params(),
+                            (*iter)->combiner_map());
 
       if (!AddJobEntryToJobGraph((*iter)->job_id(), job)) {
           dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) to job graph.\n", (*iter)->job_id());
@@ -1140,7 +1169,8 @@ bool JobManager::CausingUnwantedSerialization(JobEntry* job,
 
   bool result = false;
 
-  if (!job->write_set_p()->contains(l_id)) {
+  if (!job->write_set_p()->contains(l_id) &&
+      !job->scratch_set_p()->contains(l_id)) {
     return result;
   }
 

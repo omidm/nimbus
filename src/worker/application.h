@@ -104,13 +104,16 @@ class Application {
                        const job_id_t& id,
                        const IDSet<logical_data_id_t>& read,
                        const IDSet<logical_data_id_t>& write,
+                       const IDSet<logical_data_id_t>& scratch,
+                       const IDSet<logical_data_id_t>& reduce,
                        const IDSet<job_id_t>& before,
                        const IDSet<job_id_t>& after,
                        const job_id_t& parent_id,
                        const job_id_t& future_id,
                        const bool& sterile,
                        const GeometricRegion& region,
-                       const Parameter& params);
+                       const Parameter& params,
+                       const CombinerVector& combiners);
 
 
   void SpawnCopyJob(const job_id_t& id,

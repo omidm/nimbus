@@ -96,9 +96,10 @@ class BindingTemplate {
                      const template_id_t& template_generation_id,
                      SchedulerServer *server);
 
-    enum VERSION_TYPE {
+    enum VersionType {
       REGULAR,
-      WILD_CARD
+      WILD_CARD,
+      SCRATCH,
     };
 
     class PatternEntry {
@@ -106,7 +107,7 @@ class BindingTemplate {
         PatternEntry(const worker_id_t& worker_id,
                      const logical_data_id_t& ldid,
                      const physical_data_id_t& pdid,
-                     VERSION_TYPE version_type,
+                     VersionType version_type,
                      data_version_t version_diff_from_base)
           : worker_id_(worker_id),
             ldid_(ldid),
@@ -119,7 +120,7 @@ class BindingTemplate {
         worker_id_t worker_id_;
         logical_data_id_t ldid_;
         physical_data_id_t pdid_;
-        VERSION_TYPE version_type_;
+        VersionType version_type_;
         data_version_t version_diff_from_base_;
     };
 
@@ -137,13 +138,17 @@ class BindingTemplate {
     bool TrackDataObject(const worker_id_t& worker_id,
                          const logical_data_id_t& ldid,
                          const physical_data_id_t& pdid,
-                         VERSION_TYPE version_type,
+                         VersionType version_type,
                          data_version_t version_diff_from_base);
 
     bool UpdateDataObject(const physical_data_id_t& pdid,
+                          VersionType version_type,
                           data_version_t version_diff_from_base);
 
     bool AddComputeJobCommand(ComputeJobCommand* command,
+                              worker_id_t w_id);
+
+    bool AddCombineJobCommand(CombineJobCommand* command,
                               worker_id_t w_id);
 
     bool AddLocalCopyCommand(LocalCopyCommand* command,
@@ -173,6 +178,7 @@ class BindingTemplate {
     enum CommandTemplateType {
       BASE,
       COMPUTE,
+      COMBINE,
       LC,
       RCS,
       RCR,
@@ -198,6 +204,8 @@ class BindingTemplate {
                                   JobIdPtr job_id_ptr,
                                   const PhyIdPtrSet& read_set_ptr,
                                   const PhyIdPtrSet& write_set_ptr,
+                                  const PhyIdPtrSet& scratch_set_ptr,
+                                  const PhyIdPtrSet& reduce_set_ptr,
                                   const JobIdPtrSet& before_set_ptr,
                                   const JobIdPtrSet& after_set_ptr,
                                   JobIdPtr future_job_id_ptr,
@@ -207,6 +215,8 @@ class BindingTemplate {
           : job_name_(job_name),
             read_set_ptr_(read_set_ptr),
             write_set_ptr_(write_set_ptr),
+            scratch_set_ptr_(scratch_set_ptr),
+            reduce_set_ptr_(reduce_set_ptr),
             after_set_ptr_(after_set_ptr),
             future_job_id_ptr_(future_job_id_ptr),
             sterile_(sterile),
@@ -222,11 +232,40 @@ class BindingTemplate {
         std::string job_name_;
         PhyIdPtrSet read_set_ptr_;
         PhyIdPtrSet write_set_ptr_;
+        PhyIdPtrSet scratch_set_ptr_;
+        PhyIdPtrSet reduce_set_ptr_;
         JobIdPtrSet after_set_ptr_;
         JobIdPtr future_job_id_ptr_;
         bool sterile_;
         GeometricRegion region_;
         size_t param_index_;
+    };
+
+    class CombineJobCommandTemplate : public CommandTemplate {
+      public:
+        CombineJobCommandTemplate(const std::string& job_name,
+                                  JobIdPtr job_id_ptr,
+                                  const PhyIdPtrSet& scratch_set_ptr,
+                                  const PhyIdPtrSet& reduce_set_ptr,
+                                  const JobIdPtrSet& before_set_ptr,
+                                  const GeometricRegion& region,
+                                  const worker_id_t& worker_id)
+          : job_name_(job_name),
+            scratch_set_ptr_(scratch_set_ptr),
+            reduce_set_ptr_(reduce_set_ptr),
+            region_(region) {
+              type_ = COMBINE;
+              job_id_ptr_ = job_id_ptr;
+              before_set_ptr_ = before_set_ptr;
+              worker_id_ = worker_id;
+            }
+
+        ~CombineJobCommandTemplate() {}
+
+        std::string job_name_;
+        PhyIdPtrSet scratch_set_ptr_;
+        PhyIdPtrSet reduce_set_ptr_;
+        GeometricRegion region_;
     };
 
     class LocalCopyCommandTemplate : public CommandTemplate {
@@ -352,6 +391,7 @@ class BindingTemplate {
     CommandTemplateList command_templates_;
 
     std::map<job_id_t, ComputeJobCommandTemplate*> compute_job_to_command_map_;
+    std::map<job_id_t, CombineJobCommandTemplate*> combine_job_to_command_map_;
     std::map<job_id_t, LocalCopyCommandTemplate*> lc_job_to_command_map_;
     std::map<job_id_t, RemoteCopySendCommandTemplate*> rcs_job_to_command_map_;
     std::map<job_id_t, RemoteCopyReceiveCommandTemplate*> rcr_job_to_command_map_;
@@ -393,6 +433,10 @@ class BindingTemplate {
 
     void SendComputeJobCommand(ComputeJobCommandTemplate* command,
                                const Parameter& parameter,
+                               const IDSet<job_id_t>& extra_dependency,
+                               SchedulerServer *server);
+
+    void SendCombineJobCommand(CombineJobCommandTemplate* command,
                                const IDSet<job_id_t>& extra_dependency,
                                SchedulerServer *server);
 

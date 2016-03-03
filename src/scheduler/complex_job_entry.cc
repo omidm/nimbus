@@ -351,6 +351,8 @@ bool ComplexJobEntry::OMIDGetShadowJobEntryByIndex(size_t index, ShadowJobEntry*
                        job_id,
                        tj->read_set_p(),
                        tj->write_set_p(),
+                       tj->scratch_set_p(),
+                       tj->reduce_set_p(),
                        tj->union_set_p(),
                        before_set,
                        tj->vmap_read_diff(),
@@ -360,6 +362,7 @@ bool ComplexJobEntry::OMIDGetShadowJobEntryByIndex(size_t index, ShadowJobEntry*
                        tj->sterile(),
                        tj->region(),
                        parameters_[index],
+                       tj->combiner_map(),
                        tj,
                        this);
 

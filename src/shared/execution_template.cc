@@ -494,11 +494,31 @@ bool ExecutionTemplate::AddComputeJobTemplate(ComputeJobCommand* cm,
     }
   }
 
+  PhyIdPtrSet scratch_set;
+  {
+    IDSet<physical_data_id_t>::IDSetIter iter = cm->scratch_set_p()->begin();
+    for (; iter != cm->scratch_set_p()->end(); ++iter) {
+      PhyIdPtr phy_id_ptr = GetExistingPhyIdPtr(*iter);
+      scratch_set.insert(phy_id_ptr);
+    }
+  }
+
+  PhyIdPtrSet reduce_set;
+  {
+    IDSet<physical_data_id_t>::IDSetIter iter = cm->reduce_set_p()->begin();
+    for (; iter != cm->reduce_set_p()->end(); ++iter) {
+      PhyIdPtr phy_id_ptr = GetExistingPhyIdPtr(*iter);
+      reduce_set.insert(phy_id_ptr);
+    }
+  }
+
   ComputeJobTemplate *jt =
     new ComputeJobTemplate(job,
                            compute_job_id_ptr,
                            read_set,
                            write_set,
+                           scratch_set,
+                           reduce_set,
                            cm->before_set(),
                            future_job_id_ptr_,
                            compute_job_num_++);
@@ -516,7 +536,7 @@ void ExecutionTemplate::ComputeJobTemplate::Refresh(
 
   job_->clear_template_variables();
 
-  IDSet<physical_data_id_t> read_set, write_set;
+  IDSet<physical_data_id_t> read_set, write_set, scratch_set, reduce_set;
 
   {
     PhyIdPtrSet::iterator it = read_set_ptr_.begin();
@@ -534,11 +554,95 @@ void ExecutionTemplate::ComputeJobTemplate::Refresh(
   }
   job_->set_write_set(write_set);
 
+  {
+    PhyIdPtrSet::iterator it = scratch_set_ptr_.begin();
+    for (; it != scratch_set_ptr_.end(); ++it) {
+      scratch_set.insert(*(*it));
+    }
+  }
+  job_->set_scratch_set(scratch_set);
+
+  {
+    PhyIdPtrSet::iterator it = reduce_set_ptr_.begin();
+    for (; it != reduce_set_ptr_.end(); ++it) {
+      reduce_set.insert(*(*it));
+    }
+  }
+  job_->set_reduce_set(reduce_set);
+
   job_->set_parameters(parameters[param_index_]);
 }
 
+bool ExecutionTemplate::AddCombineJobTemplate(CombineJobCommand* cm,
+                                              Application *app) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  assert(!finalized_);
 
+  job_id_t job_id = cm->job_id().elem();
+  Job* job = app->CloneJob(cm->job_name());
+  job->set_name("Combine:" + cm->job_name());
+  job->set_region(cm->region());
+  job->set_shadow_job_id(job_id);
+  job->set_execution_template(this);
 
+  JobIdPtr combine_job_id_ptr = GetExistingInnerJobIdPtr(job_id);
+
+  PhyIdPtrSet scratch_set;
+  {
+    IDSet<physical_data_id_t>::IDSetIter iter = cm->scratch_set_p()->begin();
+    for (; iter != cm->scratch_set_p()->end(); ++iter) {
+      PhyIdPtr phy_id_ptr = GetExistingPhyIdPtr(*iter);
+      scratch_set.insert(phy_id_ptr);
+    }
+  }
+
+  PhyIdPtrSet reduce_set;
+  {
+    IDSet<physical_data_id_t>::IDSetIter iter = cm->reduce_set_p()->begin();
+    for (; iter != cm->reduce_set_p()->end(); ++iter) {
+      PhyIdPtr phy_id_ptr = GetExistingPhyIdPtr(*iter);
+      reduce_set.insert(phy_id_ptr);
+    }
+  }
+
+  CombineJobTemplate *jt =
+    new CombineJobTemplate(job,
+                           combine_job_id_ptr,
+                           scratch_set,
+                           reduce_set,
+                           cm->before_set());
+
+  ++copy_job_num_;
+  job_templates_[job_id] = jt;
+
+  return true;
+}
+
+void ExecutionTemplate::CombineJobTemplate::Refresh(
+    const std::vector<Parameter>& parameters,
+    const template_id_t& template_generation_id) {
+  job_->set_id(ID<job_id_t>(*job_id_ptr_));
+
+  job_->clear_template_variables();
+
+  IDSet<physical_data_id_t> scratch_set, reduce_set;
+
+  {
+    PhyIdPtrSet::iterator it = scratch_set_ptr_.begin();
+    for (; it != scratch_set_ptr_.end(); ++it) {
+      scratch_set.insert(*(*it));
+    }
+  }
+  job_->set_scratch_set(scratch_set);
+
+  {
+    PhyIdPtrSet::iterator it = reduce_set_ptr_.begin();
+    for (; it != reduce_set_ptr_.end(); ++it) {
+      reduce_set.insert(*(*it));
+    }
+  }
+  job_->set_reduce_set(reduce_set);
+}
 
 bool ExecutionTemplate::AddLocalCopyJobTemplate(LocalCopyCommand* cm,
                                                 Application *app) {
@@ -813,9 +917,5 @@ void ExecutionTemplate::JobTemplate::ClearAfterSet(JobTemplateVector *ready_list
     }
   }
 }
-
-
-
-
 
 

@@ -63,6 +63,8 @@ JobEntry::JobEntry() {
   checkpoint_id_ = NIMBUS_INIT_CHECKPOINT_ID;
   read_region_valid_ = false;
   write_region_valid_ = false;
+  scratch_region_valid_ = false;
+  reduce_region_valid_ = false;
   union_region_valid_ = false;
   assigned_worker_ = NULL;
   parent_job_name_ = "";  // will be set for non-sterile and complex jobs
@@ -119,6 +121,15 @@ IDSet<logical_data_id_t> JobEntry::read_set() const {
 IDSet<logical_data_id_t> JobEntry::write_set() const {
   return write_set_;
 }
+
+IDSet<logical_data_id_t> JobEntry::scratch_set() const {
+  return scratch_set_;
+}
+
+IDSet<logical_data_id_t> JobEntry::reduce_set() const {
+  return reduce_set_;
+}
+
 IDSet<logical_data_id_t> JobEntry::union_set() const {
   return union_set_;
 }
@@ -141,6 +152,10 @@ job_id_t JobEntry::future_job_id() const {
 
 Parameter JobEntry::params() const {
   return params_;
+}
+
+CombinerMap JobEntry::combiner_map() const {
+  return combiner_map_;
 }
 
 boost::shared_ptr<VersionMap> JobEntry::vmap_read() const {
@@ -265,8 +280,20 @@ const IDSet<logical_data_id_t>* JobEntry::write_set_p() const {
   return &write_set_;
 }
 
+const IDSet<logical_data_id_t>* JobEntry::scratch_set_p() const {
+  return &scratch_set_;
+}
+
+const IDSet<logical_data_id_t>* JobEntry::reduce_set_p() const {
+  return &reduce_set_;
+}
+
 const IDSet<logical_data_id_t>* JobEntry::union_set_p() const {
   return &union_set_;
+}
+
+const CombinerMap* JobEntry::combiner_map_p() const {
+  return &combiner_map_;
 }
 
 const IDSet<job_id_t>* JobEntry::before_set_p() const {
@@ -297,6 +324,10 @@ void JobEntry::set_job_id(job_id_t job_id) {
   job_id_ = job_id;
 }
 
+void JobEntry::set_combiner_map(const CombinerMap& combiner_map) {
+  combiner_map_ = combiner_map;
+}
+
 void JobEntry::set_read_set(IDSet<logical_data_id_t> read_set) {
   union_set_.remove(read_set_);
   union_set_.insert(read_set);
@@ -311,6 +342,22 @@ void JobEntry::set_write_set(IDSet<logical_data_id_t> write_set) {
   write_region_valid_ = false;
   union_region_valid_ = false;
   write_set_ = write_set;
+}
+
+void JobEntry::set_scratch_set(IDSet<logical_data_id_t> scratch_set) {
+  union_set_.remove(scratch_set_);
+  union_set_.insert(scratch_set);
+  scratch_region_valid_ = false;
+  union_region_valid_ = false;
+  scratch_set_ = scratch_set;
+}
+
+void JobEntry::set_reduce_set(IDSet<logical_data_id_t> reduce_set) {
+  union_set_.remove(reduce_set_);
+  union_set_.insert(reduce_set);
+  reduce_region_valid_ = false;
+  union_region_valid_ = false;
+  reduce_set_ = reduce_set;
 }
 
 void JobEntry::set_before_set(IDSet<job_id_t> before_set, bool update_dependencies) {
@@ -371,6 +418,11 @@ void JobEntry::set_physical_table(PhysicalTable physical_table) {
 
 void JobEntry::set_physical_table_entry(logical_data_id_t l_id, physical_data_id_t p_id) {
   physical_table_[l_id] = p_id;
+}
+
+
+void JobEntry::add_physical_reduce_set_entry(physical_data_id_t p_id) {
+  physical_reduce_set_.insert(p_id);
 }
 
 void JobEntry::set_jobs_passed_versions(IDSet<job_id_t> jobs) {
@@ -461,9 +513,13 @@ bool JobEntry::GetPhysicalReadSet(IDSet<physical_data_id_t>* set) {
   set->clear();
   IDSet<logical_data_id_t>::IDSetIter it;
   for (it = read_set_.begin(); it != read_set_.end(); ++it) {
-    if (physical_table_.count(*it) == 0)
+    PhysicalTable::iterator i = physical_table_.find(*it);
+    if (i == physical_table_.end()) {
+      dbg(DBG_ERROR, "ERROR: did not find physical element for ldid %lu in the read set!\n", *it);
+      exit(-1);
       return false;
-    set->insert(physical_table_[*it]);
+    }
+    set->insert(i->second);
   }
   return true;
 }
@@ -472,10 +528,43 @@ bool JobEntry::GetPhysicalWriteSet(IDSet<physical_data_id_t>* set) {
   set->clear();
   IDSet<logical_data_id_t>::IDSetIter it;
   for (it = write_set_.begin(); it != write_set_.end(); ++it) {
-    if (physical_table_.count(*it) == 0)
+    PhysicalTable::iterator i = physical_table_.find(*it);
+    if (i == physical_table_.end()) {
+      dbg(DBG_ERROR, "ERROR: did not find physical element for ldid %lu in the write set!\n", *it);
+      exit(-1);
       return false;
-    set->insert(physical_table_[*it]);
+    }
+    set->insert(i->second);
   }
+  return true;
+}
+
+bool JobEntry::GetPhysicalScratchSet(IDSet<physical_data_id_t>* set) {
+  set->clear();
+  IDSet<logical_data_id_t>::IDSetIter it;
+  for (it = scratch_set_.begin(); it != scratch_set_.end(); ++it) {
+    PhysicalTable::iterator i = physical_table_.find(*it);
+    if (i == physical_table_.end()) {
+      dbg(DBG_ERROR, "ERROR: did not find physical element for ldid %lu in the scratch set!\n", *it); // NOLINT
+      exit(-1);
+      return false;
+    }
+    set->insert(i->second);
+  }
+  return true;
+}
+
+bool JobEntry::GetPhysicalReduceSet(IDSet<physical_data_id_t>* set) {
+  set->clear();
+  *set = physical_reduce_set_;
+  if (reduce_set_.size() > 0) {
+    if (physical_reduce_set_.size() == 0) {
+      dbg(DBG_ERROR, "ERROR: physical reduce set was empty!\n");
+      exit(-1);
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -578,6 +667,54 @@ bool JobEntry::GetWriteSetRegion(DataManager *data_manager, GeometricRegion *reg
   }
 }
 
+bool JobEntry::GetScratchSetRegion(DataManager *data_manager, GeometricRegion *region) {
+  if (scratch_region_valid_) {
+    *region = scratch_region_;
+    return true;
+  } else {
+    if (scratch_set_.size() == 0) {
+      return false;
+    } else {
+      const LogicalDataObject* ldo;
+      IDSet<logical_data_id_t>::IDSetIter iter = scratch_set_.begin();
+      ldo = data_manager->FindLogicalObject(*iter);
+      scratch_region_ = *ldo->region();
+      ++iter;
+      for (; iter != scratch_set_.end(); ++iter) {
+        ldo = data_manager->FindLogicalObject(*iter);
+        scratch_region_ = GeometricRegion::GetBoundingBox(scratch_region_, *ldo->region());
+      }
+      *region = scratch_region_;
+      scratch_region_valid_ = true;
+      return true;
+    }
+  }
+}
+
+bool JobEntry::GetReduceSetRegion(DataManager *data_manager, GeometricRegion *region) {
+  if (reduce_region_valid_) {
+    *region = reduce_region_;
+    return true;
+  } else {
+    if (reduce_set_.size() == 0) {
+      return false;
+    } else {
+      const LogicalDataObject* ldo;
+      IDSet<logical_data_id_t>::IDSetIter iter = reduce_set_.begin();
+      ldo = data_manager->FindLogicalObject(*iter);
+      reduce_region_ = *ldo->region();
+      ++iter;
+      for (; iter != reduce_set_.end(); ++iter) {
+        ldo = data_manager->FindLogicalObject(*iter);
+        reduce_region_ = GeometricRegion::GetBoundingBox(reduce_region_, *ldo->region());
+      }
+      *region = reduce_region_;
+      reduce_region_valid_ = true;
+      return true;
+    }
+  }
+}
+
 void JobEntry::MarkJobAsCompletelyResolved() {
     assignment_dependencies_.clear();
     versioning_dependencies_.clear();
@@ -598,18 +735,23 @@ ComputeJobEntry::ComputeJobEntry(
     const job_id_t& job_id,
     const IDSet<logical_data_id_t>& read_set,
     const IDSet<logical_data_id_t>& write_set,
+    const IDSet<logical_data_id_t>& scratch_set,
+    const IDSet<logical_data_id_t>& reduce_set,
     const IDSet<job_id_t>& before_set,
     const IDSet<job_id_t>& after_set,
     const job_id_t& parent_job_id,
     const job_id_t& future_job_id,
     const bool& sterile,
     const GeometricRegion& region,
-    const Parameter& params) {
+    const Parameter& params,
+    const CombinerMap& combiner_map) {
     job_type_ = JOB_COMP;
     job_name_ = job_name;
     job_id_ = job_id;
     read_set_ = read_set;
     write_set_ = write_set;
+    scratch_set_ = scratch_set;
+    reduce_set_ = reduce_set;
     before_set_ = before_set;
     after_set_ = after_set;
     parent_job_id_ = parent_job_id;
@@ -617,9 +759,12 @@ ComputeJobEntry::ComputeJobEntry(
     sterile_ = sterile;
     region_ = region;
     params_ = params;
+    combiner_map_ = combiner_map;
 
     union_set_.insert(read_set_);
     union_set_.insert(write_set_);
+    union_set_.insert(scratch_set_);
+    union_set_.insert(reduce_set_);
 
     // parent should be explicitally in before set - omidm
     before_set_.insert(parent_job_id);

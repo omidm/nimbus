@@ -63,6 +63,8 @@ ShadowJobEntry::ShadowJobEntry(const std::string& job_name,
                                const job_id_t& job_id,
                                const IDSet<logical_data_id_t>* read_set_p,
                                const IDSet<logical_data_id_t>* write_set_p,
+                               const IDSet<logical_data_id_t>* scratch_set_p,
+                               const IDSet<logical_data_id_t>* reduce_set_p,
                                const IDSet<logical_data_id_t>* union_set_p,
                                const IDSet<job_id_t> before_set,
                                boost::shared_ptr<VersionMap> vmap_read_diff,
@@ -72,6 +74,7 @@ ShadowJobEntry::ShadowJobEntry(const std::string& job_name,
                                const bool& sterile,
                                const GeometricRegion& region,
                                const Parameter& params,
+                               const CombinerMap& combiner_map,
                                TemplateJobEntry* template_job,
                                ComplexJobEntry* complex_job) {
   job_type_ = JOB_SHDW;
@@ -79,6 +82,8 @@ ShadowJobEntry::ShadowJobEntry(const std::string& job_name,
   job_id_ = job_id;
   read_set_p_ = read_set_p;
   write_set_p_ = write_set_p;
+  scratch_set_p_ = scratch_set_p;
+  reduce_set_p_ = reduce_set_p;
   union_set_p_ = union_set_p;
   before_set_ = before_set;
   vmap_read_diff_ = vmap_read_diff;
@@ -88,6 +93,7 @@ ShadowJobEntry::ShadowJobEntry(const std::string& job_name,
   sterile_ = sterile;
   region_ = region;
   params_ = params;
+  combiner_map_ = combiner_map;
   template_job_ = template_job;
   complex_job_ = complex_job;
 }
@@ -103,6 +109,14 @@ IDSet<logical_data_id_t> ShadowJobEntry::write_set() const {
   return *write_set_p_;
 }
 
+IDSet<logical_data_id_t> ShadowJobEntry::scratch_set() const {
+  return *scratch_set_p_;
+}
+
+IDSet<logical_data_id_t> ShadowJobEntry::reduce_set() const {
+  return *reduce_set_p_;
+}
+
 IDSet<logical_data_id_t> ShadowJobEntry::union_set() const {
   return *union_set_p_;
 }
@@ -113,6 +127,14 @@ const IDSet<logical_data_id_t>* ShadowJobEntry::read_set_p() const {
 
 const IDSet<logical_data_id_t>* ShadowJobEntry::write_set_p() const {
   return write_set_p_;
+}
+
+const IDSet<logical_data_id_t>* ShadowJobEntry::scratch_set_p() const {
+  return scratch_set_p_;
+}
+
+const IDSet<logical_data_id_t>* ShadowJobEntry::reduce_set_p() const {
+  return reduce_set_p_;
 }
 
 const IDSet<logical_data_id_t>* ShadowJobEntry::union_set_p() const {
@@ -143,6 +165,13 @@ void ShadowJobEntry::set_write_set_p(const IDSet<logical_data_id_t>* write_set_p
   write_set_p_ = write_set_p;
 }
 
+void ShadowJobEntry::set_scratch_set_p(const IDSet<logical_data_id_t>* scratch_set_p) {
+  scratch_set_p_ = scratch_set_p;
+}
+
+void ShadowJobEntry::set_reduce_set_p(const IDSet<logical_data_id_t>* reduce_set_p) {
+  reduce_set_p_ = reduce_set_p;
+}
 
 void ShadowJobEntry::set_union_set_p(const IDSet<logical_data_id_t>* union_set_p) {
   union_set_p_ = union_set_p;
@@ -177,9 +206,14 @@ bool ShadowJobEntry::GetPhysicalReadSet(IDSet<physical_data_id_t>* set) {
   set->clear();
   IDSet<logical_data_id_t>::IDSetIter it;
   for (it = read_set_p_->begin(); it != read_set_p_->end(); ++it) {
-    if (physical_table_.count(*it) == 0)
+    PhysicalTable::iterator i = physical_table_.find(*it);
+    if (i == physical_table_.end()) {
+      dbg(DBG_ERROR, "ERROR: did not find physical element for ldid %lu in the read set!\n", *it);
+      exit(-1);
+      exit(-1);
       return false;
-    set->insert(physical_table_[*it]);
+    }
+    set->insert(i->second);
   }
   return true;
 }
@@ -188,10 +222,45 @@ bool ShadowJobEntry::GetPhysicalWriteSet(IDSet<physical_data_id_t>* set) {
   set->clear();
   IDSet<logical_data_id_t>::IDSetIter it;
   for (it = write_set_p_->begin(); it != write_set_p_->end(); ++it) {
-    if (physical_table_.count(*it) == 0)
+    PhysicalTable::iterator i = physical_table_.find(*it);
+    if (i == physical_table_.end()) {
+      dbg(DBG_ERROR, "ERROR: did not find physical element for ldid %lu in the write set!\n", *it);
+      exit(-1);
+      exit(-1);
       return false;
-    set->insert(physical_table_[*it]);
+    }
+    set->insert(i->second);
   }
+  return true;
+}
+
+bool ShadowJobEntry::GetPhysicalScratchSet(IDSet<physical_data_id_t>* set) {
+  set->clear();
+  IDSet<logical_data_id_t>::IDSetIter it;
+  for (it = scratch_set_p_->begin(); it != scratch_set_p_->end(); ++it) {
+    PhysicalTable::iterator i = physical_table_.find(*it);
+    if (i == physical_table_.end()) {
+      dbg(DBG_ERROR, "ERROR: did not find physical element for ldid %lu in the scratch set!\n", *it); // NOLINT
+      exit(-1);
+      exit(-1);
+      return false;
+    }
+    set->insert(i->second);
+  }
+  return true;
+}
+
+bool ShadowJobEntry::GetPhysicalReduceSet(IDSet<physical_data_id_t>* set) {
+  set->clear();
+  *set = physical_reduce_set_;
+  if (reduce_set_p_->size() > 0) {
+    if (physical_reduce_set_.size() == 0) {
+      dbg(DBG_ERROR, "ERROR: physical reduce set was empty!\n");
+      exit(-1);
+      return false;
+    }
+  }
+
   return true;
 }
 

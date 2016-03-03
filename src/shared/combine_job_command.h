@@ -33,39 +33,31 @@
  */
 
  /*
-  * The controller sends compute jobs to workers to invoke application
-  * code.  They are translations of SpawnComputeJobs from workers to
-  * the controller, binding logical objects to physical instances.
+  * The controller sends combine jobs to workers to combine the scratch
+  * instances of a logical id for reduction.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
-  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_SRC_SHARED_COMPUTE_JOB_COMMAND_H_
-#define NIMBUS_SRC_SHARED_COMPUTE_JOB_COMMAND_H_
+#ifndef NIMBUS_SRC_SHARED_COMBINE_JOB_COMMAND_H_
+#define NIMBUS_SRC_SHARED_COMBINE_JOB_COMMAND_H_
 
 
 #include <string>
 #include "src/shared/scheduler_command.h"
 
 namespace nimbus {
-class ComputeJobCommand : public SchedulerCommand {
+class CombineJobCommand : public SchedulerCommand {
   public:
-    ComputeJobCommand();
-    ComputeJobCommand(const std::string& job_name,
+    CombineJobCommand();
+    CombineJobCommand(const std::string& job_name,
                       const ID<job_id_t>& job_id,
-                      const IDSet<physical_data_id_t>& read,
-                      const IDSet<physical_data_id_t>& write,
                       const IDSet<physical_data_id_t>& scratch,
                       const IDSet<physical_data_id_t>& reduce,
                       const IDSet<job_id_t>& before,
                       const IDSet<job_id_t>& extra_dependency,
-                      const IDSet<job_id_t>& after,
-                      const ID<job_id_t>& future_job_id,
-                      const bool& sterile,
-                      const GeometricRegion& region,
-                      const Parameter& params);
-    ~ComputeJobCommand();
+                      const GeometricRegion& region);
+    ~CombineJobCommand();
 
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);
@@ -74,10 +66,6 @@ class ComputeJobCommand : public SchedulerCommand {
     virtual std::string ToString();
     std::string job_name();
     ID<job_id_t> job_id();
-    IDSet<physical_data_id_t> read_set();
-    IDSet<physical_data_id_t>* read_set_p();
-    IDSet<physical_data_id_t> write_set();
-    IDSet<physical_data_id_t>* write_set_p();
     IDSet<physical_data_id_t> scratch_set();
     IDSet<physical_data_id_t>* scratch_set_p();
     IDSet<physical_data_id_t> reduce_set();
@@ -86,34 +74,21 @@ class ComputeJobCommand : public SchedulerCommand {
     IDSet<job_id_t>* before_set_p();
     IDSet<job_id_t> extra_dependency();
     IDSet<job_id_t>* extra_dependency_p();
-    IDSet<job_id_t> after_set();
-    IDSet<job_id_t>* after_set_p();
-    ID<job_id_t> future_job_id();
-    bool sterile();
     GeometricRegion region();
-    Parameter params();
 
   private:
     std::string job_name_;
     ID<job_id_t> job_id_;
-    IDSet<physical_data_id_t> read_set_;
-    IDSet<physical_data_id_t> write_set_;
     IDSet<physical_data_id_t> scratch_set_;
     IDSet<physical_data_id_t> reduce_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> extra_dependency_;
-    IDSet<job_id_t> after_set_;
-    ID<job_id_t> future_job_id_;
-    bool sterile_;
     GeometricRegion region_;
-    Parameter params_;
 
-    bool ReadFromProtobuf(const ExecuteComputeJobPBuf& buf);
-    bool WriteToProtobuf(ExecuteComputeJobPBuf* buf);
+    bool ReadFromProtobuf(const ExecuteCombineJobPBuf& buf);
+    bool WriteToProtobuf(ExecuteCombineJobPBuf* buf);
 };
-
-
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_SRC_SHARED_COMPUTE_JOB_COMMAND_H_
+#endif  // NIMBUS_SRC_SHARED_COMBINE_JOB_COMMAND_H_

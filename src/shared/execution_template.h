@@ -118,6 +118,9 @@ class ExecutionTemplate {
     bool AddComputeJobTemplate(ComputeJobCommand* command,
                                Application *app);
 
+    bool AddCombineJobTemplate(CombineJobCommand* command,
+                               Application *app);
+
     bool AddLocalCopyJobTemplate(LocalCopyCommand* command,
                                  Application *app);
 
@@ -147,6 +150,7 @@ class ExecutionTemplate {
     enum JobTemplateType {
       BASE,
       COMPUTE,
+      COMBINE,
       LC,
       RCS,
       RCR,
@@ -190,12 +194,16 @@ class ExecutionTemplate {
                            JobIdPtr job_id_ptr,
                            const PhyIdPtrSet& read_set_ptr,
                            const PhyIdPtrSet& write_set_ptr,
+                           const PhyIdPtrSet& scratch_set_ptr,
+                           const PhyIdPtrSet& reduce_set_ptr,
                            const IDSet<job_id_t>& before_set,
                            JobIdPtr future_job_id_ptr,
                            const size_t& param_index)
           : JobTemplate(job, job_id_ptr, before_set),
             read_set_ptr_(read_set_ptr),
             write_set_ptr_(write_set_ptr),
+            scratch_set_ptr_(scratch_set_ptr),
+            reduce_set_ptr_(reduce_set_ptr),
             future_job_id_ptr_(future_job_id_ptr),
             param_index_(param_index) {
               type_ = COMPUTE;
@@ -206,8 +214,33 @@ class ExecutionTemplate {
 
         PhyIdPtrSet read_set_ptr_;
         PhyIdPtrSet write_set_ptr_;
+        PhyIdPtrSet scratch_set_ptr_;
+        PhyIdPtrSet reduce_set_ptr_;
         JobIdPtr future_job_id_ptr_;
         size_t param_index_;
+
+        virtual void Refresh(const std::vector<Parameter> & paramerts,
+                             const template_id_t& template_generation_id);
+    };
+
+    class CombineJobTemplate : public JobTemplate {
+      public:
+        CombineJobTemplate(Job *job,
+                           JobIdPtr job_id_ptr,
+                           const PhyIdPtrSet& scratch_set_ptr,
+                           const PhyIdPtrSet& reduce_set_ptr,
+                           const IDSet<job_id_t>& before_set)
+          : JobTemplate(job, job_id_ptr, before_set),
+            scratch_set_ptr_(scratch_set_ptr),
+            reduce_set_ptr_(reduce_set_ptr) {
+              type_ = COMBINE;
+              dependency_num_ = before_set.size();
+            }
+
+        ~CombineJobTemplate() {}
+
+        PhyIdPtrSet scratch_set_ptr_;
+        PhyIdPtrSet reduce_set_ptr_;
 
         virtual void Refresh(const std::vector<Parameter> & paramerts,
                              const template_id_t& template_generation_id);

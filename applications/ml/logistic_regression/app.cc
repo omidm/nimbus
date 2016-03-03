@@ -47,7 +47,7 @@
 #define DEFAULT_ITERATION_NUM 10
 #define DEFAULT_PARTITION_NUM 10
 #define DEFAULT_SAMPLE_NUM_M 1
-#define DEFAULT_REDUCTION_PARTITION_NUM 1
+#define DEFAULT_REDUCTION_PARTITION_NUM 0
 
 LogisticRegression::LogisticRegression(const size_t& dimension,
                                        const size_t& iteration_num,
@@ -62,11 +62,14 @@ LogisticRegression::LogisticRegression(const size_t& dimension,
       assert(sizeof(size_t) == 8); // NOLINT
       assert(sizeof(double) == 8); // NOLINT
       assert(((sample_num_m * size_t(1e6)) % partition_num) == 0);
-      assert((partition_num % reduction_partition_num) == 0);
+      if (reduction_partition_num != 0) {
+        assert((partition_num % reduction_partition_num) == 0);
+      }
       sample_num_per_partition_ = (sample_num_m * 1e6) / partition_num;
       std::cout << "**** number of partitions:        " << partition_num_ << std::endl;
       std::cout << "**** sample number per partition: " << sample_num_per_partition_ << std::endl;
       std::cout << "**** number of reduction partitions:        " << reduction_partition_num_ << std::endl; // NOLINT
+      reduction_combiner_active_ = true;
 }
 
 LogisticRegression::~LogisticRegression() {
@@ -97,11 +100,21 @@ size_t LogisticRegression::sample_num_per_partition() {
   return sample_num_per_partition_;
 }
 
+bool LogisticRegression::reduction_combiner_active() {
+  return reduction_combiner_active_;
+}
+
+void LogisticRegression::set_reduction_combiner_active(bool flag) {
+  reduction_combiner_active_ = flag;
+}
+
 void LogisticRegression::Load() {
   RegisterJob(NIMBUS_MAIN_JOB_NAME, new Main(this));
   RegisterJob(INIT_JOB_NAME, new Init(this));
   RegisterJob(LOOP_JOB_NAME, new ForLoop(this));
   RegisterJob(GRADIENT_JOB_NAME, new Gradient(this));
+  RegisterJob(REDUCE_JOB_NAME, new Reduce(this));
+  RegisterJob(COMBINE_JOB_NAME, new Combine(this));
   RegisterJob(REDUCE_L1_JOB_NAME, new ReduceL1(this));
   RegisterJob(REDUCE_L2_JOB_NAME, new ReduceL2(this));
   RegisterJob(REDUCE_L3_JOB_NAME, new ReduceL3(this));
@@ -129,7 +142,8 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
     ("iteration,i", po::value<std::size_t>(&iteration_num)->default_value(DEFAULT_ITERATION_NUM), "number of iterations") // NOLINT
     ("pn", po::value<std::size_t>(&partition_num)->default_value(DEFAULT_PARTITION_NUM), "number of partitions") // NOLINT
     ("sn", po::value<std::size_t>(&sample_num_m)->default_value(DEFAULT_SAMPLE_NUM_M), "number of samples in Million") // NOLINT
-    ("rpn", po::value<std::size_t>(&reduction_partition_num)->default_value(DEFAULT_REDUCTION_PARTITION_NUM), "number of reduction partitions"); // NOLINT
+    ("rpn", po::value<std::size_t>(&reduction_partition_num)->default_value(DEFAULT_REDUCTION_PARTITION_NUM), "number of reduction partitions for manual reduction by application with read/write set, if not specified nimbus handles reduction automatically through scratch/reduce set.") // NOLINT
+    ("drc", "deactivate reduction combiner"); // NOLINT
 
   po::variables_map vm;
   try {
@@ -158,6 +172,11 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
                                                    partition_num,
                                                    sample_num_m,
                                                    reduction_partition_num);
+
+  if (vm.count("drc")) {
+    app->set_reduction_combiner_active(false);
+  }
+
   return app;
 }
 

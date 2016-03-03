@@ -58,7 +58,14 @@ Data* PhysicalDataMap::AcquireAccess(
     AccessPattern access_pattern) {
   // outstanding_used_data_[job_id].insert(physical_data_id);
   // assert(internal_map_.find(physical_data_id) != internal_map_.end());
-  return internal_map_[physical_data_id].first;
+  InternalMap::iterator iter = internal_map_.find(physical_data_id);
+  if (iter != internal_map_.end()) {
+    return iter->second.first;
+  } else {
+    dbg(DBG_ERROR, "ERROR: could to find physical id %lu in the map.\n", physical_data_id);
+    exit(1);
+    return NULL;
+  }
 }
 
 bool PhysicalDataMap::ReleaseAccess(

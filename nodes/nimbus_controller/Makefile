@@ -25,4 +25,5 @@ clean: clean-files
 clean-logs:
 	\rm -f *log*
 	\rm -f *.txt
+	\rm -rf core
 

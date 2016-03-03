@@ -48,6 +48,8 @@
 #define INIT_JOB_NAME "init"
 #define LOOP_JOB_NAME "__MARK_STAT_for_loop"
 #define GRADIENT_JOB_NAME "gradient"
+#define REDUCE_JOB_NAME "reduce"
+#define COMBINE_JOB_NAME "combine"
 #define REDUCE_L1_JOB_NAME "reduce_l1"
 #define REDUCE_L2_JOB_NAME "reduce_l2"
 #define REDUCE_L3_JOB_NAME "reduce_l3"
@@ -78,6 +80,20 @@ class ForLoop : public Job {
 class Gradient : public Job {
   public:
     explicit Gradient(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
+
+class Reduce : public Job {
+  public:
+    explicit Reduce(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
+
+class Combine : public Job {
+  public:
+    explicit Combine(Application* app);
     virtual void Execute(Parameter params, const DataArray& da);
     virtual Job * Clone();
 };

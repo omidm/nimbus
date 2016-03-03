@@ -66,6 +66,9 @@ class LogisticRegression : public Application {
     virtual size_t sample_num_m();
     virtual size_t reduction_partition_num();
     virtual size_t sample_num_per_partition();
+    virtual bool reduction_combiner_active();
+
+    virtual void set_reduction_combiner_active(bool flag);
 
   private:
     size_t dimension_;
@@ -74,6 +77,7 @@ class LogisticRegression : public Application {
     size_t sample_num_m_;
     size_t reduction_partition_num_;
     size_t sample_num_per_partition_;
+    bool reduction_combiner_active_;
 };
 
 #endif  // NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_APP_H_

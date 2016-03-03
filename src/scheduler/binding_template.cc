@@ -129,8 +129,17 @@ BindingTemplate::GetRequiredUpdatesForCascading(boost::shared_ptr<VersionList> v
 
   PatternMap::iterator iter = entry_pattern_map_.begin();
   for (; iter != entry_pattern_map_.end(); ++iter) {
+    if (iter->second->version_type_ == SCRATCH) {
+      dbg(DBG_ERROR, "ERROR: entry pattern cannot have scratch type!\n");
+      assert(false);
+    }
     if (iter->second->version_type_ == WILD_CARD) {
       continue;
+    }
+
+    if (iter->second->version_diff_from_base_ != 0) {
+      dbg(DBG_ERROR, "ERROR: regular entry pattern cannot have non zero version diff!\n");
+      assert(false);
     }
 
     logical_data_id_t ldid = iter->second->ldid_;
@@ -143,14 +152,23 @@ BindingTemplate::GetRequiredUpdatesForCascading(boost::shared_ptr<VersionList> v
 
     PatternMap::iterator it = end_pattern_map_.find(pdid);
     assert(it != end_pattern_map_.end());
+    if (it->second->version_type_ == WILD_CARD) {
+      dbg(DBG_ERROR, "ERROR: ennd pattern cannot have wild_card type!\n");
+      assert(false);
+    }
 
-    data_version_t v_diff_now = it->second->version_diff_from_base_;
     data_version_t v_diff_needed = iter->second->version_diff_from_base_ + write_diff_version;
-
-    if (v_diff_now != v_diff_needed) {
-      assert(v_diff_now < v_diff_needed);
+    if (it->second->version_type_ == SCRATCH) {
       patterns->push_back(it->second);
       versions_diff->push_back(v_diff_needed);
+    } else {
+      data_version_t v_diff_now = it->second->version_diff_from_base_;
+
+      if (v_diff_now != v_diff_needed) {
+        assert(v_diff_now < v_diff_needed);
+        patterns->push_back(it->second);
+        versions_diff->push_back(v_diff_needed);
+      }
     }
   }
 }
@@ -230,6 +248,23 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
     // Checking that no ther job has candidates in before set!
     // If they do it could cause race!!!.
     {
+      {
+        std::map<job_id_t, CombineJobCommandTemplate*>::iterator iter =
+          combine_job_to_command_map_.begin();
+        for (; iter != combine_job_to_command_map_.end(); ++iter) {
+          JobIdPtrSet bs = iter->second->before_set_ptr_;
+          JobIdPtrSet::iterator i = bs.begin();
+          for (; i != bs.end(); ++i) {
+            job_id_t rcr = *(*i);
+            if (candidate_rcr_.contains(rcr)) {
+              assert(false);
+              std::cout << "DANGER 0: "
+                        << template_entry_->template_name()
+                        << std::endl;
+            }
+          }
+        }
+      }
       {
         std::map<job_id_t, RemoteCopyReceiveCommandTemplate*>::iterator iter =
           rcr_job_to_command_map_.begin();
@@ -355,6 +390,7 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
         RemoteCopyReceiveCommandTemplate *rcrc;
         switch (ct->type_) {
           case COMPUTE:
+          case COMBINE:
           case LC:
             ++iter;
             break;
@@ -558,9 +594,29 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
   // Testing the integrity of computations!
 
   {
+    PatternList::iterator iter = entry_pattern_list_.begin();
+    for (; iter != entry_pattern_list_.end(); ++iter) {
+      if ((*iter)->version_type_ == SCRATCH) {
+        dbg(DBG_ERROR, "ERROR: entry pattern cannot have scratch type!\n");
+        assert(false);
+      }
+      if ((*iter)->version_type_ == REGULAR) {
+        if ((*iter)->version_diff_from_base_ != 0) {
+          dbg(DBG_ERROR, "ERROR: regular entry pattern cannot have non zero version diff!\n");
+          assert(false);
+        }
+      }
+    }
+  }
+
+
+  {
     PatternList::iterator iter = end_pattern_list_.begin();
     for (; iter != end_pattern_list_.end(); ++iter) {
-      assert((*iter)->version_type_ == REGULAR);
+      if ((*iter)->version_type_ == WILD_CARD) {
+        dbg(DBG_ERROR, "ERROR: end pattern cannot have wild-card type!\n");
+        assert(false);
+      }
     }
   }
 
@@ -571,6 +627,7 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
   assert(phy_id_map_.size() == entry_pattern_map_.size());
   assert(end_pattern_map_.size() == end_pattern_list_.size());
   assert(entry_pattern_map_.size() == entry_pattern_list_.size());
+  assert(entry_pattern_list_.size() == end_pattern_list_.size());
   assert(ordered_entry_patterns_.size() == patterns_meta_data_.size());
 
   finalized_ = true;
@@ -652,6 +709,11 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
         cc = reinterpret_cast<ComputeJobCommandTemplate*>(ct);
         SendComputeJobCommand(cc,
                               parameters[cc->param_index_],
+                              ed,
+                              server);
+        break;
+      case COMBINE:
+        SendCombineJobCommand(reinterpret_cast<CombineJobCommandTemplate*>(ct),
                               ed,
                               server);
         break;
@@ -828,7 +890,7 @@ void BindingTemplate::SendComputeJobCommand(ComputeJobCommandTemplate* command,
   ID<job_id_t> job_id(*(command->job_id_ptr_));
   ID<job_id_t> future_job_id(*(command->future_job_id_ptr_));
 
-  IDSet<physical_data_id_t> read_set, write_set;
+  IDSet<physical_data_id_t> read_set, write_set, scratch_set, reduce_set;
   IDSet<job_id_t> before_set, after_set;
 
   {
@@ -855,11 +917,25 @@ void BindingTemplate::SendComputeJobCommand(ComputeJobCommandTemplate* command,
       write_set.insert(*(*it));
     }
   }
+  {
+    PhyIdPtrSet::iterator it = command->scratch_set_ptr_.begin();
+    for (; it != command->scratch_set_ptr_.end(); ++it) {
+      scratch_set.insert(*(*it));
+    }
+  }
+  {
+    PhyIdPtrSet::iterator it = command->reduce_set_ptr_.begin();
+    for (; it != command->reduce_set_ptr_.end(); ++it) {
+      reduce_set.insert(*(*it));
+    }
+  }
 
   ComputeJobCommand cm(job_name,
                        job_id,
                        read_set,
                        write_set,
+                       scratch_set,
+                       reduce_set,
                        before_set,
                        extra_dependency,
                        after_set,
@@ -874,6 +950,51 @@ void BindingTemplate::SendComputeJobCommand(ComputeJobCommandTemplate* command,
   }
   server->SendCommand(worker, &cm);
 }
+
+
+void BindingTemplate::SendCombineJobCommand(CombineJobCommandTemplate* command,
+                                            const IDSet<job_id_t>& extra_dependency,
+                                            SchedulerServer *server) {
+  std::string job_name = command->job_name_;
+  ID<job_id_t> job_id(*(command->job_id_ptr_));
+
+  IDSet<physical_data_id_t> scratch_set, reduce_set;
+  IDSet<job_id_t> before_set;
+
+  {
+    JobIdPtrSet::iterator it = command->before_set_ptr_.begin();
+    for (; it != command->before_set_ptr_.end(); ++it) {
+      before_set.insert(*(*it));
+    }
+  }
+  {
+    PhyIdPtrSet::iterator it = command->scratch_set_ptr_.begin();
+    for (; it != command->scratch_set_ptr_.end(); ++it) {
+      scratch_set.insert(*(*it));
+    }
+  }
+  {
+    PhyIdPtrSet::iterator it = command->reduce_set_ptr_.begin();
+    for (; it != command->reduce_set_ptr_.end(); ++it) {
+      reduce_set.insert(*(*it));
+    }
+  }
+
+  CombineJobCommand cm(job_name,
+                       job_id,
+                       scratch_set,
+                       reduce_set,
+                       before_set,
+                       extra_dependency,
+                       command->region_);
+
+  SchedulerWorker *worker;
+  if (!server->GetSchedulerWorkerById(worker, command->worker_id_)) {
+    assert(false);
+  }
+  server->SendCommand(worker, &cm);
+}
+
 
 void BindingTemplate::SendLocalCopyCommand(LocalCopyCommandTemplate* command,
                                            const IDSet<job_id_t>& extra_dependency,
@@ -1004,12 +1125,17 @@ void BindingTemplate::SendMegaRCRCommand(MegaRCRCommandTemplate* command,
 bool BindingTemplate::TrackDataObject(const worker_id_t& worker_id,
                                       const logical_data_id_t& ldid,
                                       const physical_data_id_t& pdid,
-                                      VERSION_TYPE version_type,
+                                      VersionType version_type,
                                       data_version_t version_diff_from_base) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   PhyIdPtrMap::iterator iter =  phy_id_map_.find(pdid);
   if (iter != phy_id_map_.end()) {
     return true;
+  }
+
+  if (version_type == SCRATCH) {
+    dbg(DBG_ERROR, "ERROR: cannot track a scratch data as a new entry (pdid: %lu).\n", pdid);
+    assert(false);
   }
 
   PhyIdPtr pdid_ptr = PhyIdPtr(new physical_data_id_t(pdid));
@@ -1049,16 +1175,18 @@ bool BindingTemplate::TrackDataObject(const worker_id_t& worker_id,
 }
 
 bool BindingTemplate::UpdateDataObject(const physical_data_id_t& pdid,
+                                       VersionType version_type,
                                        data_version_t version_diff_from_base) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   PatternMap::iterator iter =  end_pattern_map_.find(pdid);
   if (iter == end_pattern_map_.end()) {
+    dbg(DBG_ERROR, "ERROR:, no record found to update the pdid: %lu.\n", pdid);
     assert(false);
     return false;
   }
 
   PatternEntry *pe = iter->second;
-  pe->version_type_ = REGULAR;
+  pe->version_type_ = version_type;
   pe->version_diff_from_base_ = version_diff_from_base;
 
   return true;
@@ -1093,6 +1221,32 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
     for (; iter != command->write_set_p()->end(); ++iter) {
       PhyIdPtr phy_id_ptr = GetExistingPhyIdPtr(*iter);
       write_set.insert(phy_id_ptr);
+
+      if (worker_template_active_) {
+        phy_worker_map_[*phy_id_ptr].insert(w_id);
+      }
+    }
+  }
+
+  PhyIdPtrSet scratch_set;
+  {
+    IDSet<physical_data_id_t>::IDSetIter iter = command->scratch_set_p()->begin();
+    for (; iter != command->scratch_set_p()->end(); ++iter) {
+      PhyIdPtr phy_id_ptr = GetExistingPhyIdPtr(*iter);
+      scratch_set.insert(phy_id_ptr);
+
+      if (worker_template_active_) {
+        phy_worker_map_[*phy_id_ptr].insert(w_id);
+      }
+    }
+  }
+
+  PhyIdPtrSet reduce_set;
+  {
+    IDSet<physical_data_id_t>::IDSetIter iter = command->reduce_set_p()->begin();
+    for (; iter != command->reduce_set_p()->end(); ++iter) {
+      PhyIdPtr phy_id_ptr = GetExistingPhyIdPtr(*iter);
+      reduce_set.insert(phy_id_ptr);
 
       if (worker_template_active_) {
         phy_worker_map_[*phy_id_ptr].insert(w_id);
@@ -1149,6 +1303,8 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
                                   compute_job_id_ptr,
                                   read_set,
                                   write_set,
+                                  scratch_set,
+                                  reduce_set,
                                   before_set,
                                   after_set,
                                   future_job_id_ptr_,
@@ -1158,6 +1314,81 @@ bool BindingTemplate::AddComputeJobCommand(ComputeJobCommand* command,
 
   // Keep this mapping to set the param_index in Finalize - omidm
   compute_job_to_command_map_[*compute_job_id_ptr] = cm;
+
+  command_templates_.push_back(cm);
+
+  return true;
+}
+
+bool BindingTemplate::AddCombineJobCommand(CombineJobCommand* command,
+                                            worker_id_t w_id) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
+  worker_ids_.insert(w_id);
+  JobIdPtr combine_job_id_ptr = GetCopyJobIdPtr(command->job_id().elem());
+
+  if (worker_template_active_) {
+    job_worker_map_[*combine_job_id_ptr].insert(w_id);
+  }
+
+  PhyIdPtrSet scratch_set;
+  assert(command->scratch_set_p()->size() == 1);
+  {
+    IDSet<physical_data_id_t>::IDSetIter iter = command->scratch_set_p()->begin();
+    for (; iter != command->scratch_set_p()->end(); ++iter) {
+      PhyIdPtr phy_id_ptr = GetExistingPhyIdPtr(*iter);
+      scratch_set.insert(phy_id_ptr);
+
+      if (worker_template_active_) {
+        phy_worker_map_[*phy_id_ptr].insert(w_id);
+      }
+    }
+  }
+
+  PhyIdPtrSet reduce_set;
+  {
+    IDSet<physical_data_id_t>::IDSetIter iter = command->reduce_set_p()->begin();
+    for (; iter != command->reduce_set_p()->end(); ++iter) {
+      PhyIdPtr phy_id_ptr = GetExistingPhyIdPtr(*iter);
+      reduce_set.insert(phy_id_ptr);
+
+      if (worker_template_active_) {
+        phy_worker_map_[*phy_id_ptr].insert(w_id);
+      }
+    }
+  }
+
+  JobIdPtrSet before_set;
+  {
+    IDSet<job_id_t>::IDSetIter iter = command->before_set_p()->begin();
+    for (; iter != command->before_set_p()->end(); ++iter) {
+      JobIdPtr job_id_ptr;
+      if (IDMaker::SchedulerProducedJobID(*iter)) {
+        if (!GetCopyJobIdPtrIfExisted(*iter, &job_id_ptr)) {
+          continue;
+        }
+      } else {
+        if (!GetComputeJobIdPtrIfExisted(*iter, &job_id_ptr)) {
+          continue;
+        }
+      }
+      before_set.insert(job_id_ptr);
+
+      if (worker_template_active_) {
+        job_worker_map_[*job_id_ptr].insert(w_id);
+      }
+    }
+  }
+
+  CombineJobCommandTemplate *cm =
+    new CombineJobCommandTemplate(command->job_name(),
+                                  combine_job_id_ptr,
+                                  scratch_set,
+                                  reduce_set,
+                                  before_set,
+                                  command->region(),
+                                  w_id);
+
+  combine_job_to_command_map_[*combine_job_id_ptr] = cm;
 
   command_templates_.push_back(cm);
 

@@ -52,7 +52,9 @@ ComputeJobCommand::ComputeJobCommand() {
 ComputeJobCommand::ComputeJobCommand(const std::string& job_name,
                                      const ID<job_id_t>& job_id,
                                      const IDSet<physical_data_id_t>& read,
-                                     const IDSet<physical_data_id_t>& write, // NOLINT
+                                     const IDSet<physical_data_id_t>& write,
+                                     const IDSet<physical_data_id_t>& scratch,
+                                     const IDSet<physical_data_id_t>& reduce,
                                      const IDSet<job_id_t>& before,
                                      const IDSet<job_id_t>& extra_dependency,
                                      const IDSet<job_id_t>& after,
@@ -64,6 +66,8 @@ ComputeJobCommand::ComputeJobCommand(const std::string& job_name,
     job_id_(job_id),
     read_set_(read),
     write_set_(write),
+    scratch_set_(scratch),
+    reduce_set_(reduce),
     before_set_(before),
     extra_dependency_(extra_dependency),
     after_set_(after),
@@ -128,6 +132,8 @@ std::string ComputeJobCommand::ToString() {
   str += ("id:" + job_id_.ToNetworkData() + ",");
   str += ("read:" + read_set_.ToNetworkData() + ",");
   str += ("write:" + write_set_.ToNetworkData() + ",");
+  str += ("scratch:" + scratch_set_.ToNetworkData() + ",");
+  str += ("reduce:" + reduce_set_.ToNetworkData() + ",");
   str += ("before:" + before_set_.ToNetworkData() + ",");
   str += ("extra-dependency:" + extra_dependency_.ToNetworkData() + ",");
   str += ("after:" + after_set_.ToNetworkData() + ",");
@@ -164,6 +170,22 @@ IDSet<physical_data_id_t> ComputeJobCommand::write_set() {
 
 IDSet<physical_data_id_t>* ComputeJobCommand::write_set_p() {
   return &write_set_;
+}
+
+IDSet<physical_data_id_t> ComputeJobCommand::scratch_set() {
+  return scratch_set_;
+}
+
+IDSet<physical_data_id_t>* ComputeJobCommand::scratch_set_p() {
+  return &scratch_set_;
+}
+
+IDSet<physical_data_id_t> ComputeJobCommand::reduce_set() {
+  return reduce_set_;
+}
+
+IDSet<physical_data_id_t>* ComputeJobCommand::reduce_set_p() {
+  return &reduce_set_;
 }
 
 IDSet<job_id_t> ComputeJobCommand::after_set() {
@@ -211,6 +233,8 @@ bool ComputeJobCommand::ReadFromProtobuf(const ExecuteComputeJobPBuf& buf) {
   job_id_.set_elem(buf.job_id());
   read_set_.ConvertFromRepeatedField(buf.read_set().ids());
   write_set_.ConvertFromRepeatedField(buf.write_set().ids());
+  scratch_set_.ConvertFromRepeatedField(buf.scratch_set().ids());
+  reduce_set_.ConvertFromRepeatedField(buf.reduce_set().ids());
   before_set_.ConvertFromRepeatedField(buf.before_set().ids());
   extra_dependency_.ConvertFromRepeatedField(buf.extra_dependency().ids());
   after_set_.ConvertFromRepeatedField(buf.after_set().ids());
@@ -227,6 +251,8 @@ bool ComputeJobCommand::WriteToProtobuf(ExecuteComputeJobPBuf* buf) {
   buf->set_job_id(job_id().elem());
   read_set().ConvertToRepeatedField(buf->mutable_read_set()->mutable_ids());
   write_set().ConvertToRepeatedField(buf->mutable_write_set()->mutable_ids());
+  scratch_set().ConvertToRepeatedField(buf->mutable_scratch_set()->mutable_ids());
+  reduce_set().ConvertToRepeatedField(buf->mutable_reduce_set()->mutable_ids());
   before_set().ConvertToRepeatedField(buf->mutable_before_set()->mutable_ids());
   extra_dependency().ConvertToRepeatedField(buf->mutable_extra_dependency()->mutable_ids());
   after_set().ConvertToRepeatedField(buf->mutable_after_set()->mutable_ids());

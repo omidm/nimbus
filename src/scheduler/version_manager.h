@@ -97,6 +97,10 @@ class VersionManager {
     bool ResolveJobDataVersionsForPattern(JobEntry *job,
                   const BindingTemplate::PatternList* patterns);
 
+    bool ResolveJobDataVersionsForSingleEntry(JobEntry *job,
+                  const logical_data_id_t& ldid,
+                  data_version_t *version);
+
     bool MemoizeVersionsForTemplate(JobEntry *job);
 
     bool DefineData(

@@ -68,6 +68,7 @@ typedef boost::unordered_map<job_id_t, JobEntry*> JobEntryMap;
 typedef boost::unordered_map<job_id_t, JobEntry*> JobEntryTable;
 typedef std::list<JobEntry*> JobEntryList;
 typedef std::vector<Data*> DataArray;
+typedef boost::unordered_map<logical_data_id_t, std::string> CombinerMap;
 
 class TemplateJobEntry;
 
@@ -88,12 +89,15 @@ class JobEntry {
     virtual job_id_t job_id() const;
     virtual IDSet<logical_data_id_t> read_set() const;
     virtual IDSet<logical_data_id_t> write_set() const;
+    virtual IDSet<logical_data_id_t> scratch_set() const;
+    virtual IDSet<logical_data_id_t> reduce_set() const;
     virtual IDSet<logical_data_id_t> union_set() const;
     virtual IDSet<job_id_t> before_set() const;
     virtual IDSet<job_id_t> after_set() const;
     virtual job_id_t parent_job_id() const;
     virtual job_id_t future_job_id() const;
     virtual Parameter params() const;
+    virtual CombinerMap combiner_map() const;
     virtual boost::shared_ptr<VersionMap> vmap_read() const;
     virtual boost::shared_ptr<VersionMap> vmap_write() const;
     virtual boost::shared_ptr<VersionMap> vmap_partial() const;
@@ -124,7 +128,10 @@ class JobEntry {
 
     virtual const IDSet<logical_data_id_t>* read_set_p() const;
     virtual const IDSet<logical_data_id_t>* write_set_p() const;
+    virtual const IDSet<logical_data_id_t>* scratch_set_p() const;
+    virtual const IDSet<logical_data_id_t>* reduce_set_p() const;
     virtual const IDSet<logical_data_id_t>* union_set_p() const;
+    virtual const CombinerMap* combiner_map_p() const;
     virtual const IDSet<job_id_t>* before_set_p() const;
     virtual IDSet<job_id_t>* before_set_p();
 
@@ -135,11 +142,14 @@ class JobEntry {
     virtual void set_job_id(job_id_t job_id);
     virtual void set_read_set(IDSet<logical_data_id_t> read_set);
     virtual void set_write_set(IDSet<logical_data_id_t> write_set);
+    virtual void set_scratch_set(IDSet<logical_data_id_t> scratch_set);
+    virtual void set_reduce_set(IDSet<logical_data_id_t> reduce_set);
     virtual void set_before_set(IDSet<job_id_t> before_set, bool update_dependencies = false);
     virtual void set_after_set(IDSet<job_id_t> after_set);
     virtual void set_parent_job_id(job_id_t parent_job_id, bool update_dependencies = false);
     virtual void set_future_job_id(job_id_t future_job_id);
     virtual void set_params(Parameter params);
+    virtual void set_combiner_map(const CombinerMap& combiner_map);
     virtual void set_vmap_read(boost::shared_ptr<VersionMap> vmap_read);
     virtual void set_vmap_write(boost::shared_ptr<VersionMap> vmap_write);
     virtual void set_vmap_partial(boost::shared_ptr<VersionMap> vmap_partial);
@@ -169,9 +179,12 @@ class JobEntry {
     virtual void set_parent_load_balancing_id(load_balancing_id_t lb_id);
 
     virtual void set_physical_table_entry(logical_data_id_t l_id, physical_data_id_t p_id);
+    virtual void add_physical_reduce_set_entry(physical_data_id_t p_id);
 
     virtual bool GetPhysicalReadSet(IDSet<physical_data_id_t>* set);
     virtual bool GetPhysicalWriteSet(IDSet<physical_data_id_t>* set);
+    virtual bool GetPhysicalScratchSet(IDSet<physical_data_id_t>* set);
+    virtual bool GetPhysicalReduceSet(IDSet<physical_data_id_t>* set);
 
     virtual bool IsReadyToAssign();
     virtual void remove_assignment_dependency(job_id_t job_id);
@@ -186,6 +199,8 @@ class JobEntry {
     virtual bool GetRegion(GeometricRegion *region);
     virtual bool GetReadSetRegion(DataManager *data_manager, GeometricRegion *region);
     virtual bool GetWriteSetRegion(DataManager *data_manager, GeometricRegion *region);
+    virtual bool GetScratchSetRegion(DataManager *data_manager, GeometricRegion *region);
+    virtual bool GetReduceSetRegion(DataManager *data_manager, GeometricRegion *region);
     virtual bool GetUnionSetRegion(DataManager *data_manager, GeometricRegion *region);
 
   protected:
@@ -196,23 +211,29 @@ class JobEntry {
     job_id_t job_id_;
     IDSet<logical_data_id_t> read_set_;
     IDSet<logical_data_id_t> write_set_;
+    IDSet<logical_data_id_t> scratch_set_;
+    IDSet<logical_data_id_t> reduce_set_;
     IDSet<logical_data_id_t> union_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
     job_id_t parent_job_id_;
     job_id_t future_job_id_;
     Parameter params_;
+    CombinerMap combiner_map_;
     boost::shared_ptr<VersionMap> vmap_read_;
     boost::shared_ptr<VersionMap> vmap_write_;
     boost::shared_ptr<VersionMap> vmap_partial_;
     boost::shared_ptr<MetaBeforeSet> meta_before_set_;
     job_depth_t job_depth_;
     PhysicalTable physical_table_;
+    IDSet<physical_data_id_t> physical_reduce_set_;
     IDSet<job_id_t> jobs_passed_versions_;
     IDSet<job_id_t> assignment_dependencies_;
     IDSet<job_id_t> versioning_dependencies_;
     GeometricRegion read_region_;
     GeometricRegion write_region_;
+    GeometricRegion scratch_region_;
+    GeometricRegion reduce_region_;
     GeometricRegion union_region_;
     worker_id_t assigned_worker_id_;
     SchedulerWorker *assigned_worker_;
@@ -232,6 +253,8 @@ class JobEntry {
     bool future_;
     bool read_region_valid_;
     bool write_region_valid_;
+    bool scratch_region_valid_;
+    bool reduce_region_valid_;
     bool union_region_valid_;
     checkpoint_id_t checkpoint_id_;
     load_balancing_id_t load_balancing_id_;
@@ -249,13 +272,16 @@ class ComputeJobEntry : public JobEntry {
         const job_id_t& job_id,
         const IDSet<logical_data_id_t>& read_set,
         const IDSet<logical_data_id_t>& write_set,
+        const IDSet<logical_data_id_t>& scratch_set,
+        const IDSet<logical_data_id_t>& reduce_set,
         const IDSet<job_id_t>& before_set,
         const IDSet<job_id_t>& after_set,
         const job_id_t& parent_job_id,
         const job_id_t& future_job_id,
         const bool& sterile,
         const GeometricRegion& region,
-        const Parameter& params);
+        const Parameter& params,
+        const CombinerMap& combiner_map);
     ~ComputeJobEntry();
 };
 

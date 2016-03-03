@@ -76,10 +76,13 @@ class TemplateJobEntry : public JobEntry {
                      const size_t& index,
                      const IDSet<logical_data_id_t> read_set,
                      const IDSet<logical_data_id_t> write_set,
+                     const IDSet<logical_data_id_t> scratch_set,
+                     const IDSet<logical_data_id_t> reduce_set,
                      const IDSet<job_id_t>& before_set,
                      const IDSet<job_id_t>& after_set,
                      const bool& sterile,
                      const GeometricRegion& region,
+                     const CombinerMap& combiner_map,
                      TemplateEntry* template_entry);
 
     virtual ~TemplateJobEntry();

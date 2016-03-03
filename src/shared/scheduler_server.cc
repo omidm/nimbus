@@ -128,6 +128,7 @@ bool SchedulerServer::ReceiveJobDoneCommands(JobDoneCommandList* storage,
 
 void SchedulerServer::SendCommand(SchedulerWorker* worker,
                                   SchedulerCommand* command) {
+  dbg(DBG_NET, "Sending command %s .\n", command->ToString().c_str());
   std::string data = command->ToNetworkData();
   SchedulerCommand::length_field_t len;
   len = htonl((uint32_t)data.length() + sizeof(len));

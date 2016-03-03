@@ -166,6 +166,11 @@ bool CommandTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
                               extra_dependency,
                               client);
         break;
+      case COMBINE:
+        PushCombineJobCommand(reinterpret_cast<CombineJobCommandTemplate*>(ct),
+                              extra_dependency,
+                              client);
+        break;
       case LC:
         PushLocalCopyCommand(reinterpret_cast<LocalCopyCommandTemplate*>(ct),
                              extra_dependency,
@@ -203,7 +208,7 @@ void CommandTemplate::PushComputeJobCommand(ComputeJobCommandTemplate* command,
   ID<job_id_t> job_id(*(command->job_id_ptr_));
   ID<job_id_t> future_job_id(*(command->future_job_id_ptr_));
 
-  IDSet<physical_data_id_t> read_set, write_set;
+  IDSet<physical_data_id_t> read_set, write_set, scratch_set, reduce_set;
   IDSet<job_id_t> before_set, after_set;
 
   {
@@ -230,12 +235,27 @@ void CommandTemplate::PushComputeJobCommand(ComputeJobCommandTemplate* command,
       write_set.insert(*(*it));
     }
   }
+  {
+    PhyIdPtrSet::iterator it = command->scratch_set_ptr_.begin();
+    for (; it != command->scratch_set_ptr_.end(); ++it) {
+      scratch_set.insert(*(*it));
+    }
+  }
+  {
+    PhyIdPtrSet::iterator it = command->reduce_set_ptr_.begin();
+    for (; it != command->reduce_set_ptr_.end(); ++it) {
+      reduce_set.insert(*(*it));
+    }
+  }
+
 
   ComputeJobCommand *cm =
     new ComputeJobCommand(job_name,
                           job_id,
                           read_set,
                           write_set,
+                          scratch_set,
+                          reduce_set,
                           before_set,
                           extra_dependency,
                           after_set,
@@ -243,6 +263,47 @@ void CommandTemplate::PushComputeJobCommand(ComputeJobCommandTemplate* command,
                           command->sterile_,
                           command->region_,
                           parameter);
+
+  client->PushCommandToTheQueue(cm);
+}
+
+void CommandTemplate::PushCombineJobCommand(CombineJobCommandTemplate* command,
+                                            const IDSet<job_id_t>& extra_dependency,
+                                            SchedulerClient *client) {
+  std::string job_name = command->job_name_;
+  ID<job_id_t> job_id(*(command->job_id_ptr_));
+
+  IDSet<physical_data_id_t> scratch_set, reduce_set;
+  IDSet<job_id_t> before_set;
+
+  {
+    JobIdPtrSet::iterator it = command->before_set_ptr_.begin();
+    for (; it != command->before_set_ptr_.end(); ++it) {
+      before_set.insert(*(*it));
+    }
+  }
+  {
+    PhyIdPtrSet::iterator it = command->scratch_set_ptr_.begin();
+    for (; it != command->scratch_set_ptr_.end(); ++it) {
+      scratch_set.insert(*(*it));
+    }
+  }
+  {
+    PhyIdPtrSet::iterator it = command->reduce_set_ptr_.begin();
+    for (; it != command->reduce_set_ptr_.end(); ++it) {
+      reduce_set.insert(*(*it));
+    }
+  }
+
+
+  CombineJobCommand *cm =
+    new CombineJobCommand(job_name,
+                          job_id,
+                          scratch_set,
+                          reduce_set,
+                          before_set,
+                          extra_dependency,
+                          command->region_);
 
   client->PushCommandToTheQueue(cm);
 }
@@ -387,6 +448,24 @@ bool CommandTemplate::AddComputeJobCommand(ComputeJobCommand* command) {
     }
   }
 
+  PhyIdPtrSet scratch_set;
+  {
+    IDSet<physical_data_id_t>::IDSetIter iter = command->scratch_set_p()->begin();
+    for (; iter != command->scratch_set_p()->end(); ++iter) {
+      PhyIdPtr phy_id_ptr = GetExistingPhyIdPtr(*iter);
+      scratch_set.insert(phy_id_ptr);
+    }
+  }
+
+  PhyIdPtrSet reduce_set;
+  {
+    IDSet<physical_data_id_t>::IDSetIter iter = command->reduce_set_p()->begin();
+    for (; iter != command->reduce_set_p()->end(); ++iter) {
+      PhyIdPtr phy_id_ptr = GetExistingPhyIdPtr(*iter);
+      reduce_set.insert(phy_id_ptr);
+    }
+  }
+
   JobIdPtrSet before_set;
   {
     IDSet<job_id_t>::IDSetIter iter = command->before_set_p()->begin();
@@ -410,6 +489,8 @@ bool CommandTemplate::AddComputeJobCommand(ComputeJobCommand* command) {
                                   compute_job_id_ptr,
                                   read_set,
                                   write_set,
+                                  scratch_set,
+                                  reduce_set,
                                   before_set,
                                   after_set,
                                   future_job_id_ptr_,
@@ -425,6 +506,59 @@ bool CommandTemplate::AddComputeJobCommand(ComputeJobCommand* command) {
 
   return true;
 }
+
+bool CommandTemplate::AddCombineJobCommand(CombineJobCommand* command) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
+  assert(!finalized_);
+  JobIdPtr combine_job_id_ptr = GetExistingInnerJobIdPtr(command->job_id().elem());
+
+  PhyIdPtrSet scratch_set;
+  {
+    IDSet<physical_data_id_t>::IDSetIter iter = command->scratch_set_p()->begin();
+    for (; iter != command->scratch_set_p()->end(); ++iter) {
+      PhyIdPtr phy_id_ptr = GetExistingPhyIdPtr(*iter);
+      scratch_set.insert(phy_id_ptr);
+    }
+  }
+
+  PhyIdPtrSet reduce_set;
+  {
+    IDSet<physical_data_id_t>::IDSetIter iter = command->reduce_set_p()->begin();
+    for (; iter != command->reduce_set_p()->end(); ++iter) {
+      PhyIdPtr phy_id_ptr = GetExistingPhyIdPtr(*iter);
+      reduce_set.insert(phy_id_ptr);
+    }
+  }
+
+  JobIdPtrSet before_set;
+  {
+    IDSet<job_id_t>::IDSetIter iter = command->before_set_p()->begin();
+    for (; iter != command->before_set_p()->end(); ++iter) {
+      JobIdPtr job_id_ptr = GetExistingInnerJobIdPtr(*iter);
+      before_set.insert(job_id_ptr);
+    }
+  }
+
+  CombineJobCommandTemplate *cm =
+    new CombineJobCommandTemplate(command->job_name(),
+                                  combine_job_id_ptr,
+                                  scratch_set,
+                                  reduce_set,
+                                  before_set,
+                                  command->region(),
+                                  0);
+
+  ++copy_job_num_;
+  command_templates_.push_back(cm);
+
+  return true;
+}
+
+
+
+
+
+
 
 bool CommandTemplate::AddLocalCopyCommand(LocalCopyCommand* command) {
   boost::unique_lock<boost::mutex> lock(mutex_);

@@ -122,6 +122,7 @@ const std::string SchedulerCommand::RESPOND_STAT_NAME = "respondstat";
 const std::string SchedulerCommand::PRINT_STAT_NAME = "printstat";
 const std::string SchedulerCommand::MEGA_RCR_NAME = "megarcr";
 const std::string SchedulerCommand::MEGA_JOB_DONE_NAME = "megajobdone";
+const std::string SchedulerCommand::EXECUTE_COMBINE_NAME = "combinejob";
 
 std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
   std::string str;
@@ -239,6 +240,9 @@ std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
       break;
     case MEGA_JOB_DONE:
       str = MEGA_JOB_DONE_NAME;
+      break;
+    case EXECUTE_COMBINE:
+      str = EXECUTE_COMBINE_NAME;
       break;
     default:
       std::cout << "Type did not found\n";

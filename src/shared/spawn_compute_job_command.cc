@@ -58,24 +58,30 @@ SpawnComputeJobCommand::SpawnComputeJobCommand(const std::string& job_name,
                                                const ID<job_id_t>& job_id,
                                                const IDSet<logical_data_id_t>& read,
                                                const IDSet<logical_data_id_t>& write,
+                                               const IDSet<logical_data_id_t>& scratch,
+                                               const IDSet<logical_data_id_t>& reduce,
                                                const IDSet<job_id_t>& before,
                                                const IDSet<job_id_t>& after,
                                                const ID<job_id_t>& parent_job_id,
                                                const ID<job_id_t>& future_job_id,
                                                const bool& sterile,
                                                const GeometricRegion& region,
-                                               const Parameter& params)
+                                               const Parameter& params,
+                                               const CombinerVector& combiners)
   : job_name_(job_name),
     job_id_(job_id),
     read_set_(read),
     write_set_(write),
+    scratch_set_(scratch),
+    reduce_set_(reduce),
     before_set_(before),
     after_set_(after),
     parent_job_id_(parent_job_id),
     future_job_id_(future_job_id),
     sterile_(sterile),
     region_(region),
-    params_(params) {
+    params_(params),
+    combiners_(combiners) {
   name_ = SPAWN_COMPUTE_NAME;
   type_ = SPAWN_COMPUTE;
 }
@@ -132,11 +138,14 @@ std::string SpawnComputeJobCommand::ToString() {
   str += ("id:" + job_id_.ToNetworkData() + ",");
   str += ("read:" + read_set_.ToNetworkData() + ",");
   str += ("write:" + write_set_.ToNetworkData() + ",");
+  str += ("partial-write:" + scratch_set_.ToNetworkData() + ",");
+  str += ("reduce:" + reduce_set_.ToNetworkData() + ",");
   str += ("before:" + before_set_.ToNetworkData() + ",");
   str += ("after:" + after_set_.ToNetworkData() + ",");
   str += ("parent-id:" + parent_job_id_.ToNetworkData() + ",");
   str += ("future-id:" + future_job_id_.ToNetworkData() + ",");
   str += ("params:" + params_.ToNetworkData() + ",");
+  str += ("combiners: ...,");
   str += ("region:" + region_.ToNetworkData() + ",");
   if (sterile_) {
     str += "sterile";
@@ -170,6 +179,14 @@ IDSet<logical_data_id_t> SpawnComputeJobCommand::write_set() {
   return write_set_;
 }
 
+IDSet<logical_data_id_t> SpawnComputeJobCommand::scratch_set() {
+  return scratch_set_;
+}
+
+IDSet<logical_data_id_t> SpawnComputeJobCommand::reduce_set() {
+  return reduce_set_;
+}
+
 IDSet<job_id_t> SpawnComputeJobCommand::after_set() {
   return after_set_;
 }
@@ -190,12 +207,21 @@ GeometricRegion SpawnComputeJobCommand::region() {
   return region_;
 }
 
+typename nimbus::CombinerVector SpawnComputeJobCommand::combiners() {
+  return combiners_;
+}
+
+const typename nimbus::CombinerVector* SpawnComputeJobCommand::combiners_p() const {
+  return &combiners_;
+}
 
 bool SpawnComputeJobCommand::ReadFromProtobuf(const SubmitComputeJobPBuf& buf) {
   job_name_ = buf.name();
   job_id_.set_elem(buf.job_id());
   read_set_.ConvertFromRepeatedField(buf.read_set().ids());
   write_set_.ConvertFromRepeatedField(buf.write_set().ids());
+  scratch_set_.ConvertFromRepeatedField(buf.scratch_set().ids());
+  reduce_set_.ConvertFromRepeatedField(buf.reduce_set().ids());
   before_set_.ConvertFromRepeatedField(buf.before_set().ids());
   after_set_.ConvertFromRepeatedField(buf.after_set().ids());
   parent_job_id_.set_elem(buf.parent_id());
@@ -205,6 +231,14 @@ bool SpawnComputeJobCommand::ReadFromProtobuf(const SubmitComputeJobPBuf& buf) {
   // Is this safe?
   SerializedData d(buf.params());
   params_.set_ser_data(d);
+  {
+    combiners_.clear();
+    typename google::protobuf::RepeatedPtrField<CombinerPairPBuf>::const_iterator it =
+      buf.combiners().pairs().begin();
+    for (; it != buf.combiners().pairs().end(); ++it) {
+      combiners_.push_back(std::make_pair(it->ldid(), it->combiner()));
+    }
+  }
 
   return true;
 }
@@ -214,6 +248,8 @@ bool SpawnComputeJobCommand::WriteToProtobuf(SubmitComputeJobPBuf* buf) {
   buf->set_job_id(job_id().elem());
   read_set().ConvertToRepeatedField(buf->mutable_read_set()->mutable_ids());
   write_set().ConvertToRepeatedField(buf->mutable_write_set()->mutable_ids());
+  scratch_set().ConvertToRepeatedField(buf->mutable_scratch_set()->mutable_ids());
+  reduce_set().ConvertToRepeatedField(buf->mutable_reduce_set()->mutable_ids());
   before_set().ConvertToRepeatedField(buf->mutable_before_set()->mutable_ids());
   after_set().ConvertToRepeatedField(buf->mutable_after_set()->mutable_ids());
   buf->set_parent_id(parent_job_id().elem());
@@ -221,5 +257,15 @@ bool SpawnComputeJobCommand::WriteToProtobuf(SubmitComputeJobPBuf* buf) {
   buf->set_sterile(sterile_);
   region_.FillInMessage(buf->mutable_region());
   buf->set_params(params().ser_data().ToNetworkData());
+  {
+    typename google::protobuf::RepeatedPtrField<CombinerPairPBuf> *b =
+      buf->mutable_combiners()->mutable_pairs();
+    CombinerVector::const_iterator it = combiners_.begin();
+    for (; it != combiners_.end(); ++it) {
+      CombinerPairPBuf *pair = b->Add();
+      pair->set_ldid(it->first);
+      pair->set_combiner(it->second);
+    }
+  }
   return true;
 }

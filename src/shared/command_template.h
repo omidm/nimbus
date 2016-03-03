@@ -92,6 +92,8 @@ class CommandTemplate {
 
     bool AddComputeJobCommand(ComputeJobCommand* command);
 
+    bool AddCombineJobCommand(CombineJobCommand* command);
+
     bool AddLocalCopyCommand(LocalCopyCommand* command);
 
     bool AddRemoteCopySendCommand(RemoteCopySendCommand* command);
@@ -115,6 +117,7 @@ class CommandTemplate {
     enum CommandTemplateType {
       BASE,
       COMPUTE,
+      COMBINE,
       LC,
       RCS,
       RCR,
@@ -137,6 +140,8 @@ class CommandTemplate {
                                   JobIdPtr job_id_ptr,
                                   const PhyIdPtrSet& read_set_ptr,
                                   const PhyIdPtrSet& write_set_ptr,
+                                  const PhyIdPtrSet& scratch_set_ptr,
+                                  const PhyIdPtrSet& reduce_set_ptr,
                                   const JobIdPtrSet& before_set_ptr,
                                   const JobIdPtrSet& after_set_ptr,
                                   JobIdPtr future_job_id_ptr,
@@ -147,6 +152,8 @@ class CommandTemplate {
             job_id_ptr_(job_id_ptr),
             read_set_ptr_(read_set_ptr),
             write_set_ptr_(write_set_ptr),
+            scratch_set_ptr_(scratch_set_ptr),
+            reduce_set_ptr_(reduce_set_ptr),
             before_set_ptr_(before_set_ptr),
             after_set_ptr_(after_set_ptr),
             future_job_id_ptr_(future_job_id_ptr),
@@ -160,6 +167,8 @@ class CommandTemplate {
         JobIdPtr job_id_ptr_;
         PhyIdPtrSet read_set_ptr_;
         PhyIdPtrSet write_set_ptr_;
+        PhyIdPtrSet scratch_set_ptr_;
+        PhyIdPtrSet reduce_set_ptr_;
         JobIdPtrSet before_set_ptr_;
         JobIdPtrSet after_set_ptr_;
         JobIdPtr future_job_id_ptr_;
@@ -167,6 +176,36 @@ class CommandTemplate {
         GeometricRegion region_;
         worker_id_t worker_id_;
         size_t param_index_;
+    };
+
+
+
+    class CombineJobCommandTemplate : public BaseCommandTemplate {
+      public:
+        CombineJobCommandTemplate(const std::string& job_name,
+                                  JobIdPtr job_id_ptr,
+                                  const PhyIdPtrSet& scratch_set_ptr,
+                                  const PhyIdPtrSet& reduce_set_ptr,
+                                  const JobIdPtrSet& before_set_ptr,
+                                  const GeometricRegion& region,
+                                  const worker_id_t& worker_id)
+          : job_name_(job_name),
+            job_id_ptr_(job_id_ptr),
+            scratch_set_ptr_(scratch_set_ptr),
+            reduce_set_ptr_(reduce_set_ptr),
+            before_set_ptr_(before_set_ptr),
+            region_(region),
+            worker_id_(worker_id) {type_ = COMBINE;}
+
+        ~CombineJobCommandTemplate() {}
+
+        std::string job_name_;
+        JobIdPtr job_id_ptr_;
+        PhyIdPtrSet scratch_set_ptr_;
+        PhyIdPtrSet reduce_set_ptr_;
+        JobIdPtrSet before_set_ptr_;
+        GeometricRegion region_;
+        worker_id_t worker_id_;
     };
 
     class LocalCopyCommandTemplate : public BaseCommandTemplate {
@@ -292,6 +331,10 @@ class CommandTemplate {
 
     void PushComputeJobCommand(ComputeJobCommandTemplate* command,
                                const Parameter& parameter,
+                               const IDSet<job_id_t>& extra_dependency,
+                               SchedulerClient *client);
+
+    void PushCombineJobCommand(CombineJobCommandTemplate* command,
                                const IDSet<job_id_t>& extra_dependency,
                                SchedulerClient *client);
 

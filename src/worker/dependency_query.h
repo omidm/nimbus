@@ -59,32 +59,6 @@ namespace nimbus {
 
 class DependencyQuery {
  public:
-  typedef int64_t GroupId;
-  typedef int64_t RankId;
-
-  struct JobEntry {
-    std::string name;
-    job_id_t id;
-    IDSet<logical_data_id_t> read;
-    IDSet<logical_data_id_t> write;
-    IDSet<job_id_t> before;
-  };
-
-  struct ShortJobEntry {
-    std::string name;
-    job_id_t id;
-    IDSet<job_id_t> before;
-    GroupId group_id;
-  };
-
-  struct OutstandingAccessors {
-    OutstandingAccessors() : has_outstanding_writer(false) {}
-    bool has_outstanding_writer;
-    job_id_t outstanding_writer;
-  };
-
-  typedef boost::unordered_map<logical_data_id_t, OutstandingAccessors> OutstandingAccessorsMap;
-
   DependencyQuery();
   ~DependencyQuery();
 
@@ -94,6 +68,8 @@ class DependencyQuery {
                                 const job_id_t& id,
                                 const IDSet<logical_data_id_t>& read,
                                 const IDSet<logical_data_id_t>& write,
+                                const IDSet<logical_data_id_t>& scratch,
+                                const IDSet<logical_data_id_t>& reduce,
                                 const bool barrier = false);
 
   bool MarkEndOfStage();
@@ -102,29 +78,51 @@ class DependencyQuery {
 
   void GenerateDotFigure(const std::string& file_name);
 
+
+
+
+
  private:
+  void Prune(IDSet<job_id_t>* before);
+
+  typedef int64_t StageId;
+  typedef int64_t IndexId;
+
+  struct Job {
+    job_id_t id;
+    std::string name;
+    IDSet<logical_data_id_t> read;
+    IDSet<logical_data_id_t> write;
+    IDSet<logical_data_id_t> scratch;
+    IDSet<logical_data_id_t> reduce;
+    IDSet<job_id_t> before;
+    StageId stage_id;
+  };
+
+  struct LastBarrier {
+    LastBarrier() : valid(false) {}
+    bool valid;
+    job_id_t id;
+    StageId stage_id;
+  };
+
+  typedef std::vector<Job> JobList;
+  typedef boost::unordered_map<logical_data_id_t, job_id_t> LastWriterMap;
+  typedef std::vector<job_id_t> PartialWriters;
+  typedef boost::unordered_map<logical_data_id_t, PartialWriters> PartialWritersMap;
+
+  StageId stage_id_counter_;
+  LastBarrier last_barrier_;
+  JobList jobs_;
+  JobList staged_jobs_;
+  LastWriterMap last_writers_;
+  PartialWritersMap *last_stage_partial_writers_;
+  PartialWritersMap *current_stage_partial_writers_;
+  boost::unordered_map<job_id_t, IndexId> job_id_to_index_;
+
   int64_t total_job_;
-  int64_t total_objects_;
-  double query_time_;
-  double commit_time_;
-  double copy_time_;
-  double elimination_time_;
-  double spawn_time_;
-  double e1_time_;
-  double e2_time_;
-  double e3_time_;
-  double e4_time_;
-
-  bool has_last_barrier_job_;
-  job_id_t last_barrier_job_id_;
-  GroupId group_id_counter_;
-  std::list<JobEntry> staged_jobs_;
-  std::vector<ShortJobEntry> query_log_;
-  OutstandingAccessorsMap outstanding_accessors_map_;
-  boost::unordered_map<job_id_t, RankId> job_id_to_rank_;
-
-
-  void Eliminate(IDSet<job_id_t>* before);
+  double pruning_time_;
+  double insertion_time_;
 };
 
 }  // namespace nimbus

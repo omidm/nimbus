@@ -81,6 +81,7 @@ Job* Job::Clone() {
   return j;
 }
 
+
 bool Job::SpawnComputeJob(const std::string& name,
                           const job_id_t& id,
                           const IDSet<logical_data_id_t>& read,
@@ -88,6 +89,64 @@ bool Job::SpawnComputeJob(const std::string& name,
                           const IDSet<job_id_t>& before,
                           const IDSet<job_id_t>& after,
                           const Parameter& params,
+                          const bool& sterile,
+                          const GeometricRegion& region,
+                          const job_id_t& future_job_id) {
+  IDSet<logical_data_id_t> empty_ids;
+  std::string no_combiner = "";
+  return SpawnComputeJob(name,
+                         id,
+                         read,
+                         write,
+                         empty_ids,
+                         empty_ids,
+                         before,
+                         after,
+                         params,
+                         no_combiner,
+                         sterile,
+                         region,
+                         future_job_id);
+}
+
+bool Job::SpawnComputeJob(const std::string& name,
+                          const job_id_t& id,
+                          const IDSet<logical_data_id_t>& read,
+                          const IDSet<logical_data_id_t>& write,
+                          const IDSet<logical_data_id_t>& scratch,
+                          const IDSet<logical_data_id_t>& reduce,
+                          const IDSet<job_id_t>& before,
+                          const IDSet<job_id_t>& after,
+                          const Parameter& params,
+                          const bool& sterile,
+                          const GeometricRegion& region,
+                          const job_id_t& future_job_id) {
+  std::string no_combiner = "";
+  return SpawnComputeJob(name,
+                         id,
+                         read,
+                         write,
+                         scratch,
+                         reduce,
+                         before,
+                         after,
+                         params,
+                         no_combiner,
+                         sterile,
+                         region,
+                         future_job_id);
+}
+
+bool Job::SpawnComputeJob(const std::string& name,
+                          const job_id_t& id,
+                          const IDSet<logical_data_id_t>& read,
+                          const IDSet<logical_data_id_t>& write,
+                          const IDSet<logical_data_id_t>& scratch,
+                          const IDSet<logical_data_id_t>& reduce,
+                          const IDSet<job_id_t>& before,
+                          const IDSet<job_id_t>& after,
+                          const Parameter& params,
+                          const std::string& combiner,
                           const bool& sterile,
                           const GeometricRegion& region,
                           const job_id_t& future_job_id) {
@@ -103,6 +162,7 @@ bool Job::SpawnComputeJob(const std::string& name,
     return false;
   }
 
+  CombinerVector combiners;
   switch (spawn_state_) {
     case START_KNOWN_TEMPLATE:
       template_inner_job_ids_.push_back(id);
@@ -118,17 +178,27 @@ bool Job::SpawnComputeJob(const std::string& name,
       spawn_state_ = NORMAL;
     case NORMAL:
     case START_UNKNOWN_TEMPLATE:
+      if (combiner != "") {
+        assert(reduce.size() > 0);
+        IDSet<logical_data_id_t>::IDSetIter iter = reduce.begin();
+        for (; iter != reduce.end(); ++iter) {
+          combiners.push_back(std::make_pair(*iter, combiner));
+        }
+      }
       application_->SpawnComputeJob(name,
                                     id,
                                     read,
                                     write,
+                                    scratch,
+                                    reduce,
                                     before,
                                     after,
                                     id_.elem(),
                                     future_job_id,
                                     sterile,
                                     region,
-                                    params);
+                                    params,
+                                    combiners);
       return true;
       break;
   }
@@ -332,6 +402,27 @@ bool Job::StageJobAndLoadBeforeSet(IDSet<job_id_t> *before_set,
                                    const IDSet<logical_data_id_t>& read,
                                    const IDSet<logical_data_id_t>& write,
                                    const bool barrier) {
+  IDSet<logical_data_id_t> empty_ids;
+  return StageJobAndLoadBeforeSet(before_set,
+                                  name,
+                                  id,
+                                  read,
+                                  write,
+                                  empty_ids,
+                                  empty_ids,
+                                  barrier);
+}
+
+
+
+bool Job::StageJobAndLoadBeforeSet(IDSet<job_id_t> *before_set,
+                                   const std::string& name,
+                                   const job_id_t& id,
+                                   const IDSet<logical_data_id_t>& read,
+                                   const IDSet<logical_data_id_t>& write,
+                                   const IDSet<logical_data_id_t>& scratch,
+                                   const IDSet<logical_data_id_t>& reduce,
+                                   const bool barrier) {
   switch (spawn_state_) {
     case START_KNOWN_TEMPLATE:
       // Neutralize the call - omidm
@@ -349,6 +440,8 @@ bool Job::StageJobAndLoadBeforeSet(IDSet<job_id_t> *before_set,
                                                          id,
                                                          read,
                                                          write,
+                                                         scratch,
+                                                         reduce,
                                                          barrier);
       break;
   }
@@ -477,12 +570,28 @@ IDSet<physical_data_id_t> Job::write_set() const {
   return write_set_;
 }
 
+IDSet<physical_data_id_t> Job::scratch_set() const {
+  return scratch_set_;
+}
+
+IDSet<physical_data_id_t> Job::reduce_set() const {
+  return reduce_set_;
+}
+
 const IDSet<physical_data_id_t>& Job::get_read_set() const {
   return read_set_;
 }
 
 const IDSet<physical_data_id_t>& Job::get_write_set() const {
   return write_set_;
+}
+
+const IDSet<physical_data_id_t>& Job::get_scratch_set() const {
+  return scratch_set_;
+}
+
+const IDSet<physical_data_id_t>& Job::get_reduce_set() const {
+  return reduce_set_;
 }
 
 IDSet<job_id_t> Job::before_set() const {
@@ -547,6 +656,14 @@ void Job::set_read_set(const IDSet<physical_data_id_t>& read_set) {
 
 void Job::set_write_set(const IDSet<physical_data_id_t>& write_set) {
   write_set_ = write_set;
+}
+
+void Job::set_scratch_set(const IDSet<physical_data_id_t>& scratch_set) {
+  scratch_set_ = scratch_set;
+}
+
+void Job::set_reduce_set(const IDSet<physical_data_id_t>& reduce_set) {
+  reduce_set_ = reduce_set;
 }
 
 void Job::set_before_set(const IDSet<job_id_t>& before_set) {

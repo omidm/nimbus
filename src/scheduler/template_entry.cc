@@ -309,13 +309,16 @@ bool TemplateEntry::Instantiate(JobManager *job_manager,
                                     *(job_id_ptrs_[index]),
                                     iter->read_set_,
                                     iter->write_set_,
+                                    iter->scratch_set_,
+                                    iter->reduce_set_,
                                     before_set,
                                     after_set,
                                     parent_job_id,
                                     *(iter->future_job_id_ptr_),
                                     iter->sterile_,
                                     iter->region_,
-                                    parameters[index]);
+                                    parameters[index],
+                                    iter->combiner_map_);
     ++index;
   }
 
@@ -377,12 +380,15 @@ TemplateJobEntry* TemplateEntry::AddComputeJob(const std::string& job_name,
                                                const job_id_t& job_id,
                                                const IDSet<logical_data_id_t>& read_set,
                                                const IDSet<logical_data_id_t>& write_set,
+                                               const IDSet<logical_data_id_t>& scratch_set,
+                                               const IDSet<logical_data_id_t>& reduce_set,
                                                const IDSet<job_id_t>& before_set,
                                                const IDSet<job_id_t>& after_set,
                                                const job_id_t& parent_job_id,
                                                const job_id_t& future_job_id,
                                                const bool& sterile,
-                                               const GeometricRegion& region) {
+                                               const GeometricRegion& region,
+                                               const CombinerMap& combiner_map) {
   if (finalized_) {
     dbg(DBG_ERROR, "ERROR: template has been finalized and cannot add compute job!\n");
     return NULL;
@@ -394,10 +400,13 @@ TemplateJobEntry* TemplateEntry::AddComputeJob(const std::string& job_name,
                          compute_jobs_.size(),
                          read_set,
                          write_set,
+                         scratch_set,
+                         reduce_set,
                          before_set,
                          after_set,
                          sterile,
                          region,
+                         combiner_map,
                          this);
 
   compute_jobs_.push_back(job);
@@ -452,14 +461,17 @@ TemplateJobEntry* TemplateEntry::AddComputeJob(const std::string& job_name,
     }
 
     TemplateComputeJobEntry entry(job_name,
-        job_id_ptr,
-        read_set,
-        write_set,
-        before_set_ptrs,
-        after_set_ptrs,
-        future_job_id_ptr_,
-        sterile,
-        region);
+                                  job_id_ptr,
+                                  read_set,
+                                  write_set,
+                                  scratch_set,
+                                  reduce_set,
+                                  before_set_ptrs,
+                                  after_set_ptrs,
+                                  future_job_id_ptr_,
+                                  sterile,
+                                  region,
+                                  combiner_map);
 
     entry_list_.push_back(entry);
     job_id_ptrs_.push_back(job_id_ptr);

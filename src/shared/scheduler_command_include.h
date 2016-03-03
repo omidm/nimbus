@@ -48,6 +48,7 @@
 #include "src/shared/spawn_copy_job_command.h"
 #include "src/shared/spawn_job_graph_command.h"
 #include "src/shared/compute_job_command.h"
+#include "src/shared/combine_job_command.h"
 #include "src/shared/create_data_command.h"
 #include "src/shared/remote_copy_send_command.h"
 #include "src/shared/remote_copy_receive_command.h"

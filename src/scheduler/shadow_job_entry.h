@@ -78,6 +78,8 @@ class ShadowJobEntry : public JobEntry {
                    const job_id_t& job_id,
                    const IDSet<logical_data_id_t>* read_set_p,
                    const IDSet<logical_data_id_t>* write_set_p,
+                   const IDSet<logical_data_id_t>* scratch_set_p,
+                   const IDSet<logical_data_id_t>* reduce_set_p,
                    const IDSet<logical_data_id_t>* union_set_p,
                    const IDSet<job_id_t> before_set,
                    boost::shared_ptr<VersionMap> vmap_read_diff,
@@ -87,6 +89,7 @@ class ShadowJobEntry : public JobEntry {
                    const bool& sterile,
                    const GeometricRegion& region,
                    const Parameter& params,
+                   const CombinerMap& combiner_map,
                    TemplateJobEntry* template_job,
                    ComplexJobEntry* complex_job);
 
@@ -94,6 +97,8 @@ class ShadowJobEntry : public JobEntry {
 
     virtual const IDSet<logical_data_id_t>* read_set_p() const;
     virtual const IDSet<logical_data_id_t>* write_set_p() const;
+    virtual const IDSet<logical_data_id_t>* scratch_set_p() const;
+    virtual const IDSet<logical_data_id_t>* reduce_set_p() const;
     virtual const IDSet<logical_data_id_t>* union_set_p() const;
     virtual boost::shared_ptr<VersionMap> vmap_read_diff() const;
     virtual boost::shared_ptr<VersionList> vlist_write_diff() const;
@@ -102,10 +107,14 @@ class ShadowJobEntry : public JobEntry {
 
     virtual IDSet<logical_data_id_t> read_set() const;
     virtual IDSet<logical_data_id_t> write_set() const;
+    virtual IDSet<logical_data_id_t> scratch_set() const;
+    virtual IDSet<logical_data_id_t> reduce_set() const;
     virtual IDSet<logical_data_id_t> union_set() const;
 
     virtual void set_read_set_p(const IDSet<logical_data_id_t>* read_set_p);
     virtual void set_write_set_p(const IDSet<logical_data_id_t>* write_set_p);
+    virtual void set_scratch_set_p(const IDSet<logical_data_id_t>* scratch_set_p);
+    virtual void set_reduce_set_p(const IDSet<logical_data_id_t>* reduce_set_p);
     virtual void set_union_set_p(const IDSet<logical_data_id_t>* union_set_p);
     virtual void set_vmap_read_diff(boost::shared_ptr<VersionMap> vmap_read_diff);
     virtual void set_vlist_write_diff(boost::shared_ptr<VersionList> vlist_write_diff);
@@ -116,6 +125,8 @@ class ShadowJobEntry : public JobEntry {
 
     virtual bool GetPhysicalReadSet(IDSet<physical_data_id_t>* set);
     virtual bool GetPhysicalWriteSet(IDSet<physical_data_id_t>* set);
+    virtual bool GetPhysicalScratchSet(IDSet<physical_data_id_t>* set);
+    virtual bool GetPhysicalReduceSet(IDSet<physical_data_id_t>* set);
 
     virtual bool IsReadyForCompleteVersioning();
 
@@ -126,6 +137,8 @@ class ShadowJobEntry : public JobEntry {
     ComplexJobEntry* complex_job_;
     const IDSet<logical_data_id_t>* read_set_p_;
     const IDSet<logical_data_id_t>* write_set_p_;
+    const IDSet<logical_data_id_t>* scratch_set_p_;
+    const IDSet<logical_data_id_t>* reduce_set_p_;
     const IDSet<logical_data_id_t>* union_set_p_;
     boost::shared_ptr<VersionMap> vmap_read_diff_;
     boost::shared_ptr<VersionList> vlist_write_diff_;

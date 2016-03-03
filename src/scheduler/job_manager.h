@@ -86,13 +86,16 @@ class JobManager {
                                  const job_id_t& job_id,
                                  const IDSet<logical_data_id_t>& read_set,
                                  const IDSet<logical_data_id_t>& write_set,
+                                 const IDSet<logical_data_id_t>& scratch_set,
+                                 const IDSet<logical_data_id_t>& reduce_set,
                                  const IDSet<job_id_t>& before_set,
                                  const IDSet<job_id_t>& after_set,
                                  const job_id_t& parent_job_id,
                                  const job_id_t& future_job_id,
                                  const bool& sterile,
                                  const GeometricRegion& region,
-                                 const Parameter& params);
+                                 const Parameter& params,
+                                 const CombinerMap& combiner_map);
 
     bool AddComplexJobEntry(ComplexJobEntry* complex_job);
 
@@ -138,6 +141,10 @@ class JobManager {
 
     bool ResolveJobDataVersionsForPattern(JobEntry *job,
                   const BindingTemplate::PatternList* patterns);
+
+    bool ResolveJobDataVersionsForSingleEntry(JobEntry *job,
+                  const logical_data_id_t& ldid,
+                  data_version_t *version);
 
     bool MemoizeVersionsForTemplate(JobEntry *job);
 

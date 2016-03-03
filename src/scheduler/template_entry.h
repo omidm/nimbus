@@ -111,12 +111,15 @@ class TemplateEntry {
                                     const job_id_t& job_id,
                                     const IDSet<logical_data_id_t>& read_set,
                                     const IDSet<logical_data_id_t>& write_set,
+                                    const IDSet<logical_data_id_t>& scratch_set,
+                                    const IDSet<logical_data_id_t>& reduce_set,
                                     const IDSet<job_id_t>& before_set,
                                     const IDSet<job_id_t>& after_set,
                                     const job_id_t& parent_job_id,
                                     const job_id_t& future_job_id,
                                     const bool& sterile,
-                                    const GeometricRegion& region);
+                                    const GeometricRegion& region,
+                                    const CombinerMap& combiner_map);
 
     bool AddExplicitCopyJob();
 
@@ -157,20 +160,26 @@ class TemplateEntry {
                                 boost::shared_ptr<job_id_t> job_id_ptr,
                                 const IDSet<logical_data_id_t>& read_set,
                                 const IDSet<logical_data_id_t>& write_set,
+                                const IDSet<logical_data_id_t>& scratch_set,
+                                const IDSet<logical_data_id_t>& reduce_set,
                                 const PtrSet& before_set_ptrs,
                                 const PtrSet& after_set_ptrs,
                                 boost::shared_ptr<job_id_t> future_job_id_ptr,
                                 const bool& sterile,
-                                const GeometricRegion& region)
+                                const GeometricRegion& region,
+                                const CombinerMap& combiner_map)
           : job_name_(job_name),
             job_id_ptr_(job_id_ptr),
             read_set_(read_set),
             write_set_(write_set),
+            scratch_set_(scratch_set),
+            reduce_set_(reduce_set),
             before_set_ptrs_(before_set_ptrs),
             after_set_ptrs_(after_set_ptrs),
             future_job_id_ptr_(future_job_id_ptr),
             sterile_(sterile),
-            region_(region) {}
+            region_(region),
+            combiner_map_(combiner_map) {}
 
         ~TemplateComputeJobEntry() {}
 
@@ -178,11 +187,14 @@ class TemplateEntry {
         boost::shared_ptr<job_id_t> job_id_ptr_;
         IDSet<logical_data_id_t> read_set_;
         IDSet<logical_data_id_t> write_set_;
+        IDSet<logical_data_id_t> scratch_set_;
+        IDSet<logical_data_id_t> reduce_set_;
         PtrSet before_set_ptrs_;
         PtrSet after_set_ptrs_;
         boost::shared_ptr<job_id_t> future_job_id_ptr_;
         bool sterile_;
         GeometricRegion region_;
+        CombinerMap combiner_map_;
     };
     typedef std::vector<TemplateComputeJobEntry> EntryList;
     PtrList job_id_ptrs_;

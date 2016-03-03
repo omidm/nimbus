@@ -26,4 +26,5 @@ clean-logs:
 	\rm -f *.txt
 	\rm -rf _db_*
 	\rm -rf output/
+	\rm -rf core
 

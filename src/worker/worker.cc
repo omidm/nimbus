@@ -322,14 +322,16 @@ void Worker::WorkerCoreProcessor() {
   }
 }
 
-// Extracts data objects from the read/write set to data array.
+// Extracts data objects from the read/write/scratch/reduce set to data array.
 void Worker::ResolveDataArray(Job* job) {
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Job(name %s, #%d) ready to run.\n",
       job->name().c_str(), job->id().elem());
   job->data_array.clear();
   if ((dynamic_cast<CreateDataJob*>(job) != NULL)) {  // NOLINT
-    assert(job->read_set().size() == 0);
-    assert(job->write_set().size() == 1);
+    assert(job->get_read_set().size() == 0);
+    assert(job->get_scratch_set().size() == 0);
+    assert(job->get_reduce_set().size() == 0);
+    assert(job->get_write_set().size() == 1);
     job->data_array.push_back(
         data_map_.AcquireAccess(*job->write_set().begin(), job->id().elem(),
                                 PhysicalDataMap::INIT));
@@ -348,10 +350,23 @@ void Worker::ResolveDataArray(Job* job) {
       job->data_array.push_back(
           data_map_.AcquireAccess(*iter, job->id().elem(), PhysicalDataMap::READ));
     }
+
+    const IDSet<physical_data_id_t>& reduce = job->get_reduce_set();
+    for (iter = reduce.begin(); iter != reduce.end(); iter++) {
+      job->data_array.push_back(
+          data_map_.AcquireAccess(*iter, job->id().elem(), PhysicalDataMap::REDUCE));
+    }
+
     const IDSet<physical_data_id_t>& write = job->get_write_set();
     for (iter = write.begin(); iter != write.end(); iter++) {
       job->data_array.push_back(
           data_map_.AcquireAccess(*iter, job->id().elem(), PhysicalDataMap::WRITE));
+    }
+
+    const IDSet<physical_data_id_t>& scratch = job->get_scratch_set();
+    for (iter = scratch.begin(); iter != scratch.end(); iter++) {
+      job->data_array.push_back(
+          data_map_.AcquireAccess(*iter, job->id().elem(), PhysicalDataMap::SCRATCH));
     }
   }
 }
@@ -366,6 +381,9 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
       break;
     case SchedulerCommand::EXECUTE_COMPUTE:
       ProcessComputeJobCommand(reinterpret_cast<ComputeJobCommand*>(cm));
+      break;
+    case SchedulerCommand::EXECUTE_COMBINE:
+      ProcessCombineJobCommand(reinterpret_cast<CombineJobCommand*>(cm));
       break;
     case SchedulerCommand::CREATE_DATA:
       ProcessCreateDataCommand(reinterpret_cast<CreateDataCommand*>(cm));
@@ -467,6 +485,8 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
   job->set_id(cm->job_id());
   job->set_read_set(cm->read_set());
   job->set_write_set(cm->write_set());
+  job->set_scratch_set(cm->scratch_set());
+  job->set_reduce_set(cm->reduce_set());
   job->set_after_set(cm->after_set());
   job->set_future_job_id(cm->future_job_id());
   job->set_sterile(cm->sterile());
@@ -489,6 +509,35 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
       execution_templates_.find(execution_template_in_progress_);
     assert(iter != execution_templates_.end());
     iter->second->AddComputeJobTemplate(cm, application_);
+  }
+
+  AddJobToGraph(job);
+}
+
+void Worker::ProcessCombineJobCommand(CombineJobCommand* cm) {
+  Job* job = application_->CloneJob(cm->job_name());
+  job->set_name("Combine:" + cm->job_name());
+  job->set_id(cm->job_id());
+  job->set_scratch_set(cm->scratch_set());
+  job->set_reduce_set(cm->reduce_set());
+  job->set_region(cm->region());
+
+  if (cm->extra_dependency_p()->size() != 0) {
+    IDSet<job_id_t> extended_before_set = cm->before_set();
+    IDSet<job_id_t>::ConstIter iter = cm->extra_dependency_p()->begin();
+    for (; iter != cm->extra_dependency_p()->end(); ++iter) {
+      extended_before_set.insert(*iter);
+    }
+    job->set_before_set(extended_before_set);
+  } else {
+    job->set_before_set(cm->before_set());
+  }
+
+  if (filling_execution_template_) {
+    std::map<std::string, ExecutionTemplate*>::iterator iter =
+      execution_templates_.find(execution_template_in_progress_);
+    assert(iter != execution_templates_.end());
+    iter->second->AddCombineJobTemplate(cm, application_);
   }
 
   AddJobToGraph(job);
@@ -841,6 +890,7 @@ void Worker::LoadSchedulerCommands() {
   scheduler_command_table_[SchedulerCommand::HANDSHAKE] = new HandshakeCommand();
   scheduler_command_table_[SchedulerCommand::JOB_DONE] = new JobDoneCommand();
   scheduler_command_table_[SchedulerCommand::EXECUTE_COMPUTE] = new ComputeJobCommand();
+  scheduler_command_table_[SchedulerCommand::EXECUTE_COMBINE] = new CombineJobCommand();
   scheduler_command_table_[SchedulerCommand::CREATE_DATA] = new CreateDataCommand();
   scheduler_command_table_[SchedulerCommand::REMOTE_SEND] = new RemoteCopySendCommand();
   scheduler_command_table_[SchedulerCommand::REMOTE_RECEIVE] = new RemoteCopyReceiveCommand(); // NOLINT

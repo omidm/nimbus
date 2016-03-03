@@ -49,6 +49,7 @@ PhysicalData::PhysicalData(const physical_data_id_t& id, const worker_id_t& work
   id_ = id;
   worker_ = worker;
   version_ = NIMBUS_INIT_DATA_VERSION;
+  pending_reduce_ = false;
   last_job_write_ = NIMBUS_KERNEL_JOB_ID;
 }
 
@@ -58,6 +59,7 @@ PhysicalData::PhysicalData(const physical_data_id_t& id, const worker_id_t& work
   id_ = id;
   worker_ = worker;
   version_ = version;
+  pending_reduce_ = false;
   last_job_write_ = NIMBUS_KERNEL_JOB_ID;
 }
 
@@ -68,6 +70,7 @@ PhysicalData::PhysicalData(const physical_data_id_t& id, const worker_id_t& work
   id_ = id;
   worker_ = worker;
   version_ = version;
+  pending_reduce_ = false;
   list_job_read_ = list_job_read;
   last_job_write_ = last_job_write;
 }
@@ -76,6 +79,7 @@ PhysicalData::PhysicalData(const PhysicalData& other) {
   id_ = other.id_;
   worker_ = other.worker_;
   version_ = other.version_;
+  pending_reduce_ = other.pending_reduce_;
   list_job_read_ = other.list_job_read_;
   last_job_write_ = other.last_job_write_;
 }
@@ -84,6 +88,7 @@ PhysicalData& nimbus::PhysicalData::operator= (const PhysicalData& right) {
   id_ = right.id_;
   worker_ = right.worker_;
   version_ = right.version_;
+  pending_reduce_ = right.pending_reduce_;
   list_job_read_ = right.list_job_read_;
   last_job_write_ = right.last_job_write_;
   return *this;
@@ -126,6 +131,10 @@ data_version_t nimbus::PhysicalData::version() const {
   return version_;
 }
 
+bool nimbus::PhysicalData::pending_reduce() const {
+  return pending_reduce_;
+}
+
 
 IDSet<job_id_t> nimbus::PhysicalData::list_job_read() const {
   return list_job_read_;
@@ -166,6 +175,10 @@ void nimbus::PhysicalData::set_worker(worker_id_t worker) {
 */
 void nimbus::PhysicalData::set_version(data_version_t v) {
   version_ = v;
+}
+
+void nimbus::PhysicalData::set_pending_reduce(bool flag) {
+  pending_reduce_ = flag;
 }
 
 void nimbus::PhysicalData::set_list_job_read(IDSet<job_id_t> list_job_read) {

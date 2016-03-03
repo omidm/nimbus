@@ -48,12 +48,17 @@
 #define NIMBUS_SRC_SHARED_SPAWN_COMPUTE_JOB_COMMAND_H_
 
 
+#include <vector>
+#include <utility>
 #include <string>
 #include "src/shared/scheduler_command.h"
 #include "src/shared/geometric_region.h"
 #include "src/shared/protobuf_compiled/commands.pb.h"
 
 namespace nimbus {
+typedef std::pair<logical_data_id_t, std::string> CombinerPair;
+typedef std::vector<CombinerPair> CombinerVector;
+
 class SpawnComputeJobCommand : public SchedulerCommand {
   public:
     SpawnComputeJobCommand();
@@ -61,13 +66,16 @@ class SpawnComputeJobCommand : public SchedulerCommand {
                            const ID<job_id_t>& job_id,
                            const IDSet<logical_data_id_t>& read,
                            const IDSet<logical_data_id_t>& write,
+                           const IDSet<logical_data_id_t>& scratch,
+                           const IDSet<logical_data_id_t>& reduce,
                            const IDSet<job_id_t>& before,
                            const IDSet<job_id_t>& after,
                            const ID<job_id_t>& parent_job_id,
                            const ID<job_id_t>& future_job_id,
                            const bool& sterile,
                            const GeometricRegion& region,
-                           const Parameter& params);
+                           const Parameter& params,
+                           const CombinerVector& combiners);
 
     ~SpawnComputeJobCommand();
 
@@ -80,6 +88,8 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     ID<job_id_t> job_id();
     IDSet<logical_data_id_t> read_set();
     IDSet<logical_data_id_t> write_set();
+    IDSet<logical_data_id_t> scratch_set();
+    IDSet<logical_data_id_t> reduce_set();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
     ID<job_id_t> parent_job_id();
@@ -87,12 +97,16 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     bool sterile();
     GeometricRegion region();
     Parameter params();
+    CombinerVector combiners();
+    const CombinerVector* combiners_p() const;
 
   private:
     std::string job_name_;
     ID<job_id_t> job_id_;
     IDSet<logical_data_id_t> read_set_;
     IDSet<logical_data_id_t> write_set_;
+    IDSet<logical_data_id_t> scratch_set_;
+    IDSet<logical_data_id_t> reduce_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
     ID<job_id_t> parent_job_id_;
@@ -100,6 +114,7 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     bool sterile_;
     GeometricRegion region_;
     Parameter params_;
+    CombinerVector combiners_;
 
     bool ReadFromProtobuf(const SubmitComputeJobPBuf& buf);
     bool WriteToProtobuf(SubmitComputeJobPBuf* buf);

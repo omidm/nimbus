@@ -171,6 +171,7 @@ size_t nimbus::PhysicalObjectMap::ResetAllInstances() {
     PhysicalDataList::iterator it = pdv->begin();
     for (; it != pdv->end(); ++it) {
       it->set_version(NIMBUS_INIT_DATA_VERSION);
+      it->set_pending_reduce(false);
       IDSet<job_id_t> empty;
       it->set_list_job_read(empty);
       it->set_last_job_write(NIMBUS_KERNEL_JOB_ID);
@@ -203,6 +204,7 @@ bool nimbus::PhysicalObjectMap::UpdatePhysicalInstance(LogicalDataObject* obj,
       if (it->id() == old_instance.id()) {
         it->set_worker(new_instance.worker());
         it->set_version(new_instance.version());
+        it->set_pending_reduce(new_instance.pending_reduce());
         it->set_list_job_read(new_instance.list_job_read());
         it->set_last_job_write(new_instance.last_job_write());
         return true;
@@ -374,7 +376,7 @@ int nimbus::PhysicalObjectMap::InstancesByVersion(LogicalDataObject *object,
     PhysicalDataList::iterator it = v->begin();
     int count = 0;
     for (; it != v->end(); ++it) {
-      if (it->version() == version) {
+      if ((it->version() == version) && (!it->pending_reduce())) {
         dest->push_back(*it);
         count++;
       }
@@ -409,7 +411,7 @@ int nimbus::PhysicalObjectMap::InstancesByWorkerAndVersion(LogicalDataObject *ob
     int count = 0;
 
     for (; it != v->end(); ++it) {
-      if ((it->worker() == worker) && (it->version() == version)) {
+      if ((it->worker() == worker) && (it->version() == version) && (!it->pending_reduce())) {
         dest->push_back(*it);
         count++;
       }

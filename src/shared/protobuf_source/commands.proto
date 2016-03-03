@@ -66,6 +66,15 @@ message ParameterVector {
   repeated bytes params = 1;        
 }
 
+message CombinerPairPBuf {
+  optional uint64 ldid     = 1;
+  optional string combiner = 2;
+}
+
+message CombinerVectorPBuf {
+  repeated CombinerPairPBuf pairs = 1;        
+}
+
 message GeometricRegionPBuf {
   required int64 x  = 1;
   required int64 y  = 2;
@@ -121,6 +130,7 @@ message SchedulerPBuf{
      PRINT_STAT             = 36;
      MEGA_RCR               = 37;
      MEGA_JOB_DONE          = 38;
+     EXECUTE_COMBINE        = 39;
   }
   required Type type = 1;
 
@@ -163,6 +173,7 @@ message SchedulerPBuf{
   optional PrintStatPBuf print_stat                        = 36;
   optional MegaRCRPBuf mega_rcr                            = 37;
   optional MegaJobDonePBuf mega_job_done                   = 38;
+  optional ExecuteCombineJobPBuf execute_combine           = 39;
 }
 
 message AddComputeJobPBuf {
@@ -243,13 +254,16 @@ message SubmitComputeJobPBuf {
   optional uint64 job_id              = 2;
   optional LogicalIDSet read_set      = 3;
   optional LogicalIDSet write_set     = 4;
-  optional JobIDSet before_set        = 5;
-  optional JobIDSet after_set         = 6;
-  optional uint64 parent_id           = 7;
-  optional uint64 future_id           = 8;
-  optional bool sterile               = 9;
-  optional bytes params               = 10;
-  optional GeometricRegionPBuf region = 11;
+  optional LogicalIDSet scratch_set   = 5;
+  optional LogicalIDSet reduce_set    = 6;
+  optional JobIDSet before_set        = 7;
+  optional JobIDSet after_set         = 8;
+  optional uint64 parent_id           = 9;
+  optional uint64 future_id           = 10;
+  optional bool sterile               = 11;
+  optional bytes params               = 12;
+  optional GeometricRegionPBuf region = 13;
+  optional CombinerVectorPBuf combiners   = 14;
 }
 
 message SubmitCopyJobPBuf {
@@ -310,13 +324,25 @@ message ExecuteComputeJobPBuf {
   optional uint64 job_id              = 2;
   optional PhysicalIDSet read_set     = 3;
   optional PhysicalIDSet write_set    = 4;
+  optional PhysicalIDSet scratch_set  = 5;
+  optional PhysicalIDSet reduce_set   = 6;
+  optional JobIDSet before_set        = 7;
+  optional JobIDSet extra_dependency  = 8;
+  optional JobIDSet after_set         = 9;
+  optional uint64 future_job_id       = 10; 
+  optional bool sterile               = 11;
+  optional bytes params               = 12;
+  optional GeometricRegionPBuf region = 13;
+}
+
+message ExecuteCombineJobPBuf {
+  optional string name                = 1;
+  optional uint64 job_id              = 2;
+  optional PhysicalIDSet scratch_set  = 3;
+  optional PhysicalIDSet reduce_set   = 4;
   optional JobIDSet before_set        = 5;
   optional JobIDSet extra_dependency  = 6;
-  optional JobIDSet after_set         = 7;
-  optional uint64 future_job_id       = 8; 
-  optional bool sterile               = 9;
-  optional bytes params               = 10;
-  optional GeometricRegionPBuf region = 11;
+  optional GeometricRegionPBuf region = 7;
 }
 
 message CreateDataPBuf {

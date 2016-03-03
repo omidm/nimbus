@@ -40,8 +40,7 @@
   * functionalities, to make the code more modular and all optimizations were
   * interleaved in a complex way.
   *
-  * Author: Hang Qu <quhang@stanford.edu>
-  * Modified by: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
 #include <boost/unordered_set.hpp>
@@ -51,174 +50,207 @@
 namespace nimbus {
 
 DependencyQuery::DependencyQuery() {
-  has_last_barrier_job_ = false;
-  group_id_counter_ = 0;
+  stage_id_counter_ = 0;
+  last_stage_partial_writers_ = new PartialWritersMap();
+  current_stage_partial_writers_ = new PartialWritersMap();
   total_job_ = 0;
-  total_objects_ = 0;
-  query_time_ = 0;
-  commit_time_ = 0;
-  copy_time_ = 0;
-  elimination_time_ = 0;
-  spawn_time_ = 0;
-  e1_time_ = 0;
-  e2_time_ = 0;
-  e3_time_ = 0;
-  e4_time_ = 0;
+  pruning_time_ = 0;
+  insertion_time_ = 0;
 }
-DependencyQuery::~DependencyQuery() {}
+
+DependencyQuery::~DependencyQuery() {
+  if ((last_stage_partial_writers_->size() > 0) ||
+      (current_stage_partial_writers_->size() > 0)) {
+    dbg(DBG_ERROR, "ERROR: there are pending partial writes without reduction.\n"); //NOLINT
+    exit(-1);
+  }
+}
 
 bool DependencyQuery::StageJobAndLoadBeforeSet(IDSet<job_id_t> *before_set,
                                                const std::string& name,
                                                const job_id_t& id,
                                                const IDSet<logical_data_id_t>& read,
                                                const IDSet<logical_data_id_t>& write,
+                                               const IDSet<logical_data_id_t>& scratch,
+                                               const IDSet<logical_data_id_t>& reduce,
                                                const bool barrier) {
   ++total_job_;
-  total_objects_ += read.size() + write.size();
-  struct timespec start_time;
-  struct timespec t;
+  struct timespec start_time, end_time;
   clock_gettime(CLOCK_REALTIME, &start_time);
 
-  for (IDSet<logical_data_id_t>::ConstIter index = read.begin();
-       index != read.end(); index++) {
-    OutstandingAccessors& entry = outstanding_accessors_map_[*index];
-    if (entry.has_outstanding_writer) {
-        before_set->insert(entry.outstanding_writer);
-    }
-  }  // RAW
-  for (IDSet<logical_data_id_t>::ConstIter index = write.begin();
-       index != write.end(); index++) {
-    if (!read.contains(*index)) {
-      OutstandingAccessors& entry = outstanding_accessors_map_[*index];
-      if (entry.has_outstanding_writer) {
-        before_set->insert(entry.outstanding_writer);
+  {
+    IDSet<logical_data_id_t>::ConstIter iter = read.begin();
+    for (; iter != read.end(); ++iter) {
+      LastWriterMap::iterator it = last_writers_.find(*iter);
+      if (it != last_writers_.end()) {
+        before_set->insert(it->second);
       }
     }
-  }  // WAW
-  if (has_last_barrier_job_) {
-    before_set->insert(last_barrier_job_id_);
   }
-  if (barrier) {
-    for (std::vector<ShortJobEntry>::iterator index =
-         query_log_.begin();
-         index != query_log_.end();
-         index++) {
-       before_set->insert(index->id);
+
+  {
+    IDSet<logical_data_id_t>::ConstIter iter = write.begin();
+    for (; iter != write.end(); ++iter) {
+      if (read.contains(*iter)) {
+        continue;
+      }
+      LastWriterMap::iterator it = last_writers_.find(*iter);
+      if (it != last_writers_.end()) {
+        before_set->insert(it->second);
+      }
     }
-    outstanding_accessors_map_.clear();
-    has_last_barrier_job_ = true;
-    last_barrier_job_id_ = id;
   }
-  clock_gettime(CLOCK_REALTIME, &t);
-  query_time_ += difftime(t.tv_sec, start_time.tv_sec)
-      + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+
+  {
+    IDSet<logical_data_id_t>::ConstIter iter = reduce.begin();
+    for (; iter != reduce.end(); ++iter) {
+      PartialWritersMap::iterator it = last_stage_partial_writers_->find(*iter);
+      if (it == last_stage_partial_writers_->end()) {
+        dbg(DBG_ERROR, "ERROR: no partial write found to reduce!\n");
+        exit(-1);
+      }
+      assert(it->second.size() > 0);
+      PartialWriters::iterator i = it->second.begin();
+      for (; i != it->second.end(); ++i) {
+        before_set->insert(*i);
+      }
+      last_stage_partial_writers_->erase(it);
+    }
+  }
+
+  {
+    IDSet<logical_data_id_t>::ConstIter iter = scratch.begin();
+    for (; iter != scratch.end(); ++iter) {
+      current_stage_partial_writers_->operator[](*iter).push_back(id);
+    }
+  }
+
+  if (last_barrier_.valid) {
+    before_set->insert(last_barrier_.id);
+  }
+
+  if (barrier) {
+    JobList::iterator iter = jobs_.begin();
+    for (; iter != jobs_.end(); ++iter) {
+       before_set->insert(iter->id);
+    }
+    if (last_barrier_.valid) {
+      if (last_barrier_.stage_id >= stage_id_counter_) {
+        dbg(DBG_ERROR, "ERROR: barrier stage id does not make sense, probable mutilple barriers in one stage!\n"); // NOLINT
+        exit(-1);
+      }
+    }
+    last_barrier_.valid = true;
+    last_barrier_.id = id;
+    last_barrier_.stage_id = stage_id_counter_;
+  }
+
+  clock_gettime(CLOCK_REALTIME, &end_time);
+  insertion_time_ += difftime(end_time.tv_sec, start_time.tv_sec)
+      + .000000001 * (static_cast<double>(end_time.tv_nsec - start_time.tv_nsec));
 
   clock_gettime(CLOCK_REALTIME, &start_time);
-  Eliminate(before_set);
-  clock_gettime(CLOCK_REALTIME, &t);
-  elimination_time_ += difftime(t.tv_sec, start_time.tv_sec)
-    + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+  Prune(before_set);
+  clock_gettime(CLOCK_REALTIME, &end_time);
+  pruning_time_ += difftime(end_time.tv_sec, start_time.tv_sec)
+    + .000000001 * (static_cast<double>(end_time.tv_nsec - start_time.tv_nsec));
 
-  clock_gettime(CLOCK_REALTIME, &start_time);
-  // Put the result in staged areas.
-  staged_jobs_.push_back(JobEntry());
-  JobEntry& job_entry = staged_jobs_.back();
-  job_entry.name = name;
-  job_entry.id = id;
-  job_entry.read = read;
-  job_entry.write = write;
-  job_entry.before = *before_set;
-  clock_gettime(CLOCK_REALTIME, &t);
-  copy_time_ += difftime(t.tv_sec, start_time.tv_sec)
-      + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+  staged_jobs_.push_back(Job());
+  Job& job = staged_jobs_.back();
+  job.id = id;
+  job.name = name;
+  job.write = write;
+  job.before = *before_set;
 
   return true;
 }
 
 bool DependencyQuery::MarkEndOfStage() {
-  struct timespec start_time;
-  struct timespec t;
-  clock_gettime(CLOCK_REALTIME, &start_time);
-  // Move the job from staged areas to results.
-  for (std::list<JobEntry>::iterator iterator = staged_jobs_.begin();
-       iterator != staged_jobs_.end();
-       iterator++) {
-    clock_gettime(CLOCK_REALTIME, &start_time);
-    query_log_.push_back(ShortJobEntry());
-    ShortJobEntry& temp = query_log_.back();
-    temp.name = iterator->name;
-    temp.id = iterator->id;
-    temp.before.swap(iterator->before);
-    temp.group_id = group_id_counter_;
-    job_id_to_rank_[temp.id] = query_log_.size() - 1;
-  }
-  ++group_id_counter_;
-  // Cleans up outstanding accessor map.
-  for (std::list<JobEntry>::iterator iterator = staged_jobs_.begin();
-       iterator != staged_jobs_.end();
-       iterator++) {
-    for (IDSet<logical_data_id_t>::ConstIter index = iterator->write.begin();
-         index != iterator->write.end(); index++) {
-      OutstandingAccessors& entry = outstanding_accessors_map_[*index];
-      entry.has_outstanding_writer = true;
-      entry.outstanding_writer = iterator->id;
+  {
+    JobList::iterator iter = staged_jobs_.begin();
+    for (; iter != staged_jobs_.end(); ++iter) {
+      jobs_.push_back(Job());
+      Job& temp = jobs_.back();
+      temp.id = iter->id;
+      temp.name = iter->name;
+      temp.before.swap(iter->before);
+      temp.stage_id = stage_id_counter_;
+      job_id_to_index_[temp.id] = jobs_.size() - 1;
     }
   }
+
+  ++stage_id_counter_;
+
+  {
+    JobList::iterator iter = staged_jobs_.begin();
+    for (; iter != staged_jobs_.end(); ++iter) {
+      IDSet<logical_data_id_t>::ConstIter it = iter->write.begin();
+      for (; it != iter->write.end(); ++it) {
+        last_writers_[*it] = iter->id;
+      }
+    }
+  }
+
+  if (last_stage_partial_writers_->size() > 0) {
+    dbg(DBG_ERROR, "ERROR: there are pending partial writes from last stage without reduction.\n"); //NOLINT
+    exit(-1);
+  }
+  delete last_stage_partial_writers_;
+  last_stage_partial_writers_ = current_stage_partial_writers_;
+  current_stage_partial_writers_ = new PartialWritersMap();
 
   staged_jobs_.clear();
 
   return true;
 }
 
-void DependencyQuery::Eliminate(IDSet<job_id_t>* before) {
-  struct timespec start_time;
-  struct timespec t;
-
-  clock_gettime(CLOCK_REALTIME, &start_time);
-  int64_t count = 0;
+void DependencyQuery::Prune(IDSet<job_id_t>* before) {
   if (before->size() <= 1) {
     return;
   }
+  assert(stage_id_counter_ > 0);
 
   int64_t scanned = 0;
-  std::vector<boost::unordered_set<RankId> > group_heap;
-  boost::unordered_set<job_id_t> group_heap_buffer;
-  group_heap.resize(group_id_counter_);
+  std::vector<boost::unordered_set<IndexId> > stage_heap;
+  stage_heap.resize(stage_id_counter_);
 
-  for (IDSet<job_id_t>::IDSetIter iter = before->begin();
-       iter != before->end();
-       ++iter) {
-    RankId rank_id = job_id_to_rank_[*iter];
-    GroupId group_id = query_log_[rank_id].group_id;
-    group_heap[group_id].insert(rank_id);
+  {
+    IDSet<job_id_t>::IDSetIter iter = before->begin();
+    for (; iter != before->end(); ++iter) {
+      IndexId index = job_id_to_index_[*iter];
+      StageId stage_id = jobs_[index].stage_id;
+      stage_heap[stage_id].insert(index);
+    }
   }
 
-  for (GroupId index = group_id_counter_ - 1; index >= 0; --index) {
-    group_heap_buffer.clear();
-    for (boost::unordered_set<RankId>::iterator iter =
-         group_heap[index].begin();
-         iter != group_heap[index].end();
-         ++iter) {
-      if (before->contains(query_log_[*iter].id)) {
-        ++scanned;
+  for (StageId sid = stage_id_counter_ - 1; sid >= 0; --sid) {
+    boost::unordered_set<job_id_t> buffer;
+    {
+      boost::unordered_set<IndexId>::iterator iter = stage_heap[sid].begin();
+      for (; iter != stage_heap[sid].end(); ++iter) {
+        if (before->contains(jobs_[*iter].id)) {
+          ++scanned;
+          if (scanned == before->size()) {
+            return;
+          }
+        }
+        Job& entry = jobs_[*iter];
+        buffer.insert(entry.before.begin(), entry.before.end());
+      }  // Scan the before set.
+    }
+
+    {
+      boost::unordered_set<job_id_t>::iterator iter = buffer.begin();
+      for (; iter != buffer.end(); ++iter) {
+        before->remove(*iter);
         if (scanned == before->size()) {
           return;
         }
-      }
-      ShortJobEntry& entry = query_log_[*iter];
-      group_heap_buffer.insert(entry.before.begin(), entry.before.end());
-    }  // Scan the before set.
-
-    for (boost::unordered_set<job_id_t>::iterator iter =
-         group_heap_buffer.begin();
-         iter != group_heap_buffer.end();
-         ++iter) {
-      ++count;
-      before->remove(*iter);
-      RankId temp_rank_id = job_id_to_rank_[*iter];
-      GroupId group_id = query_log_[temp_rank_id].group_id;
-      group_heap[group_id].insert(temp_rank_id);
-    }  // Add to the heap.
+        IndexId index = job_id_to_index_[*iter];
+        StageId stage_id = jobs_[index].stage_id;
+        stage_heap[stage_id].insert(index);
+      }  // Add to the heap.
+    }
   }
 }
 
@@ -226,16 +258,14 @@ void DependencyQuery::GenerateDotFigure(const std::string& file_name) {
   return;
   std::ofstream fout(file_name.c_str(), std::ofstream::out);
   fout << "digraph Workflow {" << std::endl;
-  for (std::vector<ShortJobEntry>::iterator index = query_log_.begin();
-       index != query_log_.end();
-       index++) {
-    fout << "\t" << "node" << index->id
-         << " [label=\"" << index->name << "\"];"
+  JobList::iterator iter = jobs_.begin();
+  for (; iter != jobs_.end(); ++iter) {
+    fout << "\t" << "node" << iter->id
+         << " [label=\"" << iter->name << "\"];"
          << std::endl;
-    for (IDSet<job_id_t>::IDSetIter prec = index->before.begin();
-         prec != index->before.end();
-         prec++) {
-      fout << "\tnode" << (*prec) << "->node" << index->id << std::endl;
+    IDSet<job_id_t>::IDSetIter it = iter->before.begin();
+    for (; it != iter->before.end(); ++it) {
+      fout << "\tnode" << (*it) << "->node" << iter->id << std::endl;
     }
   }
   fout << "}" << std::endl;
@@ -245,12 +275,8 @@ void DependencyQuery::GenerateDotFigure(const std::string& file_name) {
 
 void DependencyQuery::PrintTimeProfile() {
   return;
-  printf("\nquery time:%f\ncommit_time:%f\ncopy_time:%f\nelimination_time:%f\n"
-         "spawn_time:%f\ne1_time:%f\ne2_time:%f\ne3_time:%f\ne4_time:%f\n",
-         query_time_, commit_time_, copy_time_, elimination_time_, spawn_time_,
-         e1_time_, e2_time_, e3_time_, e4_time_);
-  printf("\ntotal job:%"PRId64"\ntotal objects:%"PRId64"\n",
-         total_job_, total_objects_);
+  printf("\nDEPENDENCY QUERY: total job:%lu insertion time:%f, pruning time :%f\n",
+         total_job_, insertion_time_, pruning_time_);
 }
 
 }  // namespace nimbus

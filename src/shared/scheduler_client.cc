@@ -111,6 +111,7 @@ bool SchedulerClient::ReceiveCommands(SchedulerCommandList* storage,
 }
 
 void SchedulerClient::SendCommand(SchedulerCommand* command) {
+  dbg(DBG_NET, "Sending command %s .\n", command->ToString().c_str());
   std::string data = command->ToNetworkData();
   SchedulerCommand::length_field_t len;
   len = htonl((uint32_t)data.length() + sizeof(len));
@@ -191,6 +192,9 @@ size_t SchedulerClient::EnqueueCommands(char* buffer, size_t size) {
                 switch (command->type()) {
                   case SchedulerCommand::EXECUTE_COMPUTE:
                     ct->AddComputeJobCommand(reinterpret_cast<ComputeJobCommand*>(command));
+                    break;
+                  case SchedulerCommand::EXECUTE_COMBINE:
+                    ct->AddCombineJobCommand(reinterpret_cast<CombineJobCommand*>(command));
                     break;
                   case SchedulerCommand::LOCAL_COPY:
                     ct->AddLocalCopyCommand(reinterpret_cast<LocalCopyCommand*>(command));

@@ -371,18 +371,28 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
 }
 
 void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
+  CombinerMap combiner_map;
+  {
+    CombinerVector::const_iterator iter = cm->combiners_p()->begin();
+    for (; iter != cm->combiners_p()->end(); ++iter) {
+      combiner_map[iter->first] = iter->second;
+    }
+  }
   JobEntry * job =
     job_manager_->AddComputeJobEntry(cm->job_name(),
                                      cm->job_id().elem(),
                                      cm->read_set(),
                                      cm->write_set(),
+                                     cm->scratch_set(),
+                                     cm->reduce_set(),
                                      cm->before_set(),
                                      cm->after_set(),
                                      cm->parent_job_id().elem(),
                                      cm->future_job_id().elem(),
                                      cm->sterile(),
                                      cm->region(),
-                                     cm->params());
+                                     cm->params(),
+                                     combiner_map);
 
   std::map<job_id_t, std::string>::iterator iter =
     template_spawner_map_.find(cm->parent_job_id().elem());
@@ -393,12 +403,15 @@ void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
                                                  cm->job_id().elem(),
                                                  cm->read_set(),
                                                  cm->write_set(),
+                                                 cm->scratch_set(),
+                                                 cm->reduce_set(),
                                                  cm->before_set(),
                                                  cm->after_set(),
                                                  cm->parent_job_id().elem(),
                                                  cm->future_job_id().elem(),
                                                  cm->sterile(),
-                                                 cm->region());
+                                                 cm->region(),
+                                                 combiner_map);
     job->set_memoize(true);
     job->set_template_job(template_job);
   }
@@ -622,7 +635,14 @@ void Scheduler::ProcessTerminateCommand(TerminateCommand* cm) {
 }
 
 void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
-  if (complex_memoization_active_) {
+  bool bypass_complex_job_spawning = false;
+  // static int counter = 10;
+  // if (--counter == 0) {
+  //   counter = 10;
+  //   bypass_complex_job_spawning = true;
+  // }
+
+  if (complex_memoization_active_ && !(bypass_complex_job_spawning)) {
     Log log(Log::NO_FILE);
     log.StartTimer();
     ComplexJobEntry* complex_job;

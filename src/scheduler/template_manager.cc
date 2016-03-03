@@ -193,12 +193,15 @@ TemplateManager::AddComputeJobToTemplate(const std::string& template_name,
                                          const job_id_t& job_id,
                                          const IDSet<logical_data_id_t>& read_set,
                                          const IDSet<logical_data_id_t>& write_set,
+                                         const IDSet<logical_data_id_t>& scratch_set,
+                                         const IDSet<logical_data_id_t>& reduce_set,
                                          const IDSet<job_id_t>& before_set,
                                          const IDSet<job_id_t>& after_set,
                                          const job_id_t& parent_job_id,
                                          const job_id_t& future_job_id,
                                          const bool& sterile,
-                                         const GeometricRegion& region) {
+                                         const GeometricRegion& region,
+                                         const CombinerMap& combiner_map) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   TemplateMap::iterator iter = template_map_.find(template_name);
   if (iter != template_map_.end()) {
@@ -211,12 +214,15 @@ TemplateManager::AddComputeJobToTemplate(const std::string& template_name,
                                          job_id,
                                          read_set,
                                          write_set,
+                                         scratch_set,
+                                         reduce_set,
                                          before_set,
                                          after_set,
                                          parent_job_id,
                                          future_job_id,
                                          sterile,
-                                         region);
+                                         region,
+                                         combiner_map);
     } else {
       dbg(DBG_ERROR, "ERROR: template has been finalized and cannot add compute job!\n");
       return NULL;

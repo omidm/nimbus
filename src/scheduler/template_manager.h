@@ -91,12 +91,15 @@ class TemplateManager {
                                               const job_id_t& job_id,
                                               const IDSet<logical_data_id_t>& read_set,
                                               const IDSet<logical_data_id_t>& write_set,
+                                              const IDSet<logical_data_id_t>& scratch_set,
+                                              const IDSet<logical_data_id_t>& reduce_set,
                                               const IDSet<job_id_t>& before_set,
                                               const IDSet<job_id_t>& after_set,
                                               const job_id_t& parent_job_id,
                                               const job_id_t& future_job_id,
                                               const bool& sterile,
-                                              const GeometricRegion& region);
+                                              const GeometricRegion& region,
+                                              const CombinerMap& combiner_map);
 
     bool SetBaseVersionMapForTemplate(const std::string& template_name,
                                       boost::shared_ptr<VersionMap> vmap_base);

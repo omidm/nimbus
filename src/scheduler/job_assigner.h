@@ -119,8 +119,9 @@ namespace nimbus {
     virtual bool AssignComplexJob(ComplexJobEntry* job);
 
     virtual size_t UpdateDataForCascading(BindingTemplate *bt,
-                                        const BindingTemplate::PatternEntry *pattern,
-                                        data_version_t new_version_diff);
+                                          ComplexJobEntry *complex_job,
+                                          const BindingTemplate::PatternEntry *pattern,
+                                          data_version_t new_version_diff);
 
     virtual bool PrepareDataForJobAtWorker(JobEntry* job,
                                            SchedulerWorker* worker,
@@ -135,6 +136,14 @@ namespace nimbus {
     virtual bool CreateDataAtWorker(SchedulerWorker* worker,
                                     LogicalDataObject* ldo,
                                     PhysicalData* created_data);
+
+    virtual bool LocalCombineData(JobEntry* ref_job,
+                                  const std::string& combiner,
+                                  SchedulerWorker* worker,
+                                  LogicalDataObject* ldo,
+                                  PhysicalDataList* scratch_sources,
+                                  PhysicalData* scratch_dest,
+                                  BindingTemplate *bt);
 
     virtual job_id_t RemoteCopyData(SchedulerWorker* from_worker,
                                     SchedulerWorker* to_worker,
@@ -222,6 +231,7 @@ namespace nimbus {
     std::vector<physical_data_id_t> batch_pdid_;
     std::vector<data_version_t> batch_base_version_;
     std::vector<data_version_t> batch_unit_diff_version_;
+    std::vector<BindingTemplate::VersionType> batch_version_type_;
     job_id_t last_complex_job_id_;
     boost::mutex batch_update_mutex_;
 
