@@ -38,6 +38,8 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
+#include <boost/functional/hash.hpp>
+#include <sstream>
 #include "./utils.h"
 #include "protobuf_compiled/parameter_msg.pb.h"
 
@@ -87,4 +89,31 @@ void VectorAddWithScale(std::vector<double>* acc,
     acc->operator[](i) += add->operator[](i) * scale;
   }
 }
+
+
+void PrintWeight(Weight* w, size_t loop_counter, size_t max_loop) {
+  if (loop_counter > max_loop) {
+    return;
+  }
+
+  std::stringstream ss("");
+  std::vector<double>::iterator it = w->vector()->begin();
+  for (; it != w->vector()->end(); ++it) {
+    char buffer[16];
+    snprintf(buffer, sizeof(buffer), "%1.1e, ", *it);
+    ss << buffer;
+  }
+
+  if (loop_counter == 0) {
+    boost::hash<std::string> string_hash;
+    int hash = string_hash(ss.str().c_str());
+    printf("FINAL WEIGHT: %s\n", ss.str().c_str());
+    printf("FINAL HASH: %d\n", hash);
+  } else {
+    printf("ITERATION %2.0lu WEIGHT: %s\n", max_loop - loop_counter, ss.str().c_str());
+  }
+}
+
+
+
 

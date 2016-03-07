@@ -105,8 +105,6 @@ Worker::~Worker() {
 }
 
 void Worker::Run() {
-  std::cout << "Running the Worker" << std::endl;
-
   CreateModules();
 
   SetupTimers();
@@ -240,8 +238,6 @@ void Worker::RunReceiveEventProcessor() {
 }
 
 void Worker::WorkerCoreProcessor() {
-  std::cout << "Base Worker Core Processor" << std::endl;
-
   receive_event_thread_->join();
 
   assert(false);

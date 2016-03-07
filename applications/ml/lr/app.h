@@ -33,36 +33,53 @@
  */
 
 /*
- * Helper functions in the application.
+ * Distributed Logistic Regression application
  *
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_UTILS_H_
-#define NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_UTILS_H_
+#ifndef NIMBUS_APPLICATIONS_ML_LR_APP_H_
+#define NIMBUS_APPLICATIONS_ML_LR_APP_H_
 
-#include <iostream> // NOLINT
 #include <vector>
-#include <algorithm>
+#include <iostream> // NOLINT
 #include "src/worker/application.h"
 #include "src/shared/nimbus_types.h"
-#include "src/shared/parameter.h"
 #include "./data.h"
 
-using namespace nimbus; // NOLINT
+using nimbus::Application;
 
-bool LoadParameter(Parameter *parameter, size_t *value);
+class LogisticRegression : public Application {
+  public:
+    LogisticRegression(const size_t& dimension_,
+                       const size_t& iteration_num,
+                       const size_t& partition_num,
+                       const size_t& sample_num_m,
+                       const size_t& reduction_partition_num);
+    ~LogisticRegression();
+    virtual void Load();
 
-bool SerializeParameter(Parameter *parameter, size_t value);
+    virtual size_t dimension();
+    virtual size_t iteration_num();
+    virtual size_t partition_num();
+    virtual size_t sample_num_m();
+    virtual size_t reduction_partition_num();
+    virtual size_t sample_num_per_partition();
+    virtual bool automatic_reduction_active();
+    virtual bool reduction_combiner_active();
 
-double VectorDotProduct(const std::vector<double>* vec1,
-                        const std::vector<double>* vec2);
+    virtual void set_automatic_reduction_active(bool flag);
+    virtual void set_reduction_combiner_active(bool flag);
 
-void VrctorScale(std::vector<double>* vec,
-                 const double& scale);
+  private:
+    size_t dimension_;
+    size_t iteration_num_;
+    size_t partition_num_;
+    size_t sample_num_m_;
+    size_t reduction_partition_num_;
+    size_t sample_num_per_partition_;
+    bool automatic_reduction_active_;
+    bool reduction_combiner_active_;
+};
 
-void VectorAddWithScale(std::vector<double>* acc,
-                        const std::vector<double>* add,
-                        const double& scale);
-
-#endif  // NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_UTILS_H_
+#endif  // NIMBUS_APPLICATIONS_ML_LR_APP_H_

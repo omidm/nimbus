@@ -124,8 +124,6 @@ Scheduler::~Scheduler() {
 }
 
 void Scheduler::Run() {
-  Log::log_PrintLine("Running the Scheduler");
-
   /*
    * First create the modules, then set them up.
    */

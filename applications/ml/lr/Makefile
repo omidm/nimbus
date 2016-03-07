@@ -1,5 +1,5 @@
 
-TARGET = liblogistic_regression.so
+TARGET = liblr.so
 
 # add subdirs space separated
 SUBDIRS = protobuf_source

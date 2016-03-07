@@ -47,7 +47,7 @@
 #define DEFAULT_ITERATION_NUM 10
 #define DEFAULT_PARTITION_NUM 10
 #define DEFAULT_SAMPLE_NUM_M 1
-#define DEFAULT_REDUCTION_PARTITION_NUM 0
+#define DEFAULT_REDUCTION_PARTITION_NUM 1
 
 LogisticRegression::LogisticRegression(const size_t& dimension,
                                        const size_t& iteration_num,
@@ -62,13 +62,11 @@ LogisticRegression::LogisticRegression(const size_t& dimension,
       assert(sizeof(size_t) == 8); // NOLINT
       assert(sizeof(double) == 8); // NOLINT
       assert(((sample_num_m * size_t(1e6)) % partition_num) == 0);
-      if (reduction_partition_num != 0) {
-        assert((partition_num % reduction_partition_num) == 0);
-      }
+      assert((partition_num % reduction_partition_num) == 0);
       sample_num_per_partition_ = (sample_num_m * 1e6) / partition_num;
-      std::cout << "**** number of partitions:        " << partition_num_ << std::endl;
-      std::cout << "**** sample number per partition: " << sample_num_per_partition_ << std::endl;
-      std::cout << "**** number of reduction partitions:        " << reduction_partition_num_ << std::endl; // NOLINT
+      dbg(DBG_APP, "APPLICATION: number of partitions:        %lu\n", partition_num_);
+      dbg(DBG_APP, "APPLICATION: sample number per partition: %lu\n", sample_num_per_partition_);
+      automatic_reduction_active_ = true;
       reduction_combiner_active_ = true;
 }
 
@@ -100,12 +98,26 @@ size_t LogisticRegression::sample_num_per_partition() {
   return sample_num_per_partition_;
 }
 
+bool LogisticRegression::automatic_reduction_active() {
+  return automatic_reduction_active_;
+}
+
 bool LogisticRegression::reduction_combiner_active() {
   return reduction_combiner_active_;
 }
 
+void LogisticRegression::set_automatic_reduction_active(bool flag) {
+  automatic_reduction_active_ = flag;
+  if (!automatic_reduction_active_) {
+    dbg(DBG_APP, "APPLICATION: automatic reduction deactivated!");
+  }
+}
+
 void LogisticRegression::set_reduction_combiner_active(bool flag) {
   reduction_combiner_active_ = flag;
+  if (!reduction_combiner_active_) {
+    dbg(DBG_APP, "APPLICATION: reduction combiner deactivated!");
+  }
 }
 
 void LogisticRegression::Load() {
@@ -113,15 +125,18 @@ void LogisticRegression::Load() {
   RegisterJob(INIT_JOB_NAME, new Init(this));
   RegisterJob(LOOP_JOB_NAME, new ForLoop(this));
   RegisterJob(GRADIENT_JOB_NAME, new Gradient(this));
+
   RegisterJob(REDUCE_JOB_NAME, new Reduce(this));
   RegisterJob(COMBINE_JOB_NAME, new Combine(this));
+
   RegisterJob(REDUCE_L1_JOB_NAME, new ReduceL1(this));
   RegisterJob(REDUCE_L2_JOB_NAME, new ReduceL2(this));
   RegisterJob(REDUCE_L3_JOB_NAME, new ReduceL3(this));
 
   RegisterData(WEIGHT_DATA_NAME, new Weight(dimension_, WEIGHT_DATA_NAME));
-  RegisterData(SCRATCH_WEIGHT_DATA_NAME, new Weight(dimension_, SCRATCH_WEIGHT_DATA_NAME));
   RegisterData(SAMPLE_BATCH_DATA_NAME, new SampleBatch(dimension_, sample_num_per_partition_));
+
+  RegisterData(SCRATCH_WEIGHT_DATA_NAME, new Weight(dimension_, SCRATCH_WEIGHT_DATA_NAME));
 };
 
 extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
@@ -140,9 +155,10 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
     // Optinal arguments
     ("dimension,d", po::value<std::size_t>(&dimension)->default_value(DEFAULT_DIMENSION), "dimension of the sample vectors") // NOLINT
     ("iteration,i", po::value<std::size_t>(&iteration_num)->default_value(DEFAULT_ITERATION_NUM), "number of iterations") // NOLINT
-    ("pn", po::value<std::size_t>(&partition_num)->default_value(DEFAULT_PARTITION_NUM), "number of partitions") // NOLINT
     ("sn", po::value<std::size_t>(&sample_num_m)->default_value(DEFAULT_SAMPLE_NUM_M), "number of samples in Million") // NOLINT
-    ("rpn", po::value<std::size_t>(&reduction_partition_num)->default_value(DEFAULT_REDUCTION_PARTITION_NUM), "number of reduction partitions for manual reduction by application with read/write set, if not specified nimbus handles reduction automatically through scratch/reduce set.") // NOLINT
+    ("pn", po::value<std::size_t>(&partition_num)->default_value(DEFAULT_PARTITION_NUM), "number of partitions") // NOLINT
+    ("rpn", po::value<std::size_t>(&reduction_partition_num)->default_value(DEFAULT_REDUCTION_PARTITION_NUM), "number of reduction partitions for manual reduction by application with read/write set.") // NOLINT
+    ("dar", "deactivate automatic reduction") // NOLINT
     ("drc", "deactivate reduction combiner"); // NOLINT
 
   po::variables_map vm;
@@ -172,6 +188,10 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
                                                    partition_num,
                                                    sample_num_m,
                                                    reduction_partition_num);
+
+  if (vm.count("dar")) {
+    app->set_automatic_reduction_active(false);
+  }
 
   if (vm.count("drc")) {
     app->set_reduction_combiner_active(false);

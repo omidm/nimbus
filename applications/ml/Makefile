@@ -1,6 +1,6 @@
 
 # add subdirs space separated
-SUBDIRS = logistic_regression k_means
+SUBDIRS = lr k_means
 
 .PHONY: subdirs $(SUBDIRS) clean
 

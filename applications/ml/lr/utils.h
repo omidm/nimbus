@@ -33,51 +33,38 @@
  */
 
 /*
- * Distributed Logistic Regression application
+ * Helper functions in the application.
  *
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_APP_H_
-#define NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_APP_H_
+#ifndef NIMBUS_APPLICATIONS_ML_LR_UTILS_H_
+#define NIMBUS_APPLICATIONS_ML_LR_UTILS_H_
 
-#include <vector>
 #include <iostream> // NOLINT
+#include <vector>
+#include <algorithm>
 #include "src/worker/application.h"
 #include "src/shared/nimbus_types.h"
-// #include "./job.h"
+#include "src/shared/parameter.h"
 #include "./data.h"
 
-using nimbus::Application;
+using namespace nimbus; // NOLINT
 
-class LogisticRegression : public Application {
-  public:
-    LogisticRegression(const size_t& dimension_,
-                       const size_t& iteration_num,
-                       const size_t& partition_num,
-                       const size_t& sample_num_m,
-                       const size_t& reduction_partition_num);
-    ~LogisticRegression();
-    virtual void Load();
+bool LoadParameter(Parameter *parameter, size_t *value);
 
-    virtual size_t dimension();
-    virtual size_t iteration_num();
-    virtual size_t partition_num();
-    virtual size_t sample_num_m();
-    virtual size_t reduction_partition_num();
-    virtual size_t sample_num_per_partition();
-    virtual bool reduction_combiner_active();
+bool SerializeParameter(Parameter *parameter, size_t value);
 
-    virtual void set_reduction_combiner_active(bool flag);
+double VectorDotProduct(const std::vector<double>* vec1,
+                        const std::vector<double>* vec2);
 
-  private:
-    size_t dimension_;
-    size_t iteration_num_;
-    size_t partition_num_;
-    size_t sample_num_m_;
-    size_t reduction_partition_num_;
-    size_t sample_num_per_partition_;
-    bool reduction_combiner_active_;
-};
+void VrctorScale(std::vector<double>* vec,
+                 const double& scale);
 
-#endif  // NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_APP_H_
+void VectorAddWithScale(std::vector<double>* acc,
+                        const std::vector<double>* add,
+                        const double& scale);
+
+void PrintWeight(Weight* w, size_t loop_counter, size_t max_loop);
+
+#endif  // NIMBUS_APPLICATIONS_ML_LR_UTILS_H_

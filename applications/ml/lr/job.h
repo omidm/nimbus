@@ -38,8 +38,8 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_JOB_H_
-#define NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_JOB_H_
+#ifndef NIMBUS_APPLICATIONS_ML_LR_JOB_H_
+#define NIMBUS_APPLICATIONS_ML_LR_JOB_H_
 
 #include <iostream> // NOLINT
 #include "src/worker/physical_data_instance.h"
@@ -119,4 +119,4 @@ class ReduceL3 : public Job {
     virtual Job * Clone();
 };
 
-#endif  // NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_JOB_H_
+#endif  // NIMBUS_APPLICATIONS_ML_LR_JOB_H_

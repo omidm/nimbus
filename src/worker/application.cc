@@ -78,7 +78,6 @@ void Application::Load() {
 void Application::Start(SchedulerClient* client,
     IDMaker* id_maker,
     WorkerLdoMap* ldo_map) {
-  std::cout << "Running Nimbus application: " << id_ << std::endl;
   client_ = client;
   id_maker_ = id_maker;
   ldo_map_ = ldo_map;

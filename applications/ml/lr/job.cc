@@ -50,6 +50,7 @@
 #define PARTITION_NUM static_cast<LogisticRegression*>(application())->partition_num()
 #define PARTITION_SIZE static_cast<LogisticRegression*>(application())->sample_num_per_partition()
 #define REDUCTION_PARTITION_NUM static_cast<LogisticRegression*>(application())->reduction_partition_num() // NOLINT
+#define AUTOMATIC_REDUCTION_ACTIVE static_cast<LogisticRegression*>(application())->automatic_reduction_active() // NOLINT
 #define REDUCTION_COMBINER_ACTIVE static_cast<LogisticRegression*>(application())->reduction_combiner_active() // NOLINT
 
 Main::Main(Application* app) {
@@ -86,7 +87,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   }
 
   // differentiate the automatic and manual reduction cases!
-  if (REDUCTION_PARTITION_NUM == 0) {
+  if (AUTOMATIC_REDUCTION_ACTIVE) {
     std::vector<logical_data_id_t> weight_data_ids;
     GetNewLogicalDataID(&weight_data_ids, 1);
 
@@ -160,7 +161,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   }
 };
 
-// used for for initializing the samples.
+// used for initializing the samples.
 static uint32_t prf(uint32_t x) {
   x += 4698U;
   x = ((x >> 16) ^ x) * 0x45d9f3bU;
@@ -230,7 +231,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     StartTemplate("__MARK_STAT_for_loop");
 
     // differentiate the automatic and manual reduction cases!
-    if (REDUCTION_PARTITION_NUM == 0) {
+    if (AUTOMATIC_REDUCTION_ACTIVE) {
       // Spawn the batch of jobs for gradient stage
       std::vector<job_id_t> gradient_job_ids;
       GetNewJobID(&gradient_job_ids, PARTITION_NUM);
@@ -260,6 +261,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
         LoadLdoIdsInSet(&write, r, WEIGHT_DATA_NAME, NULL);
         scratch.clear();
         before.clear();
+        SerializeParameter(&par, loop_counter - 1);
         StageJobAndLoadBeforeSet(&before, GRADIENT_JOB_NAME, reduction_job_id[0], read, write, scratch, reduce); // NOLINT
         if (REDUCTION_COMBINER_ACTIVE) {
           SpawnComputeJob(REDUCE_JOB_NAME, reduction_job_id[0], read, write, scratch, reduce, before, after, par, COMBINE_JOB_NAME, true, r); // NOLINT
@@ -285,7 +287,6 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
       }
 
       MarkEndOfStage();
-
 
       // Spawning the reduction stages
       assert((PARTITION_NUM % REDUCTION_PARTITION_NUM) == 0);
@@ -334,6 +335,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
         before.clear();
         StageJobAndLoadBeforeSet(&before, REDUCE_L3_JOB_NAME, reduction_l3_job_id[i], read, write);
         after.clear();
+        SerializeParameter(&par, i * ITERATION_NUM + loop_counter - 1);
         SpawnComputeJob(REDUCE_L3_JOB_NAME, reduction_l3_job_id[i], read, write, before, after, par, true, r); // NOLINT
       }
 
@@ -389,12 +391,8 @@ void Gradient::Execute(Parameter params, const DataArray& da) {
     w = static_cast<Weight*>(da[0]);
     sb = static_cast<SampleBatch*>(da[1]);
   }
-
-
-  if (REDUCTION_PARTITION_NUM != 0) {
-    assert(da[2]->name() == WEIGHT_DATA_NAME);
-    // assert(false);
-  }
+  assert(da[2]->name() == WEIGHT_DATA_NAME);
+  assert(da[2]->physical_id() == w->physical_id());
 
   std::vector<double> gradient(w->dimension(), 0);
   std::vector<Sample>::iterator iter = sb->samples()->begin();
@@ -441,17 +439,13 @@ void Reduce::Execute(Parameter params, const DataArray& da) {
     assert((*iter)->name() == WEIGHT_DATA_NAME);
     VectorAddWithScale(w->vector(), &reduced, 1);
 
-    std::cout << "*********** Weight::";
-    std::vector<double>::iterator it = w->vector()->begin();
-    for (; it != w->vector()->end(); ++it) {
-      std::cout << ", " <<  *it;
-    }
-    std::cout << std::endl;
+    size_t loop_counter;
+    LoadParameter(&params, &loop_counter);
+    PrintWeight(w, loop_counter, ITERATION_NUM);
   }
   iter++;
   assert(iter == da.end());
 };
-
 
 
 Combine::Combine(Application *app) {
@@ -486,13 +480,6 @@ void Combine::Execute(Parameter params, const DataArray& da) {
   iter++;
   assert(iter == da.end());
 };
-
-
-
-
-
-
-
 
 
 ReduceL1::ReduceL1(Application *app) {
@@ -592,17 +579,9 @@ void ReduceL3::Execute(Parameter params, const DataArray& da) {
   }
   assert(iter == da.end());
 
-  std::cout << "*********** Weight::";
-  std::vector<double>::iterator it = w->vector()->begin();
-  for (; it != w->vector()->end(); ++it) {
-    std::cout << ", " <<  *it;
-  }
-  std::cout << std::endl;
+  size_t loop_counter;
+  LoadParameter(&params, &loop_counter);
+  PrintWeight(w, loop_counter, ITERATION_NUM);
 };
-
-
-
-
-
 
 
