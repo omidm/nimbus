@@ -1376,6 +1376,41 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
     // BINDING MEMOIZE - omidm
     RemoteCopyData(worker_sender, worker, ldo, &from_instance, &target_instance, bt);
 
+
+
+
+    // avoid potential repeat of the future remote copy b keeping a copy of the
+    // data locally at the worker. -omidm
+    if (changing_needed_version) {
+      dbg(DBG_SCHED, "Avoiding potential future remote copy for data %lu (3).\n", l_id);
+      PhysicalData spare_copy;
+      GetFreeDataAtWorker(worker, ldo, &spare_copy);
+      assert(spare_copy.id() != target_instance.id());
+
+      // BINDING MEMOIZE - omidm
+      if (memoize_binding) {
+        bt->TrackDataObject(worker->worker_id(),
+                            l_id,
+                            spare_copy.id(),
+                            BindingTemplate::WILD_CARD,
+                            0);
+        bt->TrackDataObject(worker->worker_id(),
+                            l_id,
+                            target_instance.id(),
+                            BindingTemplate::REGULAR,
+                            version_diff);
+        bt->UpdateDataObject(spare_copy.id(),
+                             BindingTemplate::REGULAR,
+                             version_diff);
+      }
+      // BINDING MEMOIZE - omidm
+
+      // BINDING MEMOIZE - omidm
+      LocalCopyData(worker, ldo, &target_instance, &spare_copy, bt);
+    }
+
+
+
     AllocateLdoInstanceToJob(job, ldo, target_instance);
 
     // BINDING MEMOIZE - omidm
