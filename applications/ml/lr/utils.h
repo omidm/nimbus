@@ -65,6 +65,8 @@ void VectorAddWithScale(std::vector<double>* acc,
                         const std::vector<double>* add,
                         const double& scale);
 
-void PrintWeight(Weight* w, size_t loop_counter, size_t max_loop);
+void PrintWeight(Weight* w,
+                 size_t loop_counter,
+                 size_t max_loop);
 
 #endif  // NIMBUS_APPLICATIONS_ML_LR_UTILS_H_

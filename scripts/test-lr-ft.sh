@@ -55,13 +55,13 @@ Whi='\x1B[0;97m';
 source scripts/test-utils.sh
 
 
-DESC="Runs fault tolerance tests against stencil_1d application."
+DESC="Runs fault tolerance tests against logistic regression application."
 USAGE="./scripts/test-stencil-ft.sh"
 
 print_help "${DESC}" "${USAGE}" "$1"
 
 ITER_NUM=500
-CHUNK_NUM=16
+SAMPLE_NUM_M=".001"
 BATCH_NUM=6
 THREAD_NUM=16
 TIME_OUT_T=60
@@ -74,8 +74,8 @@ CHKP_NUM=2 # FAULT_DELAY / FT_PERIOD
 CONTROLLER_ARGS="-t ${THREAD_NUM} -a ${BATCH_NUM} -w 4 --split 4 1 1"
 CONTROLLER_ARGS_FT="--aft --ft_period ${FT_PERIOD} -t ${THREAD_NUM} -a ${BATCH_NUM} -w 4 --split 4 1 1"
 WORKER_ARGS="4 --othread ${THREAD_NUM}"
-APPLICATION_ARGS="-i ${ITER_NUM} --pn ${CHUNK_NUM} --cpp 1"
-APPLICATION_LIB="applications/simple/stencil_1d/libstencil_1d.so"
+APPLICATION_ARGS="-i ${ITER_NUM} --sn ${SAMPLE_NUM_M}"
+APPLICATION_LIB="applications/ml/lr/liblr.so"
 
 
 echo -e "${Cya}Ruunnig the base experiment without faults:${RCol}"
@@ -91,13 +91,13 @@ while true; do
     echo -e "${Yel}[ WARNING ] base experiment with ${ITER_NUM} iterations was only ${ELAPSED} (<${BASE_LENGTH}) seconds!${RCol}"
     ITER_NUM=$((((${BASE_LENGTH}-${ELAPSED})*(${ITER_NUM}/${NORM_ELAPSED}))+${ITER_NUM}))
     echo -e "${Yel}[ WARNING ] retrying the experiment with ${ITER_NUM} iterations to get the minimum length ... ${RCol}"
-    APPLICATION_ARGS="-i ${ITER_NUM} --pn ${CHUNK_NUM} --cpp 1"
+    APPLICATION_ARGS="-i ${ITER_NUM} --sn ${SAMPLE_NUM_M}"
   else
     echo -e "${Gre}[ SUCCESS ] base experiment finished in ${ELAPSED} seconds.${RCol}"
     break
   fi
 done
-get_hash "FINAL HASH"
+get_hash "FINAL WEIGHT HASH"
 correct_hash=${HASH}
 
 
@@ -128,11 +128,11 @@ resume_controller
 wait_to_succeed basic_completion_check ${TIME_OUT_T}
 echo -e "${Gre}[ SUCCESS ] experiment with fault finished in $((${ELAPSED}+3*${FAULT_DELAY})) seconds.${RCol}"
 check_rewinding 3
-check_hash_soft "FINAL HASH" "${correct_hash}"
+check_hash "FINAL WEIGHT HASH" "${correct_hash}"
 
 
 clean_logs
-echo -e "${Gre}\n[ PASSED  ] stencil fault tolerance test passed successfuly!${RCol}"
+echo -e "${Gre}\n[ PASSED  ] logistic regression fault tolerance test passed successfuly!${RCol}"
 exit 0
 
 

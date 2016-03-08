@@ -162,6 +162,27 @@ function check_hash {
   fi
 }
 
+# check_hash_soft tag correct_hash
+function check_hash_soft {
+  local pattern="s/.*$1: //"
+  local final_hash=$(grep "$1" logs/workers/*/stdout  | sed "${pattern}")
+  if ! [ -z ${final_hash} ]; then
+    HASH=${final_hash}
+    if [ "${HASH}" == "$2" ]; then
+      echo -e "${Gre}[ SUCCESS ] hash value matches!${RCol}"
+    else
+      echo -e "${Red}[ WARNING ] hash value does not match! [${HASH} != $2]${RCol}"
+      return 1;
+    fi
+  else
+    echo -e "${Red}[ FAILED  ] could not get the hash value!.${RCol}"
+    exit 1
+  fi
+}
+
+
+
+
 function kill_one_worker {
   local WORKER_PIDS=$(ps -fu $USER| grep "nimbus_worker" | grep -v "grep" | awk '{print $2}')
   for pid in ${WORKER_PIDS}

@@ -78,7 +78,7 @@ echo -e "${Cya}WORKERS     : one, single-threaded w/o templates${RCol}"
 echo -e "${Cya}APPLICATION : one application partition${RCol}"
 start_experiment "--dct" "1" "${APPLICATION_LIB}" "--pn 1 --cpp ${CHUNK_NUM}" 
 wait_to_succeed basic_completion_check ${TIME_OUT_T} 
-echo -e "${Gre}[ SUCCESS ] finished based experiment in ${ELAPSED} seconds.${RCol}" 
+echo -e "${Gre}[ SUCCESS ] finished base experiment in ${ELAPSED} seconds.${RCol}" 
 get_hash "FINAL HASH"
 correct_hash=${HASH}
 
@@ -179,7 +179,7 @@ echo -e "${Cya}APPLICATION : ${CHUNK_NUM} application partition${RCol}"
 start_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM}" "1 --othread ${THREAD_NUM}" "${APPLICATION_LIB}" "--pn ${CHUNK_NUM} --cpp 1" 
 wait_to_succeed basic_completion_check ${TIME_OUT_T} 
 echo -e "${Gre}[ SUCCESS ] finished experiment in ${ELAPSED} seconds.${RCol}" 
-check_hash "FINAL HASH" "${correct_hash}"
+check_hash_soft "FINAL HASH" "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"
@@ -189,7 +189,7 @@ echo -e "${Cya}APPLICATION : ${CHUNK_NUM} application partition${RCol}"
 start_experiment "-t ${THREAD_NUM} -a ${BATCH_NUM} -w 4 --split 4 1 1" "4 --othread ${THREAD_NUM}" "${APPLICATION_LIB}" "--pn ${CHUNK_NUM} --cpp 1" 
 wait_to_succeed basic_completion_check ${TIME_OUT_T} 
 echo -e "${Gre}[ SUCCESS ] finished experiment in ${ELAPSED} seconds.${RCol}" 
-check_hash "FINAL HASH" "${correct_hash}"
+check_hash_soft "FINAL HASH" "${correct_hash}"
 
 
 clean_logs

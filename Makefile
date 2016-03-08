@@ -41,15 +41,19 @@ clean-logs:
 	\rm -rf logs/
 
 
-.PHONY: test test-stencil test-water
+.PHONY: test test-stencil test-lr test-water
 
 test-stencil: extern src nodes applications
 	scripts/test-stencil-basic.sh
 	scripts/test-stencil-ft.sh
 
+test-lr: extern src nodes applications
+	scripts/test-lr-basic.sh
+	scripts/test-lr-ft.sh
+
 test-water: extern src nodes applications
 	scripts/test-water-basic.sh
 	scripts/test-water-ft.sh
 
-test: test-stencil test-water
+test: test-stencil test-lr test-water
 

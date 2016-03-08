@@ -52,7 +52,7 @@
 LogisticRegression::LogisticRegression(const size_t& dimension,
                                        const size_t& iteration_num,
                                        const size_t& partition_num,
-                                       const size_t& sample_num_m,
+                                       const double& sample_num_m,
                                        const size_t& reduction_partition_num)
   : dimension_(dimension),
     iteration_num_(iteration_num),
@@ -61,7 +61,7 @@ LogisticRegression::LogisticRegression(const size_t& dimension,
     reduction_partition_num_(reduction_partition_num) {
       assert(sizeof(size_t) == 8); // NOLINT
       assert(sizeof(double) == 8); // NOLINT
-      assert(((sample_num_m * size_t(1e6)) % partition_num) == 0);
+      assert((size_t(sample_num_m * size_t(1e6)) % partition_num) == 0);
       assert((partition_num % reduction_partition_num) == 0);
       sample_num_per_partition_ = (sample_num_m * 1e6) / partition_num;
       dbg(DBG_APP, "APPLICATION: number of partitions:        %lu\n", partition_num_);
@@ -86,7 +86,7 @@ size_t LogisticRegression::partition_num() {
   return partition_num_;
 }
 
-size_t LogisticRegression::sample_num_m() {
+double LogisticRegression::sample_num_m() {
   return sample_num_m_;
 }
 
@@ -145,7 +145,7 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
   size_t dimension;
   size_t iteration_num;
   size_t partition_num;
-  size_t sample_num_m;
+  double sample_num_m;
   size_t reduction_partition_num;
 
   po::options_description desc("Logistic Regression Options");
@@ -155,7 +155,7 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
     // Optinal arguments
     ("dimension,d", po::value<std::size_t>(&dimension)->default_value(DEFAULT_DIMENSION), "dimension of the sample vectors") // NOLINT
     ("iteration,i", po::value<std::size_t>(&iteration_num)->default_value(DEFAULT_ITERATION_NUM), "number of iterations") // NOLINT
-    ("sn", po::value<std::size_t>(&sample_num_m)->default_value(DEFAULT_SAMPLE_NUM_M), "number of samples in Million") // NOLINT
+    ("sn", po::value<double>(&sample_num_m)->default_value(DEFAULT_SAMPLE_NUM_M), "number of samples in Million") // NOLINT
     ("pn", po::value<std::size_t>(&partition_num)->default_value(DEFAULT_PARTITION_NUM), "number of partitions") // NOLINT
     ("rpn", po::value<std::size_t>(&reduction_partition_num)->default_value(DEFAULT_REDUCTION_PARTITION_NUM), "number of reduction partitions for manual reduction by application with read/write set.") // NOLINT
     ("dar", "deactivate automatic reduction") // NOLINT

@@ -91,7 +91,9 @@ void VectorAddWithScale(std::vector<double>* acc,
 }
 
 
-void PrintWeight(Weight* w, size_t loop_counter, size_t max_loop) {
+void PrintWeight(Weight* w,
+                 size_t loop_counter,
+                 size_t max_loop) {
   if (loop_counter > max_loop) {
     return;
   }
@@ -108,7 +110,7 @@ void PrintWeight(Weight* w, size_t loop_counter, size_t max_loop) {
     boost::hash<std::string> string_hash;
     int hash = string_hash(ss.str().c_str());
     printf("FINAL WEIGHT: %s\n", ss.str().c_str());
-    printf("FINAL HASH: %d\n", hash);
+    printf("FINAL WEIGHT HASH: %d\n", hash);
   } else {
     printf("ITERATION %2.0lu WEIGHT: %s\n", max_loop - loop_counter, ss.str().c_str());
   }
