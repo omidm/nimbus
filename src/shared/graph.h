@@ -240,7 +240,7 @@ template<typename T, typename key_t>
 bool Graph<T, key_t>::AddEdge(key_t start_key, key_t end_key) {
   typename Vertex<T, key_t>::Iter start_iter;
   if (!HasVertex(start_key, &start_iter)) {
-    dbg(DBG_WARN, "WARNING: start vertex with id %lu does not exist.\n", start_key);
+    // dbg(DBG_WARN, "WARNING: start vertex with id %lu does not exist.\n", start_key);
     return false;
   }
   typename Vertex<T, key_t>::Iter end_iter;
@@ -282,7 +282,7 @@ template<typename T, typename key_t>
 bool Graph<T, key_t>::AddEdge(key_t start_key, key_t end_key, Edge<T, key_t>** edge) {
   typename Vertex<T, key_t>::Iter start_iter;
   if (!HasVertex(start_key, &start_iter)) {
-    dbg(DBG_WARN, "WARNING: start vertex with id %lu does not exist.\n", start_key);
+    // dbg(DBG_WARN, "WARNING: start vertex with id %lu does not exist.\n", start_key);
     return false;
   }
   typename Vertex<T, key_t>::Iter end_iter;

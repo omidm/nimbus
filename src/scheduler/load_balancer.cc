@@ -120,7 +120,7 @@ void LoadBalancer::set_global_region(const GeometricRegion& region) {
 
 
 void LoadBalancer::Run() {
-  dbg(DBG_WARN, "WARNING: Base load balancer is being used!!!\n");
+  dbg(DBG_WARN, "WARNING: Base load balancer is being used for LoadBalancer::Run!\n");
 }
 
 size_t LoadBalancer::AssignReadyJobs() {
@@ -145,30 +145,50 @@ size_t LoadBalancer::AssignReadyJobs() {
 }
 
 bool LoadBalancer::SetWorkerToAssignJob(JobEntry *job) {
-  dbg(DBG_WARN, "WARNING: Base load balancer is being used, all jobs are assigned to first worker.!!!\n"); // NOLINT
+  static bool printed_warn = false;
+  if (!printed_warn) {
+    dbg(DBG_WARN, "WARNING: Base load balancer is being used for SetWorkerToAssignJob, all jobs are assigned to first worker!\n"); // NOLINT
+    printed_warn = true;
+  }
   assert(worker_map_.size() > 0);
   job->set_assigned_worker(worker_map_.begin()->second);
   return true;
 }
 
 bool LoadBalancer::BalanceLoad(counter_t query_id) {
-  dbg(DBG_WARN, "WARNING: Base load balancer is being used, no load balancing hapens.!!!\n"); // NOLINT
+  static bool printed_warn = false;
+  if (!printed_warn) {
+    dbg(DBG_WARN, "WARNING: Base load balancer is being used for BalanceLoad, no load balancing happens!\n"); // NOLINT
+    printed_warn = true;
+  }
   QueryMap::iterator iter = queries_.find(query_id);
   assert(iter != queries_.end());
   return true;
 }
 
 void LoadBalancer::NotifyJobAssignment(const JobEntry *job) {
-  dbg(DBG_WARN, "WARNING: Base load balancer is being used!!!\n");
+  static bool printed_warn = false;
+  if (!printed_warn) {
+    dbg(DBG_WARN, "WARNING: Base load balancer is being used for NotifyJobAssignment!\n");
+    printed_warn = true;
+  }
 }
 
 void LoadBalancer::NotifyJobDone(const JobEntry *job) {
-  dbg(DBG_WARN, "WARNING: Base load balancer is being used!!!\n");
+  static bool printed_warn = false;
+  if (!printed_warn) {
+    dbg(DBG_WARN, "WARNING: Base load balancer is being used for NotifyJobDone!\n");
+    printed_warn = true;
+  }
 }
 
 
 void LoadBalancer::NotifyRegisteredWorker(SchedulerWorker *worker) {
-  dbg(DBG_WARN, "WARNING: Base load balancer is being used!!!\n");
+  static bool printed_warn = false;
+  if (!printed_warn) {
+    dbg(DBG_WARN, "WARNING: Base load balancer is being used for NotifyRegisteredWorker!\n");
+    printed_warn = true;
+  }
   worker_id_t worker_id = worker->worker_id();
   WorkerMap::iterator iter = worker_map_.find(worker_id);
   if (iter == worker_map_.end()) {
@@ -180,7 +200,11 @@ void LoadBalancer::NotifyRegisteredWorker(SchedulerWorker *worker) {
 }
 
 bool LoadBalancer::NotifyDownWorker(worker_id_t worker_id) {
-  dbg(DBG_WARN, "WARNING: Base load balancer is being used!!!\n");
+  static bool printed_warn = false;
+  if (!printed_warn) {
+    dbg(DBG_WARN, "WARNING: Base load balancer is being used for NotifyDownWorker!\n");
+    printed_warn = true;
+  }
   WorkerMap::iterator iter = worker_map_.find(worker_id);
   if (iter != worker_map_.end()) {
     worker_map_.erase(iter);
