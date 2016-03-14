@@ -34,7 +34,11 @@ LR_APP_OPTIONS += ' -i ' + str(config.ITERATION_NUM)
 LR_APP_OPTIONS += ' --sn ' + str(config.SAMPLE_NUM_M)
 LR_APP_OPTIONS += ' --pn ' + str(config.PARTITION_NUM)
 LR_APP_OPTIONS += ' --rpn ' + str(config.REDUCTION_PARTITION_NUM)
-LR_REL_APP_PATH = 'applications/ml/logistic_regression/liblogistic_regression.so' 
+if config.DEACTIVATE_AUTOMATIC_REDUCTION:
+  LR_APP_OPTIONS += ' --dar '
+if config.DEACTIVATE_REDUCTION_COMBINER:
+  LR_APP_OPTIONS += ' --drc '
+LR_REL_APP_PATH = 'applications/ml/logistic_regression/liblr.so' 
 
 # water
 WATER_APP_OPTIONS  = ' '

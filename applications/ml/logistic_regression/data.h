@@ -38,8 +38,8 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATIONS_ML_LR_DATA_H_
-#define NIMBUS_APPLICATIONS_ML_LR_DATA_H_
+#ifndef NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_DATA_H_
+#define NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_DATA_H_
 
 #include <assert.h>
 #include <vector>
@@ -122,4 +122,4 @@ class Weight : public Data {
 };
 
 
-#endif  // NIMBUS_APPLICATIONS_ML_LR_DATA_H_
+#endif  // NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_DATA_H_

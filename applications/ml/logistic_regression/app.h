@@ -38,8 +38,8 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATIONS_ML_LR_APP_H_
-#define NIMBUS_APPLICATIONS_ML_LR_APP_H_
+#ifndef NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_APP_H_
+#define NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_APP_H_
 
 #include <vector>
 #include <iostream> // NOLINT
@@ -82,4 +82,4 @@ class LogisticRegression : public Application {
     bool reduction_combiner_active_;
 };
 
-#endif  // NIMBUS_APPLICATIONS_ML_LR_APP_H_
+#endif  // NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_APP_H_

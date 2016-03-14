@@ -72,7 +72,7 @@ SAMPLE_NUM_M=".001"
 BATCH_NUM=6
 THREAD_NUM=16
 TIME_OUT_T=20
-APPLICATION_LIB="applications/ml/lr/liblr.so"
+APPLICATION_LIB="applications/ml/logistic_regression/liblr.so"
 
 echo -e "${Cya}Ruunnig the base experiment:${RCol}"
 echo -e "${Cya}CONTROLLER  : single-threaded w/o templates${RCol}"

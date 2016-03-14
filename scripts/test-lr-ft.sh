@@ -75,7 +75,7 @@ CONTROLLER_ARGS="-t ${THREAD_NUM} -a ${BATCH_NUM} -w 4 --split 4 1 1"
 CONTROLLER_ARGS_FT="--aft --ft_period ${FT_PERIOD} -t ${THREAD_NUM} -a ${BATCH_NUM} -w 4 --split 4 1 1"
 WORKER_ARGS="4 --othread ${THREAD_NUM}"
 APPLICATION_ARGS="-i ${ITER_NUM} --sn ${SAMPLE_NUM_M}"
-APPLICATION_LIB="applications/ml/lr/liblr.so"
+APPLICATION_LIB="applications/ml/logistic_regression/liblr.so"
 
 
 echo -e "${Cya}Ruunnig the base experiment without faults:${RCol}"

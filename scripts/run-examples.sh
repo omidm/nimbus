@@ -96,7 +96,7 @@ if [[ ${EXAMPLE} == "stencil_1d" ]]; then
 elif [[ ${EXAMPLE} == "job_spawner" ]]; then
   ${NIMBUS_HOME}/scripts/start-workers.sh 1 --fg -l applications/simple/job_spawner/libjob_spawner.so ${ARGS}
 elif [[ ${EXAMPLE} == "lr" ]]; then
-  ${NIMBUS_HOME}/scripts/start-workers.sh 1 --fg -l applications/ml/lr/liblr.so ${ARGS}
+  ${NIMBUS_HOME}/scripts/start-workers.sh 1 --fg -l applications/ml/logistic_regression/liblr.so ${ARGS}
 elif [[ ${EXAMPLE} == "k-means" ]]; then
   ${NIMBUS_HOME}/scripts/start-workers.sh 1 --fg -l applications/ml/k_means/libk_means.so ${ARGS}
 else

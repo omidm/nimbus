@@ -38,8 +38,8 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATIONS_ML_LR_UTILS_H_
-#define NIMBUS_APPLICATIONS_ML_LR_UTILS_H_
+#ifndef NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_UTILS_H_
+#define NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_UTILS_H_
 
 #include <iostream> // NOLINT
 #include <vector>
@@ -69,4 +69,4 @@ void PrintWeight(Weight* w,
                  size_t loop_counter,
                  size_t max_loop);
 
-#endif  // NIMBUS_APPLICATIONS_ML_LR_UTILS_H_
+#endif  // NIMBUS_APPLICATIONS_ML_LOGISTIC_REGRESSION_UTILS_H_
