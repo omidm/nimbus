@@ -1,0 +1,23 @@
+
+---------------------------------------------
+Author: Omid Mashayekhi <omidm@stanford.edu>
+---------------------------------------------
+
+The gradient operation in Logistic regression program written in C. This
+code runs the operations serially on a single node. It helps determining the
+bottomline speed of the C without having the nimbus runtime overhead involved.
+
+Usage:
+Gradient Program Options:
+  -h [ --help ]                produce help message
+  -d [ --dimension ] arg (=10) dimension of the sample vectors
+  -i [ --iteration ] arg (=10) number of iterations
+  --sn arg (=1)                number of samples in Million
+
+
+Makefile options:
+    $ make                to build
+    $ make run            to run the example with some default arguments
+    $ make clean          clean generated object and executable files
+
+

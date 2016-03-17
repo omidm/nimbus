@@ -33,8 +33,6 @@
  */
 
  /*
-  * This file has the main function that launches Nimbus controller.
-  *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
@@ -128,7 +126,8 @@ int main(int argc, char *argv[]) {
   for (size_t i = 0; i < sample_num; ++i) {
     samples.push_back(Sample());
     Sample& s = samples.back();
-    s.label_ = i % 2;
+    // s.label_ = i % 2;
+    s.label_ = static_cast<double>((i % 2) *2) - 1;  // for +1 and -1 labels
     for (size_t j = 0; j < dimension; ++j) {
       s.vector_.push_back(13);
     }
