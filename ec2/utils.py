@@ -20,7 +20,7 @@ OUTPUT_PATH                     = 'output/'
 
 # Path configuration
 NIMBUS_ROOT                     = '~/cloud/src/nimbus/'
-REL_LOGS_PATH                    = 'logs/'
+REL_LOGS_PATH                   = 'logs/'
 REL_CONTROLLER_PATH             = 'nodes/nimbus_controller/'
 REL_WORKER_PATH                 = 'nodes/nimbus_worker/'
 
@@ -28,19 +28,21 @@ REL_WORKER_PATH                 = 'nodes/nimbus_worker/'
 # Forming the worker arguments based on options
 
 # lr
+LR_REL_APP_PATH = 'applications/ml/logistic_regression/liblr.so' 
 LR_APP_OPTIONS  = ' '
 LR_APP_OPTIONS += ' -d ' + str(config.DIMENSION)
 LR_APP_OPTIONS += ' -i ' + str(config.ITERATION_NUM)
-LR_APP_OPTIONS += ' --sn ' + str(config.SAMPLE_NUM_M)
-LR_APP_OPTIONS += ' --pn ' + str(config.PARTITION_NUM)
-LR_APP_OPTIONS += ' --rpn ' + str(config.REDUCTION_PARTITION_NUM)
+LR_APP_OPTIONS += ' -s ' + str(config.SAMPLE_NUM_M)
+LR_APP_OPTIONS += ' -p ' + str(config.PARTITION_NUM)
+LR_APP_OPTIONS += ' -w ' + str(config.SPIN_WAIT_US)
+LR_APP_OPTIONS += ' -r ' + str(config.REDUCTION_PARTITION_NUM)
 if config.DEACTIVATE_AUTOMATIC_REDUCTION:
   LR_APP_OPTIONS += ' --dar '
 if config.DEACTIVATE_REDUCTION_COMBINER:
   LR_APP_OPTIONS += ' --drc '
-LR_REL_APP_PATH = 'applications/ml/logistic_regression/liblr.so' 
 
 # water
+WATER_REL_APP_PATH = 'applications/physbam/water/libwater_app.so'
 WATER_APP_OPTIONS  = ' '
 WATER_APP_OPTIONS += ' -s ' + str(config.SIMULATION_SCALE)
 WATER_APP_OPTIONS += ' -e ' + str(config.FRAME_NUMBER)
@@ -58,15 +60,24 @@ if not config.GLOBAL_WRITE:
   WATER_APP_OPTIONS += ' --dgw '
 if config.NO_PROJ_BOTTLENECK:
   WATER_APP_OPTIONS += ' --dpb '
-WATER_REL_APP_PATH = 'applications/physbam/water/libwater_app.so'
+
+
+if (config.APPLICATION == 'lr'):
+  REL_APP_PATH = LR_REL_APP_PATH
+  APP_OPTIONS  = LR_APP_OPTIONS
+elif (config.APPLICATION == 'water'):
+  REL_APP_PATH = WATER_REL_APP_PATH
+  APP_OPTIONS  = WATER_APP_OPTIONS
+else:
+  print "ERROR: unknown application: " + config.APPLICATION
+  exit(0)
 
 
 def start_experiment(controller_ip, controller_p_ip, worker_ips, worker_p_ips):
-  worker_num = len(worker_ips)
-  start_controller(controller_ip, worker_num);
+  start_controller(controller_ip, config.WORKER_NUM);
 
-  idx = 0;
-  for idx in range(0, len(worker_ips)):
+  assert(config.WORKER_NUM <= len(worker_ips))
+  for idx in range(0, config.WORKER_NUM):
     ip = worker_ips[idx]
     p_ip = worker_p_ips[idx]
     start_worker(controller_p_ip, ip, p_ip, idx+1);
@@ -134,15 +145,8 @@ def start_worker(controller_p_ip, worker_ip, worker_p_ip, num):
   worker_command += ' --othread ' + str(config.OTHREAD_NUM)
   if config.DEACTIVATE_EXECUTION_TEMPLATE:
     worker_command += ' --det '
-  if (config.APPLICATION == 'lr'):
-    worker_command += ' -l ' + str(LR_REL_APP_PATH)
-    worker_command += ' ' + str(LR_APP_OPTIONS)
-  elif (config.APPLICATION == 'water'):
-    worker_command += ' -l ' + str(WATER_REL_APP_PATH)
-    worker_command += ' ' + str(WATER_APP_OPTIONS)
-  else:
-    print "ERROR: unknown application: " + config.APPLICATION
-    exit(0)
+  worker_command += ' -l ' + REL_APP_PATH
+  worker_command += ' ' + APP_OPTIONS
   worker_command += ' &>> ' + str(num) + '_' + STD_OUT_LOG
 
   print '** Starting worker: ' + str(num)
@@ -155,6 +159,7 @@ def start_worker(controller_p_ip, worker_ip, worker_p_ip, num):
 def stop_experiment(controller_ip, worker_ips):
   stop_controller(controller_ip);
 
+  assert(config.WORKER_NUM <= len(worker_ips))
   num = 0;
   for ip in worker_ips:
     num += 1
@@ -204,10 +209,10 @@ def collect_logs(controller_ip, worker_ips):
 
   collect_controller_logs(controller_ip)
 
-  num = 0
-  for ip in worker_ips:
-    num += 1
-    collect_worker_logs(ip, num);
+  assert(config.WORKER_NUM <= len(worker_ips))
+  for idx in range(0, config.WORKER_NUM):
+    ip = worker_ips[idx]
+    collect_worker_logs(ip, idx+1);
 
 
 def collect_controller_logs(controller_ip):
@@ -294,12 +299,12 @@ def clean_logs(controller_ip, worker_ips):
   command +=  'rm -rf ' + worker_path + 'split_output/;'
   command +=  'rm -rf ' + worker_path + 'output/;'
 
+  print '** Cleaning controller: ' + controller_ip
   subprocess.Popen(['ssh', '-q', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
       'ubuntu@' + controller_ip, command])
 
-  print '** Cleaning controller ' + controller_ip
 
   num = 0
   for ip in worker_ips:

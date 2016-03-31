@@ -15,7 +15,7 @@
 # US West (Oregon) Region
 EC2_LOCATION                    = 'us-west-2'
 UBUNTU_AMI                      = 'ami-fa9cf1ca'
-NIMBUS_AMI                      = 'ami-ec29c68c' # 'ami-04db3464' # 'ami-f65bb996' # 'ami-86d437e6' # 'ami-9a05e6fa' # 'ami-451ffc25'
+NIMBUS_AMI                      = 'ami-f50ee495' # 'ami-04db3464' # 'ami-f65bb996' # 'ami-86d437e6' # 'ami-9a05e6fa' # 'ami-451ffc25'
 CONTROLLER_INSTANCE_TYPE        = 'c3.4xlarge'
 WORKER_INSTANCE_TYPE            = 'c3.2xlarge'
 PLACEMENT                       = 'us-west-2c' # None
@@ -64,6 +64,7 @@ DIMENSION                       = 10
 ITERATION_NUM                   = 30
 PARTITION_NUM                   = 2000
 SAMPLE_NUM_M                    = 100
+SPIN_WAIT_US                    = 0
 DEACTIVATE_AUTOMATIC_REDUCTION  = False
 DEACTIVATE_REDUCTION_COMBINER   = False
 REDUCTION_PARTITION_NUM         = WORKER_NUM

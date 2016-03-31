@@ -13,7 +13,7 @@ import utils
 import config
 
 
-parser = argparse.ArgumentParser(description='Process log files.')
+parser = argparse.ArgumentParser(description='Nimbus EC2 Manager.')
 parser.add_argument(
     "-l", "--launch",
     dest="launch",
@@ -129,47 +129,47 @@ elif (args.start or args.end or args.download or args.clean or args.printip or a
       placement_group=config.PLACEMENT_GROUP);
   
   if (not args.controllerip == "X.X.X.X"):
-    scheduler_ip   = args.controllerip
-    scheduler_p_ip = args.controllerprivateip
+    controller_ip   = args.controllerip
+    controller_p_ip = args.controllerprivateip
   else:
     cips = ec2.get_ip_addresses(
         config.EC2_LOCATION,
         placement_group=config.PLACEMENT_GROUP,
         instance_type=config.CONTROLLER_INSTANCE_TYPE);
-    scheduler_ip   = cips["public"][0]
-    scheduler_p_ip = cips["private"][0]
+    controller_ip   = cips["public"][0]
+    controller_p_ip = cips["private"][0]
   
   worker_ips = list(ip_addresses["public"])
-  worker_ips.remove(scheduler_ip)
+  worker_ips.remove(controller_ip)
   
   if (not args.useprivate):
-    scheduler_p_ip = scheduler_ip
+    controller_p_ip = controller_ip
     worker_p_ips = list(worker_ips)
   else:
-    assert(not scheduler_p_ip == "X.X.X.X") 
+    assert(not controller_p_ip == "X.X.X.X") 
     worker_p_ips = list(ip_addresses["private"])
-    worker_p_ips.remove(scheduler_p_ip)
+    worker_p_ips.remove(controller_p_ip)
   
   if (args.printip):
-    print "scheduler IP:         " + scheduler_ip
-    print "scheduler Private IP: " + scheduler_p_ip
+    print "Controller IP:         " + controller_ip
+    print "Controller Private IP: " + controller_p_ip
     print "Worker IPs:           " + str(worker_ips)
     print "Worker Private IPs:   " + str(worker_p_ips)
   
   if (args.wakeup):
-    utils.test_nodes(worker_ips + [scheduler_ip])
+    utils.test_nodes(worker_ips + [controller_ip])
    
   if (args.start):
-    utils.start_experiment(scheduler_ip, scheduler_p_ip, worker_ips, worker_p_ips)
+    utils.start_experiment(controller_ip, controller_p_ip, worker_ips, worker_p_ips)
   
   if(args.download):
-    utils.collect_logs(scheduler_ip, worker_ips)
+    utils.collect_logs(controller_ip, worker_ips)
   
   if (args.end):
-    utils.stop_experiment(scheduler_ip, worker_ips)
+    utils.stop_experiment(controller_ip, worker_ips)
 
   if (args.clean):
-    utils.clean_logs(scheduler_ip, worker_ips)
+    utils.clean_logs(controller_ip, worker_ips)
   
 else :
   print "\n** Provide an action to perform!\n"
