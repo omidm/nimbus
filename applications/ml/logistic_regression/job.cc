@@ -48,6 +48,7 @@
 
 #define ITERATION_NUM static_cast<LogisticRegression*>(application())->iteration_num()
 #define PARTITION_NUM static_cast<LogisticRegression*>(application())->partition_num()
+#define SPIN_WAIT_US static_cast<LogisticRegression*>(application())->spin_wait_us()
 #define PARTITION_SIZE static_cast<LogisticRegression*>(application())->sample_num_per_partition()
 #define REDUCTION_PARTITION_NUM static_cast<LogisticRegression*>(application())->reduction_partition_num() // NOLINT
 #define AUTOMATIC_REDUCTION_ACTIVE static_cast<LogisticRegression*>(application())->automatic_reduction_active() // NOLINT
@@ -377,6 +378,12 @@ Job * Gradient::Clone() {
 };
 
 void Gradient::Execute(Parameter params, const DataArray& da) {
+  if (SPIN_WAIT_US != 0) {
+    dbg(DBG_APP, "Replacing gradient computation with spin wait for %lu us.\n", SPIN_WAIT_US);
+    spin_wait(SPIN_WAIT_US);
+    return;
+  }
+
   dbg(DBG_APP, "Executing the gradient job: %lu\n", id().elem());
   assert(da.size() == 3);
   Weight *w = NULL;

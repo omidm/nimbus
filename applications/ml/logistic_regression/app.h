@@ -55,6 +55,7 @@ class LogisticRegression : public Application {
                        const size_t& iteration_num,
                        const size_t& partition_num,
                        const double& sample_num_m,
+                       const size_t& spin_wait_us,
                        const size_t& reduction_partition_num);
     ~LogisticRegression();
     virtual void Load();
@@ -63,6 +64,7 @@ class LogisticRegression : public Application {
     virtual size_t iteration_num();
     virtual size_t partition_num();
     virtual double sample_num_m();
+    virtual size_t spin_wait_us();
     virtual size_t reduction_partition_num();
     virtual size_t sample_num_per_partition();
     virtual bool automatic_reduction_active();
@@ -76,6 +78,7 @@ class LogisticRegression : public Application {
     size_t iteration_num_;
     size_t partition_num_;
     double sample_num_m_;
+    size_t spin_wait_us_;
     size_t reduction_partition_num_;
     size_t sample_num_per_partition_;
     bool automatic_reduction_active_;

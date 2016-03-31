@@ -59,6 +59,8 @@ std::string exec(const char* cmd);
 
 std::string int2string(uint64_t num);
 
+void spin_wait(size_t spin_wait_us, size_t per_itter_mul = 1000);
+
 }  // namespace nimbus
 
 

@@ -67,5 +67,31 @@ std::string int2string(uint64_t num) {
   return ss.str();
 }
 
+void spin_wait(size_t spin_wait_us, size_t per_iter_mul) {
+  if (spin_wait_us == 0) {
+    return;
+  }
+
+  struct timeval start;
+  gettimeofday(&start, NULL);
+  size_t dummy = 1;
+  size_t elapsed = 0;
+  size_t loop_count = 0;
+  while (elapsed < spin_wait_us) {
+    for (size_t i = 0; i < per_iter_mul; ++i) {
+      dummy *= i;
+    }
+    ++loop_count;
+    struct timeval end;
+    gettimeofday(&end, NULL);
+    elapsed =
+      (static_cast<size_t>(end.tv_sec - start.tv_sec)) * 1000000 +
+      (static_cast<size_t>(end.tv_usec - start.tv_usec));
+  }
+
+  return;
+}
+
+
 }  // namespace nimbus
 

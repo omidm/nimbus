@@ -47,17 +47,20 @@
 #define DEFAULT_ITERATION_NUM 10
 #define DEFAULT_PARTITION_NUM 10
 #define DEFAULT_SAMPLE_NUM_M 1
+#define DEFAULT_SPIN_WAIT_US 0
 #define DEFAULT_REDUCTION_PARTITION_NUM 1
 
 LogisticRegression::LogisticRegression(const size_t& dimension,
                                        const size_t& iteration_num,
                                        const size_t& partition_num,
                                        const double& sample_num_m,
+                                       const size_t& spin_wait_us,
                                        const size_t& reduction_partition_num)
   : dimension_(dimension),
     iteration_num_(iteration_num),
     partition_num_(partition_num),
     sample_num_m_(sample_num_m),
+    spin_wait_us_(spin_wait_us),
     reduction_partition_num_(reduction_partition_num) {
       assert(sizeof(size_t) == 8); // NOLINT
       assert(sizeof(double) == 8); // NOLINT
@@ -88,6 +91,10 @@ size_t LogisticRegression::partition_num() {
 
 double LogisticRegression::sample_num_m() {
   return sample_num_m_;
+}
+
+size_t LogisticRegression::spin_wait_us() {
+  return spin_wait_us_;
 }
 
 size_t LogisticRegression::reduction_partition_num() {
@@ -146,6 +153,7 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
   size_t iteration_num;
   size_t partition_num;
   double sample_num_m;
+  size_t spin_wait_us;
   size_t reduction_partition_num;
 
   po::options_description desc("Logistic Regression Options");
@@ -155,9 +163,10 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
     // Optinal arguments
     ("dimension,d", po::value<std::size_t>(&dimension)->default_value(DEFAULT_DIMENSION), "dimension of the sample vectors") // NOLINT
     ("iteration,i", po::value<std::size_t>(&iteration_num)->default_value(DEFAULT_ITERATION_NUM), "number of iterations") // NOLINT
-    ("sn", po::value<double>(&sample_num_m)->default_value(DEFAULT_SAMPLE_NUM_M), "number of samples in Million") // NOLINT
-    ("pn", po::value<std::size_t>(&partition_num)->default_value(DEFAULT_PARTITION_NUM), "number of partitions") // NOLINT
-    ("rpn", po::value<std::size_t>(&reduction_partition_num)->default_value(DEFAULT_REDUCTION_PARTITION_NUM), "number of reduction partitions for manual reduction by application with read/write set.") // NOLINT
+    ("sample_num_m,s", po::value<double>(&sample_num_m)->default_value(DEFAULT_SAMPLE_NUM_M), "number of samples in Million") // NOLINT
+    ("partition_num,p", po::value<std::size_t>(&partition_num)->default_value(DEFAULT_PARTITION_NUM), "number of partitions") // NOLINT
+    ("spin_wait,w", po::value<std::size_t>(&spin_wait_us)->default_value(DEFAULT_SPIN_WAIT_US), "spin wait in micro seconds, if non zero,replaces the gradient operation with fixed spin wait.") // NOLINT
+    ("reduction_partition_num,r", po::value<std::size_t>(&reduction_partition_num)->default_value(DEFAULT_REDUCTION_PARTITION_NUM), "number of reduction partitions for manual reduction by application with read/write set.") // NOLINT
     ("dar", "deactivate automatic reduction") // NOLINT
     ("drc", "deactivate reduction combiner"); // NOLINT
 
@@ -187,6 +196,7 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
                                                    iteration_num,
                                                    partition_num,
                                                    sample_num_m,
+                                                   spin_wait_us,
                                                    reduction_partition_num);
 
   if (vm.count("dar")) {
