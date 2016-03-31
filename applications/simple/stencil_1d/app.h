@@ -50,16 +50,21 @@ using nimbus::Application;
 
 class Stencil1DApp : public Application {
   public:
-    Stencil1DApp(size_t counter, size_t part_num,
-        size_t chunk_per_part, size_t chunk_size, size_t bandwidth);
+    Stencil1DApp(const size_t& iteration_num,
+                 const size_t& partition_num,
+                 const size_t& chunck_per_partition,
+                 const size_t& chunk_size,
+                 const size_t& bandwidth,
+                 const size_t& spin_wait_us);
     ~Stencil1DApp();
     virtual void Load();
 
-    size_t counter_;
-    size_t part_num_;
-    size_t chunk_per_part_;
+    size_t iteration_num_;
+    size_t partition_num_;
+    size_t chunk_per_partition_;
     size_t chunk_size_;
     size_t bandwidth_;
+    size_t spin_wait_us_;
 };
 
 

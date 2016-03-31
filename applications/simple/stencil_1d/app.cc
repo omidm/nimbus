@@ -44,13 +44,26 @@
 #include "./job.h"
 #include "./data.h"
 
-Stencil1DApp::Stencil1DApp(size_t counter, size_t part_num,
-    size_t chunk_per_part, size_t chunk_size, size_t bandwidth) {
-  counter_ = counter;
-  part_num_ = part_num;
-  chunk_per_part_ = chunk_per_part;
+#define DEFAULT_ITERATION_NUM 150
+#define DEFAULT_PARTITION_NUM 4
+#define DEFAULT_CHUNK_PER_PARTITION 4
+#define DEFAULT_CHUNK_SIZE 5
+#define DEFAULT_BANDWIDTH 1
+#define DEFAULT_SPIN_WAIT_US 0
+
+
+Stencil1DApp::Stencil1DApp(const size_t& iteration_num,
+                           const size_t& partition_num,
+                           const size_t& chunk_per_partition,
+                           const size_t& chunk_size,
+                           const size_t& bandwidth,
+                           const size_t& spin_wait_us) {
+  iteration_num_ = iteration_num;
+  partition_num_ = partition_num;
+  chunk_per_partition_ = chunk_per_partition;
   chunk_size_ = chunk_size;
   bandwidth_ = bandwidth;
+  spin_wait_us_ = spin_wait_us;
 };
 
 Stencil1DApp::~Stencil1DApp() {
@@ -74,22 +87,24 @@ void Stencil1DApp::Load() {
 extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
   namespace po = boost::program_options;
 
-  size_t iter_num = 150;
-  size_t part_num = 4;
-  size_t chunk_per_part = 4;
-  size_t chunk_size = 5;
-  size_t bandwidth = 1;
+  size_t iteration_num;
+  size_t partition_num;
+  size_t chunk_per_partition;
+  size_t chunk_size;
+  size_t bandwidth;
+  size_t spin_wait_us;
 
   po::options_description desc("Stencil 1D Options");
   desc.add_options()
     ("help,h", "produce help message")
 
     // Optinal arguments
-    ("iter_num,i", po::value<size_t>(&iter_num), "number of iterations [default = 150]") //NOLINT
-    ("pn", po::value<size_t>(&part_num), "number of partitions [default = 4]") //NOLINT
-    ("cpp", po::value<size_t>(&chunk_per_part), "number of chunks per partition [default = 4]") //NOLINT
-    ("cs", po::value<size_t>(&chunk_size), "chunk size in cells [default = 5]") //NOLINT
-    ("bw", po::value<size_t>(&bandwidth), "ghost region bandwidth [default = 1]"); //NOLINT
+    ("iteration,i", po::value<std::size_t>(&iteration_num)->default_value(DEFAULT_ITERATION_NUM), "number of iterations") // NOLINT
+    ("pn", po::value<size_t>(&partition_num)->default_value(DEFAULT_PARTITION_NUM), "number of partitions") //NOLINT
+    ("cpp", po::value<size_t>(&chunk_per_partition)->default_value(DEFAULT_CHUNK_PER_PARTITION), "number of chunks per partition") //NOLINT
+    ("cs", po::value<size_t>(&chunk_size)->default_value(DEFAULT_CHUNK_SIZE), "chunk size in cells") //NOLINT
+    ("bw", po::value<size_t>(&bandwidth)->default_value(DEFAULT_BANDWIDTH), "ghost region bandwidth [default = 1]") //NOLINT
+    ("spin_wait,w", po::value<std::size_t>(&spin_wait_us)->default_value(DEFAULT_SPIN_WAIT_US), "spin wait in micro seconds, if non zero,replaces the gradient operation with fixed spin wait."); // NOLINT
 
   po::variables_map vm;
   try {
@@ -113,7 +128,11 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
     return NULL;
   }
 
-  return new Stencil1DApp(
-      iter_num, part_num, chunk_per_part, chunk_size, bandwidth);
+  return new Stencil1DApp(iteration_num,
+                          partition_num,
+                          chunk_per_partition,
+                          chunk_size,
+                          bandwidth,
+                          spin_wait_us);
 }
 

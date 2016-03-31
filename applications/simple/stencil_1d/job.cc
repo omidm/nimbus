@@ -45,16 +45,16 @@
 #include "./utils.h"
 #include "src/shared/helpers.h"
 
-#define LOOP_COUNTER static_cast<Stencil1DApp*>(application())->counter_
-#define LOOP_CONDITION 0
-#define PART_NUM static_cast<Stencil1DApp*>(application())->part_num_
-#define CHUNK_PER_PART static_cast<Stencil1DApp*>(application())->chunk_per_part_
+#define ITERATION_NUM static_cast<Stencil1DApp*>(application())->iteration_num_
+#define PARTITION_NUM static_cast<Stencil1DApp*>(application())->partition_num_
+#define CHUNK_PER_PARTITION static_cast<Stencil1DApp*>(application())->chunk_per_partition_
 #define CHUNK_SIZE static_cast<Stencil1DApp*>(application())->chunk_size_
 #define BANDWIDTH static_cast<Stencil1DApp*>(application())->bandwidth_
+#define SPIN_WAIT_US static_cast<Stencil1DApp*>(application())->spin_wait_us_
 
 #define STENCIL_SIZE (2*BANDWIDTH)+1
-#define PART_SIZE (CHUNK_PER_PART)*CHUNK_SIZE
-#define CHUNK_NUM PART_NUM*CHUNK_PER_PART
+#define PART_SIZE (CHUNK_PER_PARTITION)*CHUNK_SIZE
+#define CHUNK_NUM PARTITION_NUM*CHUNK_PER_PARTITION
 
 Main::Main(Application* app) {
   set_application(app);
@@ -68,8 +68,8 @@ Job * Main::Clone() {
 void Main::Execute(Parameter params, const DataArray& da) {
   dbg(DBG_APP, "Executing the main job\n");
   assert(CHUNK_SIZE > (2 * BANDWIDTH));
-  assert(CHUNK_NUM >= PART_NUM);
-  assert(CHUNK_NUM % PART_NUM == 0);
+  assert(CHUNK_NUM >= PARTITION_NUM);
+  assert(CHUNK_NUM % PARTITION_NUM == 0);
 
   std::vector<job_id_t> job_ids;
   std::vector<logical_data_id_t> d;
@@ -132,7 +132,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   write.clear();
   before.clear();
   StageJobAndLoadBeforeSet(&before, LOOP_JOB_NAME, job_ids[CHUNK_NUM], read, write, true);
-  SerializeParameter(&par, LOOP_COUNTER);
+  SerializeParameter(&par, ITERATION_NUM);
   SpawnComputeJob(LOOP_JOB_NAME, job_ids[CHUNK_NUM], read, write, before, after, par);
 
   // EndTemplate("main_job");
@@ -157,13 +157,13 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
   size_t loop_counter;
   LoadParameter(&params, &loop_counter);
 
-  if (loop_counter > LOOP_CONDITION) {
+  if (loop_counter > 0) {
     StartTemplate("__MARK_STAT_for_loop");
 
     // Spawn the batch of jobs in each stencil
     std::vector<job_id_t> stencil_job_ids;
-    GetNewJobID(&stencil_job_ids, PART_NUM);
-    for (size_t i = 0; i < PART_NUM; ++i) {
+    GetNewJobID(&stencil_job_ids, PARTITION_NUM);
+    for (size_t i = 0; i < PARTITION_NUM; ++i) {
       read.clear();
       GeometricRegion r_r(i * PART_SIZE - BANDWIDTH, 0, 0, PART_SIZE + 2 * BANDWIDTH, 1, 1);
       LoadLdoIdsInSet(&read, r_r, DATA_NAME, NULL);
@@ -181,8 +181,8 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
 
     // Spawning the print jobs at the end of each loop
     std::vector<job_id_t> print_job_ids;
-    GetNewJobID(&print_job_ids, PART_NUM);
-    for (size_t i = 0; i < PART_NUM; ++i) {
+    GetNewJobID(&print_job_ids, PARTITION_NUM);
+    for (size_t i = 0; i < PARTITION_NUM; ++i) {
       read.clear();
       GeometricRegion region(i * PART_SIZE, 0, 0, PART_SIZE, 1, 1);
       LoadLdoIdsInSet(&read, region, DATA_NAME, NULL);
@@ -298,6 +298,11 @@ Job * Stencil::Clone() {
 };
 
 void Stencil::Execute(Parameter params, const DataArray& da) {
+  if (SPIN_WAIT_US != 0) {
+    dbg(DBG_APP, "Replacing the stencil computation with spin wait for %lu us.\n", SPIN_WAIT_US);
+    spin_wait(SPIN_WAIT_US);
+    return;
+  }
   dbg(DBG_APP, "Executing the stencil job: %lu\n", id().elem());
   std::vector<int> read_data;
   std::vector<int> write_data;
@@ -318,7 +323,7 @@ void Stencil::Execute(Parameter params, const DataArray& da) {
   if (part_num == 0) {
     write_data.insert(write_data.begin(), read_data.begin(), read_data.begin() + BANDWIDTH);
   }
-  if (part_num == (PART_NUM - 1)) {
+  if (part_num == (PARTITION_NUM - 1)) {
     write_data.insert(write_data.end(), read_data.end() - BANDWIDTH, read_data.end());
   }
 
