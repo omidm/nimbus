@@ -210,9 +210,10 @@ def collect_logs(controller_ip, worker_ips):
   collect_controller_logs(controller_ip)
 
   assert(config.WORKER_NUM <= len(worker_ips))
-  for idx in range(0, config.WORKER_NUM):
-    ip = worker_ips[idx]
-    collect_worker_logs(ip, idx+1);
+  num = 0;
+  for ip in worker_ips:
+    num += 1
+    collect_worker_logs(ip, num);
 
 
 def collect_controller_logs(controller_ip):
