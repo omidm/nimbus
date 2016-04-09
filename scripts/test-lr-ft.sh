@@ -74,7 +74,7 @@ CHKP_NUM=2 # FAULT_DELAY / FT_PERIOD
 CONTROLLER_ARGS="-t ${THREAD_NUM} -a ${BATCH_NUM} -w 4 --split 4 1 1"
 CONTROLLER_ARGS_FT="--aft --ft_period ${FT_PERIOD} -t ${THREAD_NUM} -a ${BATCH_NUM} -w 4 --split 4 1 1"
 WORKER_ARGS="4 --othread ${THREAD_NUM}"
-APPLICATION_ARGS="-i ${ITER_NUM} --sn ${SAMPLE_NUM_M}"
+APPLICATION_ARGS="-i ${ITER_NUM} -s ${SAMPLE_NUM_M}"
 APPLICATION_LIB="applications/ml/logistic_regression/liblr.so"
 
 
@@ -91,7 +91,7 @@ while true; do
     echo -e "${Yel}[ WARNING ] base experiment with ${ITER_NUM} iterations was only ${ELAPSED} (<${BASE_LENGTH}) seconds!${RCol}"
     ITER_NUM=$((((${BASE_LENGTH}-${ELAPSED})*(${ITER_NUM}/${NORM_ELAPSED}))+${ITER_NUM}))
     echo -e "${Yel}[ WARNING ] retrying the experiment with ${ITER_NUM} iterations to get the minimum length ... ${RCol}"
-    APPLICATION_ARGS="-i ${ITER_NUM} --sn ${SAMPLE_NUM_M}"
+    APPLICATION_ARGS="-i ${ITER_NUM} -s ${SAMPLE_NUM_M}"
   else
     echo -e "${Gre}[ SUCCESS ] base experiment finished in ${ELAPSED} seconds.${RCol}"
     break
