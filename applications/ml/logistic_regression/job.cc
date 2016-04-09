@@ -49,7 +49,8 @@
 #define ITERATION_NUM static_cast<LogisticRegression*>(application())->iteration_num()
 #define PARTITION_NUM static_cast<LogisticRegression*>(application())->partition_num()
 #define SPIN_WAIT_US static_cast<LogisticRegression*>(application())->spin_wait_us()
-#define PARTITION_SIZE static_cast<LogisticRegression*>(application())->sample_num_per_partition()
+#define PARTITION_SIZE 1  // to fix the problem with the limit of int_dimension_t
+// #define PARTITION_SIZE static_cast<LogisticRegression*>(application())->sample_num_per_partition() // NOLINT
 #define REDUCTION_PARTITION_NUM static_cast<LogisticRegression*>(application())->reduction_partition_num() // NOLINT
 #define AUTOMATIC_REDUCTION_ACTIVE static_cast<LogisticRegression*>(application())->automatic_reduction_active() // NOLINT
 #define REDUCTION_COMBINER_ACTIVE static_cast<LogisticRegression*>(application())->reduction_combiner_active() // NOLINT
@@ -189,7 +190,7 @@ void Init::Execute(Parameter params, const DataArray& da) {
   assert(da.size() == 1);
   assert(da[0]->name() == SAMPLE_BATCH_DATA_NAME);
   SampleBatch *sb = static_cast<SampleBatch*>(da[0]);
-  assert(sb->sample_num() == PARTITION_SIZE);
+  // assert(sb->sample_num() == PARTITION_SIZE);
 
   // omidm
   // double label = (base_val % 2);        // for +1 and 0 labels
