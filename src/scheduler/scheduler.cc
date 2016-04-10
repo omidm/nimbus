@@ -574,6 +574,13 @@ void Scheduler::ProcessMegaJobDoneCommand(MegaJobDoneCommand* cm) {
   for (; iter != cm->job_ids_p()->end(); ++iter) {
     job_manager_->NotifyJobDone(*iter);
   }
+
+  if (cm->mark_stat()) {
+    char buff[LOG_MAX_BUFF_SIZE];
+    snprintf(buff, sizeof(buff), "%10.9lf", Log::GetRawTime());
+    std::cout << "MARK_JOBDONE MEGA: " << buff << " " << std::endl;
+    PrintStats();
+  }
 }
 
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
@@ -625,6 +632,13 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
 //    load_balancer_->NotifyJobDone(job);
 //    job_manager_->NotifyJobDone(job);
 //  }
+
+  if (cm->mark_stat()) {
+    char buff[LOG_MAX_BUFF_SIZE];
+    snprintf(buff, sizeof(buff), "%10.9lf", Log::GetRawTime());
+    std::cout << "MARK_JOBDONE: " << buff << " " << std::endl;
+    PrintStats();
+  }
 }
 
 void Scheduler::ProcessTerminateCommand(TerminateCommand* cm) {
@@ -1033,6 +1047,9 @@ void Scheduler::PrintStats() {
   uint64_t c_sent = server_->total_bytes_sent();
   uint64_t c_received = server_->total_bytes_received();
   double c_overhead = log_overhead_.timer();
+
+  PrintStatCommand command(0);
+  server_->BroadcastCommand(&command);
 
   fprintf(file, "%10.9lf %3.1lu sent(MB): %.4f received(MB): %.4f overhead(s): %.4f\n",
       Log::GetRawTime(),

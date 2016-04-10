@@ -254,7 +254,8 @@ size_t SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
                                                         comm->run_time(),
                                                         comm->wait_time(),
                                                         comm->max_alloc(),
-                                                        comm->final());
+                                                        comm->final(),
+                                                        comm->mark_stat());
           received_job_done_commands_.push_back(dup_comm);
         }
       } else {

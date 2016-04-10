@@ -49,10 +49,13 @@ using boost::char_separator;
 MegaJobDoneCommand::MegaJobDoneCommand() {
   name_ = MEGA_JOB_DONE_NAME;
   type_ = MEGA_JOB_DONE;
+  mark_stat_ = false;
 }
 
-MegaJobDoneCommand::MegaJobDoneCommand(const std::vector<job_id_t>& job_ids)
-: job_ids_(job_ids) {
+MegaJobDoneCommand::MegaJobDoneCommand(const std::vector<job_id_t>& job_ids,
+                                       const bool mark_stat)
+: job_ids_(job_ids),
+  mark_stat_(mark_stat) {
   name_ = MEGA_JOB_DONE_NAME;
   type_ = MEGA_JOB_DONE;
 }
@@ -116,6 +119,10 @@ const std::vector<job_id_t>* MegaJobDoneCommand::job_ids_p() {
   return &job_ids_;
 }
 
+bool MegaJobDoneCommand::mark_stat() {
+  return mark_stat_;
+}
+
 bool MegaJobDoneCommand::ReadFromProtobuf(const MegaJobDonePBuf& buf) {
   {
     job_ids_.clear();
@@ -125,6 +132,8 @@ bool MegaJobDoneCommand::ReadFromProtobuf(const MegaJobDonePBuf& buf) {
       job_ids_.push_back(*it);
     }
   }
+
+  mark_stat_ = buf.mark_stat();
 
   return true;
 }
@@ -138,6 +147,8 @@ bool MegaJobDoneCommand::WriteToProtobuf(MegaJobDonePBuf* buf) {
       b->Add(*it);
     }
   }
+
+  buf->set_mark_stat(mark_stat());
 
   return true;
 }

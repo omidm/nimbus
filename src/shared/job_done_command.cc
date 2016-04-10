@@ -52,6 +52,7 @@ JobDoneCommand::JobDoneCommand() {
   wait_time_ = 0;
   max_alloc_ = 0;
   final_ = false;
+  mark_stat_ = false;
 }
 
 JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id)
@@ -62,18 +63,21 @@ JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id)
   wait_time_ = 0;
   max_alloc_ = 0;
   final_ = false;
+  mark_stat_ = false;
 }
 
 JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id,
                                const double run_time,
                                const double wait_time,
                                const size_t max_alloc,
-                               const bool final)
+                               const bool final,
+                               const bool mark_stat)
   : job_id_(job_id),
     run_time_(run_time),
     wait_time_(wait_time),
     max_alloc_(max_alloc),
-    final_(final) {
+    final_(final),
+    mark_stat_(mark_stat) {
   name_ = JOB_DONE_NAME;
   type_ = JOB_DONE;
 }
@@ -129,7 +133,8 @@ std::string JobDoneCommand::ToString() {
   str += ("run_time: " + boost::lexical_cast<std::string>(run_time_) + " ");
   str += ("wait_time: " + boost::lexical_cast<std::string>(wait_time_) + " ");
   str += ("max_alloc: " + boost::lexical_cast<std::string>(max_alloc_) + " ");
-  str += ("final: " + std::string(final_ ? "true" : "false"));
+  str += ("final: " + std::string(final_ ? "true " : "false "));
+  str += ("mark_satat: " + std::string(mark_stat_ ? "true" : "false"));
   return str;
 }
 
@@ -153,6 +158,10 @@ bool JobDoneCommand::final() {
   return final_;
 }
 
+bool JobDoneCommand::mark_stat() {
+  return mark_stat_;
+}
+
 void JobDoneCommand::set_final(bool flag) {
   final_ = flag;
 }
@@ -163,6 +172,7 @@ bool JobDoneCommand::ReadFromProtobuf(const JobDonePBuf& buf) {
   wait_time_ = buf.wait_time();
   max_alloc_ = buf.max_alloc();
   final_ = buf.final();
+  mark_stat_ = buf.mark_stat();
   return true;
 }
 
@@ -172,5 +182,6 @@ bool JobDoneCommand::WriteToProtobuf(JobDonePBuf* buf) {
   buf->set_wait_time(wait_time());
   buf->set_max_alloc(max_alloc());
   buf->set_final(final());
+  buf->set_mark_stat(mark_stat());
   return true;
 }

@@ -49,6 +49,7 @@ ExecutionTemplate::ExecutionTemplate(const std::string& execution_template_name,
                                      const std::vector<job_id_t>& outer_job_ids,
                                      const std::vector<physical_data_id_t>& phy_ids) {
   finalized_ = false;
+  mark_stat_ = false;
   copy_job_num_ = 0;
   compute_job_num_ = 0;
   job_done_counter_ = 0;
@@ -206,6 +207,8 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
   assert(blocked_on_extra_dependency_.size() == 0);
   // assert(seed_job_templates_.size() > 0);
 
+  mark_stat_ = false;
+
   extra_dependency_ = extra_dependency;
   if (extra_dependency_.size() != 0) {
     dbg(DBG_WARN, "WARNING: extra dependency size of %lu for %s!\n",
@@ -306,7 +309,8 @@ bool ExecutionTemplate::InstantiatePending(const WorkerDataExchanger::EventList&
 
 bool ExecutionTemplate::MarkInnerJobDone(const job_id_t& shadow_job_id,
                                          JobList *ready_jobs,
-                                         bool &prepare_rewind_phase,
+                                         bool prepare_rewind_phase,
+                                         bool mark_stat,
                                          bool append) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   assert(extra_dependency_.size() == 0);
@@ -316,6 +320,10 @@ bool ExecutionTemplate::MarkInnerJobDone(const job_id_t& shadow_job_id,
   }
 
   bool et_complete = false;
+
+  if (mark_stat) {
+    mark_stat_ = mark_stat;
+  }
 
   assert(job_done_counter_ > 0);
   assert(ready_job_counter_ > 0);
@@ -397,7 +405,7 @@ bool ExecutionTemplate::GenerateMegaJobDoneCommand(MegaJobDoneCommand **cm) {
     job_ids.push_back(*(*iter));
   }
 
-  *cm = new MegaJobDoneCommand(job_ids);
+  *cm = new MegaJobDoneCommand(job_ids, mark_stat_);
   return true;
 }
 

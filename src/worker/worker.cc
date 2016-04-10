@@ -1072,6 +1072,10 @@ void Worker::NotifyLocalJobDone(Job* job) {
   bool template_job = false;
   bool need_to_send_job_done = true;
   MegaJobDoneCommand *mega_job_done_comm = NULL;
+  bool mark_stat = false;
+  if (job->name().find("__MARK_STAT") != std::string::npos) {
+    mark_stat = true;
+  }
   {
     timer::StartTimer(timer::kJobGraph3);
     boost::unique_lock<boost::recursive_mutex> lock(job_graph_mutex_);
@@ -1085,7 +1089,7 @@ void Worker::NotifyLocalJobDone(Job* job) {
       ExecutionTemplate *et = job->execution_template();
       assert(et);
       JobList ready_jobs;
-      if (et->MarkInnerJobDone(shadow_job_id, &ready_jobs, prepare_rewind_phase_, false)) {
+      if (et->MarkInnerJobDone(shadow_job_id, &ready_jobs, prepare_rewind_phase_, mark_stat, false)) { // NOLINT
         assert(ready_jobs.size() == 0);
         et->GenerateMegaJobDoneCommand(&mega_job_done_comm);
         std::map<template_id_t, ExecutionTemplate*>::iterator iter =
@@ -1175,7 +1179,7 @@ void Worker::NotifyLocalJobDone(Job* job) {
 
   if (need_to_send_job_done) {
     if (!template_job)
-      SendJobDoneAndDeleteJob(job);
+      SendJobDoneAndDeleteJob(job, mark_stat);
     else if (mega_job_done_comm != NULL) {
       client_->SendCommand(mega_job_done_comm);
       delete mega_job_done_comm;
@@ -1185,7 +1189,7 @@ void Worker::NotifyLocalJobDone(Job* job) {
   timer::StopTimer(timer::kJobGraph3);
 }
 
-void Worker::SendJobDoneAndDeleteJob(Job* job) {
+void Worker::SendJobDoneAndDeleteJob(Job* job, bool mark_stat) {
   Parameter params;
   SaveDataJob *j = dynamic_cast<SaveDataJob*>(job); // NOLINT
   if (j != NULL) {
@@ -1193,7 +1197,7 @@ void Worker::SendJobDoneAndDeleteJob(Job* job) {
                               ID<checkpoint_id_t>(j->checkpoint_id()), j->handle());
     client_->SendCommand(&cm);
   } else if ((!IDMaker::SchedulerProducedJobID(job->id().elem())) || (!job->sterile())) {
-    JobDoneCommand cm(job->id(), job->run_time(), job->wait_time(), job->max_alloc(), false);
+    JobDoneCommand cm(job->id(), job->run_time(), job->wait_time(), job->max_alloc(), false, mark_stat); // NOLINT
     client_->SendCommand(&cm);
   }
 

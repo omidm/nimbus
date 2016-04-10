@@ -101,7 +101,8 @@ class ExecutionTemplate {
 
     bool MarkInnerJobDone(const job_id_t& shadow_job_id,
                           JobList *ready_jobs,
-                          bool &prepare_rewind_phase,
+                          bool prepare_rewind_phase,
+                          bool mark_stat,
                           bool append);
 
     void NotifyJobDone(const job_id_t& job_id,
@@ -342,6 +343,7 @@ class ExecutionTemplate {
     };
 
     bool finalized_;
+    bool mark_stat_;
     size_t copy_job_num_;
     size_t compute_job_num_;
     size_t job_done_counter_;

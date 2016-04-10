@@ -516,12 +516,6 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
   size_t copy_job_num = bt->copy_job_num();
   size_t compute_job_num = bt->compute_job_num();
 
-  if (job->template_entry()->template_name().find("__MARK_STAT") != std::string::npos) {
-    scheduler_->PrintStats();
-    PrintStatCommand command(0);
-    server_->BroadcastCommand(&command);
-  }
-
   Log log(Log::NO_FILE);
   std::cout << "COMPLEX: Assigning: "
     << job->template_entry()->template_name()
@@ -567,6 +561,14 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
     << job->template_entry()->template_name()
     << " " << log.timer() << std::endl;
 
+  if (job->template_entry()->template_name().find("__MARK_STAT") != std::string::npos) {
+    char buff[LOG_MAX_BUFF_SIZE];
+    snprintf(buff, sizeof(buff), "%10.9lf", Log::GetRawTime());
+    std::cout << "MARK_ASSIGN COMPLEX: " << buff
+              << " for " << job->template_entry()->template_name()
+              << std::endl;
+  }
+
   return true;
 }
 
@@ -585,12 +587,6 @@ bool JobAssigner::AssignJob(JobEntry *job) {
     std::vector<job_id_t> j;
     id_maker_->GetNewJobID(&j, 1);
     std::cout << "COPY JOBS UNTIL " << job->job_name() << " : " << j[0] << std::endl;
-  }
-
-  if (job->job_name().find("__MARK_STAT") != std::string::npos) {
-    scheduler_->PrintStats();
-    PrintStatCommand command(0);
-    server_->BroadcastCommand(&command);
   }
 
   SchedulerWorker* worker = job->assigned_worker();
@@ -691,6 +687,14 @@ bool JobAssigner::AssignJob(JobEntry *job) {
 
     job_manager_->NotifyJobAssignment(job);
     load_balancer_->NotifyJobAssignment(job);
+
+    if (job->job_name().find("__MARK_STAT") != std::string::npos) {
+      char buff[LOG_MAX_BUFF_SIZE];
+      snprintf(buff, sizeof(buff), "%10.9lf", Log::GetRawTime());
+      std::cout << "MARK_ASSIGN: " << buff
+                << " for " << job->job_name()
+                << std::endl;
+    }
 
     return true;
   }

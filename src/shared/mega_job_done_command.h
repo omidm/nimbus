@@ -52,7 +52,8 @@ namespace nimbus {
 class MegaJobDoneCommand : public SchedulerCommand {
   public:
     MegaJobDoneCommand();
-    explicit MegaJobDoneCommand(const std::vector<job_id_t>& job_ids);
+    MegaJobDoneCommand(const std::vector<job_id_t>& job_ids,
+                       const bool mark_stat);
 
     ~MegaJobDoneCommand();
 
@@ -63,9 +64,11 @@ class MegaJobDoneCommand : public SchedulerCommand {
     virtual std::string ToString();
     std::vector<job_id_t> job_ids();
     const std::vector<job_id_t>* job_ids_p();
+    bool mark_stat();
 
   private:
     std::vector<job_id_t> job_ids_;
+    bool mark_stat_;
 
     bool ReadFromProtobuf(const MegaJobDonePBuf& buf);
     bool WriteToProtobuf(MegaJobDonePBuf* buf);

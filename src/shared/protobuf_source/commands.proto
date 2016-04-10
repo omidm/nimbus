@@ -299,6 +299,7 @@ message JobDonePBuf {
   optional double wait_time       = 3;
   optional uint64 max_alloc       = 4;
   optional bool final             = 5;
+  optional bool mark_stat         = 6;
 }
 
 message PrepareRewindPBuf {
@@ -381,6 +382,7 @@ message MegaRCRPBuf {
 
 message MegaJobDonePBuf {
   optional JobIDVector job_ids     = 1; 
+  optional bool mark_stat          = 2;
 }
 
 message LocalCopyPBuf {

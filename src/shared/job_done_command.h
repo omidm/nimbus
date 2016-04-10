@@ -59,7 +59,8 @@ class JobDoneCommand : public SchedulerCommand {
                    const double run_time,
                    const double wait_time,
                    const size_t max_alloc,
-                   const bool final);
+                   const bool final,
+                   const bool mark_stat);
     ~JobDoneCommand();
 
     virtual SchedulerCommand* Clone();
@@ -72,6 +73,7 @@ class JobDoneCommand : public SchedulerCommand {
     double wait_time();
     size_t max_alloc();
     bool final();
+    bool mark_stat();
 
     void set_final(bool flag);
 
@@ -81,6 +83,7 @@ class JobDoneCommand : public SchedulerCommand {
     double wait_time_;
     size_t max_alloc_;
     bool final_;
+    bool mark_stat_;
 
     bool ReadFromProtobuf(const JobDonePBuf& buf);
     bool WriteToProtobuf(JobDonePBuf* buf);
