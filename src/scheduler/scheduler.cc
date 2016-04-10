@@ -686,7 +686,13 @@ void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
 }
 
 void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
-  if (controller_template_active_) {
+  bool bypass = false;
+  // static int counter = 5;
+  // if (--counter >= 0) {
+  //   bypass = true;
+  // }
+
+  if (controller_template_active_ && !bypass) {
     std::string template_name = cm->job_graph_name();
     job_id_t job_id = cm->parent_job_id().elem();
 
@@ -711,7 +717,13 @@ void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
 }
 
 void Scheduler::ProcessEndTemplateCommand(EndTemplateCommand* cm) {
-  if (controller_template_active_) {
+  bool bypass = false;
+  // static int counter = 5;
+  // if (--counter >= 0) {
+  //   bypass = true;
+  // }
+
+  if (controller_template_active_ && !bypass) {
     template_manager_->FinalizeNewTemplate(cm->job_graph_name());
     DefinedTemplateCommand command(cm->job_graph_name());
     server_->BroadcastCommand(&command);
