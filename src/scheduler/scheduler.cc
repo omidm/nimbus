@@ -647,14 +647,16 @@ void Scheduler::ProcessTerminateCommand(TerminateCommand* cm) {
 }
 
 void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
-  bool bypass_complex_job_spawning = false;
-  // static int counter = 10;
-  // if (--counter == 0) {
-  //   counter = 10;
-  //   bypass_complex_job_spawning = true;
-  // }
+  bool bypass = false;
+#ifdef _RUN_MIX_SIMPLE_COMPLEX_SCENARIO
+  static int counter = 10;
+  if (--counter == 0) {
+    counter = 10;
+    bypass = true;
+  }
+#endif
 
-  if (complex_memoization_active_ && !(bypass_complex_job_spawning)) {
+  if (complex_memoization_active_ && !(bypass)) {
     Log log(Log::NO_FILE);
     log.StartTimer();
     ComplexJobEntry* complex_job;
@@ -687,10 +689,12 @@ void Scheduler::ProcessSpawnTemplateCommand(SpawnTemplateCommand* cm) {
 
 void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
   bool bypass = false;
-  // static int counter = 5;
-  // if (--counter >= 0) {
-  //   bypass = true;
-  // }
+#ifdef _RUN_DELAYED_MEMOIZATION_SCENARIO
+  static int counter = 5;
+  if (--counter >= 0) {
+    bypass = true;
+  }
+#endif
 
   if (controller_template_active_ && !bypass) {
     std::string template_name = cm->job_graph_name();
@@ -718,10 +722,12 @@ void Scheduler::ProcessStartTemplateCommand(StartTemplateCommand* cm) {
 
 void Scheduler::ProcessEndTemplateCommand(EndTemplateCommand* cm) {
   bool bypass = false;
-  // static int counter = 5;
-  // if (--counter >= 0) {
-  //   bypass = true;
-  // }
+#ifdef _RUN_DELAYED_MEMOIZATION_SCENARIO
+  static int counter = 5;
+  if (--counter >= 0) {
+    bypass = true;
+  }
+#endif
 
   if (controller_template_active_ && !bypass) {
     template_manager_->FinalizeNewTemplate(cm->job_graph_name());

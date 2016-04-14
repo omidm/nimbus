@@ -172,6 +172,14 @@ bool DynamicLoadBalancer::SetWorkerToAssignJob(JobEntry *job) {
       return false;
     }
 
+#ifdef _RUN_MULTI_TENANT_SCENARIO
+    if ((load_balancing_id_ % 2) == 0) {
+      if ((w_id % 2) == 0) {
+        w_id -= 1;
+      }
+    }
+#endif
+
     job->set_assigned_worker(worker_map_[w_id]);
 
     region_map_.TrackRegionCoverage(data_manager_, job, &w_id);

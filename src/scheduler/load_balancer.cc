@@ -133,6 +133,19 @@ size_t LoadBalancer::AssignReadyJobs() {
   JobEntryList::iterator iter;
   for (iter = list.begin(); iter != list.end(); ++iter) {
     JobEntry* job = *iter;
+#ifdef _RUN_MULTI_TENANT_SCENARIO
+    if (job->job_type() == JOB_CMPX) {
+      static int counter = 10;
+      if (--counter == 0) {
+        if (load_balancing_id_ == 1) {
+          ++load_balancing_id_;
+        } else {
+          --load_balancing_id_;
+        }
+        counter = 10;
+      }
+    }
+#endif
     if (!SetWorkerToAssignJob(job)) {
       dbg(DBG_ERROR, "ERROR: LoadBalancer: could not get worker to assign job %lu.\n", job->job_id()); // NOLINT
       assert(false);

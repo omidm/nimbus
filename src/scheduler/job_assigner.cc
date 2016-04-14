@@ -748,7 +748,7 @@ size_t JobAssigner::UpdateDataForCascading(BindingTemplate *bt,
           pattern->ldid_, target_instance.version(), base_version, new_version_diff);
       JobEntryList::iterator iter = list.begin();
       for (; iter != list.end(); ++iter) {
-        dbg(DBG_ERROR, "ERROR: job %s (id: %lu) needs the data!",
+        dbg(DBG_ERROR, "ERROR: job %s (id: %lu) needs the data!\n",
             (*iter)->job_name().c_str(), (*iter)->job_id());
       }
       assert(false);

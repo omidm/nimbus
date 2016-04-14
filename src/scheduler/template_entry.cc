@@ -601,9 +601,11 @@ std::string TemplateEntry::ProduceBindingRecordName(const ComplexJobEntry *job) 
 
   std::string key = template_name_;
   key += "-" + int2string(job->load_balancing_id());
+#ifndef _RUN_MULTI_TENANT_SCENARIO
   key += "--" + job->grand_parent_job_name();
   key += "-" + int2string(job->parent_load_balancing_id());
   key += + (job->parent_cascaded_bound() ? "-cascaded" : "-simple");
+#endif
   return key;
 }
 
@@ -648,6 +650,9 @@ void TemplateEntry::MarkExplicitBinding(const ComplexJobEntry *complex_job) {
 }
 
 bool TemplateEntry::ExplicitBindingBefore(const ComplexJobEntry *complex_job) {
+#ifdef _RUN_MULTI_TENANT_SCENARIO
+  return true;
+#endif
   std::string record_name = ProduceBindingRecordName(complex_job);
   BindingSet::iterator iter = explicit_binding_history_.find(record_name);
   if (iter != explicit_binding_history_.end()) {

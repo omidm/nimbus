@@ -47,6 +47,11 @@
 #include <inttypes.h>
 #include <string>
 
+// Uncomment any of the following and recompile the libarary for various scenarios.
+// #define _RUN_MULTI_TENANT_SCENARIO
+// #define _RUN_MIX_SIMPLE_COMPLEX_SCENARIO
+// #define _RUN_DELAYED_MEMOIZATION_SCENARIO
+
 #define NIMBUS_LEVELDB_PRIVATE_KEY "~/cloud/src/nimbus/scripts/nimbus-rsa-key-pair"
 
 #define TCP_NODELAY_OPTION true
