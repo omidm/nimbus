@@ -133,23 +133,37 @@ size_t LoadBalancer::AssignReadyJobs() {
   JobEntryList::iterator iter;
   for (iter = list.begin(); iter != list.end(); ++iter) {
     JobEntry* job = *iter;
+    if (!SetWorkerToAssignJob(job)) {
+      dbg(DBG_ERROR, "ERROR: LoadBalancer: could not get worker to assign job %lu.\n", job->job_id()); // NOLINT
+      assert(false);
+    }
 #ifdef _RUN_MULTI_TENANT_SCENARIO
     if (job->job_type() == JOB_CMPX) {
       static int counter = 10;
       if (--counter == 0) {
-        if (load_balancing_id_ == 1) {
+        if ((load_balancing_id_ % 2) == 1) {
           ++load_balancing_id_;
         } else {
           --load_balancing_id_;
         }
         counter = 10;
       }
+    } else if (job->job_name().find("__MARK_STAT") != std::string::npos) {
+      static size_t warmup = 0;
+      switch (warmup) {
+        case 0:
+          ++warmup;
+          break;
+        case 1:
+        case 2:
+          ++load_balancing_id_;
+          ++warmup;
+          break;
+        default:
+          break;
+      }
     }
 #endif
-    if (!SetWorkerToAssignJob(job)) {
-      dbg(DBG_ERROR, "ERROR: LoadBalancer: could not get worker to assign job %lu.\n", job->job_id()); // NOLINT
-      assert(false);
-    }
   }
 
   job_assigner_->AssignJobs(list);

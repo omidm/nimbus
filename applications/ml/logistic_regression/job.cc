@@ -76,7 +76,6 @@ void Main::Execute(Parameter params, const DataArray& da) {
   /*
    * Defining partition and data.
    */
-#ifndef _RUN_MULTI_TENANT_SCENARIO
   std::vector<logical_data_id_t> sample_data_ids;
   GetNewLogicalDataID(&sample_data_ids, PARTITION_NUM);
 
@@ -88,21 +87,6 @@ void Main::Execute(Parameter params, const DataArray& da) {
 
     DefineData(SAMPLE_BATCH_DATA_NAME, sample_data_ids[i], p.elem(), neighbor_partitions);
   }
-#else
-  // Define only one partition for samples, all partitions share this data.
-  // This is just a hack to avoid remote copy samples to other nodes.
-  std::vector<logical_data_id_t> sample_data_ids;
-  GetNewLogicalDataID(&sample_data_ids, 1);
-
-  {
-    GeometricRegion r(0, 0, 0, PARTITION_SIZE * PARTITION_NUM, 1, 1);
-
-    ID<partition_id_t> p(0);
-    DefinePartition(p, r);
-
-    DefineData(SAMPLE_BATCH_DATA_NAME, sample_data_ids[0], p.elem(), neighbor_partitions);
-  }
-#endif
 
   // differentiate the automatic and manual reduction cases!
   if (AUTOMATIC_REDUCTION_ACTIVE) {
@@ -151,7 +135,6 @@ void Main::Execute(Parameter params, const DataArray& da) {
    */
 
   // Spawn the batch of jobs for init stage
-#ifndef _RUN_MULTI_TENANT_SCENARIO
   std::vector<job_id_t> init_job_ids;
   GetNewJobID(&init_job_ids, PARTITION_NUM);
   for (size_t i = 0; i < PARTITION_NUM; ++i) {
@@ -164,21 +147,6 @@ void Main::Execute(Parameter params, const DataArray& da) {
     SerializeParameter(&par, i);
     SpawnComputeJob(INIT_JOB_NAME, init_job_ids[i], read, write, before, after, par, true, r); // NOLINT
   }
-#else
-  // If you have a single partition for samples, spawna  single init job.
-  std::vector<job_id_t> init_job_ids;
-  GetNewJobID(&init_job_ids, 1);
-  {
-    GeometricRegion r(0, 0, 0, PARTITION_SIZE * PARTITION_NUM, 1, 1);
-    read.clear();
-    write.clear();
-    LoadLdoIdsInSet(&write, r, SAMPLE_BATCH_DATA_NAME, NULL);
-    before.clear();
-    StageJobAndLoadBeforeSet(&before, INIT_JOB_NAME, init_job_ids[0], read, write);
-    SerializeParameter(&par, 0);
-    SpawnComputeJob(INIT_JOB_NAME, init_job_ids[0], read, write, before, after, par, true, r); // NOLINT
-  }
-#endif
 
   MarkEndOfStage();
 

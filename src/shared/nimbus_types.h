@@ -52,6 +52,11 @@
 // #define _RUN_MIX_SIMPLE_COMPLEX_SCENARIO
 // #define _RUN_DELAYED_MEMOIZATION_SCENARIO
 
+// for multi-tenant scenario you need to delay memoization too.
+#ifdef _RUN_MULTI_TENANT_SCENARIO
+#define _RUN_DELAYED_MEMOIZATION_SCENARIO
+#endif
+
 #define NIMBUS_LEVELDB_PRIVATE_KEY "~/cloud/src/nimbus/scripts/nimbus-rsa-key-pair"
 
 #define TCP_NODELAY_OPTION true
