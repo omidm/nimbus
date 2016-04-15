@@ -170,7 +170,7 @@ Weight::~Weight() {
 
 void Weight::Create() {
   vector_.resize(dimension_, 1);
-  gradient_.resize(dimension_, 1);
+  gradient_.resize(dimension_, 0);
 }
 
 void Weight::Destroy() {

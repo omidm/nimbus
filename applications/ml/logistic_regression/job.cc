@@ -274,7 +274,28 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
 
       MarkEndOfStage();
     } else {
-      // Spawn the batch of jobs for gradient stage
+      assert((PARTITION_NUM % REDUCTION_PARTITION_NUM) == 0);
+      size_t REDUCTION_PARTITION_SIZE = PARTITION_SIZE * PARTITION_NUM / REDUCTION_PARTITION_NUM;
+
+      // update all per partiton weights.
+      std::vector<job_id_t> reduction_l3_job_id;
+      GetNewJobID(&reduction_l3_job_id, REDUCTION_PARTITION_NUM);
+      for (size_t i = 0; i < REDUCTION_PARTITION_NUM; ++i) {
+        GeometricRegion r(i * REDUCTION_PARTITION_SIZE, 0, 0, REDUCTION_PARTITION_SIZE, 1, 1);
+        read.clear();
+        LoadLdoIdsInSet(&read, r, SCRATCH_WEIGHT_DATA_NAME, NULL);
+        write.clear();
+        LoadLdoIdsInSet(&write, r, WEIGHT_DATA_NAME, NULL);
+        before.clear();
+        StageJobAndLoadBeforeSet(&before, SYNCH_JOB_NAME, reduction_l3_job_id[i], read, write);
+        after.clear();
+        SerializeParameter(&par, i * ITERATION_NUM + loop_counter);
+        SpawnComputeJob(SYNCH_JOB_NAME, reduction_l3_job_id[i], read, write, before, after, par, true, r); // NOLINT
+      }
+
+      MarkEndOfStage();
+
+      // Spawn per partition jobs for gradient stage
       std::vector<job_id_t> gradient_job_ids;
       GetNewJobID(&gradient_job_ids, PARTITION_NUM);
       for (size_t i = 0; i < PARTITION_NUM; ++i) {
@@ -290,10 +311,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
 
       MarkEndOfStage();
 
-      // Spawning the reduction stages
-      assert((PARTITION_NUM % REDUCTION_PARTITION_NUM) == 0);
-      size_t REDUCTION_PARTITION_SIZE = PARTITION_SIZE * PARTITION_NUM / REDUCTION_PARTITION_NUM;
-
+      // Spawn first level of reduction
       std::vector<job_id_t> reduction_l1_job_id;
       GetNewJobID(&reduction_l1_job_id, REDUCTION_PARTITION_NUM);
       for (size_t i = 0; i < REDUCTION_PARTITION_NUM; ++i) {
@@ -310,6 +328,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
 
       MarkEndOfStage();
 
+      // Spawn second level of reduction.
       std::vector<job_id_t> reduction_l2_job_id;
       GetNewJobID(&reduction_l2_job_id, 1);
       {
@@ -322,23 +341,6 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
         StageJobAndLoadBeforeSet(&before, REDUCE_L2_JOB_NAME, reduction_l2_job_id[0], read, write);
         after.clear();
         SpawnComputeJob(REDUCE_L2_JOB_NAME, reduction_l2_job_id[0], read, write, before, after, par, true, r); // NOLINT
-      }
-
-      MarkEndOfStage();
-
-      std::vector<job_id_t> reduction_l3_job_id;
-      GetNewJobID(&reduction_l3_job_id, REDUCTION_PARTITION_NUM);
-      for (size_t i = 0; i < REDUCTION_PARTITION_NUM; ++i) {
-        GeometricRegion r(i * REDUCTION_PARTITION_SIZE, 0, 0, REDUCTION_PARTITION_SIZE, 1, 1);
-        read.clear();
-        LoadLdoIdsInSet(&read, r, SCRATCH_WEIGHT_DATA_NAME, NULL);
-        write.clear();
-        LoadLdoIdsInSet(&write, r, WEIGHT_DATA_NAME, NULL);
-        before.clear();
-        StageJobAndLoadBeforeSet(&before, REDUCE_L3_JOB_NAME, reduction_l3_job_id[i], read, write);
-        after.clear();
-        SerializeParameter(&par, i * ITERATION_NUM + loop_counter - 1);
-        SpawnComputeJob(REDUCE_L3_JOB_NAME, reduction_l3_job_id[i], read, write, before, after, par, true, r); // NOLINT
       }
 
       MarkEndOfStage();
@@ -362,6 +364,29 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     EndTemplate("__MARK_STAT_for_loop");
   } else {
     // StartTemplate("for_loop_end");
+
+    if (!AUTOMATIC_REDUCTION_ACTIVE) {
+      assert((PARTITION_NUM % REDUCTION_PARTITION_NUM) == 0);
+      size_t REDUCTION_PARTITION_SIZE = PARTITION_SIZE * PARTITION_NUM / REDUCTION_PARTITION_NUM;
+
+      // update all per partiton weights.
+      std::vector<job_id_t> reduction_l3_job_id;
+      GetNewJobID(&reduction_l3_job_id, REDUCTION_PARTITION_NUM);
+      for (size_t i = 0; i < REDUCTION_PARTITION_NUM; ++i) {
+        GeometricRegion r(i * REDUCTION_PARTITION_SIZE, 0, 0, REDUCTION_PARTITION_SIZE, 1, 1);
+        read.clear();
+        LoadLdoIdsInSet(&read, r, SCRATCH_WEIGHT_DATA_NAME, NULL);
+        write.clear();
+        LoadLdoIdsInSet(&write, r, WEIGHT_DATA_NAME, NULL);
+        before.clear();
+        StageJobAndLoadBeforeSet(&before, SYNCH_JOB_NAME, reduction_l3_job_id[i], read, write);
+        after.clear();
+        SerializeParameter(&par, i * ITERATION_NUM);
+        SpawnComputeJob(SYNCH_JOB_NAME, reduction_l3_job_id[i], read, write, before, after, par, true, r); // NOLINT
+      }
+
+      MarkEndOfStage();
+    }
 
     // EndTemplate("for_loop_end");
 
@@ -557,16 +582,16 @@ void ReduceL2::Execute(Parameter params, const DataArray& da) {
 };
 
 
-ReduceL3::ReduceL3(Application *app) {
+Synch::Synch(Application *app) {
   set_application(app);
 };
 
-Job * ReduceL3::Clone() {
+Job * Synch::Clone() {
   dbg(DBG_APP, "Cloning reduce l3 job!\n");
-  return new ReduceL3(application());
+  return new Synch(application());
 };
 
-void ReduceL3::Execute(Parameter params, const DataArray& da) {
+void Synch::Execute(Parameter params, const DataArray& da) {
   dbg(DBG_APP, "Executing the reduce l3 job: %lu\n", id().elem());
   assert((PARTITION_NUM % REDUCTION_PARTITION_NUM) == 0);
   size_t REDUCTION_SIZE = PARTITION_NUM / REDUCTION_PARTITION_NUM;

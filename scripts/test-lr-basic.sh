@@ -69,6 +69,7 @@ print_help "${DESC}" "${USAGE}" "$1"
 
 ITER_NUM=100
 SAMPLE_NUM_M=".001"
+REDUCTION_PARTITION_NUM=5
 BATCH_NUM=6
 THREAD_NUM=16
 TIME_OUT_T=20
@@ -83,6 +84,16 @@ wait_to_succeed basic_completion_check ${TIME_OUT_T}
 echo -e "${Gre}[ SUCCESS ] finished base experiment in ${ELAPSED} seconds.${RCol}" 
 get_hash "FINAL WEIGHT HASH"
 correct_hash=${HASH}
+
+
+echo -e "${Cya}Ruunnig the base experiment:${RCol}"
+echo -e "${Cya}CONTROLLER  : single-threaded w/o templates${RCol}"
+echo -e "${Cya}WORKERS     : one, single-threaded w/o templates${RCol}"
+echo -e "${Cya}APPLICATION : multi-level explicit reduction using read/write set only${RCol}"
+start_experiment "--dct" "1" "${APPLICATION_LIB}" "-i ${ITER_NUM} -s ${SAMPLE_NUM_M} --dar -r ${REDUCTION_PARTITION_NUM}" 
+wait_to_succeed basic_completion_check ${TIME_OUT_T} 
+echo -e "${Gre}[ SUCCESS ] finished base experiment in ${ELAPSED} seconds.${RCol}" 
+check_hash "FINAL WEIGHT HASH" "${correct_hash}"
 
 
 echo -e "${Cya}Ruunnig experiment for:${RCol}"

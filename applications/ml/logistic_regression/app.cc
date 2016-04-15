@@ -138,7 +138,7 @@ void LogisticRegression::Load() {
 
   RegisterJob(REDUCE_L1_JOB_NAME, new ReduceL1(this));
   RegisterJob(REDUCE_L2_JOB_NAME, new ReduceL2(this));
-  RegisterJob(REDUCE_L3_JOB_NAME, new ReduceL3(this));
+  RegisterJob(SYNCH_JOB_NAME, new Synch(this));
 
   RegisterData(WEIGHT_DATA_NAME, new Weight(dimension_, WEIGHT_DATA_NAME));
   RegisterData(SAMPLE_BATCH_DATA_NAME, new SampleBatch(dimension_, sample_num_per_partition_));

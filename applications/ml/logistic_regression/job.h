@@ -52,7 +52,7 @@
 #define COMBINE_JOB_NAME "combine"
 #define REDUCE_L1_JOB_NAME "reduce_l1"
 #define REDUCE_L2_JOB_NAME "reduce_l2"
-#define REDUCE_L3_JOB_NAME "reduce_l3"
+#define SYNCH_JOB_NAME "synch"
 
 using namespace nimbus; // NOLINT
 
@@ -112,9 +112,9 @@ class ReduceL2 : public Job {
     virtual Job * Clone();
 };
 
-class ReduceL3 : public Job {
+class Synch : public Job {
   public:
-    explicit ReduceL3(Application* app);
+    explicit Synch(Application* app);
     virtual void Execute(Parameter params, const DataArray& da);
     virtual Job * Clone();
 };

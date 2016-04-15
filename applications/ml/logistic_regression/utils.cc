@@ -94,7 +94,7 @@ void VectorAddWithScale(std::vector<double>* acc,
 void PrintWeight(Weight* w,
                  size_t loop_counter,
                  size_t max_loop) {
-  if (loop_counter > max_loop) {
+  if (loop_counter >= max_loop) {
     return;
   }
 
