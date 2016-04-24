@@ -20,7 +20,10 @@ $(TARGET): $(OBJFILES)
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
 run: check $(TARGET)
-	./$(TARGET) -d 10 -i 20 --sn 0.05
+	./$(TARGET) -d 10 -i 100 --sn 0.24
+
+run-par: check $(TARGET)
+	./run-parallel.sh
 
 clean: clean-files
 	\rm -f $(TARGET)

@@ -18,6 +18,7 @@ Gradient Program Options:
 Makefile options:
     $ make                to build
     $ make run            to run the example with some default arguments
+    $ make run-par        to run the example one process per each core in parallel
     $ make clean          clean generated object and executable files
 
 
