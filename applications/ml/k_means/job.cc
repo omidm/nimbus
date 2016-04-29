@@ -413,6 +413,12 @@ Job * Cluster::Clone() {
 };
 
 void Cluster::Execute(Parameter params, const DataArray& da) {
+  if (SPIN_WAIT_US != 0) {
+    dbg(DBG_APP, "Replacing cluster computation with spin wait for %lu us.\n", SPIN_WAIT_US);
+    spin_wait(SPIN_WAIT_US);
+    return;
+  }
+
   dbg(DBG_APP, "Executing the cluster job: %lu\n", id().elem());
   assert(da.size() == 3);
   Means *m = NULL;

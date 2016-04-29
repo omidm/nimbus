@@ -264,7 +264,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
         scratch.clear();
         before.clear();
         SerializeParameter(&par, loop_counter - 1);
-        StageJobAndLoadBeforeSet(&before, GRADIENT_JOB_NAME, reduction_job_id[0], read, write, scratch, reduce); // NOLINT
+        StageJobAndLoadBeforeSet(&before, REDUCE_JOB_NAME, reduction_job_id[0], read, write, scratch, reduce); // NOLINT
         if (REDUCTION_COMBINER_ACTIVE) {
           SpawnComputeJob(REDUCE_JOB_NAME, reduction_job_id[0], read, write, scratch, reduce, before, after, par, COMBINE_JOB_NAME, true, r); // NOLINT
         } else {
