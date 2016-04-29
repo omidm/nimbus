@@ -89,3 +89,34 @@ void VectorAddWithScale(std::vector<double>* acc,
   }
 }
 
+
+void PrintMeans(Means* m,
+                 size_t loop_counter,
+                 size_t max_loop) {
+  if (loop_counter >= max_loop) {
+    return;
+  }
+
+  std::stringstream ss("");
+  for (size_t i = 0; i < m->cluster_num(); ++i) {
+    ss << "\nCentroid: " << i << " ";
+    std::vector<double>::iterator it = m->means()->operator[](i).vector()->begin();
+    for (; it != m->means()->operator[](i).vector()->end(); ++it) {
+      char buffer[16];
+      snprintf(buffer, sizeof(buffer), "%1.1e, ", *it);
+      ss << buffer;
+    }
+  }
+
+  if (loop_counter == 0) {
+    boost::hash<std::string> string_hash;
+    int hash = string_hash(ss.str().c_str());
+    printf("FINAL : %s\n", ss.str().c_str());
+    printf("FINAL HASH: %d\n", hash);
+  } else {
+    printf("ITERATION %2.0lu: %s\n", max_loop - loop_counter, ss.str().c_str());
+  }
+}
+
+
+

@@ -65,4 +65,8 @@ void VectorAddWithScale(std::vector<double>* acc,
                         const std::vector<double>* add,
                         const double& scale);
 
+void PrintMeans(Means* w,
+                 size_t loop_counter,
+                 size_t max_loop);
+
 #endif  // NIMBUS_APPLICATIONS_ML_K_MEANS_UTILS_H_

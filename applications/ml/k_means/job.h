@@ -50,6 +50,10 @@
 #define LOOP_JOB_NAME "__MARK_STAT_for_loop"
 #define CLUSTER_JOB_NAME "cluster"
 #define REDUCE_JOB_NAME "reduce"
+#define COMBINE_JOB_NAME "combine"
+#define REDUCE_L1_JOB_NAME "reduce_l1"
+#define REDUCE_L2_JOB_NAME "reduce_l2"
+#define SYNCH_JOB_NAME "synch"
 
 using namespace nimbus; // NOLINT
 
@@ -95,7 +99,32 @@ class Reduce : public Job {
     virtual Job * Clone();
 };
 
+class Combine : public Job {
+  public:
+    explicit Combine(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
 
+class ReduceL1 : public Job {
+  public:
+    explicit ReduceL1(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
 
+class ReduceL2 : public Job {
+  public:
+    explicit ReduceL2(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
+
+class Synch : public Job {
+  public:
+    explicit Synch(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
 
 #endif  // NIMBUS_APPLICATIONS_ML_K_MEANS_JOB_H_

@@ -48,23 +48,32 @@
 #define DEFAULT_ITERATION_NUM 10
 #define DEFAULT_PARTITION_NUM 10
 #define DEFAULT_SAMPLE_NUM_M 1
+#define DEFAULT_SPIN_WAIT_US 0
+#define DEFAULT_REDUCTION_PARTITION_NUM 1
 
 KMeans::KMeans(const size_t& dimension,
                const size_t& cluster_num,
                const size_t& iteration_num,
                const size_t& partition_num,
-               const size_t& sample_num_m)
+               const double& sample_num_m,
+               const size_t& spin_wait_us,
+               const size_t& reduction_partition_num)
   : dimension_(dimension),
     cluster_num_(cluster_num),
     iteration_num_(iteration_num),
     partition_num_(partition_num),
-    sample_num_m_(sample_num_m) {
+    sample_num_m_(sample_num_m),
+    spin_wait_us_(spin_wait_us),
+    reduction_partition_num_(reduction_partition_num) {
       assert(sizeof(size_t) == 8); // NOLINT
       assert(sizeof(double) == 8); // NOLINT
-      assert(((sample_num_m * size_t(1e6)) % partition_num) == 0);
+      assert((size_t(sample_num_m * size_t(1e6)) % partition_num) == 0);
+      assert((partition_num % reduction_partition_num) == 0);
       sample_num_per_partition_ = (sample_num_m * 1e6) / partition_num;
-      std::cout << "**** number of partitions:        " << partition_num_ << std::endl;
-      std::cout << "**** sample number per partition: " << sample_num_per_partition_ << std::endl;
+      dbg(DBG_APP, "APPLICATION: number of partitions:        %lu\n", partition_num_);
+      dbg(DBG_APP, "APPLICATION: sample number per partition: %lu\n", sample_num_per_partition_);
+      automatic_reduction_active_ = true;
+      reduction_combiner_active_ = true;
 }
 
 KMeans::~KMeans() {
@@ -86,12 +95,42 @@ size_t KMeans::partition_num() {
   return partition_num_;
 }
 
-size_t KMeans::sample_num_m() {
+double KMeans::sample_num_m() {
   return sample_num_m_;
+}
+
+size_t KMeans::spin_wait_us() {
+  return spin_wait_us_;
+}
+
+size_t KMeans::reduction_partition_num() {
+  return reduction_partition_num_;
 }
 
 size_t KMeans::sample_num_per_partition() {
   return sample_num_per_partition_;
+}
+
+bool KMeans::automatic_reduction_active() {
+  return automatic_reduction_active_;
+}
+
+bool KMeans::reduction_combiner_active() {
+  return reduction_combiner_active_;
+}
+
+void KMeans::set_automatic_reduction_active(bool flag) {
+  automatic_reduction_active_ = flag;
+  if (!automatic_reduction_active_) {
+    dbg(DBG_APP, "APPLICATION: automatic reduction deactivated!");
+  }
+}
+
+void KMeans::set_reduction_combiner_active(bool flag) {
+  reduction_combiner_active_ = flag;
+  if (!reduction_combiner_active_) {
+    dbg(DBG_APP, "APPLICATION: reduction combiner deactivated!");
+  }
 }
 
 void KMeans::Load() {
@@ -100,10 +139,18 @@ void KMeans::Load() {
   RegisterJob(INIT_MEANS_JOB_NAME, new InitMeans(this));
   RegisterJob(LOOP_JOB_NAME, new ForLoop(this));
   RegisterJob(CLUSTER_JOB_NAME, new Cluster(this));
-  RegisterJob(REDUCE_JOB_NAME, new Reduce(this));
 
-  RegisterData(MEANS_DATA_NAME, new Means(dimension_, cluster_num_));
+  RegisterJob(REDUCE_JOB_NAME, new Reduce(this));
+  RegisterJob(COMBINE_JOB_NAME, new Combine(this));
+
+  RegisterJob(REDUCE_L1_JOB_NAME, new ReduceL1(this));
+  RegisterJob(REDUCE_L2_JOB_NAME, new ReduceL2(this));
+  RegisterJob(SYNCH_JOB_NAME, new Synch(this));
+
+  RegisterData(MEANS_DATA_NAME, new Means(dimension_, cluster_num_, MEANS_DATA_NAME));
   RegisterData(SAMPLE_BATCH_DATA_NAME, new SampleBatch(dimension_, sample_num_per_partition_));
+
+  RegisterData(SCRATCH_MEANS_DATA_NAME, new Means(dimension_, cluster_num_, SCRATCH_MEANS_DATA_NAME)); // NOLINT
 };
 
 extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
@@ -113,7 +160,9 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
   size_t cluster_num;
   size_t iteration_num;
   size_t partition_num;
-  size_t sample_num_m;
+  double sample_num_m;
+  size_t spin_wait_us;
+  size_t reduction_partition_num;
 
 
   po::options_description desc("K-Means Options");
@@ -123,9 +172,13 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
     // Optinal arguments
     ("dimension,d", po::value<std::size_t>(&dimension)->default_value(DEFAULT_DIMENSION), "dimension of the sample vectors") // NOLINT
     ("iteration,i", po::value<std::size_t>(&iteration_num)->default_value(DEFAULT_ITERATION_NUM), "number of iterations") // NOLINT
-    ("cn", po::value<std::size_t>(&cluster_num)->default_value(DEFAULT_CLUSTER_NUM), "number of clusters") // NOLINT
-    ("pn", po::value<std::size_t>(&partition_num)->default_value(DEFAULT_PARTITION_NUM), "number of partitions") // NOLINT
-    ("sn", po::value<std::size_t>(&sample_num_m)->default_value(DEFAULT_SAMPLE_NUM_M), "number of samples in Million"); // NOLINT
+    ("sample_num_m,s", po::value<double>(&sample_num_m)->default_value(DEFAULT_SAMPLE_NUM_M), "number of samples in Million") // NOLINT
+    ("cluster_num,p", po::value<std::size_t>(&cluster_num)->default_value(DEFAULT_CLUSTER_NUM), "number of clusters") // NOLINT
+    ("partition_num,p", po::value<std::size_t>(&partition_num)->default_value(DEFAULT_PARTITION_NUM), "number of partitions") // NOLINT
+    ("spin_wait,w", po::value<std::size_t>(&spin_wait_us)->default_value(DEFAULT_SPIN_WAIT_US), "spin wait in micro seconds, if non zero,replaces the gradient operation with fixed spin wait.") // NOLINT
+    ("reduction_partition_num,r", po::value<std::size_t>(&reduction_partition_num)->default_value(DEFAULT_REDUCTION_PARTITION_NUM), "number of reduction partitions for manual reduction by application with read/write set.") // NOLINT
+    ("dar", "deactivate automatic reduction") // NOLINT
+    ("drc", "deactivate reduction combiner"); // NOLINT
 
   po::variables_map vm;
   try {
@@ -153,7 +206,18 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
                            cluster_num,
                            iteration_num,
                            partition_num,
-                           sample_num_m);
+                           sample_num_m,
+                           spin_wait_us,
+                           reduction_partition_num);
+
+  if (vm.count("dar")) {
+    app->set_automatic_reduction_active(false);
+  }
+
+  if (vm.count("drc")) {
+    app->set_reduction_combiner_active(false);
+  }
+
   return app;
 }
 

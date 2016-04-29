@@ -49,6 +49,7 @@
 #include "protobuf_compiled/data_msgs.pb.h"
 
 #define MEANS_DATA_NAME "means"
+#define SCRATCH_MEANS_DATA_NAME "scratch_means"
 #define SAMPLE_BATCH_DATA_NAME "sample_batch"
 
 using namespace nimbus; // NOLINT
@@ -113,7 +114,8 @@ class Mean {
 class Means : public Data {
   public:
     explicit Means(const size_t& dimension,
-                   const size_t& cluster_num);
+                   const size_t& cluster_num,
+                   const std::string& name);
     virtual ~Means();
 
     virtual void Create();

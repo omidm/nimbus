@@ -152,6 +152,7 @@ Mean::Mean(const size_t& dimension)
   : dimension_(dimension),
     vector_(dimension),
     scratch_(dimension) {
+  scratch_weight_ = 0;
 }
 
 Mean::~Mean() {
@@ -179,10 +180,11 @@ void Mean::set_scratch_weight(const size_t& w) {
 
 
 Means::Means(const size_t& dimension,
-             const size_t& cluster_num)
+             const size_t& cluster_num,
+             const std::string& name)
   : dimension_(dimension),
     cluster_num_(cluster_num) {
-  set_name(MEANS_DATA_NAME);
+  set_name(name);
 }
 
 Means::~Means() {
@@ -199,7 +201,7 @@ void Means::Destroy() {
 }
 
 Data* Means::Clone() {
-  return new Means(dimension_, cluster_num_);
+  return new Means(dimension_, cluster_num_, name());
 }
 
 void Means::Copy(Data* from) {
@@ -238,7 +240,7 @@ bool Means::DeSerialize(const SerializedData& ser_data, Data** result) {
   data_msgs::MeansMsg means_msg;
   std::string str(ser_data.data_ptr_raw(), ser_data.size());
   means_msg.ParseFromString(str);
-  Means* m = new Means(dimension_, cluster_num_);
+  Means* m = new Means(dimension_, cluster_num_, name());
   m->Create();
   assert(size_t(means_msg.means_size()) == cluster_num_);
   for (size_t i = 0; i < cluster_num_; i++) {
