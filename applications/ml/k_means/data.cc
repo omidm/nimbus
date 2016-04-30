@@ -206,7 +206,7 @@ Data* Means::Clone() {
 
 void Means::Copy(Data* from) {
   Means *data = static_cast<Means*>(from); // NOLINT
-  assert(data->name() == MEANS_DATA_NAME);
+  assert(data->name() == MEANS_DATA_NAME || data->name() == SCRATCH_MEANS_DATA_NAME);
   means_.clear();
   typename std::vector<Mean>::const_iterator iter = data->means()->begin();
   for (; iter != data->means()->end(); ++iter) {
