@@ -173,7 +173,7 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
     ("dimension,d", po::value<std::size_t>(&dimension)->default_value(DEFAULT_DIMENSION), "dimension of the sample vectors") // NOLINT
     ("iteration,i", po::value<std::size_t>(&iteration_num)->default_value(DEFAULT_ITERATION_NUM), "number of iterations") // NOLINT
     ("sample_num_m,s", po::value<double>(&sample_num_m)->default_value(DEFAULT_SAMPLE_NUM_M), "number of samples in Million") // NOLINT
-    ("cluster_num,p", po::value<std::size_t>(&cluster_num)->default_value(DEFAULT_CLUSTER_NUM), "number of clusters") // NOLINT
+    ("cluster_num,c", po::value<std::size_t>(&cluster_num)->default_value(DEFAULT_CLUSTER_NUM), "number of clusters") // NOLINT
     ("partition_num,p", po::value<std::size_t>(&partition_num)->default_value(DEFAULT_PARTITION_NUM), "number of partitions") // NOLINT
     ("spin_wait,w", po::value<std::size_t>(&spin_wait_us)->default_value(DEFAULT_SPIN_WAIT_US), "spin wait in micro seconds, if non zero,replaces the gradient operation with fixed spin wait.") // NOLINT
     ("reduction_partition_num,r", po::value<std::size_t>(&reduction_partition_num)->default_value(DEFAULT_REDUCTION_PARTITION_NUM), "number of reduction partitions for manual reduction by application with read/write set.") // NOLINT

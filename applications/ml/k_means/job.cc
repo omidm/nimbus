@@ -449,19 +449,21 @@ void Cluster::Execute(Parameter params, const DataArray& da) {
   std::vector<Sample>::iterator iter = sb->samples()->begin();
   for (; iter != sb->samples()->end(); ++iter) {
     double distance = -1;
-    size_t cluster_index = 0;
-    size_t closest_cluster = 0;
     std::vector<Mean>::iterator it = m->means()->begin();
-    for (; it != m->means()->end(); ++it, ++cluster_index) {
+    std::vector<Mean>::iterator closest_it = it;
+    for (; it != m->means()->end(); ++it) {
       double temp = VectorDistance(it->vector(), iter->vector());
       if ((temp < distance) || (distance == -1)) {
         distance = temp;
-        closest_cluster = cluster_index;
+        closest_it = it;
       }
     }
-    VectorAddWithScale(m->means()->operator[](closest_cluster).scratch(), iter->vector(), 1);
-    size_t weight = m->means()->operator[](closest_cluster).scratch_weight();
-    m->means()->operator[](closest_cluster).set_scratch_weight(++weight);
+    VectorAddWithScale(closest_it->scratch(), iter->vector(), 1);
+    size_t weight = closest_it->scratch_weight();
+    closest_it->set_scratch_weight(++weight);
+    // VectorAddWithScale(m->means()->operator[](closest_cluster).scratch(), iter->vector(), 1);
+    // size_t weight = m->means()->operator[](closest_cluster).scratch_weight();
+    // m->means()->operator[](closest_cluster).set_scratch_weight(++weight);
   }
 };
 

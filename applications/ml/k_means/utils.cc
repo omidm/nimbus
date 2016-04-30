@@ -68,9 +68,10 @@ double VectorDistance(const std::vector<double>* vec1,
   assert(vec1->size() == vec2->size());
   double result = 0;
   for (size_t i = 0; i < vec1->size(); ++i) {
-    result += pow(vec1->operator[](i) - vec2->operator[](i), 2);
+    double diff = vec1->operator[](i) - vec2->operator[](i);
+    result += diff * diff;
   }
-  return pow(result, 0.5);
+  return result;
 }
 
 void VectorScale(std::vector<double>* vec,
