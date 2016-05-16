@@ -15,7 +15,7 @@
 # US West (Oregon) Region
 EC2_LOCATION                    = 'us-west-2'
 UBUNTU_AMI                      = 'ami-fa9cf1ca'
-NIMBUS_AMI                      = 'ami-f50ee495' # 'ami-04db3464' # 'ami-f65bb996' # 'ami-86d437e6' # 'ami-9a05e6fa' # 'ami-451ffc25'
+NIMBUS_AMI                      = 'ami-0ce5166c' # 'ami-9859aef8'
 CONTROLLER_INSTANCE_TYPE        = 'c3.4xlarge'
 WORKER_INSTANCE_TYPE            = 'c3.2xlarge'
 PLACEMENT                       = 'us-west-2c' # None
@@ -47,7 +47,7 @@ ACTIVATE_FT                     = False
 LB_PERIOD                       = 60
 FT_PERIOD                       = 600
 FIRST_PORT                      = 5800
-SPLIT_ARGS                      = str(WORKER_NUM) + ' 1 1' # str(WORKER_NUM) + ' 1 1' '2 2 2' '4 4 4'
+SPLIT_ARGS                      = str(WORKER_NUM) + ' 1 1' # '2 2 2' '4 4 4'
 
 
 # Worker configurations
@@ -61,9 +61,10 @@ WORKER_TASKSET                  = '0-1,4-5' # '0-3,8-11'
 # Application configurations
 # lr and k-means
 DIMENSION                       = 10
+CLUSTER_NUM                     = 2
 ITERATION_NUM                   = 30
 PARTITION_NUM                   = 2000
-SAMPLE_NUM_M                    = 100
+SAMPLE_NUM_M                    = 544
 SPIN_WAIT_US                    = 0
 DEACTIVATE_AUTOMATIC_REDUCTION  = False
 DEACTIVATE_REDUCTION_COMBINER   = False

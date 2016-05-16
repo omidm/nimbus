@@ -41,6 +41,21 @@ if config.DEACTIVATE_AUTOMATIC_REDUCTION:
 if config.DEACTIVATE_REDUCTION_COMBINER:
   LR_APP_OPTIONS += ' --drc '
 
+# k-means
+KM_REL_APP_PATH = 'applications/ml/k_means/libk_means.so' 
+KM_APP_OPTIONS  = ' '
+KM_APP_OPTIONS += ' -d ' + str(config.DIMENSION)
+KM_APP_OPTIONS += ' -c ' + str(config.CLUSTER_NUM)
+KM_APP_OPTIONS += ' -i ' + str(config.ITERATION_NUM)
+KM_APP_OPTIONS += ' -s ' + str(config.SAMPLE_NUM_M)
+KM_APP_OPTIONS += ' -p ' + str(config.PARTITION_NUM)
+KM_APP_OPTIONS += ' -w ' + str(config.SPIN_WAIT_US)
+KM_APP_OPTIONS += ' -r ' + str(config.REDUCTION_PARTITION_NUM)
+if config.DEACTIVATE_AUTOMATIC_REDUCTION:
+  KM_APP_OPTIONS += ' --dar '
+if config.DEACTIVATE_REDUCTION_COMBINER:
+  KM_APP_OPTIONS += ' --drc '
+
 # water
 WATER_REL_APP_PATH = 'applications/physbam/water/libwater_app.so'
 WATER_APP_OPTIONS  = ' '
@@ -65,6 +80,9 @@ if config.NO_PROJ_BOTTLENECK:
 if (config.APPLICATION == 'lr'):
   REL_APP_PATH = LR_REL_APP_PATH
   APP_OPTIONS  = LR_APP_OPTIONS
+elif (config.APPLICATION == 'k-means'):
+  REL_APP_PATH = KM_REL_APP_PATH
+  APP_OPTIONS  = KM_APP_OPTIONS
 elif (config.APPLICATION == 'water'):
   REL_APP_PATH = WATER_REL_APP_PATH
   APP_OPTIONS  = WATER_APP_OPTIONS
@@ -119,7 +137,7 @@ def start_controller(controller_ip, worker_num):
     controller_command += ' --dcb '
   controller_command += ' &>> ' + STD_OUT_LOG
 
-  print '** Starting controller: ' + controller_ip
+  # print '** Starting controller: ' + controller_ip
   subprocess.Popen(['ssh', '-q', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
@@ -149,7 +167,7 @@ def start_worker(controller_p_ip, worker_ip, worker_p_ip, num):
   worker_command += ' ' + APP_OPTIONS
   worker_command += ' &>> ' + str(num) + '_' + STD_OUT_LOG
 
-  print '** Starting worker: ' + str(num)
+  # print '** Starting worker: ' + str(num)
   subprocess.Popen(['ssh', '-q', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
@@ -170,7 +188,7 @@ def stop_controller(controller_ip):
   controller_command =  'cd ' + NIMBUS_ROOT + ';'
   controller_command += 'scripts/stop-controller.sh &> /dev/null'
 
-  print '** Stopping controller: ' + controller_ip
+  # print '** Stopping controller: ' + controller_ip
   subprocess.Popen(['ssh', '-q', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
@@ -181,7 +199,7 @@ def stop_worker(worker_ip, num):
   worker_command =  'cd ' + NIMBUS_ROOT + ';'
   worker_command += 'scripts/stop-workers.sh &> /dev/null'
 
-  print '** Stopping worker: ' + str(num)
+  # print '** Stopping worker: ' + str(num)
   subprocess.Popen(['ssh', '-q', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
@@ -195,7 +213,7 @@ def test_nodes(node_ips):
   num = 0;
   for ip in node_ips:
     num += 1;
-    print '** Testing node: ' + str(num) + ' ip: ' + ip
+    # print '** Testing node: ' + str(num) + ' ip: ' + ip
     subprocess.Popen(['ssh', '-q', '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
@@ -300,7 +318,7 @@ def clean_logs(controller_ip, worker_ips):
   command +=  'rm -rf ' + worker_path + 'split_output/;'
   command +=  'rm -rf ' + worker_path + 'output/;'
 
-  print '** Cleaning controller: ' + controller_ip
+  # print '** Cleaning controller: ' + controller_ip
   subprocess.Popen(['ssh', '-q', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
@@ -311,7 +329,7 @@ def clean_logs(controller_ip, worker_ips):
   for ip in worker_ips:
     num += 1
   
-    print '** Cleaning worker ' + str(num)
+    # print '** Cleaning worker ' + str(num)
     subprocess.Popen(['ssh', '-q',  '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
