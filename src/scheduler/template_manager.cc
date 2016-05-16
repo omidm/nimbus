@@ -81,6 +81,9 @@ bool TemplateManager::DetectNewTemplate(const std::string& template_name) {
     template_map_[template_name] = new TemplateEntry(template_name,
                                                      worker_template_active_,
                                                      mega_rcr_job_active_);
+
+  dbg(DBG_SCHED, "New template detected %s (total count: %lu)\n",
+      template_name.c_str(), template_map_.size());
   } else {
     if (!iter->second->finalized()) {
       if (iter->second->CleanPartiallyFilledTemplate()) {
@@ -150,6 +153,7 @@ bool TemplateManager::GetComplexJobEntryForTemplate(ComplexJobEntry*& complex_jo
                                                     const std::vector<Parameter>& parameters) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   TemplateMap::iterator iter = template_map_.find(template_name);
+
   if (iter != template_map_.end()) {
     if (iter->second->finalized()) {
       std::vector<job_id_t> j;

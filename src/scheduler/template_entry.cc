@@ -626,6 +626,10 @@ bool TemplateEntry::AddBindingRecord(const ComplexJobEntry *complex_job,
                                             mega_rcr_job_active_);
   binding_records_[record_name] = bt;
   binding_template = bt;
+
+  dbg(DBG_SCHED, "Added binding record for %s with record key: %s (binding count: %lu)\n",
+      template_name_.c_str(), record_name.c_str(), binding_records_.size());
+
   return true;
 }
 
