@@ -1,16 +1,30 @@
 
-# add subdirs space separated
-SUBDIRS = leveldb
+.PHONY: default boost-t leveldb-t protobuf-t
 
-.PHONY: subdirs $(SUBDIRS) clean
+default: boost-t leveldb-t protobuf-t
 
-subdirs: $(SUBDIRS)
+boost-t: boost
+boost:
+	./install-boost.sh
 
-$(SUBDIRS):
-	$(MAKE) -C $@
+leveldb-t:
+	$(MAKE) -C leveldb
 
-clean:
-	for dir in $(SUBDIRS); do \
-    $(MAKE) -C $$dir clean; \
-  done
+protobuf-t: protobuf
+protobuf:
+	./install-protobuf.sh
+
+
+.PHONY: clean-boost clean-leveldb clean-protobuf clean
+
+clean-boost:
+	rm -rf boost
+
+clean-leveldb:
+	$(MAKE) -C leveldb clean
+
+clean-protobuf:
+	rm -rf protobuf
+
+clean: clean-boost clean-leveldb clean-protobuf
 

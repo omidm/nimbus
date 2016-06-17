@@ -1,8 +1,9 @@
 # Root includes for all Nimbus Makefiles,
 # before including this file NIMBUS_ROOT needs to be set.
 
-NIMBUS_LIB   = ${NIMBUS_ROOT}/src/
-LEVELDB_ROOT = ${NIMBUS_ROOT}/extern/leveldb/
+BOOST_ROOT    = ${NIMBUS_ROOT}/extern/boost/
+LEVELDB_ROOT  = ${NIMBUS_ROOT}/extern/leveldb/
+PROTOBUF_ROOT = ${NIMBUS_ROOT}/extern/protobuf/
 
 # Set the compiler
 # Configuration file for non-default compiler values (CPP)
@@ -12,6 +13,8 @@ LEVELDB_ROOT = ${NIMBUS_ROOT}/extern/leveldb/
 ifeq ('$(CPP)', '$(CC) -E')
   CPP = g++
 endif
+
+PROTOC = ${PROTOBUF_ROOT}/bin/protoc
 
 # Flags for all cpp invocations
 CFLAGS = -Wall -g -O3
@@ -24,23 +27,34 @@ CFLAGS = -Wall -g -O3
 CFLAGS   += -DV_APP_CACHE                       # falg to use application data manager that frees inner physical object memory asd
 
 # -I params for all cpp invocations
-IFLAGS   = -I/opt/local/include                 # Include MacPorts includes
-IFLAGS  += -I/usr/local/include                 # Include boost and protocol buffer headers
+IFLAGS   = -I${NIMBUS_ROOT}                     # Include nimbus headers
+IFLAGS  += -I${BOOST_ROOT}/include              # Include boost headers
 IFLAGS  += -I${LEVELDB_ROOT}/include            # Include leveldb headers
-IFLAGS  += -I${NIMBUS_ROOT}                     # Include nimbus headers
+IFLAGS  += -I${PROTOBUF_ROOT}/include           # Include protobuf headers
+# IFLAGS  += -I/opt/local/include               # Include MacPorts includes
+# IFLAGS  += -I/usr/local/include               # Include boost and protocol buffer headers
 
 # -l params for linking invocation, only for executables
-LFLAGS   = -lnimbus -lboost_thread -lboost_system -lpthread -lprotobuf -lboost_program_options -ldl -lleveldb           
+# LFLAGS   = -lnimbus -lboost_thread -lboost_system -lpthread -lprotobuf -lboost_program_options -ldl -lleveldb
+LFLAGS   = -lnimbus
+LFLAGS  += -lpthread -ldl
+LFLAGS  += -lleveldb
+LFLAGS  += -lprotobuf
+LFLAGS  += -lboost_thread -lboost_system -lboost_program_options
 
 # -L params for linking invocation, only for executables
-LDFLAGS += -L/opt/local/lib                     # Link with MacPorts libraries
-LDFLAGS += -L/usr/local/lib                     # Link with boost and protocol buffer libraries
-LDFLAGS += -L${LEVELDB_ROOT}                    # Link with Leveldb library
-LDFLAGS += -L${NIMBUS_LIB}                      # Link with Nimbus library
+LDFLAGS  = -L${NIMBUS_ROOT}/lib                 # Link with nimbus library
+LDFLAGS += -L${BOOST_ROOT}/lib                  # Link with boost library
+LDFLAGS += -L${LEVELDB_ROOT}                    # Link with leveldb library
+LDFLAGS += -L${PROTOBUF_ROOT}/lib               # Link with protobuf library
+# LDFLAGS += -L/opt/local/lib                   # Link with MacPorts libraries
+# LDFLAGS += -L/usr/local/lib                   # Link with boost and protocol buffer libraries
 
 # -rpath tells executable where to look for libraries, only for executables
-LDFLAGS += -Wl,-rpath ${NIMBUS_LIB}
+LDFLAGS += -Wl,-rpath ${NIMBUS_ROOT}/lib
+LDFLAGS += -Wl,-rpath ${BOOST_ROOT}/lib
 LDFLAGS += -Wl,-rpath ${LEVELDB_ROOT}
+LDFLAGS += -Wl,-rpath ${PROTOBUF_ROOT}/lib
 
 # flags to defer linking, only for shared libraries
 SHARED_FLAGS = -shared -fPIC

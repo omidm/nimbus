@@ -9,6 +9,7 @@ default: $(SUBDIRS)
 $(SUBDIRS):
 	$(MAKE) -C $@
 
+src: extern
 nodes: extern src
 applications: extern src
 

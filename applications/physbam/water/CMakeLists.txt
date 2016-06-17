@@ -16,8 +16,13 @@ SET(NIMBUS_ROOT ${PROJECT_SOURCE_DIR}/../../..)
 # Remove all the DBG lines during compile time.
 # add_definitions(-D_NIMBUS_NO_DBG)
 
-include_directories(${NIMBUS_ROOT})
-LINK_DIRECTORIES(${NIMBUS_ROOT}/src)
+# Add the include path for nimbus, boost, leveldb, and protobuf.
+INCLUDE(${NIMBUS_ROOT}/Makeinclude.cmake)
+add_definitions(${IFLAGS})
+
+# The next line is not needed, since the executable will link to nimbus. This
+# make only generates the shared library used by the executable (e.g. worker).  
+# LINK_DIRECTORIES(${NIMBUS_ROOT}/lib)
 
 ######################################################
 # Custom commands to autogenerate data_def           #
@@ -251,4 +256,4 @@ SET(LIBRARIES_TO_LINK PhysBAM_Rendering-OpenGL)
 #SET(PHYSBAM_USE_CUDA ON CACHE BOOL ON FORCE)
 
 INCLUDE(${NIMBUS_ROOT}/applications/physbam/physbam-lib/Scripts/CMake/Nimbus_Application_Library.cmake)
-include_directories(${NIMBUS_ROOT}/extern/leveldb/include/)
+

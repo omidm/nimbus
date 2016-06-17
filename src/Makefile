@@ -1,5 +1,5 @@
 
-TARGET = libnimbus.so
+TARGET = ../lib/libnimbus.so
 
 default: $(TARGET)
 
@@ -30,6 +30,7 @@ DATA_PROTO_OBJECT_FILES = $(wildcard data/physbam/protobuf_compiled/*.pb.o)
 OBJFILES += $(DATA_PROTO_OBJECT_FILES)
 
 $(TARGET): $(SUBDIRS)
+	mkdir -p ../lib
 	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(OBJFILES) -o $(TARGET)
 
 clean: clean-files
