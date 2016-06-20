@@ -67,7 +67,9 @@ class WorkerThreadAuxiliary : public WorkerThread {
   virtual void Run();
   void MainLoop(WorkerTaskThreadAuxiliary* task_thread);
   void SetThreadNum(const int thread_num);
+#ifndef __MACH__
   virtual void SetThreadAffinity(const cpu_set_t* cpuset);
+#endif
  private:
   pthread_mutex_t lock_for_allocated_threads_;
   pthread_mutex_t internal_lock_;

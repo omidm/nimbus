@@ -275,6 +275,7 @@ void WorkerManager::ScheduleComputationJobs() {
     if (physical_core_for_auxiliary_jobs < 1) {
       physical_core_for_auxiliary_jobs = 1;
     }
+#ifndef __MACH__
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
     for (int i = 0; i < physical_core_for_auxiliary_jobs; ++i) {
@@ -282,6 +283,7 @@ void WorkerManager::ScheduleComputationJobs() {
       CPU_SET(LOGICAL_CORE_Y[i], &cpuset);
     }
     worker_thread_auxiliary_->SetThreadAffinity(&cpuset);
+#endif
     worker_thread_auxiliary_->SetThreadNum(
         physical_core_for_auxiliary_jobs * 8);
   }
@@ -290,6 +292,7 @@ void WorkerManager::ScheduleComputationJobs() {
 }
 
 void* WorkerManager::ThreadEntryPoint(void* parameters) {
+#ifndef __MACH__
   {
     struct sched_param param;
     param.sched_priority = 0;
@@ -299,6 +302,7 @@ void* WorkerManager::ThreadEntryPoint(void* parameters) {
       std::exit(1);
     }
   }
+#endif
   WorkerThread* worker_thread = reinterpret_cast<WorkerThread*>(parameters);
   worker_thread->Run();
   assert(false);

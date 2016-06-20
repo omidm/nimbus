@@ -71,6 +71,7 @@ function print_usage {
   echo -e "${RCol}"
 }
 
+LOCALHOST=$(hostname)
 
 if [ -z "${NIMBUS_HOME}" ]; then
   export NIMBUS_HOME="$(cd "`dirname "$0"`"/..; pwd)"
@@ -140,7 +141,7 @@ for arg in ${ARGS}; do
   idx=$((${idx}+1))
 done
 if [ "${controller_ip_given}" == "false" ]; then
-  NEW_ARGS=" --cip localhost "${NEW_ARGS}
+  NEW_ARGS=" --cip ${LOCALHOST} "${NEW_ARGS}
 fi
 
 idx=0

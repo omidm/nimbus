@@ -45,12 +45,15 @@ namespace nimbus {
 
 WorkerThread::WorkerThread(WorkerManager* worker_manager) {
   worker_manager_ = worker_manager;
+#ifndef __MACH__
   used_cpu_set_ = NULL;
+#endif
 }
 
 WorkerThread::~WorkerThread() {
 }
 
+#ifndef __MACH__
 void WorkerThread::SetThreadAffinity(const cpu_set_t* cpuset) {
   if (used_cpu_set_ == NULL) {
     used_cpu_set_ = new cpu_set_t;
@@ -70,5 +73,6 @@ void WorkerThread::SetThreadAffinity(const cpu_set_t* cpuset) {
                            sizeof(cpu_set_t), cpuset);
   }
 }
+#endif
 
 }  // namespace nimbus

@@ -3,9 +3,12 @@
 
 default: boost-t leveldb-t protobuf-t
 
+NIMBUS_ROOT = ..
+include $(NIMBUS_ROOT)/Makeinclude
+
 boost-t: boost
 boost:
-	./install-boost.sh
+	./install-boost.sh $(OS_DARWIN)
 
 leveldb-t:
 	$(MAKE) -C leveldb

@@ -83,11 +83,13 @@ void WorkerThreadAuxiliary::Run() {
     pthread_mutex_unlock(&internal_lock_);
   }
 }
+#ifndef __MACH__
 void WorkerThreadAuxiliary::SetThreadAffinity(const cpu_set_t* cpuset) {
   pthread_mutex_lock(&lock_for_allocated_threads_);
   WorkerThread::SetThreadAffinity(cpuset);
   pthread_mutex_unlock(&lock_for_allocated_threads_);
 }
+#endif
 
 void WorkerThreadAuxiliary::SetThreadNum(const int thread_num) {
   assert(thread_num >= 0);
@@ -106,11 +108,13 @@ void WorkerThreadAuxiliary::SetThreadNum(const int thread_num) {
             task_thread_pool_->AllocateTaskThread();
         pthread_mutex_lock(&lock_for_allocated_threads_);
         allocated_threads.push_back(task_thread->task_thread_wrapper);
+#ifndef __MACH__
         if (used_cpu_set_ != NULL) {
           pthread_setaffinity_np(
               task_thread->task_thread_wrapper->thread_handle(),
               sizeof(cpu_set_t), used_cpu_set_);
         }
+#endif
         pthread_mutex_unlock(&lock_for_allocated_threads_);
         assert(task_thread->task_thread_wrapper);
       } else {

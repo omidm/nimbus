@@ -22,5 +22,15 @@ cd ${UNTAR_DIR}
 ./b2 install
 cd -
 
+# if OS_DARWIN is set, then update the install name for boost libraries.
+if [ "$#" == 1 ]; then
+  cd ${ABS_INSTALL_DIR}/lib/
+  install_name_tool libboost_thread.dylib -id @rpath/libboost_thread.dylib
+  install_name_tool -change libboost_system.dylib @rpath/libboost_system.dylib libboost_thread.dylib
+  install_name_tool libboost_system.dylib -id @rpath/libboost_system.dylib
+  install_name_tool libboost_program_options.dylib -id @rpath/libboost_program_options.dylib
+  cd -
+fi
+
 rm -rf ${UNTAR_DIR}
 

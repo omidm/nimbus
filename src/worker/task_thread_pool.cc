@@ -65,6 +65,7 @@ TaskThreadWrapper::~TaskThreadWrapper() {
   pthread_cond_destroy(&internal_cond_);
 }
 void* TaskThreadWrapper::ThreadRoutine(void* parameter) {
+#ifndef __MACH__
   {
     struct sched_param param;
     param.sched_priority = 0;
@@ -74,6 +75,7 @@ void* TaskThreadWrapper::ThreadRoutine(void* parameter) {
       std::exit(1);
     }
   }
+#endif
   TaskThreadWrapper* task_thread =
       static_cast<TaskThreadWrapper*>(parameter);
   task_thread->MainLoop();

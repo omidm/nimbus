@@ -61,10 +61,14 @@ class WorkerThread {
 
   pthread_t thread_id;
   TaskThreadPool::TaskThreadList allocated_threads;
+#ifndef __MACH__
   virtual void SetThreadAffinity(const cpu_set_t* cpuset);
+#endif
 
  protected:
+#ifndef __MACH__
   cpu_set_t* used_cpu_set_;
+#endif
   WorkerManager* worker_manager_;
 };
 }  // namespace nimbus

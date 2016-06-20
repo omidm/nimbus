@@ -49,8 +49,12 @@
 #include <iostream>  // NOLINT
 #include "src/shared/dbg.h"
 
+// Note: you may have to increase the OS limits first.
+// Look at the nimbus/scripts/configure_tcp.sh for help.
+#ifndef __MACH__
 #define SERVER_TCP_SEND_BUF_SIZE 10485760  // 10MB
 #define SERVER_TCP_RECEIVE_BUF_SIZE 10485760  // 10MB
+#endif
 
 using boost::asio::ip::tcp;
 
@@ -191,10 +195,12 @@ void SchedulerServer::HandleAccept(SchedulerServerConnection* connection,
     // Set the tcp send and receive buf size.
     // Note: you may have to increase the OS limits first.
     // Look at the nimbus/scripts/configure_tcp.sh for help.
+#ifndef __MACH__
     boost::asio::socket_base::send_buffer_size s_option(SERVER_TCP_SEND_BUF_SIZE);
     boost::asio::socket_base::receive_buffer_size r_option(SERVER_TCP_RECEIVE_BUF_SIZE);
     connection->socket()->set_option(s_option);
     connection->socket()->set_option(r_option);
+#endif
     // Turn of Nagle algorithm.
     boost::asio::ip::tcp::no_delay nd_option(TCP_NODELAY_OPTION);
     connection->socket()->set_option(nd_option);

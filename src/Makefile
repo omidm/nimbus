@@ -1,5 +1,7 @@
 
-TARGET = ../lib/libnimbus.so
+LIB_PATH  = ../lib
+LIB_NAME  = libnimbus.so
+TARGET    = $(LIB_PATH)/$(LIB_NAME)
 
 default: $(TARGET)
 
@@ -29,9 +31,17 @@ OBJFILES += $(SHARED_PROTO_OBJECT_FILES)
 DATA_PROTO_OBJECT_FILES = $(wildcard data/physbam/protobuf_compiled/*.pb.o)
 OBJFILES += $(DATA_PROTO_OBJECT_FILES)
 
+LFLAGS   = -lboost_thread -lboost_system -lpthread -lprotobuf -lboost_program_options -ldl -lleveldb
+
+# INSTALL_FLAG is not needed for linux
+ifdef OS_DARWIN
+  INSTALL_FLAG = -install_name @rpath/$(LIB_NAME)
+endif
+
 $(TARGET): $(SUBDIRS)
-	mkdir -p ../lib
-	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(OBJFILES) -o $(TARGET)
+	mkdir -p $(LIB_PATH)
+# $(CPP) $(CFLAGS) $(SHARED_FLAGS) $(OBJFILES) -o $(TARGET)
+	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(OBJFILES) -o $(TARGET) $(INSTALL_FLAG) $(LDFLAGS) $(LFLAGS)
 
 clean: clean-files
 	for dir in $(SUBDIRS); do \

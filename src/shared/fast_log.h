@@ -43,6 +43,12 @@
 
 #include <pthread.h>
 #include <sys/types.h>
+#include <unistd.h>  // for syscal in mac and debian
+
+#ifdef __MACH__
+#include <mach/clock.h>
+#include <mach/mach.h>
+#endif
 
 #include <string.h>
 #include <cassert>
@@ -162,7 +168,17 @@ inline void StartTimer(TimerType timer_type, int depth = 1) {
   void* ptr = pthread_getspecific(timer_keys[timer_type]);
   TimerRecord* record = static_cast<TimerRecord*>(ptr);
   assert(record);
+#ifdef __MACH__  // OS X does not have clock_gettime, use clock_get_time
+  clock_serv_t cclock;
+  mach_timespec_t mts;
+  host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+  clock_get_time(cclock, &mts);
+  mach_port_deallocate(mach_task_self(), cclock);
+  (record->new_timestamp).tv_sec = mts.tv_sec;
+  (record->new_timestamp).tv_nsec = mts.tv_nsec;
+#else
   clock_gettime(CLOCK_REALTIME, &(record->new_timestamp));
+#endif
   if (record->depth != 0) {
     record->sum +=
         record->depth * (
@@ -185,7 +201,17 @@ inline void StopTimer(TimerType timer_type, int depth = 1) {
   void* ptr = pthread_getspecific(timer_keys[timer_type]);
   TimerRecord* record = static_cast<TimerRecord*>(ptr);
   assert(record);
+#ifdef __MACH__  // OS X does not have clock_gettime, use clock_get_time
+  clock_serv_t cclock;
+  mach_timespec_t mts;
+  host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+  clock_get_time(cclock, &mts);
+  mach_port_deallocate(mach_task_self(), cclock);
+  (record->new_timestamp).tv_sec = mts.tv_sec;
+  (record->new_timestamp).tv_nsec = mts.tv_nsec;
+#else
   clock_gettime(CLOCK_REALTIME, &(record->new_timestamp));
+#endif
   record->sum +=
       record->depth * (
            (record->new_timestamp.tv_sec - record->old_timestamp.tv_sec) * 1e9
@@ -202,7 +228,17 @@ inline int64_t ReadTimer(TimerType timer_type) {
   void* ptr = pthread_getspecific(timer_keys[timer_type]);
   TimerRecord* record = static_cast<TimerRecord*>(ptr);
   assert(record);
+#ifdef __MACH__  // OS X does not have clock_gettime, use clock_get_time
+  clock_serv_t cclock;
+  mach_timespec_t mts;
+  host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+  clock_get_time(cclock, &mts);
+  mach_port_deallocate(mach_task_self(), cclock);
+  (record->new_timestamp).tv_sec = mts.tv_sec;
+  (record->new_timestamp).tv_nsec = mts.tv_nsec;
+#else
   clock_gettime(CLOCK_REALTIME, &(record->new_timestamp));
+#endif
   return record->sum +
       record->depth * (
            (record->new_timestamp.tv_sec - record->old_timestamp.tv_sec) * 1e9

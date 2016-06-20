@@ -38,8 +38,12 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
-
 #include "src/shared/fast_log.h"
+
+#ifdef __MACH__
+#include <mach/clock.h>
+#include <mach/mach.h>
+#endif
 
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS
@@ -49,6 +53,7 @@
 
 #include <cstdlib>
 #include <string>
+
 
 namespace {
 pthread_mutex_t map_lock;
@@ -175,7 +180,17 @@ void InitializeTimers() {
 void PrintTimerSummary(FILE* output) {
   pthread_mutex_lock(&map_lock);
   struct timespec now;
+#ifdef __MACH__  // OS X does not have clock_gettime, use clock_get_time
+  clock_serv_t cclock;
+  mach_timespec_t mts;
+  host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+  clock_get_time(cclock, &mts);
+  mach_port_deallocate(mach_task_self(), cclock);
+  now.tv_sec = mts.tv_sec;
+  now.tv_nsec = mts.tv_nsec;
+#else
   clock_gettime(CLOCK_REALTIME, &now);
+#endif
   for (TimersMap::iterator iter = timers_map.begin();
        iter != timers_map.end(); ++iter) {
     TimerRecord* record = iter->second;
@@ -213,7 +228,17 @@ int64_t ReadTimerTypeSum(TimerType timer_type) {
   pthread_mutex_lock(&map_lock);
   struct timespec now;
   int64_t sum = 0;
+#ifdef __MACH__  // OS X does not have clock_gettime, use clock_get_time
+  clock_serv_t cclock;
+  mach_timespec_t mts;
+  host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+  clock_get_time(cclock, &mts);
+  mach_port_deallocate(mach_task_self(), cclock);
+  now.tv_sec = mts.tv_sec;
+  now.tv_nsec = mts.tv_nsec;
+#else
   clock_gettime(CLOCK_REALTIME, &now);
+#endif
   for (TimersMap::iterator iter = timers_map.begin();
        iter != timers_map.end(); ++iter) {
     TimerRecord* record = iter->second;

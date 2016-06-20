@@ -60,8 +60,13 @@
 
 using boost::asio::ip::tcp;
 
+// Note: you may have to increase the OS limits first.
+// Look at the nimbus/scripts/configure_tcp.sh for help.
+#ifndef __MACH__
 #define CLIENT_TCP_SEND_BUF_SIZE 134217728  // 128MB
 #define CLIENT_TCP_RECEIVE_BUF_SIZE 134217728  // 128MB
+#endif
+
 #define CLIENT_BUF_SIZE 40960000
 #define SEPARATE_COMMAND_TEMPLATE_THREAD true
 
@@ -371,10 +376,12 @@ void SchedulerClient::CreateNewConnections() {
   // Set the tcp send and receive buf size.
   // Note: you may have to increase the OS limits first.
   // Look at the nimbus/scripts/configure_tcp.sh for help.
+#ifndef __MACH__
   boost::asio::socket_base::send_buffer_size s_option(CLIENT_TCP_SEND_BUF_SIZE);
   boost::asio::socket_base::receive_buffer_size r_option(CLIENT_TCP_RECEIVE_BUF_SIZE);
   socket_->set_option(s_option);
   socket_->set_option(r_option);
+#endif
   // Turn of Nagle algorithm.
   boost::asio::ip::tcp::no_delay nd_option(TCP_NODELAY_OPTION);
   socket_->set_option(nd_option);

@@ -1,5 +1,4 @@
 
-
 TARGET = nimbus_controller
 
 .PHONY: default check $(TARGET) clean clean-logs
@@ -14,7 +13,7 @@ HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
 
 $(TARGET): $(OBJFILES)
-	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJFILES) -o $(TARGET) $(LINK_FLAG) $(LFLAGS)
+	$(CPP) $(CFLAGS) $(OBJFILES) -o $(TARGET) $(LDFLAGS) $(LFLAGS)
 
 %.o: %.cc
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 

@@ -43,6 +43,11 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#ifdef __MACH__
+#include <mach/clock.h>
+#include <mach/mach.h>
+#endif
+
 #include <boost/unordered_set.hpp>
 #include "src/shared/nimbus.h"
 #include "src/worker/dependency_query.h"
@@ -76,7 +81,19 @@ bool DependencyQuery::StageJobAndLoadBeforeSet(IDSet<job_id_t> *before_set,
                                                const bool barrier) {
   ++total_job_;
   struct timespec start_time, end_time;
+#ifdef __MACH__  // OS X does not have clock_gettime, use clock_get_time
+  {
+    clock_serv_t cclock;
+    mach_timespec_t mts;
+    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+    clock_get_time(cclock, &mts);
+    mach_port_deallocate(mach_task_self(), cclock);
+    start_time.tv_sec = mts.tv_sec;
+    start_time.tv_nsec = mts.tv_nsec;
+  }
+#else
   clock_gettime(CLOCK_REALTIME, &start_time);
+#endif
 
   {
     IDSet<logical_data_id_t>::ConstIter iter = read.begin();
@@ -145,13 +162,49 @@ bool DependencyQuery::StageJobAndLoadBeforeSet(IDSet<job_id_t> *before_set,
     last_barrier_.stage_id = stage_id_counter_;
   }
 
+#ifdef __MACH__  // OS X does not have clock_gettime, use clock_get_time
+  {
+    clock_serv_t cclock;
+    mach_timespec_t mts;
+    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+    clock_get_time(cclock, &mts);
+    mach_port_deallocate(mach_task_self(), cclock);
+    end_time.tv_sec = mts.tv_sec;
+    end_time.tv_nsec = mts.tv_nsec;
+  }
+#else
   clock_gettime(CLOCK_REALTIME, &end_time);
+#endif
   insertion_time_ += difftime(end_time.tv_sec, start_time.tv_sec)
       + .000000001 * (static_cast<double>(end_time.tv_nsec - start_time.tv_nsec));
 
+#ifdef __MACH__  // OS X does not have clock_gettime, use clock_get_time
+  {
+    clock_serv_t cclock;
+    mach_timespec_t mts;
+    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+    clock_get_time(cclock, &mts);
+    mach_port_deallocate(mach_task_self(), cclock);
+    start_time.tv_sec = mts.tv_sec;
+    start_time.tv_nsec = mts.tv_nsec;
+  }
+#else
   clock_gettime(CLOCK_REALTIME, &start_time);
+#endif
   Prune(before_set);
+#ifdef __MACH__  // OS X does not have clock_gettime, use clock_get_time
+  {
+    clock_serv_t cclock;
+    mach_timespec_t mts;
+    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+    clock_get_time(cclock, &mts);
+    mach_port_deallocate(mach_task_self(), cclock);
+    end_time.tv_sec = mts.tv_sec;
+    end_time.tv_nsec = mts.tv_nsec;
+  }
+#else
   clock_gettime(CLOCK_REALTIME, &end_time);
+#endif
   pruning_time_ += difftime(end_time.tv_sec, start_time.tv_sec)
     + .000000001 * (static_cast<double>(end_time.tv_nsec - start_time.tv_nsec));
 

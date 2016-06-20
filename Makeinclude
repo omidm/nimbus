@@ -90,25 +90,24 @@ clean-files:
 	\rm -Rf $(CHECKDIR)
 
 
+# Detect if we are running Darwin -- should be replaced by autoconf eventually
+ifeq ($(findstring darwin, ${OSTYPE}), darwin) 
+  OS_DARWIN=TRUE
+else
+ifeq ($(findstring Darwin, $(shell uname)), Darwin)
+  OS_DARWIN=TRUE  
+endif
+endif
 
-# # Detect if we are running Darwin -- should be replaced by autoconf eventually
-# ifeq ($(findstring darwin, ${OSTYPE}), darwin) 
-#   OS_DARWIN=TRUE
-# else
-# ifeq ($(findstring Darwin, $(shell uname)), Darwin)
-#   OS_DARWIN=TRUE  
-# endif
-# endif
-#
-# # Detect if we are running Linux -- should be replaced by autoconf eventually
-# ifeq (${OSTYPE}, linux)
-#   OS_LINUX=TRUE
-# else
-# ifeq ($(findstring Linux, $(shell uname)), Linux)
-#   OS_LINUX=TRUE
-# endif
-# endif
-#
+# Detect if we are running Linux -- should be replaced by autoconf eventually
+ifeq (${OSTYPE}, linux)
+  OS_LINUX=TRUE
+else
+ifeq ($(findstring Linux, $(shell uname)), Linux)
+  OS_LINUX=TRUE
+endif
+endif
+
 # # For reasons I do not understand need to disable two-level loading namespace
 # # optimizations under Darwin -pal
 # ifdef OS_DARWIN
