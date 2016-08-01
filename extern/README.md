@@ -69,14 +69,14 @@ you can fix as follows:
 
 ### Fix unknown field  `siginfo'
 
-In file `gcc-4.5.3/libgcc/../gcc/config/i386/linux-unwind.h` replace struct
-`siginfo` with `siginfo_t`:
+In file `gcc-4.5.3/libgcc/../gcc/config/i386/linux-unwind.h` replace `struct siginfo` with `siginfo_t`:
 
-    $ sed -i 's/siginfo/siginfo_t/g' gcc-4.5.3/libgcc/../gcc/config/i386/linux-unwind.h
+    $ sed -i 's/struct siginfo/siginfo_t/g' gcc-4.5.3/libgcc/../gcc/config/i386/linux-unwind.h
 
 ### Fix `libs/libgcj.so: undefined reference to '__cxa_call_unexpected'`
 
-Update `gcc-4.5.3/libjava/prims.cc` file as follows:
+If youwant to also install java compiler you need to update
+`gcc-4.5.3/libjava/prims.cc` file as follows:
 
      #ifndef DISABLE_GETENV_PROPERTIES
     +#ifdef __GLIBC__
@@ -101,11 +101,11 @@ Update `gcc-4.5.3/libjava/prims.cc` file as follows:
 ### Install Alternatives
                          --install link name path priority
 
-    $ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.3 10
-    $ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.4 20
+    $ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.5 10
+    $ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.x 20
 
-    $ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.3 10
-    $ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.4 20
+    $ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.5 10
+    $ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.x 20
 
     $ sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30
     $ sudo update-alternatives --set cc /usr/bin/gcc
