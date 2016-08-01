@@ -23,6 +23,9 @@ structured as follows:
     The physbam smoke simulation bundle that runs againt nimbus. To make the
     shared librray refrer to the README file in the subfolder.
 
+To build and install PhysBAM library and run the applications, there are a few
+dependencies that are required, The `install-dependencies.sh` script installs
+the required packages.  
 
 -------------------------------------------------------------------
 Makefile
@@ -43,6 +46,32 @@ using cmake for the physbam librray as follows:
 To show and check the oprions:
 
   $ cmake -LH ../..
+
+For example, if you use the ccmake gui directly, you should togle the options
+to make them look like this:
+
+  CMAKE_BUILD_TYPE                 Release
+  CMAKE_INSTALL_PREFIX             /usr/local
+  MPI_EXTRA_LIBRARY                /usr/lib/openmpi/lib/libmpi.so;/usr/lib/openmpi/lib/libopen-rte.so;/usr/lib/openmpi/lib/libopen-pal.so;/usr/lib/x86_64-linux-gnu/libdl.so;/usr/lib/x86_
+  MPI_LIBRARY                      /usr/lib/openmpi/lib/libmpi_cxx.so
+  PHYSBAM_BUILD_EXTERNAL_LIBRARI   ON
+  PHYSBAM_BUILD_SHARED_LIBS        OFF
+  PHYSBAM_COMPILE_WITHOUT_DOUBLE   OFF
+  PHYSBAM_COMPILE_WITHOUT_DYADIC   ON
+  PHYSBAM_COMPILE_WITHOUT_READ_W   OFF
+  PHYSBAM_COMPILE_WITHOUT_RLE_SU   ON
+  PHYSBAM_USE_CUDA                 OFF
+  PHYSBAM_USE_LAMMPI               OFF
+  PHYSBAM_USE_LIBJPEG              ON
+  PHYSBAM_USE_LIBPNG               ON
+  PHYSBAM_USE_OPENMPI              ON
+  PHYSBAM_USE_OPTIX                OFF
+  PHYSBAM_USE_PTHREADS             ON
+  PHYSBAM_USE_TBB                  OFF
+  ProcessorCount_cmd_getconf       /usr/bin/getconf
+  ProcessorCount_cmd_sysctl        /sbin/sysctl
+  file_cmd                         /usr/bin/file
+
 
 ** NOTE: to make the core library, applications, and shared librraies for
 nimbus in the DEBUG mode, replace "Release" with "Debug" in all directives. For

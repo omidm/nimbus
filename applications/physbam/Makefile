@@ -1,25 +1,28 @@
 
-.PHONY: physbam-lib water-physbam water-nimbus opengl_3d
+.PHONY: dependencies physbam-lib water-physbam water-nimbus opengl_3d
 
 all: physbam-lib water-physbam water-nimbus opengl_3d
 
-physbam-lib:
+dependencies:
+	./install-dependencies.sh
+
+physbam-lib: dependencies
 	cd physbam-lib/Public_Library; mkdir -p Build/Release;
 	cd physbam-lib/Public_Library/Build/Release; \
     cmake -D PHYSBAM_USE_OPENMPI=ON -D PHYSBAM_USE_LAMMPI=OFF ../..
 	$(MAKE) -C physbam-lib/Public_Library/Build/Release
 
-water-physbam: physbam-lib
+water-physbam: dependencies physbam-lib
 	cd physbam-app/water/; mkdir -p Build/Release;
 	cd physbam-app/water/Build/Release; cmake ../..
 	$(MAKE) -C physbam-app/water/Build/Release
 
-water-nimbus: physbam-lib
+water-nimbus: dependencies physbam-lib
 	cd water/; mkdir -p Build/Release;
 	cd water/Build/Release; cmake ../..
 	$(MAKE) -C water/Build/Release
 
-opengl_3d: physbam-lib
+opengl_3d: dependencies physbam-lib
 	cd physbam-app/opengl_3d/; mkdir -p Build/Release;
 	cd physbam-app/opengl_3d/Build/Release; cmake ../..
 	$(MAKE) -C physbam-app/opengl_3d/Build/Release
@@ -27,18 +30,18 @@ opengl_3d: physbam-lib
 
 .PHONY: physbam-lib-debug water-physbam-debug water-nimbus-debug
 
-physbam-lib-debug:
+physbam-lib-debug: dependencies
 	cd physbam-lib/Public_Library; mkdir -p Build/Debug;
 	cd physbam-lib/Public_Library/Build/Debug; \
     cmake -D PHYSBAM_USE_OPENMPI=ON -D PHYSBAM_USE_LAMMPI=OFF ../..
 	$(MAKE) -C physbam-lib/Public_Library/Build/Debug
 
-water-physbam-debug: physbam-lib-debug
+water-physbam-debug: dependencies physbam-lib-debug
 	cd physbam-app/water/; mkdir -p Build/Debug;
 	cd physbam-app/water/Build/Debug; cmake ../..
 	$(MAKE) -C physbam-app/water/Build/Debug
 
-water-nimbus-debug: physbam-lib-debug
+water-nimbus-debug: dependencies physbam-lib-debug
 	cd water/; mkdir -p Build/Debug;
 	cd water/Build/Debug; cmake ../..
 	$(MAKE) -C water/Build/Debug

@@ -170,7 +170,18 @@ Nimbus Installation Dependencies - MacOSX
 ** Install Boost:
   sudo port install boost
   (you may need to install  MacPorts first)
-  
+
+** Installing brew on El Captain
+run the command from homebrew website:
+
+    $ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
+but, `brew update` does not work directly, following is a fix:
+
+    $ cd /Users/omidm/.homebrew/Library
+    $ git pull origin master
+    $ brew update
+
 
 
 =============================================================================

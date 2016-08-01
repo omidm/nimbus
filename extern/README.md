@@ -48,10 +48,9 @@ It is straight forward to make and install from the source code:
   $ make
   $ sudo make install
 
-by default the binaries  will be installed in `/usr/local` which is
-searched in `$PATH` before `/usr/`,=. This effectively makes gcc/g++ 4.5 the
-default compiler. It is
-better to change the install path as used above with the 
+by default the binaries  will be installed in `/usr/local` which is searched in
+`$PATH` before `/usr/`,=. This effectively makes gcc/g++ 4.5 the default
+compiler. It is better to change the install path as used above with the
 `--prefix=/usr/` option, and then switch the compiler version with alternatives
 as explained in the following.
 
