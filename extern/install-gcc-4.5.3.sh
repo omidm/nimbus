@@ -3,29 +3,17 @@
 # installs gcc version 4.5 and required dependencies. See the README.md file
 # for moreinformation.
 
-TAR_FILE="gmp-6.1.1.tar.bz2"
-UNTAR_DIR="_temp_gmp_build"
-
-rm -rf ${UNTAR_DIR} && mkdir -p ${UNTAR_DIR}
-
 ### Install GMP
-sudo apt-get install --yes m4
-tar -xjf ${TAR_FILE} -C ${UNTAR_DIR} --strip-components=1
-cd ${UNTAR_DIR}
-./configure
-make -j 12
-make check
-sudo make install
-cd -
-
-rm -rf ${UNTAR_DIR}
-
+sudo apt-get install --yes libgmp-dev
+# ./install-gmp-6.1.1.sh
 
 ### Install MPFR
 sudo apt-get install --yes libmpfr-dev
+# ./install-mpfr-3.1.4.sh
 
 ### Install MPC
 sudo apt-get install --yes libmpc-dev
+# ./install-mpc-1.0.3.sh
 
 ### Install zip
 sudo apt-get install --yes zip
