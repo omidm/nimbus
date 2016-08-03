@@ -17,7 +17,10 @@ The following instruction are scripted in `install-g++-4.5.sh` file.
 ## Prerequisites
 
 ### Install GMP
-For more information visit: https://gmplib.org/#DOWNLOAD
+    $ sudo apt-get install libmpc-dev
+
+Or you can install form the source. For more information visit:
+https://gmplib.org/#DOWNLOAD
 
     $ sudo apt-get install m4
     $ tar -xjf gmp-6.1.1.tar.bz2
@@ -30,8 +33,28 @@ For more information visit: https://gmplib.org/#DOWNLOAD
 ### Install MPFR
     $ sudo apt-get install libmpfr-dev
 
+Or you can install form the source. For more information visit:
+http://www.mpfr.org/mpfr-current/mpfr.html
+
+    $ tar -xvzf mpfr.3.1.4.tar.gz
+    $ cd mpfr.3.1.4
+    $ ./configure
+    $ make
+    $ make check
+    $ sudo make install
+
 ### Install MPC
     $ sudo apt-get install libmpc-dev
+
+Or you can install form the source. For more information visit:
+http://www.multiprecision.org/index.php?prog=mpc
+
+    $ tar -xvzf mpc-1.0.3.tar.gz
+    $ cd mpc-1.0.3
+    $ ./configure
+    $ make
+    $ make check
+    $ sudo make install
 
 ### Install zip
     $ sudo apt-get install zip
@@ -41,15 +64,16 @@ For more information visit: https://gmplib.org/#DOWNLOAD
 ## Install gcc 4.5 from source
 
 It is straight forward to make and install from the source code:
-  $ tar -xvzf gcc-4.5.3.tar.gz
-  $ mkdir <objdir>
-  $ cd <objdir>
-  $ <srcdir>/configure --prefix=/usr/ --program-suffix=-4.5 --enable-languages=c,c++
-  $ make
-  $ sudo make install
+
+    $ tar -xvzf gcc-4.5.3.tar.gz
+    $ mkdir <objdir>
+    $ cd <objdir>
+    $ <srcdir>/configure --prefix=/usr/ --program-suffix=-4.5 --enable-languages=c,c++
+    $ make
+    $ sudo make install
 
 by default the binaries  will be installed in `/usr/local` which is searched in
-`$PATH` before `/usr/`,=. This effectively makes gcc/g++ 4.5 the default
+`$PATH` before `/usr/`. This effectively makes gcc/g++ 4.5 the default
 compiler. It is better to change the install path as used above with the
 `--prefix=/usr/` option, and then switch the compiler version with alternatives
 as explained in the following.
