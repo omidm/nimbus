@@ -13,7 +13,7 @@ sudo apt-get install --yes m4
 
 cd ${UNTAR_DIR}
 ./configure
-make -j 16
+make -j $(nproc)
 make check
 sudo make install
 cd -

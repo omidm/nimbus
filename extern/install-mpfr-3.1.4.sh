@@ -11,7 +11,7 @@ tar -xvzf ${TAR_FILE} -C ${UNTAR_DIR} --strip-components=1
 
 cd ${UNTAR_DIR}
 ./configure
-make -j 16
+make -j $(nproc)
 make check
 sudo make install
 cd -

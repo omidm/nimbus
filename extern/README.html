@@ -1,0 +1,142 @@
+<h1 id="installing-gccg-version-4.5-form-source-code">Installing gcc/g++ version 4.5 form source code</h1>
+<p>Although, Nimbus is supported with the latest g++ version, PhysBAM library compiles only with g++ version 4.5. If you want to run fluid simulation applications in the standalone mode or against Nimbus, you need to install g++ version 4.5, manually. The older versions of g++ are not shipped with Ubuntu distributions including and after 12.04, and even mainstream package managers doe not have the binaries for x86 architectures.</p>
+<p>This tutorial gives you directions on how to install g++ version 4.5 from the source code. It has been tested on Ubuntu 12.04, 14.04, and 16.04. For more information visit gcc website: https://gcc.gnu.org/install/.</p>
+<p>The following instruction are scripted in <code>install-g++-4.5.sh</code> file.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<h3 id="install-gmp">Install GMP</h3>
+<pre><code>$ sudo apt-get install libmpc-dev</code></pre>
+<p>Or you can install form the source. For more information visit: https://gmplib.org/#DOWNLOAD</p>
+<pre><code>$ sudo apt-get install m4
+$ tar -xjf gmp-6.1.1.tar.bz2
+$ cd gmp-6.1.1
+$ ./configure
+$ make
+$ make check
+$ sudo make install</code></pre>
+<p><strong>NOTE 1</strong>: if you install GMP through package manager for Ubuntu 14.04 and 16.04, the gmp.h file will be installed at <code>/usr/include/x86_64-linux-gnu/gmp.h</code> instaed of <code>/usr/include/gmp.h</code>. You will need to create a symbolik link so that gcc can find the header file.</p>
+<pre><code>$ sudo ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h</code></pre>
+<p><strong>NOTE 2</strong>: in Ubuntu 12.04 if you install the GMP through the source file there would be a conflict with the pachages installed through package manager for MPFR. You will need to define <code>__gmp_const</code> manualy in <code>/usr/include/mpfr.h</code>:</p>
+<pre><code>/* GMP&#39;s internal __gmp_const macro has been removed on 2012-03-04:
+   http://gmplib.org:8000/gmp/rev/d287cfaf6732
+   const is standard and now assumed to be available. If the
+   __gmp_const
+   definition is no longer present in GMP, this probably means
+   that GMP
+   assumes that const is available; thus let&#39;s define it to
+   const.
+   Note: this is a temporary fix that can be backported to
+   previous MPFR
+   versions. In the future, __gmp_const should be
+   replaced by const like
+   in GMP. */
+#ifndef __gmp_const
+# define __gmp_const const
+#endif</code></pre>
+<h3 id="install-mpfr">Install MPFR</h3>
+<pre><code>$ sudo apt-get install libmpfr-dev</code></pre>
+<p>Or you can install form the source. For more information visit: http://www.mpfr.org/mpfr-current/mpfr.html</p>
+<pre><code>$ tar -xvzf mpfr.3.1.4.tar.gz
+$ cd mpfr.3.1.4
+$ ./configure
+$ make
+$ make check
+$ sudo make install</code></pre>
+<h3 id="install-mpc">Install MPC</h3>
+<pre><code>$ sudo apt-get install libmpc-dev</code></pre>
+<p>Or you can install form the source. For more information visit: http://www.multiprecision.org/index.php?prog=mpc</p>
+<pre><code>$ tar -xvzf mpc-1.0.3.tar.gz
+$ cd mpc-1.0.3
+$ ./configure
+$ make
+$ make check
+$ sudo make install</code></pre>
+<h3 id="install-zip">Install zip</h3>
+<pre><code>$ sudo apt-get install zip</code></pre>
+<h2 id="install-gcc-4.5-from-source">Install gcc 4.5 from source</h2>
+<p>It is straight forward to make and install from the source code:</p>
+<pre><code>$ tar -xvzf gcc-4.5.3.tar.gz
+$ mkdir &lt;objdir&gt;
+$ cd &lt;objdir&gt;
+$ &lt;srcdir&gt;/configure --prefix=/usr/ --program-suffix=-4.5 --enable-languages=c,c++
+$ make
+$ sudo make install</code></pre>
+<p>by default the binaries will be installed in <code>/usr/local</code> which is searched in <code>$PATH</code> before <code>/usr/</code>. This effectively makes gcc/g++ 4.5 the default compiler. It is better to change the install path as used above with the <code>--prefix=/usr/</code> option, and then switch the compiler version with alternatives as explained in the following.</p>
+<p>If source code is compiled as given, there are few known issues. Here is a list you can fix as follows:</p>
+<h3 id="fix-the-unknown-syscdefs.h-file">Fix the unknown <code>sys/cdefs.h</code> file</h3>
+<pre><code>$ sudo apt-get install libc6-dev-i386</code></pre>
+<h3 id="fix-the-known-crti.o-file">Fix the known <code>crti.o</code> file</h3>
+<pre><code>$ sudo ln -s /usr/lib/x86_64-linux-gnu /usr/lib64</code></pre>
+<h3 id="fix-unknown-field-siginfo">Fix unknown field `siginfo'</h3>
+<p>In file <code>gcc-4.5.3/libgcc/../gcc/config/i386/linux-unwind.h</code> replace <code>struct siginfo</code> with <code>siginfo_t</code>:</p>
+<pre><code>$ sed -i &#39;s/struct siginfo/siginfo_t/g&#39; gcc-4.5.3/libgcc/../gcc/config/i386/linux-unwind.h</code></pre>
+<h3 id="fix-libslibgcj.so-undefined-reference-to-__cxa_call_unexpected">Fix <code>libs/libgcj.so: undefined reference to '__cxa_call_unexpected'</code></h3>
+<p>If youwant to also install java compiler you need to update <code>gcc-4.5.3/libjava/prims.cc</code> file as follows:</p>
+<pre><code> #ifndef DISABLE_GETENV_PROPERTIES
++#ifdef __GLIBC__
++/* glibc 2.15+ provides even for C++ inline optimized ::isspace etc.
++   Unfortunately those inlines are throw (), and call a function pointer
++   (which is throw () too, but with -fnon-call-exceptions this results
++   in a __cxa_call_unexpected call.  This macro disables the optimized
++   version.  */
++#define __NO_CTYPE 1
++#endif
+ #include &lt;ctype.h&gt;
+ #include &lt;java-props.h&gt;
+ #define PROCESS_GCJ_PROPERTIES process_gcj_properties()</code></pre>
+<h2 id="change-the-gccg-version-with-alternatives">Change the gcc/g++ version with <code>alternatives</code></h2>
+<h3 id="remove-existing-alternatives">remove existing alternatives</h3>
+<pre><code>$ sudo update-alternatives --remove-all gcc 
+$ sudo update-alternatives --remove-all g++</code></pre>
+<h3 id="install-alternatives">Install Alternatives</h3>
+<pre><code>                     --install link name path priority
+
+$ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.5 10
+$ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.x 20
+
+$ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.5 10
+$ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.x 20
+
+$ sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30
+$ sudo update-alternatives --set cc /usr/bin/gcc
+
+$ sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30
+$ sudo update-alternatives --set c++ /usr/bin/g++</code></pre>
+<h4 id="configure-alternatives">Configure Alternatives</h4>
+<pre><code>$ sudo update-alternatives --config gcc
+$ sudo update-alternatives --config g++</code></pre>
+<h1 id="installing-shared-libraries-and-linker-issues-in-macosx">Installing shared libraries and linker issues in MacOSX</h1>
+<p>For further reading see: https://blogs.oracle.com/dipol/entry/dynamic_libraries_rpath_and_mac http://stackoverflow.com/questions/33665781/dependencies-on-boost-library-dont-have-full-path http://stackoverflow.com/questions/4513799/how-to-set-the-runtime-path-rpath-of-an-executable-with-gcc-under-mac-osx</p>
+<p>When installing shared libraries and handling linker calls in MacOSX, there are few differences compared to Linux. In both systems, the linker looks for the shared libraries in some default paths, and also you can add extra runtime paths by setting environment variables. For example, after installing the shared libraries in this directory, you can launch executables that need this libraries by setting the <code>DYLD_LIBRARY_PATH</code> in MacOSX (and <code>LD_LIBRARY_PATH</code> in Linux) as follows</p>
+<pre><code>$ cd nimbus/nodes/nimbus_controller/
+$ DYLD_LIBRARY_PATH=&quot;../../extern/boost/lib/:../../extern/protobuf/lib/&quot; ./nimbus_controller -p 5800 -w 1</code></pre>
+<p>However, this is annoying and you want to add the linker path to the binary, for example, the <code>-Wl,-rpath &lt;path-to-lib&gt;</code> directives in gcc. However, this is not just enough, in MacOSX. In MacOSX, when linking against a shared library, it has a header file that enforces where to find that library. You can find that using the diagnostic tool as follows:</p>
+<pre><code>otool -L &lt;executable or shared-library&gt;</code></pre>
+<p>If you check for the <code>nimbus_controller</code> executable, you will see that the <code>protobuf</code> library has absolute path, while the <code>boost</code> libraries are relative. That is why linker complains only about not finding <code>boost</code>. To fix this issue, you have two options you need to replace the path name of the boost libraries after it is generayed with <code>install_name_tool</code>. There are two ways:</p>
+<h3 id="first-option">First option:</h3>
+<p>You can first generate your executable/libnimbus.so and then fix the library paths in the generated executable. Without changing the install name of boost libraries, make nimbus library and nimbus_controller. If you want to do the inspection, e.g.:</p>
+<pre><code>$ otool -L nimbus_controller</code></pre>
+<p>you will find out that, protobuf libraries have absolute path while boost paths are relative. Now you can fix them:</p>
+<pre><code># FOR INSPECTION: otool -L nimbus_controller
+$ install_name_tool -change libboost_thread.dylib @executable_path/../../extern/boost/lib/libboost_thread.dylib nimbus_controller
+$ install_name_tool -change libboost_system.dylib @executable_path/../../extern/boost/lib/libboost_system.dylib nimbus_controller
+$ install_name_tool -change libboost_program_options.dylib @executable_path/../../extern/boost/lib/libboost_program_options.dylib nimbus_controller
+
+# FOR INSPECTION: otool -L libnimbus.so
+$ install_name_tool -change libboost_thread.dylib @executable_path/../../extern/boost/lib/libboost_thread.dylib libnimbus.so
+$ install_name_tool -change libboost_system.dylib @executable_path/../../extern/boost/lib/libboost_system.dylib libnimbus.so
+$ install_name_tool -change libboost_program_options.dylib @executable_path/../../extern/boost/lib/libboost_program_options.dylib libnimbus.so</code></pre>
+<p>Also, the boost itself, needs to be updated:</p>
+<pre><code>$ FOR INSPECTION: otool -L libboost_thread.dylib
+$ install_name_tool -change libboost_system.dylib @executable_path/../../extern/boost/lib/libboost_system.dylib libboost_thread.dylib</code></pre>
+<p>Then you can run directly:</p>
+<pre><code>$ ./nimbus_controller -p 5800 -w 1</code></pre>
+<h3 id="second-option-recommended">Second option (RECOMMENDED):</h3>
+<p>Directly fix the header file of the boost libraries, and then make your executables and other shared libraries:</p>
+<pre><code>$ install_name_tool libboost_thread.dylib -id @rpath/libboost_thread.dylib
+$ install_name_tool -change libboost_system.dylib @rpath/libboost_system.dylib libboost_thread.dylib
+$ install_name_tool libboost_system.dylib -id @rpath/libboost_system.dylib
+$ install_name_tool libboost_program_options.dylib -id @rpath/libboost_program_options.dylib</code></pre>
+<p>Then, remake the nimbus_controller and libnimbus.so.</p>
+<p><strong>IMPORTANT</strong>: you could also replace the <code>@rpath</code> with <code>$(pwd)</code> to give the full-absolute-path, this is a beter solution.</p>
+<h2 id="note">Note:</h2>
+<p>It is better to fix the header file of the shared library, upon creation. This is done by using the <code>-install_name @rpath/$(LIB_NAME)</code> option in gcc/g++. For example see how libnimbus is generated in <code>nimbus/src/Makefile</code>. You can also use install name as <code>full-absolute-path</code> instead of <code>@rpath/...</code>.</p>

@@ -30,6 +30,35 @@ https://gmplib.org/#DOWNLOAD
     $ make check
     $ sudo make install
 
+
+**NOTE 1**: if you install GMP through package manager for Ubuntu 14.04 and
+16.04, the gmp.h file will be installed at `/usr/include/x86_64-linux-gnu/gmp.h`
+instaed of `/usr/include/gmp.h`. You will need to create a symbolik link so that
+gcc can find the header file.
+
+    $ sudo ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h
+
+**NOTE 2**: in Ubuntu 12.04 if you install the GMP through the source file there
+would be a conflict with the pachages installed through package manager for
+MPFR. You will need to define `__gmp_const` manualy in `/usr/include/mpfr.h`:
+
+    /* GMP's internal __gmp_const macro has been removed on 2012-03-04:
+       http://gmplib.org:8000/gmp/rev/d287cfaf6732
+       const is standard and now assumed to be available. If the
+       __gmp_const
+       definition is no longer present in GMP, this probably means
+       that GMP
+       assumes that const is available; thus let's define it to
+       const.
+       Note: this is a temporary fix that can be backported to
+       previous MPFR
+       versions. In the future, __gmp_const should be
+       replaced by const like
+       in GMP. */
+    #ifndef __gmp_const
+    # define __gmp_const const
+    #endif
+
 ### Install MPFR
     $ sudo apt-get install libmpfr-dev
 
