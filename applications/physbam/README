@@ -47,7 +47,7 @@ To show and check the oprions:
 
   $ cmake -LH ../..
 
-For example, if you use the ccmake gui directly, you should togle the options
+For example, if you use the ccmake gui directly, you should toggle the options
 to make them look like this:
 
   CMAKE_BUILD_TYPE                 Release

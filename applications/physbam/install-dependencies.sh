@@ -6,6 +6,8 @@
 sudo apt-get install --yes cmake-curses-gui
 
 ### opengl
+sudo apt-get install --yes freeglut3
+sudo apt-get install --yes freeglut3-dev
 sudo apt-get install --yes libqt4-opengl
 sudo apt-get install --yes libqt4-opengl-dev
 
@@ -21,8 +23,4 @@ sudo apt-get install --yes libpng-dev
 sudo apt-get install --yes libx11-6
 sudo apt-get install --yes libx11-dev
 sudo apt-get install --yes libxi-dev
-
-###  ??
-sudo apt-get install --yes freeglut3
-sudo apt-get install --yes freeglut3-dev
 

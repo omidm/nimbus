@@ -1,18 +1,18 @@
 
-# Installing gcc/g++ version 4.5 form source code
+# Installing gcc version 4.5 form source code
 
-Although, Nimbus is supported with the latest g++ version, PhysBAM library
-compiles only with g++ version 4.5. If you want to run fluid simulation
-applications in the standalone mode or against Nimbus, you need to install g++
-version 4.5, manually. The older versions of g++ are not shipped with Ubuntu
+Although, Nimbus is supported with the latest gcc version, PhysBAM library
+compiles only with gcc version 4.5. If you want to run fluid simulation
+applications in the standalone mode or against Nimbus, you need to install gcc
+version 4.5, manually. The older versions of gcc are not shipped with Ubuntu
 distributions including and after 12.04, and even mainstream package managers
 doe not have the binaries for x86 architectures.
 
-This tutorial gives you directions on how to install g++ version 4.5 from the
+This tutorial gives you directions on how to install gcc version 4.5 from the
 source code. It has been tested on Ubuntu 12.04, 14.04, and 16.04. For more
 information visit gcc website: https://gcc.gnu.org/install/.
 
-The following instruction are scripted in `install-g++-4.5.sh` file. 
+The following instruction are scripted in `install-gcc-4.5.sh` file. 
 
 ## Prerequisites
 
@@ -31,14 +31,7 @@ https://gmplib.org/#DOWNLOAD
     $ sudo make install
 
 
-**NOTE 1**: if you install GMP through package manager for Ubuntu 14.04 and
-16.04, the gmp.h file will be installed at `/usr/include/x86_64-linux-gnu/gmp.h`
-instaed of `/usr/include/gmp.h`. You will need to create a symbolik link so that
-gcc can find the header file.
-
-    $ sudo ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h
-
-**NOTE 2**: in Ubuntu 12.04 if you install the GMP through the source file there
+**NOTE**: in Ubuntu 12.04 if you install the GMP through the source file there
 would be a conflict with the pachages installed through package manager for
 MPFR. You will need to define `__gmp_const` manualy in `/usr/include/mpfr.h`:
 
@@ -88,6 +81,66 @@ http://www.multiprecision.org/index.php?prog=mpc
 ### Install zip
     $ sudo apt-get install zip
 
+
+### Updating the search paths of soon to be compiled gcc!
+So, here is the problem: if you print out the include path for header files and
+libraries for a gcc version that has been installed through a package manager,
+with a command like:
+
+    $ /usr/bin/g++-<version> -E -x c++ - -v < /dev/null
+
+you will see that `/usr/include/x86_64-linux-gnu` is part of the include search
+path, and `/usr/lib/x86_64-linux-gnu` is part of the `LIBRARY_PATH`. However,
+for some reason I am not aware of, when I configure and build the gcc 4.5.3
+locally, the include and library default search lists lack those paths. This
+is important, as some of the libraries and header files are installed
+in those places. For example, the openGL library, `libGL.so`, is placed at
+`/usr/lib/x86_64-linux-gnu`, and while compiling with the newly installed gcc,
+the ccmake of PhySBAM cannot locate the library. As another example, if you
+install GMP through package manager for Ubuntu 14.04 and 16.04, the `gmp.h` file
+will be installed at `/usr/include/x86_64-linux-gnu/gmp.h` instaed of
+`/usr/include/gmp.h`. During building the new gcc, the configuration phase is
+successful since it uses the already installed gcc through package manager
+which finds the `gmp.h`. However, during the building phase, when it comes to
+checking the built compiler, it fails since it cannot find the header file. One
+could solve the issue by adding symbolic links, e.g.:
+
+    $ sudo ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h
+
+But this only solves the problem temporarily. The complication remains for
+compiling PhysBAM later. One solution would be to update the `CPATH` and
+`LIBRARY_PATH` environment variables with those arguments in the current
+session:
+
+    $ export CPATH=/usr/include/x86_64-linux-gnu
+    $ export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu
+
+or preferably, permanently:
+
+    $ echo 'CPATH=/usr/include/x86_64-linux-gnu:$CPATH' >> ~/.profile
+    $ echo 'CPATH=/usr/include/x86_64-linux-gnu:$CPATH' >> ~/.bash_profile
+    $ source ~/.profile
+
+    $ echo 'LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LIBRARY_PATH' >> ~/.profile
+    $ echo 'LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LIBRARY_PATH' >> ~/.bash_profile
+    $ source ~/.profile
+
+Perhaps, a more long term solution would be to configure/compile gcc in a way
+that those paths are built-in, like the packages from package manager. I have
+looked through the source code, and noticed that following files are
+responsible for updating the search paths:
+
+    file: <gcc-source>/gcc/incpath.c: functions such as add_path, add_cpp_dir_path, etc.
+    file: <gcc-source>/gcc/cppdefault.c: macros are defind here. 
+    file: <gcc-source>/gcc/doc/gccint.info: for definition of macros.
+
+For example, if I define `SYSTEM_INCLUDE_DIR` in
+`<gcc-source>/gcc/cppdefault.c` as follows:
+
+    #define SYSTEM_INCLUDE_DIR "/usr/include/x86_64-linux-gnu"
+
+and build the compiler again, then the header search path is updated
+appropriately. One could find a similar solution for the library path as well.
 
 
 ## Install gcc 4.5 from source
