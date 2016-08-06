@@ -19,12 +19,10 @@ sudo apt-get install --yes libmpc-dev
 sudo apt-get install --yes zip
 
 ### Update search paths:
-echo 'CPATH=/usr/include/x86_64-linux-gnu:$CPATH' >> ~/.profile
-echo 'CPATH=/usr/include/x86_64-linux-gnu:$CPATH' >> ~/.bash_profile
-source ~/.profile
-
-echo 'LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LIBRARY_PATH' >> ~/.profile
-echo 'LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LIBRARY_PATH' >> ~/.bash_profile
+echo 'export CPATH=/usr/include/x86_64-linux-gnu' >> ~/.profile
+echo 'export CPATH=/usr/include/x86_64-linux-gnu' >> ~/.bash_profile
+echo 'export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu' >> ~/.profile
+echo 'export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu' >> ~/.bash_profile
 source ~/.profile
 
 
@@ -61,6 +59,9 @@ rm -rf ${OBJ_DIR}
 ### switch gcc/g++ version
 if ( ls /usr/bin/gcc-4.5 &> /dev/null ); then
   echo "SUCCESS: gcc-4.5 was installed, setting up the symlink"
+  echo "*****************************************************************************"
+  echo "**** NOTE: you need to either open a new shell or execute 'source ~/.profile'"
+  echo "*****************************************************************************"
   sudo rm /usr/bin/gcc
   sudo ln -s /usr/bin/gcc-4.5 /usr/bin/gcc
 else
@@ -69,6 +70,9 @@ fi
 
 if ( ls /usr/bin/g++-4.5 &> /dev/null ); then
   echo "SUCCESS: g++-4.5 was installed, setting up the symlink"
+  echo "*****************************************************************************"
+  echo "**** NOTE: you need to either open a new shell or execute 'source ~/.profile'"
+  echo "*****************************************************************************"
   sudo rm /usr/bin/g++
   sudo ln -s /usr/bin/g++-4.5 /usr/bin/g++
 else

@@ -92,37 +92,45 @@ with a command like:
 you will see that `/usr/include/x86_64-linux-gnu` is part of the include search
 path, and `/usr/lib/x86_64-linux-gnu` is part of the `LIBRARY_PATH`. However,
 for some reason I am not aware of, when I configure and build the gcc 4.5.3
-locally, the include and library default search lists lack those paths. This
-is important, as some of the libraries and header files are installed
-in those places. For example, the openGL library, `libGL.so`, is placed at
-`/usr/lib/x86_64-linux-gnu`, and while compiling with the newly installed gcc,
-the ccmake of PhySBAM cannot locate the library. As another example, if you
-install GMP through package manager for Ubuntu 14.04 and 16.04, the `gmp.h` file
-will be installed at `/usr/include/x86_64-linux-gnu/gmp.h` instaed of
-`/usr/include/gmp.h`. During building the new gcc, the configuration phase is
-successful since it uses the already installed gcc through package manager
-which finds the `gmp.h`. However, during the building phase, when it comes to
-checking the built compiler, it fails since it cannot find the header file. One
-could solve the issue by adding symbolic links, e.g.:
+locally, the include and library default search lists lack those paths. This is
+important, as some of the libraries and header files are installed in those
+places.
+
+For example, if you install GMP through package manager for Ubuntu 14.04 and
+16.04, the `gmp.h` file will be installed at
+`/usr/include/x86_64-linux-gnu/gmp.h` instaed of `/usr/include/gmp.h`. During
+building the new gcc, the configuration phase is successful since it uses the
+already installed gcc through package manager which finds the `gmp.h`. However,
+during the building phase, when it comes to testing the built compiler, it
+fails since the built compiler cannot find the header file in its default
+paths. One could solve the issue by adding symbolic links, e.g.:
 
     $ sudo ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h
 
 But this only solves the problem temporarily. The complication remains for
-compiling PhysBAM later. One solution would be to update the `CPATH` and
-`LIBRARY_PATH` environment variables with those arguments in the current
-session:
+compiling PhysBAM later.  For example, the openGL library, `libGL.so`, is
+placed at `/usr/lib/x86_64-linux-gnu`, and while compiling with the newly
+installed gcc, the ccmake of PhySBAM cannot locate the library.
+
+One solution would be to update the `CPATH` and `LIBRARY_PATH` environment
+variables with those arguments in the current session:
 
     $ export CPATH=/usr/include/x86_64-linux-gnu
     $ export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu
 
 or preferably, permanently:
 
-    $ echo 'CPATH=/usr/include/x86_64-linux-gnu:$CPATH' >> ~/.profile
-    $ echo 'CPATH=/usr/include/x86_64-linux-gnu:$CPATH' >> ~/.bash_profile
+    $ echo 'export CPATH=/usr/include/x86_64-linux-gnu' >> ~/.profile
+    $ echo 'export CPATH=/usr/include/x86_64-linux-gnu' >> ~/.bash_profile
+    $ echo 'export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu' >> ~/.profile
+    $ echo 'export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu' >> ~/.bash_profile
     $ source ~/.profile
 
-    $ echo 'LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LIBRARY_PATH' >> ~/.profile
-    $ echo 'LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LIBRARY_PATH' >> ~/.bash_profile
+The `install-gcc-4.5.3.sh` script updates the `~/.profile`, `~/.bash_profile`,
+however there is no way for a shell process to update the parent session
+environment variables. After installation, you should either close the shell
+and open a new one or refresh the environment variables as follows:
+
     $ source ~/.profile
 
 Perhaps, a more long term solution would be to configure/compile gcc in a way
@@ -139,7 +147,7 @@ For example, if I define `SYSTEM_INCLUDE_DIR` in
 
     #define SYSTEM_INCLUDE_DIR "/usr/include/x86_64-linux-gnu"
 
-and build the compiler again, then the header search path is updated
+and build the compiler again, then the default header search path is updated
 appropriately. One could find a similar solution for the library path as well.
 
 

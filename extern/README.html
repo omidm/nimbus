@@ -53,26 +53,28 @@ $ sudo make install</code></pre>
 <h3 id="updating-the-search-paths-of-soon-to-be-compiled-gcc">Updating the search paths of soon to be compiled gcc!</h3>
 <p>So, here is the problem: if you print out the include path for header files and libraries for a gcc version that has been installed through a package manager, with a command like:</p>
 <pre><code>$ /usr/bin/g++-&lt;version&gt; -E -x c++ - -v &lt; /dev/null</code></pre>
-<p>you will see that <code>/usr/include/x86_64-linux-gnu</code> is part of the include search path, and <code>/usr/lib/x86_64-linux-gnu</code> is part of the <code>LIBRARY_PATH</code>. However, for some reason I am not aware of, when I configure and build the gcc 4.5.3 locally, the include and library default search lists lack those paths. This is important, as some of the libraries and header files are installed in those places. For example, the openGL library, <code>libGL.so</code>, is placed at <code>/usr/lib/x86_64-linux-gnu</code>, and while compiling with the newly installed gcc, the ccmake of PhySBAM cannot locate the library. As another example, if you install GMP through package manager for Ubuntu 14.04 and 16.04, the <code>gmp.h</code> file will be installed at <code>/usr/include/x86_64-linux-gnu/gmp.h</code> instaed of <code>/usr/include/gmp.h</code>. During building the new gcc, the configuration phase is successful since it uses the already installed gcc through package manager which finds the <code>gmp.h</code>. However, during the building phase, when it comes to checking the built compiler, it fails since it cannot find the header file. One could solve the issue by adding symbolic links, e.g.:</p>
+<p>you will see that <code>/usr/include/x86_64-linux-gnu</code> is part of the include search path, and <code>/usr/lib/x86_64-linux-gnu</code> is part of the <code>LIBRARY_PATH</code>. However, for some reason I am not aware of, when I configure and build the gcc 4.5.3 locally, the include and library default search lists lack those paths. This is important, as some of the libraries and header files are installed in those places.</p>
+<p>For example, if you install GMP through package manager for Ubuntu 14.04 and 16.04, the <code>gmp.h</code> file will be installed at <code>/usr/include/x86_64-linux-gnu/gmp.h</code> instaed of <code>/usr/include/gmp.h</code>. During building the new gcc, the configuration phase is successful since it uses the already installed gcc through package manager which finds the <code>gmp.h</code>. However, during the building phase, when it comes to testing the built compiler, it fails since the built compiler cannot find the header file in its default paths. One could solve the issue by adding symbolic links, e.g.:</p>
 <pre><code>$ sudo ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h</code></pre>
-<p>But this only solves the problem temporarily. The complication remains for compiling PhysBAM later. One solution would be to update the <code>CPATH</code> and <code>LIBRARY_PATH</code> environment variables with those arguments in the current session:</p>
+<p>But this only solves the problem temporarily. The complication remains for compiling PhysBAM later. For example, the openGL library, <code>libGL.so</code>, is placed at <code>/usr/lib/x86_64-linux-gnu</code>, and while compiling with the newly installed gcc, the ccmake of PhySBAM cannot locate the library.</p>
+<p>One solution would be to update the <code>CPATH</code> and <code>LIBRARY_PATH</code> environment variables with those arguments in the current session:</p>
 <pre><code>$ export CPATH=/usr/include/x86_64-linux-gnu
 $ export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu</code></pre>
 <p>or preferably, permanently:</p>
-<pre><code>$ echo &#39;CPATH=/usr/include/x86_64-linux-gnu:$CPATH&#39; &gt;&gt; ~/.profile
-$ echo &#39;CPATH=/usr/include/x86_64-linux-gnu:$CPATH&#39; &gt;&gt; ~/.bash_profile
-$ source ~/.profile
-
-$ echo &#39;LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LIBRARY_PATH&#39; &gt;&gt; ~/.profile
-$ echo &#39;LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LIBRARY_PATH&#39; &gt;&gt; ~/.bash_profile
+<pre><code>$ echo &#39;export CPATH=/usr/include/x86_64-linux-gnu&#39; &gt;&gt; ~/.profile
+$ echo &#39;export CPATH=/usr/include/x86_64-linux-gnu&#39; &gt;&gt; ~/.bash_profile
+$ echo &#39;export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu&#39; &gt;&gt; ~/.profile
+$ echo &#39;export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu&#39; &gt;&gt; ~/.bash_profile
 $ source ~/.profile</code></pre>
+<p>The <code>install-gcc-4.5.3.sh</code> script updates the <code>~/.profile</code>, <code>~/.bash_profile</code>, however there is no way for a shell process to update the parent session environment variables. After installation, you should either close the shell and open a new one or refresh the environment variables as follows:</p>
+<pre><code>$ source ~/.profile</code></pre>
 <p>Perhaps, a more long term solution would be to configure/compile gcc in a way that those paths are built-in, like the packages from package manager. I have looked through the source code, and noticed that following files are responsible for updating the search paths:</p>
 <pre><code>file: &lt;gcc-source&gt;/gcc/incpath.c: functions such as add_path, add_cpp_dir_path, etc.
 file: &lt;gcc-source&gt;/gcc/cppdefault.c: macros are defind here. 
 file: &lt;gcc-source&gt;/gcc/doc/gccint.info: for definition of macros.</code></pre>
 <p>For example, if I define <code>SYSTEM_INCLUDE_DIR</code> in <code>&lt;gcc-source&gt;/gcc/cppdefault.c</code> as follows:</p>
 <pre><code>#define SYSTEM_INCLUDE_DIR &quot;/usr/include/x86_64-linux-gnu&quot;</code></pre>
-<p>and build the compiler again, then the header search path is updated appropriately. One could find a similar solution for the library path as well.</p>
+<p>and build the compiler again, then the default header search path is updated appropriately. One could find a similar solution for the library path as well.</p>
 <h2 id="install-gcc-4.5-from-source">Install gcc 4.5 from source</h2>
 <p>It is straight forward to make and install from the source code:</p>
 <pre><code>$ tar -xvzf gcc-4.5.3.tar.gz
