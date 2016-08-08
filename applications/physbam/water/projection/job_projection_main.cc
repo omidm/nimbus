@@ -47,7 +47,6 @@
 #include "applications/physbam/water//reg_def.h"
 #include "src/shared/dbg.h"
 #include "src/shared/nimbus.h"
-#include "src/worker/job_query.h"
 #include "src/worker/worker_thread.h"
 
 #include "applications/physbam/water//projection/job_projection_main.h"
@@ -86,7 +85,7 @@ void JobProjectionMain::SpawnJobs(
     const nimbus::GeometricRegion& global_region) {
   struct timeval start_time;
   gettimeofday(&start_time, NULL);
-  nimbus::JobQuery job_query(this);
+  // nimbus::JobQuery job_query(this);
   int projection_job_num = 5;
   std::vector<nimbus::job_id_t> projection_job_ids;
   GetNewJobID(&projection_job_ids, projection_job_num);
@@ -313,12 +312,12 @@ void JobProjectionMain::SpawnJobs(
 
   EndTemplate("projection_main");
 
-  job_query.PrintTimeProfile();
+  // job_query.PrintTimeProfile();
 
-  if (time == 0) {
-    dbg(APP_LOG, "Print job dependency figure.\n");
-    job_query.GenerateDotFigure("projection_main.dot");
-  }
+  // if (time == 0) {
+  //   dbg(APP_LOG, "Print job dependency figure.\n");
+  //   job_query.GenerateDotFigure("projection_main.dot");
+  // }
   {
     struct timeval t;
     gettimeofday(&t, NULL);

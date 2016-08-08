@@ -48,7 +48,6 @@
 #include "src/shared/dbg.h"
 #include "src/shared/nimbus.h"
 #include "src/shared/fast_log.h"
-#include "src/worker/job_query.h"
 #include <sstream>
 #include <string>
 

@@ -51,7 +51,6 @@
 #include "applications/physbam/water//water_example.h"
 #include "src/shared/dbg.h"
 #include "src/shared/nimbus.h"
-#include "src/worker/job_query.h"
 #include "src/worker/worker_thread.h"
 
 #include "applications/physbam/water//projection/job_projection_loop_bottleneck.h"
