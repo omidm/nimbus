@@ -61,5 +61,8 @@ CLEANSUBDIRS += water/Build/Debug
 clean: $(CLEANSUBDIRS)
 
 $(CLEANSUBDIRS):
-	$(MAKE) -C $@ clean
+	if [ -d $@ ]; then \
+    $(MAKE) -C $@ clean; \
+	  cd $@; cd ../..; rm -rf Build; \
+  fi
 
