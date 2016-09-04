@@ -540,12 +540,33 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
     << " " << log.timer() << std::endl;
 
   log.log_StartTimer();
-  bt->Instantiate(job->inner_job_ids(),
-                  job->parameters(),
-                  copy_job_ids,
-                  physical_ids,
+  bt->Refresh(job->inner_job_ids(),
+              copy_job_ids,
+              physical_ids);
+  log.log_StopTimer();
+  std::cout << "COMPLEX: Refresh: "
+    << job->template_entry()->template_name()
+    << " " << log.timer() << std::endl;
+
+
+  ExtensionsMap extensions;
+#ifdef _RUN_MULTI_TENANT_SCENARIO
+  if (template_generation_id_ == 5) {
+    log.log_StartTimer();
+    LoadTemplateExtensions(job, bt, &extensions);
+    log.log_StopTimer();
+    std::cout << "COMPLEX: Load Extensions: "
+      << job->template_entry()->template_name()
+      << " tgid " << (template_generation_id_ + 1)
+      << " " << log.timer() << std::endl;
+  }
+#endif
+
+  log.log_StartTimer();
+  bt->Instantiate(job->parameters(),
                   extra_dependency,
                   ++template_generation_id_,
+                  extensions,
                   server_);
   log.log_StopTimer();
   std::cout << "COMPLEX: Instantiate: "
@@ -571,6 +592,255 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
 
   return true;
 }
+
+
+void JobAssigner::LoadTemplateExtensions(ComplexJobEntry *job,
+                                         BindingTemplate *bt,
+                                         ExtensionsMap *extensions) {
+#ifndef _RUN_MULTI_TENANT_SCENARIO
+  assert(NULL);
+#endif
+
+  worker_id_t to_worker_id = 1;
+  worker_id_t from_worker_id = 2;
+
+  // The following is an algorithm to find a gradient task at worker 2, the
+  // general case might get lengthy, after first run, you could fill in the
+  // job_id and shadow_job_id from the std:out of the controller and comment out
+  // the general case code block to avoid the cost.
+  ShadowJobEntry *sj = NULL;
+  BindingTemplate::ComputeJobCommandTemplate* tj = NULL;
+
+  job_id_t job_id = 0;  // 10000000120
+  job_id_t shadow_job_id = 0;  // 10000000070
+
+  // General case
+  // comment out if job_id/shadow_job_id are hard coded (other than zero)!
+  {
+    std::map<worker_id_t, BindingTemplate::JobIdPtrList>::const_iterator iter =
+      bt->worker_job_ids_p()->find(from_worker_id);
+    assert(iter != bt->worker_job_ids_p()->end());
+
+    BindingTemplate::JobIdPtrList::const_iterator it =
+      iter->second.begin();
+    for (; it != iter->second.end(); ++it) {
+      bool success = job->OMIDGetShadowJobEntryById(*(*it), sj);
+      assert(success);
+      if (sj->job_name() == "gradient") {
+        job_id = *(*it);
+        std::cout << "\n**** MIGRATED JOB ID: " << job_id << std::endl;
+        break;
+      }
+    }
+  }
+  {
+    std::map<job_id_t, BindingTemplate::ComputeJobCommandTemplate*>::const_iterator iter =
+      bt->compute_job_to_command_map_p()->begin();
+    for (; iter != bt->compute_job_to_command_map_p()->end(); ++iter) {
+      if (*(iter->second->job_id_ptr_) == job_id) {
+        shadow_job_id = iter->first;
+        std::cout << "\n**** MIGRATED SHADOW JOB ID: " << shadow_job_id << std::endl;
+        tj = iter->second;
+        break;
+      }
+    }
+  }
+
+  // Hard-coded
+  {
+    bool success = job->OMIDGetShadowJobEntryById(job_id, sj);
+    assert(success);
+    std::map<job_id_t, BindingTemplate::ComputeJobCommandTemplate*>::const_iterator iter =
+      bt->compute_job_to_command_map_p()->find(shadow_job_id);
+    assert(iter != bt->compute_job_to_command_map_p()->end());
+    tj = iter->second;
+  }
+
+
+  assert(sj);
+  assert(tj);
+
+
+  // TODO(omidm): the next portion of code is quite hacky, mainly because I am
+  // assuming it is running against logistic regression with disabled automatic
+  // reduction, and in the _RUN_MULTI_TENANT_SCENARIO mode. The general
+  // solution should:
+  //
+  //    1. add support for scratch/reduce set.
+  //
+  //    2. check the version of each accessed data, and transfer only if target
+  //    host does not have the version (currently I assume that the SampleBatch
+  //    version is fine, and only weight needs to be transfered.
+  //
+  //    3. add create methods if target host does not have paceholder for the
+  //    data, now with _RUN_MULTI_TENANT_SCENARIO mode, it should be fine.
+  //
+  //    4. check that the new physical data on the target host does not involve
+  //    in the template instantiation, otherwise the before set is required and
+  //    it gets so messy!
+  //
+  //    5. etc.
+  //
+
+  physical_data_id_t to_read_only_data = 0;
+  physical_data_id_t to_read_write_data = 0;
+  {
+    IDSet<logical_data_id_t>::ConstIter iter = sj->read_set_p()->begin();
+    for (; iter != sj->read_set_p()->end(); ++iter) {
+      PhysicalDataList instances;
+      LogicalDataObject* ldo =
+        const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(*iter));
+      data_manager_->InstancesByWorker(ldo, to_worker_id, &instances);
+      assert(instances.size() > 0);
+      if (sj->write_set_p()->contains(*iter)) {
+        to_read_write_data = instances.begin()->id();
+        dbg(DBG_ERROR, "******************************* to RW %lu \n", to_read_write_data); // NOLINT
+      } else {
+        to_read_only_data = instances.begin()->id();
+        dbg(DBG_ERROR, "******************************* to RO %lu \n", to_read_only_data); // NOLINT
+      }
+    }
+  }
+
+  physical_data_id_t from_read_write_data = 0;
+  {
+    BindingTemplate::PhyIdPtrSet::iterator iter = tj->write_set_ptr_.begin();
+    for (; iter != tj->write_set_ptr_.end(); ++iter) {
+      from_read_write_data = **iter;
+      dbg(DBG_ERROR, "******************************* to RW %lu \n", from_read_write_data); // NOLINT
+    }
+  }
+
+
+  SchedulerWorker *to_worker = NULL;
+  if (!server_->GetSchedulerWorkerById(to_worker, to_worker_id)) {
+    assert(false);
+  }
+  SchedulerWorker *from_worker = NULL;
+  if (!server_->GetSchedulerWorkerById(from_worker, from_worker_id)) {
+    assert(false);
+  }
+
+
+  std::vector<boost::shared_ptr<RemoteCopySendCommand> > from_worker_send_commands;
+  std::vector<boost::shared_ptr<RemoteCopyReceiveCommand> > to_worker_receive_commands;
+  {
+    IDSet<job_id_t> before;
+    IDSet<job_id_t> extra_dependency;
+
+    std::vector<job_id_t> j;
+    id_maker_->GetNewJobID(&j, 2);
+    job_id_t receive_id = j[0];
+    job_id_t send_id = j[1];
+
+    boost::shared_ptr<RemoteCopySendCommand> cm_s =
+      boost::shared_ptr<RemoteCopySendCommand>(
+          new RemoteCopySendCommand(
+            ID<job_id_t>(send_id),
+            ID<job_id_t>(receive_id),
+            ID<job_id_t>(NIMBUS_KERNEL_JOB_ID),
+            ID<physical_data_id_t>(from_read_write_data),
+            ID<worker_id_t>(to_worker_id),
+            to_worker->ip(),
+            ID<port_t>(to_worker->port()),
+            before,
+            extra_dependency));
+    from_worker_send_commands.push_back(cm_s);
+
+    boost::shared_ptr<RemoteCopyReceiveCommand> cm_r =
+      boost::shared_ptr<RemoteCopyReceiveCommand>(
+          new RemoteCopyReceiveCommand(
+            ID<job_id_t>(receive_id),
+            ID<physical_data_id_t>(to_read_write_data),
+            before,
+            extra_dependency));
+    to_worker_receive_commands.push_back(cm_r);
+  }
+
+  std::vector<boost::shared_ptr<RemoteCopySendCommand> > to_worker_send_commands;
+  std::vector<boost::shared_ptr<RemoteCopyReceiveCommand> > from_worker_receive_commands;
+  {
+    IDSet<job_id_t> before;
+    IDSet<job_id_t> extra_dependency;
+
+    std::vector<job_id_t> j;
+    id_maker_->GetNewJobID(&j, 2);
+    job_id_t receive_id = j[0];
+    job_id_t send_id = j[1];
+
+    boost::shared_ptr<RemoteCopySendCommand> cm_s =
+      boost::shared_ptr<RemoteCopySendCommand>(
+          new RemoteCopySendCommand(
+            ID<job_id_t>(send_id),
+            ID<job_id_t>(receive_id),
+            ID<job_id_t>(NIMBUS_KERNEL_JOB_ID),
+            ID<physical_data_id_t>(to_read_write_data),
+            ID<worker_id_t>(from_worker_id),
+            from_worker->ip(),
+            ID<port_t>(from_worker->port()),
+            before,
+            extra_dependency));
+    to_worker_send_commands.push_back(cm_s);
+
+    boost::shared_ptr<RemoteCopyReceiveCommand> cm_r =
+      boost::shared_ptr<RemoteCopyReceiveCommand>(
+          new RemoteCopyReceiveCommand(
+            ID<job_id_t>(receive_id),
+            ID<physical_data_id_t>(from_read_write_data),
+            before,
+            extra_dependency));
+    from_worker_receive_commands.push_back(cm_r);
+  }
+
+  boost::shared_ptr<ComputeJobCommand> compute_command;
+  {
+    IDSet<job_id_t> before, after;
+    IDSet<job_id_t> extra_dependency;
+    IDSet<physical_data_id_t> read_set, write_set, scratch_set, reduce_set;
+    read_set.insert(to_read_only_data);
+    read_set.insert(to_read_write_data);
+    write_set.insert(to_read_write_data);
+    compute_command = boost::shared_ptr<ComputeJobCommand>(
+        new ComputeJobCommand(
+          sj->job_name(),
+          ID<job_id_t>(job_id),
+          read_set,
+          write_set,
+          scratch_set,
+          reduce_set,
+          before,  // will be blocked by the worker on the receive jobs!
+          extra_dependency,
+          after,
+          ID<job_id_t>(sj->future_job_id()),
+          sj->sterile(),
+          sj->region(),
+          sj->params()));
+  }
+
+  extensions->clear();
+  std::vector<TemplateExtension> to_worker_exts;
+  {
+    TemplateExtension e(
+        false,
+        compute_command,
+        to_worker_send_commands,
+        to_worker_receive_commands);
+    to_worker_exts.push_back(e);
+  }
+  std::vector<TemplateExtension> from_worker_exts;
+  {
+    TemplateExtension e(
+        true,
+        compute_command,
+        from_worker_send_commands,
+        from_worker_receive_commands);
+    from_worker_exts.push_back(e);
+  }
+
+  extensions->operator[](to_worker_id) = to_worker_exts;
+  extensions->operator[](from_worker_id) = from_worker_exts;
+}
+
 
 bool JobAssigner::AssignJob(JobEntry *job) {
   if (job->job_type() == JOB_CMPX) {

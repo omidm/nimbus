@@ -106,15 +106,15 @@ class DependencyQuery {
     StageId stage_id;
   };
 
-  typedef std::vector<Job> JobList;
+  typedef std::vector<Job> JobVec;
   typedef boost::unordered_map<logical_data_id_t, job_id_t> LastWriterMap;
   typedef std::vector<job_id_t> PartialWriters;
   typedef boost::unordered_map<logical_data_id_t, PartialWriters> PartialWritersMap;
 
   StageId stage_id_counter_;
   LastBarrier last_barrier_;
-  JobList jobs_;
-  JobList staged_jobs_;
+  JobVec jobs_;
+  JobVec staged_jobs_;
   LastWriterMap last_writers_;
   PartialWritersMap *last_stage_partial_writers_;
   PartialWritersMap *current_stage_partial_writers_;

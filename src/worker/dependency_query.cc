@@ -147,7 +147,7 @@ bool DependencyQuery::StageJobAndLoadBeforeSet(IDSet<job_id_t> *before_set,
   }
 
   if (barrier) {
-    JobList::iterator iter = jobs_.begin();
+    JobVec::iterator iter = jobs_.begin();
     for (; iter != jobs_.end(); ++iter) {
        before_set->insert(iter->id);
     }
@@ -220,7 +220,7 @@ bool DependencyQuery::StageJobAndLoadBeforeSet(IDSet<job_id_t> *before_set,
 
 bool DependencyQuery::MarkEndOfStage() {
   {
-    JobList::iterator iter = staged_jobs_.begin();
+    JobVec::iterator iter = staged_jobs_.begin();
     for (; iter != staged_jobs_.end(); ++iter) {
       jobs_.push_back(Job());
       Job& temp = jobs_.back();
@@ -235,7 +235,7 @@ bool DependencyQuery::MarkEndOfStage() {
   ++stage_id_counter_;
 
   {
-    JobList::iterator iter = staged_jobs_.begin();
+    JobVec::iterator iter = staged_jobs_.begin();
     for (; iter != staged_jobs_.end(); ++iter) {
       IDSet<logical_data_id_t>::ConstIter it = iter->write.begin();
       for (; it != iter->write.end(); ++it) {
@@ -311,7 +311,7 @@ void DependencyQuery::GenerateDotFigure(const std::string& file_name) {
   return;
   std::ofstream fout(file_name.c_str(), std::ofstream::out);
   fout << "digraph Workflow {" << std::endl;
-  JobList::iterator iter = jobs_.begin();
+  JobVec::iterator iter = jobs_.begin();
   for (; iter != jobs_.end(); ++iter) {
     fout << "\t" << "node" << iter->id
          << " [label=\"" << iter->name << "\"];"

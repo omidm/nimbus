@@ -88,12 +88,14 @@ class BindingTemplate {
 
     typedef boost::unordered_map<worker_id_t, IDSet<job_id_t> > ExtraDependency;
 
-    bool Instantiate(const std::vector<job_id_t>& compute_job_ids,
-                     const std::vector<Parameter>& parameters,
-                     const std::vector<job_id_t>& copy_job_ids,
-                     const std::vector<physical_data_id_t> *physical_ids,
+    bool Refresh(const std::vector<job_id_t>& compute_job_ids,
+                 const std::vector<job_id_t>& copy_job_ids,
+                 const std::vector<physical_data_id_t> *physical_ids);
+
+    bool Instantiate(const std::vector<Parameter>& parameters,
                      const ExtraDependency& extra_dependency,
                      const template_id_t& template_generation_id,
+                     const ExtensionsMap& extensions,
                      SchedulerServer *server);
 
     enum VersionType {
@@ -164,11 +166,12 @@ class BindingTemplate {
                                         ConstPatternList *patterns,
                                         std::vector<data_version_t> *versions_diff);
 
-  private:
     typedef boost::shared_ptr<job_id_t> JobIdPtr;
     typedef std::vector<JobIdPtr> JobIdPtrList;
     typedef boost::unordered_set<JobIdPtr> JobIdPtrSet;
     typedef boost::unordered_map<job_id_t, JobIdPtr> JobIdPtrMap;
+
+    const std::map<worker_id_t, JobIdPtrList>* worker_job_ids_p() const;
 
     typedef boost::shared_ptr<physical_data_id_t> PhyIdPtr;
     typedef std::vector<PhyIdPtr> PhyIdPtrList;
@@ -360,6 +363,9 @@ class BindingTemplate {
         PhyIdPtrList to_physical_data_id_ptrs_;
     };
 
+    const std::map<job_id_t, ComputeJobCommandTemplate*>* compute_job_to_command_map_p() const;
+
+  private:
     bool finalized_;
     bool established_command_template_;
     TemplateEntry *template_entry_;
@@ -428,8 +434,9 @@ class BindingTemplate {
 
     void SpawnCommandTemplateAtWorkers(const std::vector<Parameter>& parameters,
                                        const ExtraDependency& extra_dependency,
-                                       SchedulerServer *server,
-                                       const template_id_t& template_generation_id);
+                                       const template_id_t& template_generation_id,
+                                       const ExtensionsMap& extensions,
+                                       SchedulerServer *server);
 
     void SendComputeJobCommand(ComputeJobCommandTemplate* command,
                                const Parameter& parameter,

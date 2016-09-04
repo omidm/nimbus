@@ -45,6 +45,7 @@
 
 #include <string>
 #include <vector>
+#include "src/shared/template_extension.h"
 #include "src/shared/scheduler_command.h"
 #include "src/shared/parameter.h"
 #include "src/shared/protobuf_compiled/commands.pb.h"
@@ -60,7 +61,8 @@ class SpawnCommandTemplateCommand : public SchedulerCommand {
                                 const IDSet<job_id_t>& extra_dependency,
                                 const std::vector<Parameter>& parameters,
                                 const std::vector<physical_data_id_t>& phy_ids,
-                                const template_id_t& template_generation_id);
+                                const template_id_t& template_generation_id,
+                                const std::vector<TemplateExtension>& extensions);
 
     ~SpawnCommandTemplateCommand();
 
@@ -77,6 +79,7 @@ class SpawnCommandTemplateCommand : public SchedulerCommand {
     template_id_t template_generation_id();
     IDSet<job_id_t> extra_dependency();
     IDSet<job_id_t>* extra_dependency_p();
+    std::vector<TemplateExtension> extensions();
 
   private:
     std::string command_template_name_;
@@ -86,6 +89,7 @@ class SpawnCommandTemplateCommand : public SchedulerCommand {
     std::vector<Parameter> parameters_;
     std::vector<physical_data_id_t> phy_ids_;
     template_id_t template_generation_id_;
+    std::vector<TemplateExtension> extensions_;
 
     bool ReadFromProtobuf(const SpawnCommandTemplatePBuf& buf);
     bool WriteToProtobuf(SpawnCommandTemplatePBuf* buf);

@@ -56,14 +56,16 @@ SpawnCommandTemplateCommand::SpawnCommandTemplateCommand(const std::string& comm
                                                    const IDSet<job_id_t>& extra_dependency,
                                                    const std::vector<Parameter>& parameters,
                                                    const std::vector<physical_data_id_t>& phy_ids,
-                                                   const template_id_t& template_generation_id)
+                                                   const template_id_t& template_generation_id,
+                                                   const std::vector<TemplateExtension>& extensions)
   : command_template_name_(command_template_name),
     inner_job_ids_(inner_job_ids),
     outer_job_ids_(outer_job_ids),
     extra_dependency_(extra_dependency),
     parameters_(parameters),
     phy_ids_(phy_ids),
-    template_generation_id_(template_generation_id) {
+    template_generation_id_(template_generation_id),
+    extensions_(extensions) {
   name_ = SPAWN_COMMAND_TEMPLATE_NAME;
   type_ = SPAWN_COMMAND_TEMPLATE;
 }
@@ -118,6 +120,27 @@ std::string SpawnCommandTemplateCommand::ToString() {
   std::string str;
   str += (name_ + " ");
   str += ("name:" + command_template_name_ + ", ...");
+  str += (" ids< ... > ");
+  str += (" extensions: ");
+  std::vector<TemplateExtension>::iterator iter = extensions_.begin();
+  for (; iter != extensions_.end(); ++iter) {
+    str += (iter->migrate_out() ? " migrate-out" : " migrate-in");
+    str += (" compute_command: " + iter->compute_command()->ToString());
+    {
+      std::vector<boost::shared_ptr<RemoteCopySendCommand> >::iterator it =
+        iter->send_commands_p()->begin();
+      for (; it != iter->send_commands_p()->end(); ++it) {
+        str += (" send_command: " + (*it)->ToString());
+      }
+    }
+    {
+      std::vector<boost::shared_ptr<RemoteCopyReceiveCommand> >::iterator it =
+        iter->receive_commands_p()->begin();
+      for (; it != iter->receive_commands_p()->end(); ++it) {
+        str += (" receive_command: " + (*it)->ToString());
+      }
+    }
+  }
   return str;
 }
 
@@ -151,6 +174,10 @@ IDSet<job_id_t> SpawnCommandTemplateCommand::extra_dependency() {
 
 IDSet<job_id_t>* SpawnCommandTemplateCommand::extra_dependency_p() {
   return &extra_dependency_;
+}
+
+std::vector<TemplateExtension> SpawnCommandTemplateCommand::extensions() {
+  return extensions_;
 }
 
 bool SpawnCommandTemplateCommand::ReadFromProtobuf(const SpawnCommandTemplatePBuf& buf) {
@@ -197,6 +224,50 @@ bool SpawnCommandTemplateCommand::ReadFromProtobuf(const SpawnCommandTemplatePBu
 
   template_generation_id_ = buf.template_generation_id();
 
+  {
+    extensions_.clear();
+    typename google::protobuf::RepeatedPtrField<TemplateExtensionPBuf>::const_iterator iter =
+      buf.extensions().begin();
+    for (; iter != buf.extensions().end(); ++iter) {
+      bool migrate_out = iter->migrate_out();
+
+      boost::shared_ptr<ComputeJobCommand> compute_command =
+        boost::shared_ptr<ComputeJobCommand>(new ComputeJobCommand());
+      compute_command->ReadFromProtobuf(iter->compute_command());
+
+      std::vector<boost::shared_ptr<RemoteCopySendCommand> > send_commands;
+      {
+        typename google::protobuf::RepeatedPtrField<RemoteCopySendPBuf>::const_iterator it =
+          iter->send_commands().begin();
+        for (; it != iter->send_commands().end(); ++it) {
+          boost::shared_ptr<RemoteCopySendCommand> send =
+            boost::shared_ptr<RemoteCopySendCommand>(new RemoteCopySendCommand());
+          send->ReadFromProtobuf(*it);
+          send_commands.push_back(send);
+        }
+      }
+
+      std::vector<boost::shared_ptr<RemoteCopyReceiveCommand> > receive_commands;
+      {
+        typename google::protobuf::RepeatedPtrField<RemoteCopyReceivePBuf>::const_iterator it =
+          iter->receive_commands().begin();
+        for (; it != iter->receive_commands().end(); ++it) {
+          boost::shared_ptr<RemoteCopyReceiveCommand> receive =
+            boost::shared_ptr<RemoteCopyReceiveCommand>(new RemoteCopyReceiveCommand());
+          receive->ReadFromProtobuf(*it);
+          receive_commands.push_back(receive);
+        }
+      }
+
+      TemplateExtension extension(migrate_out,
+                                  compute_command,
+                                  send_commands,
+                                  receive_commands);
+
+      extensions_.push_back(extension);
+    }
+  }
+
   return true;
 }
 
@@ -240,5 +311,46 @@ bool SpawnCommandTemplateCommand::WriteToProtobuf(SpawnCommandTemplatePBuf* buf)
 
   buf->set_template_generation_id(template_generation_id_);
 
+
+  {
+    typename google::protobuf::RepeatedPtrField<TemplateExtensionPBuf> *b =
+      buf->mutable_extensions();
+    std::vector<TemplateExtension>::iterator iter = extensions_.begin();
+    for (; iter != extensions_.end(); ++iter) {
+      TemplateExtensionPBuf *ebuf = b->Add();
+
+      ebuf->set_migrate_out(iter->migrate_out());
+
+      {
+        ExecuteComputeJobPBuf *cmd = ebuf->mutable_compute_command();
+        iter->compute_command()->WriteToProtobuf(cmd);
+      }
+
+      {
+        typename google::protobuf::RepeatedPtrField<RemoteCopySendPBuf> *eb =
+          ebuf->mutable_send_commands();
+        std::vector<boost::shared_ptr<RemoteCopySendCommand> >::iterator it =
+          iter->send_commands_p()->begin();
+        for (; it != iter->send_commands_p()->end(); ++it) {
+          RemoteCopySendPBuf *sub_buf = eb->Add();
+          (*it)->WriteToProtobuf(sub_buf);
+        }
+      }
+
+      {
+        typename google::protobuf::RepeatedPtrField<RemoteCopyReceivePBuf> *eb =
+          ebuf->mutable_receive_commands();
+        std::vector<boost::shared_ptr<RemoteCopyReceiveCommand> >::iterator it =
+          iter->receive_commands_p()->begin();
+        for (; it != iter->receive_commands_p()->end(); ++it) {
+          RemoteCopyReceivePBuf *sub_buf = eb->Add();
+          (*it)->WriteToProtobuf(sub_buf);
+        }
+      }
+    }
+  }
+
   return true;
 }
+
+

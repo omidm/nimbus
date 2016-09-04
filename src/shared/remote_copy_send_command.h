@@ -91,6 +91,7 @@ class RemoteCopySendCommand : public SchedulerCommand {
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> extra_dependency_;
 
+  public:
     bool ReadFromProtobuf(const RemoteCopySendPBuf& buf);
     bool WriteToProtobuf(RemoteCopySendPBuf* buf);
 };

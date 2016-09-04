@@ -75,6 +75,7 @@ class RemoteCopyReceiveCommand : public SchedulerCommand {
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> extra_dependency_;
 
+  public:
     bool ReadFromProtobuf(const RemoteCopyReceivePBuf& buf);
     bool WriteToProtobuf(RemoteCopyReceivePBuf* buf);
 };

@@ -47,7 +47,9 @@ using namespace nimbus; // NOLINT
 ExecutionTemplate::ExecutionTemplate(const std::string& execution_template_name,
                                      const std::vector<job_id_t>& inner_job_ids,
                                      const std::vector<job_id_t>& outer_job_ids,
-                                     const std::vector<physical_data_id_t>& phy_ids) {
+                                     const std::vector<physical_data_id_t>& phy_ids,
+                                     Application *application,
+                                     WorkerDataExchanger *data_exchanger) {
   finalized_ = false;
   mark_stat_ = false;
   copy_job_num_ = 0;
@@ -58,6 +60,9 @@ ExecutionTemplate::ExecutionTemplate(const std::string& execution_template_name,
   execution_template_name_ = execution_template_name;
   template_generation_id_ = NIMBUS_INIT_TEMPLATE_ID;
   future_job_id_ptr_ = JobIdPtr(new job_id_t(0));
+
+  application_ = application;
+  data_exchanger_ = data_exchanger;
 
   {
     std::vector<job_id_t>::const_iterator iter = inner_job_ids.begin();
@@ -98,7 +103,18 @@ bool ExecutionTemplate::finalized() {
 size_t ExecutionTemplate::job_num() {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   assert(finalized_);
-  return copy_job_num_ + compute_job_num_;
+
+  size_t count = copy_job_num_ + compute_job_num_;
+  if (extensions_.size() > 0) {
+    std::vector<TemplateExtension>::iterator iter = extensions_.begin();
+    for (; iter != extensions_.end(); ++iter) {
+      count += iter->send_commands_p()->size();
+      count += iter->receive_commands_p()->size();
+      iter->migrate_out() ? --count : ++count;
+    }
+  }
+
+  return count;
 }
 
 size_t ExecutionTemplate::copy_job_num() {
@@ -137,6 +153,16 @@ size_t ExecutionTemplate::ready_job_counter() {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   return ready_job_counter_;
 }
+
+
+Application* ExecutionTemplate::application() {
+  return application_;
+}
+
+WorkerDataExchanger* ExecutionTemplate::data_exchanger() {
+  return data_exchanger_;
+}
+
 
 bool ExecutionTemplate::Finalize() {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
@@ -177,6 +203,7 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
                                     const std::vector<physical_data_id_t>& physical_ids,
                                     const WorkerDataExchanger::EventList& pending_events,
                                     const template_id_t& template_generation_id,
+                                    const std::vector<TemplateExtension>& extensions,
                                     JobList *ready_jobs) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
 
@@ -194,6 +221,7 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
     pending_parameters_ = parameters;
     pending_physical_ids_ = physical_ids;
     pending_template_generation_id_ = template_generation_id;
+    pending_extensions_ = extensions;
     ready_jobs->clear();
     return false;
   }
@@ -216,6 +244,7 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
   }
 
   template_generation_id_ = template_generation_id;
+
   job_done_counter_ = copy_job_num_ + compute_job_num_;
 
   {
@@ -247,6 +276,24 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
 
   parameters_ = parameters;
 
+  extensions_ = extensions;
+
+  migrated_jobs_.clear();
+  {
+    if (extensions_.size() > 0) {
+      std::vector<TemplateExtension>::iterator iter = extensions_.begin();
+      for (size_t idx = 0; iter != extensions_.end(); ++iter, ++idx) {
+        dbg(DBG_WARN, "*\n*** MIGRATE %s TEMPLATE EXTENSION\n*\n",
+            iter->migrate_out() ? "OUT" : "IN");
+        job_id_t job_id = iter->compute_command()->job_id().elem();
+        migrated_jobs_[job_id] = idx;
+        job_done_counter_ += iter->send_commands_p()->size();
+        job_done_counter_ += iter->receive_commands_p()->size();
+        iter->migrate_out() ? --job_done_counter_ : ++job_done_counter_;
+      }
+    }
+  }
+
   {
     JobTemplateVector::iterator iter = job_templates_list_.begin();
     for (; iter != job_templates_list_.end(); ++iter) {
@@ -263,9 +310,28 @@ bool ExecutionTemplate::Instantiate(const std::vector<job_id_t>& inner_job_ids,
     for (; iter != seed_job_templates_.end(); ++iter) {
       JobTemplate *jt = *iter;
       jt->Refresh(parameters_, template_generation_id_);
+
+      size_t ext_idx = 0;
+      bool migrated = false;
+      if (extensions_.size() > 0) {
+        boost::unordered_map<job_id_t, size_t>::iterator it =
+          migrated_jobs_.find(*(jt->job_id_ptr_));
+        if (it != migrated_jobs_.end()) {
+          migrated = true;
+          ext_idx = it->second;
+        }
+      }
+
       if (extra_dependency_.size() == 0) {
-        ready_jobs->push_back((jt->job_));
-        ++counter;
+        if (migrated) {
+          // Note the read by reference. -omidm
+          TemplateExtension& ext = extensions_[ext_idx];
+          assert(ext.migrate_out());
+          counter += ext.LoadSendJobs(ready_jobs, this, true);
+        } else {
+          ready_jobs->push_back((jt->job_));
+          ++counter;
+        }
       } else {
         blocked_on_extra_dependency_.push_back((jt->job_));
       }
@@ -302,6 +368,7 @@ bool ExecutionTemplate::InstantiatePending(const WorkerDataExchanger::EventList&
               pending_physical_ids_,
               pending_events,
               pending_template_generation_id_,
+              pending_extensions_,
               ready_jobs);
 
   return true;
@@ -338,18 +405,61 @@ bool ExecutionTemplate::MarkInnerJobDone(const job_id_t& shadow_job_id,
     return et_complete;
   }
 
-  JobTemplateMap::iterator it = job_templates_.find(shadow_job_id);
-  assert(it != job_templates_.end());
   JobTemplateVector ready_list;
-  it->second->ClearAfterSet(&ready_list);
+  {
+    JobTemplateMap::iterator iter = job_templates_.find(shadow_job_id);
+    if (iter != job_templates_.end()) {
+      iter->second->ClearAfterSet(&ready_list);
+    } else {
+      boost::unordered_map<job_id_t, size_t>::iterator it =
+        migrated_jobs_.find(shadow_job_id);
+      assert(it != migrated_jobs_.end());
+      // Note the read by reference. -omidm
+      TemplateExtension& ext = extensions_[it->second];
+      TemplateExtension::State state;
+      ready_job_counter_ +=
+        ext.MarkJobDone(ready_jobs, this, &state, true);
+      if (state == TemplateExtension::RELEASE) {
+        bool found = false;
+        JobTemplateMap::iterator i = job_templates_.begin();
+        for (; i != job_templates_.end(); ++i) {
+          if (*(i->second->job_id_ptr_) == shadow_job_id) {
+            found = true;
+            break;
+          }
+        }
+        assert(found);
+        i->second->ClearAfterSet(&ready_list);
+      }
+    }
+  }
 
   size_t counter = 0;
   JobTemplateVector::iterator iter = ready_list.begin();
   for (; iter != ready_list.end(); ++iter) {
     JobTemplate *jt = *iter;
     jt->Refresh(parameters_, template_generation_id_);
-    ready_jobs->push_back((jt->job_));
-    ++counter;
+
+    size_t ext_idx = 0;
+    bool migrated = false;
+    if (extensions_.size() > 0) {
+      boost::unordered_map<job_id_t, size_t>::iterator it =
+        migrated_jobs_.find(*(jt->job_id_ptr_));
+      if (it != migrated_jobs_.end()) {
+        migrated = true;
+        ext_idx = it->second;
+      }
+    }
+
+    if (migrated) {
+      // Note the read by reference. -omidm
+      TemplateExtension& ext = extensions_[ext_idx];
+      assert(ext.migrate_out());
+      counter += ext.LoadSendJobs(ready_jobs, this, true);
+    } else {
+      ready_jobs->push_back((jt->job_));
+      ++counter;
+    }
   }
 
   ready_job_counter_ += counter;
@@ -383,8 +493,26 @@ void ExecutionTemplate::NotifyJobDone(const job_id_t& job_id,
   if (extra_dependency_.size() == 0) {
     JobList::iterator iter = blocked_on_extra_dependency_.begin();
     for (; iter != blocked_on_extra_dependency_.end(); ++iter) {
-      ready_jobs->push_back(*iter);
-      ++counter;
+      size_t ext_idx = 0;
+      bool migrated = false;
+      if (extensions_.size() > 0) {
+        boost::unordered_map<job_id_t, size_t>::iterator it =
+          migrated_jobs_.find((*iter)->id().elem());
+        if (it != migrated_jobs_.end()) {
+          migrated = true;
+          ext_idx = it->second;
+        }
+      }
+
+      if (migrated) {
+        // Note the read by reference. -omidm
+        TemplateExtension& ext = extensions_[ext_idx];
+        assert(ext.migrate_out());
+        counter += ext.LoadSendJobs(ready_jobs, this, true);
+      } else {
+        ready_jobs->push_back(*iter);
+        ++counter;
+      }
     }
     blocked_on_extra_dependency_.clear();
   }
@@ -426,17 +554,31 @@ void ExecutionTemplate::ProcessReceiveEvent(const WorkerDataExchanger::Event& e,
   JobTemplateMap::iterator iter;
   if (e.mega_rcr_job_id_ == NIMBUS_KERNEL_JOB_ID) {
     iter = job_templates_.find(e.receive_job_id_);
-    assert(iter != job_templates_.end());
-    JobTemplate *jt = iter->second;
-    RemoteCopyReceiveJob *rcr = dynamic_cast<RemoteCopyReceiveJob*>(jt->job_); // NOLINT
-    assert(rcr != NULL);
-    rcr->set_data_version(e.version_);
-    rcr->set_serialized_data(e.ser_data_);
+    if (iter != job_templates_.end()) {
+      JobTemplate *jt = iter->second;
+      RemoteCopyReceiveJob *rcr = dynamic_cast<RemoteCopyReceiveJob*>(jt->job_); // NOLINT
+      assert(rcr != NULL);
+      rcr->set_data_version(e.version_);
+      rcr->set_serialized_data(e.ser_data_);
 
-    assert(jt->dependency_counter_ > 0);
-    --(jt->dependency_counter_);
-    if (jt->dependency_counter_ == 0) {
-      jt->Refresh(parameters_, template_generation_id_);
+      assert(jt->dependency_counter_ > 0);
+      --(jt->dependency_counter_);
+      if (jt->dependency_counter_ == 0) {
+        jt->Refresh(parameters_, template_generation_id_);
+        if (extra_dependency_.size() == 0) {
+          ready_jobs->push_back(rcr);
+          ++counter;
+        } else {
+          blocked_on_extra_dependency_.push_back(rcr);
+        }
+      }
+    } else {
+      // TODO(omidm): HACK FOR NOW WITH INDEX 0
+      // Note the read by reference. -omidm
+      TemplateExtension& ext = extensions_[0];
+      RemoteCopyReceiveJob *rcr = NULL;
+      ext.LoadReceiveJob(&rcr, e, this);
+      assert(rcr);
       if (extra_dependency_.size() == 0) {
         ready_jobs->push_back(rcr);
         ++counter;

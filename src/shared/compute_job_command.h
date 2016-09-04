@@ -108,6 +108,7 @@ class ComputeJobCommand : public SchedulerCommand {
     GeometricRegion region_;
     Parameter params_;
 
+  public:
     bool ReadFromProtobuf(const ExecuteComputeJobPBuf& buf);
     bool WriteToProtobuf(ExecuteComputeJobPBuf* buf);
 };

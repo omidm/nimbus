@@ -118,6 +118,10 @@ namespace nimbus {
 
     virtual bool AssignComplexJob(ComplexJobEntry* job);
 
+    virtual void LoadTemplateExtensions(ComplexJobEntry* job,
+                                        BindingTemplate *bt,
+                                        ExtensionsMap *extensions);
+
     virtual size_t UpdateDataForCascading(BindingTemplate *bt,
                                           ComplexJobEntry *complex_job,
                                           const BindingTemplate::PatternEntry *pattern,

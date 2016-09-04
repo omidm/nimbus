@@ -110,6 +110,15 @@ const BindingTemplate::PatternList* BindingTemplate::end_pattern_list_p() const 
   return &end_pattern_list_;
 }
 
+const std::map<worker_id_t, BindingTemplate::JobIdPtrList>*
+BindingTemplate::worker_job_ids_p() const {
+  return &worker_job_ids_;
+}
+
+const std::map<job_id_t, BindingTemplate::ComputeJobCommandTemplate*>*
+BindingTemplate::compute_job_to_command_map_p() const {
+  return &compute_job_to_command_map_;
+}
 
 
 void
@@ -634,16 +643,9 @@ bool BindingTemplate::Finalize(const std::vector<job_id_t>& compute_job_ids) {
   return true;
 }
 
-bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
-                                  const std::vector<Parameter>& parameters,
-                                  const std::vector<job_id_t>& copy_job_ids,
-                                  const std::vector<physical_data_id_t> *physical_ids,
-                                  const ExtraDependency& extra_dependency,
-                                  const template_id_t& template_generation_id,
-                                  SchedulerServer *server) {
-  Log log(Log::NO_FILE);
-  log.log_StartTimer();
-
+bool BindingTemplate::Refresh(const std::vector<job_id_t>& compute_job_ids,
+                              const std::vector<job_id_t>& copy_job_ids,
+                              const std::vector<physical_data_id_t> *physical_ids) {
   boost::unique_lock<boost::mutex> lock(mutex_);
   assert(finalized_);
   assert(compute_job_ids.size() == compute_job_id_list_.size());
@@ -677,16 +679,29 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
     }
   }
 
-  log.log_StopTimer();
-  std::cout << "COMPLEX: Instantiate Loading: "
-    << log.timer() << std::endl;
+  return true;
+}
 
+
+bool BindingTemplate::Instantiate(const std::vector<Parameter>& parameters,
+                                  const ExtraDependency& extra_dependency,
+                                  const template_id_t& template_generation_id,
+                                  const ExtensionsMap& extensions,
+                                  SchedulerServer *server) {
+  boost::unique_lock<boost::mutex> lock(mutex_);
+  assert(finalized_);
 
   if (established_command_template_) {
-    SpawnCommandTemplateAtWorkers(parameters, extra_dependency, server, template_generation_id);
+    SpawnCommandTemplateAtWorkers(parameters,
+                                  extra_dependency,
+                                  template_generation_id,
+                                  extensions,
+                                  server);
     return true;
   }
 
+  // Extensions could be only handled after command template is established. -omidm
+  assert(extensions.size() == 0);
 
   if (worker_template_active_ && !established_command_template_) {
     SendCommandTemplateHeaderToWorkers(server);
@@ -742,15 +757,14 @@ bool BindingTemplate::Instantiate(const std::vector<job_id_t>& compute_job_ids,
     }
   }
 
-
   if (worker_template_active_ && !established_command_template_) {
     SendCommandTemplateFinalizeToWorkers(server);
     established_command_template_ = true;
   }
 
-
   return true;
 }
+
 
 void BindingTemplate::SendCommandTemplateHeaderToWorkers(SchedulerServer *server) {
   std::set<worker_id_t>::iterator iter = worker_ids_.begin();
@@ -812,8 +826,9 @@ void BindingTemplate::SendCommandTemplateFinalizeToWorkers(SchedulerServer *serv
 
 void BindingTemplate::SpawnCommandTemplateAtWorkers(const std::vector<Parameter>& parameters,
                                                     const ExtraDependency& extra_dependency,
-                                                    SchedulerServer *server,
-                                                    const template_id_t& template_generation_id) {
+                                                    const template_id_t& template_generation_id,
+                                                    const ExtensionsMap& extensions,
+                                                    SchedulerServer *server) {
   std::set<worker_id_t>::iterator iter = worker_ids_.begin();
   for (; iter != worker_ids_.end(); ++iter) {
     worker_id_t w_id = *iter;
@@ -866,13 +881,22 @@ void BindingTemplate::SpawnCommandTemplateAtWorkers(const std::vector<Parameter>
       }
     }
 
+    std::vector<TemplateExtension> worker_extensions;
+    if (extensions.size() > 0) {
+      ExtensionsMap::const_iterator it = extensions.find(w_id);
+      if (it != extensions.end()) {
+        worker_extensions = it->second;
+      }
+    }
+
     SpawnCommandTemplateCommand cm(record_name_,
                                    inner_job_ids,
                                    outer_job_ids,
                                    ed,
                                    params,
                                    phy_ids,
-                                   template_generation_id);
+                                   template_generation_id,
+                                   worker_extensions);
 
     SchedulerWorker *worker;
     if (!server->GetSchedulerWorkerById(worker, w_id)) {

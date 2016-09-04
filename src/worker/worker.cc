@@ -787,7 +787,9 @@ void Worker::ProcessStartCommandTemplateCommand(StartCommandTemplateCommand* com
     new ExecutionTemplate(key,
                           command->inner_job_ids(),
                           command->outer_job_ids(),
-                          command->phy_ids());
+                          command->phy_ids(),
+                          application_,
+                          data_exchanger_);
 
   execution_template_in_progress_ = key;
   filling_execution_template_ = true;
@@ -849,6 +851,7 @@ void Worker::ProcessSpawnCommandTemplateCommand(SpawnCommandTemplateCommand* com
                       command->phy_ids(),
                       it->second,
                       tgi,
+                      command->extensions(),
                       &ready_jobs);
     if (instantiated) {
       pending_events_.erase(it);
@@ -862,6 +865,7 @@ void Worker::ProcessSpawnCommandTemplateCommand(SpawnCommandTemplateCommand* com
                     command->phy_ids(),
                     empty_pending_events,
                     tgi,
+                    command->extensions(),
                     &ready_jobs);
   }
 

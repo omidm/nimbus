@@ -69,7 +69,9 @@ class ExecutionTemplate {
     ExecutionTemplate(const std::string& execution_template_name,
                       const std::vector<job_id_t>& inner_job_ids,
                       const std::vector<job_id_t>& outer_job_ids,
-                      const std::vector<physical_data_id_t>& phy_ids);
+                      const std::vector<physical_data_id_t>& phy_idsi,
+                      Application *application,
+                      WorkerDataExchanger *data_exchanger);
 
     ~ExecutionTemplate();
 
@@ -84,6 +86,8 @@ class ExecutionTemplate {
     template_id_t pending_template_generation_id();
     size_t ready_job_counter();
 
+    Application* application();
+    WorkerDataExchanger* data_exchanger();
 
     bool Finalize();
 
@@ -94,6 +98,7 @@ class ExecutionTemplate {
                      const std::vector<physical_data_id_t>& physical_ids,
                      const WorkerDataExchanger::EventList& pending_events,
                      const template_id_t& template_generation_id,
+                     const std::vector<TemplateExtension>& extensions,
                      JobList *ready_jobs);
 
     bool InstantiatePending(const WorkerDataExchanger::EventList& pending_events,
@@ -373,6 +378,11 @@ class ExecutionTemplate {
     JobTemplateVector seed_job_templates_;
     std::vector<Parameter> parameters_;
 
+    std::vector<TemplateExtension> extensions_;
+    boost::unordered_map<job_id_t, size_t> migrated_jobs_;
+    Application *application_;
+    WorkerDataExchanger *data_exchanger_;
+
     mutable boost::recursive_mutex mutex_;
 
     bool pending_instantiate_;
@@ -382,6 +392,7 @@ class ExecutionTemplate {
     std::vector<Parameter> pending_parameters_;
     std::vector<physical_data_id_t> pending_physical_ids_;
     template_id_t pending_template_generation_id_;
+    std::vector<TemplateExtension> pending_extensions_;
 
 
     JobIdPtr GetExistingInnerJobIdPtr(job_id_t job_id);
