@@ -1,0 +1,51 @@
+
+
+The multi-tenant scenarie:
+
+profile/controller_progress_new.py -d output -v
+
+ 1: init & define
+ 2: over 100 workers no template
+ 3: over 50 workers no template
+ 4: over 100 workers no template
+ 5: over 100 workers no template
+ 6: over 100 workers no template
+ 7: over 100 workers controller template learning
+ 8: over 100 workers binding template learning (first time contoller template used)
+ 9: over 100 workers worker template learning (first time binding template used, complex assignment)
+10: over 100 workers full
+11: over 100 workers full
+12: over 100 workers full
+13: over 100 workers full with the extension (9, 10, 11, 12 first 4 before (template_generation_id == 5) is true, note NIMBUS_INIT_TEMPLATE_ID is 1 )
+14: over 100 workers full
+15: over 100 workers full
+16: over 100 workers full
+17: over 100 workers full
+18: over 100 workers full (10 complex assing complete 9 -> 18)
+19: over 50 workers binding template learning
+20: over 50 workers worker template learning (first time binding template used, complex assignment)
+21: over 50 workers full
+22: over 50 workers full
+23: over 50 workers full
+24: over 50 workers full
+25: over 50 workers full
+26: over 50 workers full
+27: over 50 workers full
+28: over 50 workers full
+29: over 50 workers full (10 complex assign compete 20 -> 29)
+30: over 50 workers full + extra validation (flushing and query in data manager)
+31: over 50 workers full + extra validation (only query in data manager the rest is hit)
+32: over 100 workers full
+33: over 100 workers full
+34: over 100 workers full
+35: over 100 workers full
+36: over 100 workers full
+37: over 100 workers full
+38: over 100 workers full
+39: over 100 workers full
+40: over 50 workers full + extra validation (flushing and query in data manager)
+41: over 50 workers full + extra validation (only query in data manager the rest is hit)
+42: over 50 workers full
+43: over 50 workers full
+
+
