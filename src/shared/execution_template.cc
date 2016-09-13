@@ -573,12 +573,15 @@ void ExecutionTemplate::ProcessReceiveEvent(const WorkerDataExchanger::Event& e,
         }
       }
     } else {
-      // TODO(omidm): HACK FOR NOW WITH INDEX 0
-      // Note the read by reference. -omidm
-      TemplateExtension& ext = extensions_[0];
       RemoteCopyReceiveJob *rcr = NULL;
-      ext.LoadReceiveJob(&rcr, e, this);
+      std::vector<TemplateExtension>::iterator it = extensions_.begin();
+      for (; it != extensions_.end(); ++it) {
+        if (it->LoadReceiveJob(&rcr, e, this)) {
+          break;
+        }
+      }
       assert(rcr);
+
       if (extra_dependency_.size() == 0) {
         ready_jobs->push_back(rcr);
         ++counter;

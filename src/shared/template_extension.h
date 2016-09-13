@@ -93,9 +93,9 @@ class TemplateExtension {
                         ExecutionTemplate *et,
                         bool append);
 
-    size_t LoadReceiveJob(RemoteCopyReceiveJob **rcr,
-                          const WorkerDataExchanger::Event& e,
-                          ExecutionTemplate *et);
+    bool LoadReceiveJob(RemoteCopyReceiveJob **rcr,
+                        const WorkerDataExchanger::Event& e,
+                        ExecutionTemplate *et);
 
 
   private:

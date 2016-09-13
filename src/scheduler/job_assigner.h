@@ -118,9 +118,27 @@ namespace nimbus {
 
     virtual bool AssignComplexJob(ComplexJobEntry* job);
 
-    virtual void LoadTemplateExtensions(ComplexJobEntry* job,
-                                        BindingTemplate *bt,
-                                        ExtensionsMap *extensions);
+    virtual size_t GenerateMigrationScenarios(
+                        ComplexJobEntry* job,
+                        BindingTemplate *bt,
+                        const template_id_t& tgid,
+                        ExtensionsMap *extensions);
+
+    virtual void FindJobsToMigrate(
+                        ComplexJobEntry* job,
+                        BindingTemplate *bt,
+                        const size_t& count,
+                        const worker_id_t& to_worker_id,
+                        const worker_id_t& from_worker_id,
+                        std::vector<ShadowJobEntry*>* shadow_jobs,
+                        std::vector<BindingTemplate::ComputeJobCommandTemplate*>* template_jobs);
+
+    virtual void AppendTemplateExtensions(
+                        const worker_id_t& to_worker_id,
+                        const worker_id_t& from_worker_id,
+                        ShadowJobEntry* sj,
+                        BindingTemplate::ComputeJobCommandTemplate* tj,
+                        ExtensionsMap *extensions);
 
     virtual size_t UpdateDataForCascading(BindingTemplate *bt,
                                           ComplexJobEntry *complex_job,

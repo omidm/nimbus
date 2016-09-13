@@ -550,16 +550,16 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
 
 
   ExtensionsMap extensions;
-#ifdef _RUN_MULTI_TENANT_SCENARIO
-  if (template_generation_id_ == 5) {
-    log.log_StartTimer();
-    LoadTemplateExtensions(job, bt, &extensions);
-    log.log_StopTimer();
-    std::cout << "COMPLEX: Load Extensions: "
-      << job->template_entry()->template_name()
-      << " tgid " << (template_generation_id_ + 1)
-      << " " << log.timer() << std::endl;
-  }
+#ifdef _RUN_MIGRATION_SCENARIO
+  log.log_StartTimer();
+  size_t ext_count =
+    GenerateMigrationScenarios(job, bt, template_generation_id_, &extensions);
+  log.log_StopTimer();
+  std::cout << "COMPLEX: Loaded "
+    << ext_count << " Extensions for template "
+    << job->template_entry()->template_name()
+    << " at tgid " << template_generation_id_
+    << " :" << log.timer() << std::endl;
 #endif
 
   log.log_StartTimer();
@@ -593,29 +593,81 @@ bool JobAssigner::AssignComplexJob(ComplexJobEntry *job) {
   return true;
 }
 
-
-void JobAssigner::LoadTemplateExtensions(ComplexJobEntry *job,
-                                         BindingTemplate *bt,
-                                         ExtensionsMap *extensions) {
-#ifndef _RUN_MULTI_TENANT_SCENARIO
+size_t JobAssigner::GenerateMigrationScenarios(
+                  ComplexJobEntry* job,
+                  BindingTemplate *bt,
+                  const template_id_t& tgid,
+                  ExtensionsMap *extensions) {
+#ifndef _RUN_MIGRATION_SCENARIO
   assert(NULL);
 #endif
 
-  worker_id_t to_worker_id = 1;
-  worker_id_t from_worker_id = 2;
+  size_t count = 0;
+  size_t ratio = 0;
+  std::vector<ShadowJobEntry*> shadow_jobs;
+  std::vector<BindingTemplate::ComputeJobCommandTemplate*> template_jobs;
 
-  // The following is an algorithm to find a gradient task at worker 2, the
-  // general case might get lengthy, after first run, you could fill in the
-  // job_id and shadow_job_id from the std:out of the controller and comment out
-  // the general case code block to avoid the cost.
-  ShadowJobEntry *sj = NULL;
-  BindingTemplate::ComputeJobCommandTemplate* tj = NULL;
+  switch (tgid) {
+    case 5:
+      // only one task from worker 2 to worker 1;
+      count = 1;
+      FindJobsToMigrate(job, bt, count, 1, 2, &shadow_jobs, &template_jobs);
+      AppendTemplateExtensions(1, 2, shadow_jobs[0], template_jobs[0], extensions);
+      return count;
+      break;
+    case 6:
+      // 10% of the tasks on even workers;
+      ratio = 10;
+      break;
+    case 7:
+      // 20% of the tasks on even workers;
+      ratio = 5;
+      break;
+    case 8:
+      // 50% of the tasks on even workers;
+      ratio = 2;
+      break;
+    default:
+      return count;
+      break;
+  }
 
-  job_id_t job_id = 0;  // 10000000120
-  job_id_t shadow_job_id = 0;  // 10000000070
+  size_t worker_num = server_->worker_num();
+  size_t task_num = bt->compute_job_to_command_map_p()->size();
 
-  // General case
-  // comment out if job_id/shadow_job_id are hard coded (other than zero)!
+  for (size_t w = 1; w < worker_num; w += 2) {
+    size_t c = (task_num - worker_num) / worker_num / ratio;
+    FindJobsToMigrate(job, bt, c, w, w+1, &shadow_jobs, &template_jobs);
+    for (size_t i = 0; i < c; ++i) {
+      AppendTemplateExtensions(w, w+1, shadow_jobs[i], template_jobs[i], extensions);
+    }
+    count += c;
+  }
+
+  return count;
+}
+
+void JobAssigner::FindJobsToMigrate(
+                  ComplexJobEntry* job,
+                  BindingTemplate *bt,
+                  const size_t& count,
+                  const worker_id_t& to_worker_id,
+                  const worker_id_t& from_worker_id,
+                  std::vector<ShadowJobEntry*>* shadow_jobs,
+                  std::vector<BindingTemplate::ComputeJobCommandTemplate*>* template_jobs) {
+#ifndef _RUN_MIGRATION_SCENARIO
+  assert(NULL);
+#endif
+
+  if (count == 0) {
+    shadow_jobs->clear();
+    template_jobs->clear();
+    return;
+  }
+
+  boost::unordered_map<job_id_t, ShadowJobEntry*> shadow_jobs_map;
+  boost::unordered_map<job_id_t, BindingTemplate::ComputeJobCommandTemplate*> template_jobs_map;
+
   {
     std::map<worker_id_t, BindingTemplate::JobIdPtrList>::const_iterator iter =
       bt->worker_job_ids_p()->find(from_worker_id);
@@ -624,47 +676,80 @@ void JobAssigner::LoadTemplateExtensions(ComplexJobEntry *job,
     BindingTemplate::JobIdPtrList::const_iterator it =
       iter->second.begin();
     for (; it != iter->second.end(); ++it) {
-      bool success = job->OMIDGetShadowJobEntryById(*(*it), sj);
-      assert(success);
+      job_id_t job_id = *(*it);
+      ShadowJobEntry *sj = NULL;
+      job->OMIDGetShadowJobEntryById(job_id, sj);
+      if (sj == NULL) {
+        continue;
+      }
+
       if (sj->job_name() == "gradient") {
-        job_id = *(*it);
-        std::cout << "\n**** MIGRATED JOB ID: " << job_id << std::endl;
-        break;
+        shadow_jobs_map[job_id] = sj;
+        if (shadow_jobs_map.size() == count) {
+          break;
+        }
       }
     }
   }
+  assert(shadow_jobs_map.size() == count);
+
   {
     std::map<job_id_t, BindingTemplate::ComputeJobCommandTemplate*>::const_iterator iter =
       bt->compute_job_to_command_map_p()->begin();
     for (; iter != bt->compute_job_to_command_map_p()->end(); ++iter) {
-      if (*(iter->second->job_id_ptr_) == job_id) {
-        shadow_job_id = iter->first;
-        std::cout << "\n**** MIGRATED SHADOW JOB ID: " << shadow_job_id << std::endl;
-        tj = iter->second;
-        break;
+      job_id_t job_id = *(iter->second->job_id_ptr_);
+      job_id_t template_job_id = iter->first;
+      BindingTemplate::ComputeJobCommandTemplate* tj = iter->second;
+
+      boost::unordered_map<job_id_t, ShadowJobEntry*>::iterator it =
+        shadow_jobs_map.find(job_id);
+      if (it != shadow_jobs_map.end()) {
+        dbg(DBG_ERROR, "\nMIGRATED: selected job %lu (template %lu) to migrate from worker % lu to worker %lu.\n\n", // NOLINT
+            job_id, template_job_id, from_worker_id, to_worker_id);
+        template_jobs_map[job_id] = tj;
+        if (template_jobs_map.size() == count) {
+          break;
+        }
       }
     }
   }
+  assert(template_jobs_map.size() == count);
 
-  // Hard-coded
   {
-    bool success = job->OMIDGetShadowJobEntryById(job_id, sj);
-    assert(success);
-    std::map<job_id_t, BindingTemplate::ComputeJobCommandTemplate*>::const_iterator iter =
-      bt->compute_job_to_command_map_p()->find(shadow_job_id);
-    assert(iter != bt->compute_job_to_command_map_p()->end());
-    tj = iter->second;
+    shadow_jobs->clear();
+    template_jobs->clear();
+
+    boost::unordered_map<job_id_t, ShadowJobEntry*>::iterator iter =
+      shadow_jobs_map.begin();
+    for (; iter != shadow_jobs_map.end(); ++iter) {
+      job_id_t job_id = iter->first;
+
+      boost::unordered_map<job_id_t, BindingTemplate::ComputeJobCommandTemplate*>::iterator it =
+        template_jobs_map.find(job_id);
+      assert(it != template_jobs_map.end());
+      shadow_jobs->push_back(iter->second);
+      template_jobs->push_back(it->second);
+    }
   }
 
+  assert(shadow_jobs->size() == count);
+  assert(template_jobs->size() == count);
+}
 
-  assert(sj);
-  assert(tj);
 
+void JobAssigner::AppendTemplateExtensions(
+                const worker_id_t& to_worker_id,
+                const worker_id_t& from_worker_id,
+                ShadowJobEntry* sj,
+                BindingTemplate::ComputeJobCommandTemplate* tj,
+                ExtensionsMap *extensions) {
+#ifndef _RUN_MIGRATION_SCENARIO
+  assert(NULL);
+#endif
 
-  // TODO(omidm): the next portion of code is quite hacky, mainly because I am
-  // assuming it is running against logistic regression with disabled automatic
-  // reduction, and in the _RUN_MULTI_TENANT_SCENARIO mode. The general
-  // solution should:
+  // TODO(omidm): this code is quite hacky, mainly because I am assuming it is
+  // running against logistic regression with disabled automatic reduction, and
+  // in the _RUN_MULTI_TENANT_SCENARIO mode. The general solution should:
   //
   //    1. add support for scratch/reduce set.
   //
@@ -694,10 +779,10 @@ void JobAssigner::LoadTemplateExtensions(ComplexJobEntry *job,
       assert(instances.size() > 0);
       if (sj->write_set_p()->contains(*iter)) {
         to_read_write_data = instances.begin()->id();
-        dbg(DBG_ERROR, "******************************* to RW %lu \n", to_read_write_data); // NOLINT
+        dbg(DBG_ERROR, "MIGRATE: for job %lu, to RW %lu.\n", sj->job_id(), to_read_write_data); // NOLINT
       } else {
         to_read_only_data = instances.begin()->id();
-        dbg(DBG_ERROR, "******************************* to RO %lu \n", to_read_only_data); // NOLINT
+        dbg(DBG_ERROR, "MIGRATE: for job %lu, to RO %lu.\n", sj->job_id(), to_read_only_data); // NOLINT
       }
     }
   }
@@ -707,7 +792,7 @@ void JobAssigner::LoadTemplateExtensions(ComplexJobEntry *job,
     BindingTemplate::PhyIdPtrSet::iterator iter = tj->write_set_ptr_.begin();
     for (; iter != tj->write_set_ptr_.end(); ++iter) {
       from_read_write_data = **iter;
-      dbg(DBG_ERROR, "******************************* to RW %lu \n", from_read_write_data); // NOLINT
+      dbg(DBG_ERROR, "MIGRATE: for job %lu, from RW %lu.\n", sj->job_id(), from_read_write_data); // NOLINT
     }
   }
 
@@ -803,7 +888,7 @@ void JobAssigner::LoadTemplateExtensions(ComplexJobEntry *job,
     compute_command = boost::shared_ptr<ComputeJobCommand>(
         new ComputeJobCommand(
           sj->job_name(),
-          ID<job_id_t>(job_id),
+          ID<job_id_t>(sj->job_id()),
           read_set,
           write_set,
           scratch_set,
@@ -817,29 +902,33 @@ void JobAssigner::LoadTemplateExtensions(ComplexJobEntry *job,
           sj->params()));
   }
 
-  extensions->clear();
-  std::vector<TemplateExtension> to_worker_exts;
   {
     TemplateExtension e(
         false,
         compute_command,
         to_worker_send_commands,
         to_worker_receive_commands);
-    to_worker_exts.push_back(e);
+    extensions->operator[](to_worker_id).push_back(e);
   }
-  std::vector<TemplateExtension> from_worker_exts;
+
   {
     TemplateExtension e(
         true,
         compute_command,
         from_worker_send_commands,
         from_worker_receive_commands);
-    from_worker_exts.push_back(e);
+    extensions->operator[](from_worker_id).push_back(e);
   }
-
-  extensions->operator[](to_worker_id) = to_worker_exts;
-  extensions->operator[](from_worker_id) = from_worker_exts;
 }
+
+
+
+
+
+
+
+
+
 
 
 bool JobAssigner::AssignJob(JobEntry *job) {

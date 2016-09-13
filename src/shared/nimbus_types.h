@@ -48,9 +48,15 @@
 #include <string>
 
 // Uncomment any of the following and recompile the libarary for various scenarios.
+// #define _RUN_MIGRATION_SCENARIO
 // #define _RUN_MULTI_TENANT_SCENARIO
 // #define _RUN_MIX_SIMPLE_COMPLEX_SCENARIO
 // #define _RUN_DELAYED_MEMOIZATION_SCENARIO
+
+// formigration scenario you need  multi-tenant scenario too.
+#ifdef _RUN_MIGRATION_SCENARIO
+#define _RUN_MULTI_TENANT_SCENARIO
+#endif
 
 // for multi-tenant scenario you need to delay memoization too.
 #ifdef _RUN_MULTI_TENANT_SCENARIO

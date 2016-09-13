@@ -180,9 +180,9 @@ size_t TemplateExtension::LoadSendJobs(JobList *ready_jobs,
 }
 
 
-size_t TemplateExtension::LoadReceiveJob(RemoteCopyReceiveJob **rcr,
-                                         const WorkerDataExchanger::Event& e,
-                                         ExecutionTemplate *et) {
+bool TemplateExtension::LoadReceiveJob(RemoteCopyReceiveJob **rcr,
+                                       const WorkerDataExchanger::Event& e,
+                                       ExecutionTemplate *et) {
   job_id_t shadow_job_id = compute_command_->job_id().elem();
 
   bool found = false;
@@ -208,9 +208,8 @@ size_t TemplateExtension::LoadReceiveJob(RemoteCopyReceiveJob **rcr,
       break;
     }
   }
-  assert(found);
 
-  return 1;
+  return found;
 }
 
 
