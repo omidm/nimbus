@@ -10,3 +10,5 @@ sudo apt-get install make
 # for 16.04
 sudo apt-get install python
 
+# for plotting scripts
+sudo apt-get install python-numpy
