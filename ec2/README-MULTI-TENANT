@@ -1,51 +1,142 @@
+-------------------------------------------------------------------------------
+How to run dynamic scheduling scenarios:
+-------------------------------------------------------------------------------
+
+1. uncomment the following line in "src/shared/nimbus_types.h", for either
+   multi-tenant or migration scenario:
+
+    - // #define _RUN_MULTI_TENANT_SCENARIO
+    + #define _RUN_MULTI_TENANT_SCENARIO
+
+    - // #define _RUN_MIGRATION_SCENARIO
+    + #define _RUN_MIGRATION_SCENARIO
+
+2. clean and rebuild
+
+    $ cd <nimbus-root>
+    $ make clean
+    $ make
+
+3. run against the logistic regression applications and you need to deactivate
+   automatic reduction by passing --dar option to the application when
+   launching the workers.
 
 
-The multi-tenant scenarie:
 
-profile/controller_progress_new.py -d output -v
+-------------------------------------------------------------------------------
+Specifications:
+-------------------------------------------------------------------------------
 
- 1: init & define
- 2: over 100 workers no template
- 3: over 50 workers no template
- 4: over 100 workers no template
- 5: over 100 workers no template
- 6: over 100 workers no template
- 7: over 100 workers controller template learning
- 8: over 100 workers binding template learning (first time contoller template used)
- 9: over 100 workers worker template learning (first time binding template used, complex assignment)
-10: over 100 workers full
-11: over 100 workers full
-12: over 100 workers full
-13: over 100 workers full with the extension (9, 10, 11, 12 first 4 before (template_generation_id == 5) is true, note NIMBUS_INIT_TEMPLATE_ID is 1 )
-14: over 100 workers full
-15: over 100 workers full
-16: over 100 workers full
-17: over 100 workers full
-18: over 100 workers full (10 complex assing complete 9 -> 18)
-19: over 50 workers binding template learning
-20: over 50 workers worker template learning (first time binding template used, complex assignment)
-21: over 50 workers full
-22: over 50 workers full
-23: over 50 workers full
-24: over 50 workers full
-25: over 50 workers full
-26: over 50 workers full
-27: over 50 workers full
-28: over 50 workers full
-29: over 50 workers full (10 complex assign compete 20 -> 29)
-30: over 50 workers full + extra validation (flushing and query in data manager)
-31: over 50 workers full + extra validation (only query in data manager the rest is hit)
-32: over 100 workers full
-33: over 100 workers full
-34: over 100 workers full
-35: over 100 workers full
-36: over 100 workers full
-37: over 100 workers full
-38: over 100 workers full
-39: over 100 workers full
-40: over 50 workers full + extra validation (flushing and query in data manager)
-41: over 50 workers full + extra validation (only query in data manager the rest is hit)
-42: over 50 workers full
-43: over 50 workers full
+After running the application, profile the logs with the provided scripts in
+"<nimbus-root>/ec2/profile" directory, to see the length of each iteration
+
+    $ cd <nimbus-root>/ec2
+    $ profile/controller_progress_new.py -d <output-folder> -v
+
+Followings are the map for the events in each iteration:
+
+     1: init & define
+    
+     2: over 100 workers -- no template
+    
+     3: over  50 workers -- no template
+    
+     4: over 100 workers -- no template
+    
+     5: over 100 workers -- no template
+    
+     6: over 100 workers -- no template
+    
+     7: over 100 workers -- installing controller template
+    
+     8: over 100 workers -- installing binding template
+          - first time controller template used
+    
+     9: over 100 workers -- installing worker template
+          - first time binding template used
+          - complex assignment
+    
+    10: over 100 workers -- all templates active
+    
+    11: over 100 workers -- all templates active
+    
+    12: over 100 workers -- all templates active
+    
+    13: over 100 workers -- all templates active
+          - single migration
+          - 9, 10, 11, 12 first 4 before template_generation_id is 5,
+            note NIMBUS_INIT_TEMPLATE_ID is 1.
+    
+    14: over 100 workers -- all templates active
+        - with 10% even to odd migration
+    
+    15: over 100 workers -- all templates active
+        - with 30% even to odd migration
+    
+    16: over 100 workers -- all templates active
+        - with 50% even to odd migration
+    
+    17: over 100 workers -- all templates active
+    
+    18: over 100 workers -- all templates active
+          - 10 complex assign complete 9 -> 18
+    
+    19: over  50 workers -- installing binding template
+    
+    20: over  50 workers -- installing worker template
+          - first time binding template used
+          - complex assignment)
+    
+    21: over  50 workers -- all templates active
+    
+    22: over  50 workers -- all templates active
+    
+    23: over  50 workers -- all templates active
+    
+    24: over  50 workers -- all templates active
+    
+    25: over  50 workers -- all templates active
+    
+    26: over  50 workers -- all templates active
+    
+    27: over  50 workers -- all templates active
+    
+    28: over  50 workers -- all templates active
+    
+    29: over  50 workers -- all templates active
+          - 10 complex assign compete 20 -> 29
+    
+    30: over 100 workers -- all templates active
+          - extra validation
+          - flushing and query in data manager
+    
+    31: over 100 workers -- all templates active
+          - extra validation
+          - only query in data manager the rest is hit
+    
+    32: over 100 workers -- all templates active
+    
+    33: over 100 workers -- all templates active
+    
+    34: over 100 workers -- all templates active
+    
+    35: over 100 workers -- all templates active
+    
+    36: over 100 workers -- all templates active
+    
+    37: over 100 workers -- all templates active
+    
+    38: over 100 workers -- all templates active
+    
+    39: over 100 workers -- all templates active
+    
+    40: over  50 workers -- all templates active
+          - extra validation
+          - flushing and query in data manager
+    
+    41: over  50 workers -- all templates active
+          - extra validation
+          - only query in data manager the rest is hit
+    ...
 
 
