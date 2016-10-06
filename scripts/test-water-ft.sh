@@ -63,8 +63,8 @@ print_help "${DESC}" "${USAGE}" "$1"
 
 TIME_OUT_T=100
 FT_PERIOD=15
-FAULT_DELAY=40
-CHKP_NUM=2 # FAULT_DELAY / FT_PERIOD
+FAULT_DELAY=25
+CHKP_NUM=1 # FAULT_DELAY / FT_PERIOD
 
 CONTROLLER_ARGS="--aft --ft_period ${FT_PERIOD} -t 4 -a 6 -w 2 --split 1 2 1"
 WORKER_ARGS="2 --othread 2 "
