@@ -17,6 +17,9 @@ SET(${PROJECT_NAME}_h
 #List the libraries you want to link against - including a higher-level
 #library automatically includes the lower-level ones
 SET(LIBRARIES_TO_LINK PhysBAM_Rendering-OpenGL)
+  
+# Added to fix the compile issue on Ubuntu 16.04 - omidm
+LIST(APPEND LIBRARIES_TO_LINK X11)
         
 #you can force cache variables to be on or off here
 #SET(PHYSBAM_USE_CUDA ON CACHE BOOL ON FORCE)

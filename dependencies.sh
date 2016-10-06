@@ -12,3 +12,7 @@ sudo apt-get install python
 
 # for plotting scripts
 sudo apt-get install python-numpy
+
+# for visualizing physbam through scripts
+sudo apt-get install xdotool
+
