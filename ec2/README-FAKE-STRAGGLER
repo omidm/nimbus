@@ -39,7 +39,7 @@ Then launch 8 cpu-bound background processes in the non-limited group. The
 application could be as simple as adding doubles; there is an example provided
 in the repository:
 
-    $ 8 X : sudo cgexec -g cpu:lesscpulimited taskset -c 0-7 ~/cloud/src/nimbus/test/bg_process/bg_process 1 1 &
+    $ 8 X : cd bg_process; sudo cgexec -g cpu:lesscpulimited taskset -c 0-7 ./bg_process -t 1 -s 1 &
 
 Each iteration of a normal running PhysBAM takes 21 seconds, while running with
 10X  slower straggler makes the iteration take 183 seconds.
@@ -66,7 +66,7 @@ Then launch 8 cpu-bound background processes in the non-limited group with
 could be as simple as adding doubles; there is an example provided in the
 repository:
 
-    $ 8 X : sudo cgexec -g cpu:lesscpulimited taskset -c 0-3,8-11 ~/cloud/src/nimbus/test/bg_process/bg_process 1 1 &
+    $ 8 X : cd bg_process; sudo cgexec -g cpu:lesscpulimited taskset -c 0-3,8-11 ./bg_process -t 1 -s 1 &
 
 Each iteration of a normal running Nimbus takes 25 seconds, while running with
 10X  slower straggler makes the iteration take 190 seconds.

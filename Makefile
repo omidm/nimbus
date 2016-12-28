@@ -1,6 +1,6 @@
 
 # add subdirs space separated
-SUBDIRS = extern src nodes applications
+SUBDIRS = extern src nodes applications ec2
 
 .PHONY: default $(SUBDIRS) physbam clean clean-hard clean-logs
 
@@ -10,6 +10,7 @@ $(SUBDIRS):
 	$(MAKE) -C $@
 
 src: extern
+ec2: extern src
 nodes: extern src
 applications: extern src
 
@@ -18,7 +19,7 @@ physbam: src
 
 
 # add subdirs space separated
-CLEAN_SUBDIRS = src nodes applications
+CLEAN_SUBDIRS = src nodes applications ec2
 clean: clean-logs
 	for dir in $(CLEAN_SUBDIRS); do \
     $(MAKE) -C $$dir clean; \
@@ -26,7 +27,7 @@ clean: clean-logs
 
 
 # add subdirs space separated
-CLEAN_H_SUBDIRS = extern src nodes applications applications/physbam
+CLEAN_H_SUBDIRS = extern src nodes applications ec2 applications/physbam
 clean-hard: clean-logs
 	for dir in $(CLEAN_H_SUBDIRS); do \
     $(MAKE) -C $$dir clean; \
@@ -34,7 +35,7 @@ clean-hard: clean-logs
 
 
 # add subdirs space separated
-CLEAN_L_SUBDIRS = nodes/nimbus_controller nodes/nimbus_worker
+CLEAN_L_SUBDIRS = nodes/nimbus_controller nodes/nimbus_worker ec2/bg_process
 clean-logs:
 	for dir in $(CLEAN_L_SUBDIRS); do \
     $(MAKE) -C $$dir clean-logs; \
