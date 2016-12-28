@@ -823,6 +823,7 @@ void RemoteCopyReceiveJob::Execute(Parameter params, const DataArray& da) {
   da[0]->set_version(data_version_);
 
   data_copy->Destroy();
+  delete data_copy;
   timer::StopTimer(timer::kRCRCopy);
   // delete serialized_data_->data_ptr(); // Not needed with shared pointer.
   delete serialized_data_;
@@ -874,6 +875,7 @@ void MegaRCRJob::Execute(Parameter params, const DataArray& da) {
     da[idx]->Copy(data_copy);
 
     data_copy->Destroy();
+    delete data_copy;
     // delete ser_data->data_ptr(); // Not needed with shared pointer.
     delete ser_data;
   }
