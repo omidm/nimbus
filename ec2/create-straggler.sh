@@ -46,7 +46,7 @@
 # Author: Omid Mashayekhi <omidm@stanford.edu>
 
 if [ "$1" = t ]; then
-  killall -v bg_process
+  sudo killall -v bg_process
   exit 0
 fi
 
