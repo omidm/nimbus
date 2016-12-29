@@ -47,8 +47,8 @@
 
 if [ "$1" = t ]; then
   killall -v bg_process
+  exit 0
 fi
-exit 0
 
 PID=`ps aux | grep nimbus_worker | grep -v grep | awk '{print $2}'`
 echo "PID:  " $PID
