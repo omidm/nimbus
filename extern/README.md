@@ -120,16 +120,19 @@ variables with those arguments in the current session:
 
 or preferably, permanently:
 
+    $ echo 'export CPATH=/usr/include/x86_64-linux-gnu' >> ~/.bashrc
     $ echo 'export CPATH=/usr/include/x86_64-linux-gnu' >> ~/.profile
     $ echo 'export CPATH=/usr/include/x86_64-linux-gnu' >> ~/.bash_profile
+    $ echo 'export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu' >> ~/.bashrc
     $ echo 'export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu' >> ~/.profile
     $ echo 'export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu' >> ~/.bash_profile
     $ source ~/.profile
 
-The `install-gcc-4.5.3.sh` script updates the `~/.profile`, `~/.bash_profile`,
-however there is no way for a shell process to update the parent session
-environment variables. After installation, you should either close the shell
-and open a new one or refresh the environment variables as follows:
+The `install-gcc-4.5.3.sh` script updates the `~/.bashrc`, `~/.profile`, and
+`~/.bash_profile`, however there is no way for a shell process to update the
+parent session environment variables. After installation, you should either
+close the shell and open a new one or refresh the environment variables as
+follows:
 
     $ source ~/.profile
 

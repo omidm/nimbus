@@ -61,12 +61,14 @@ $ sudo make install</code></pre>
 <pre><code>$ export CPATH=/usr/include/x86_64-linux-gnu
 $ export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu</code></pre>
 <p>or preferably, permanently:</p>
-<pre><code>$ echo &#39;export CPATH=/usr/include/x86_64-linux-gnu&#39; &gt;&gt; ~/.profile
+<pre><code>$ echo &#39;export CPATH=/usr/include/x86_64-linux-gnu&#39; &gt;&gt; ~/.bashrc
+$ echo &#39;export CPATH=/usr/include/x86_64-linux-gnu&#39; &gt;&gt; ~/.profile
 $ echo &#39;export CPATH=/usr/include/x86_64-linux-gnu&#39; &gt;&gt; ~/.bash_profile
+$ echo &#39;export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu&#39; &gt;&gt; ~/.bashrc
 $ echo &#39;export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu&#39; &gt;&gt; ~/.profile
 $ echo &#39;export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu&#39; &gt;&gt; ~/.bash_profile
 $ source ~/.profile</code></pre>
-<p>The <code>install-gcc-4.5.3.sh</code> script updates the <code>~/.profile</code>, <code>~/.bash_profile</code>, however there is no way for a shell process to update the parent session environment variables. After installation, you should either close the shell and open a new one or refresh the environment variables as follows:</p>
+<p>The <code>install-gcc-4.5.3.sh</code> script updates the <code>~/.bashrc</code>, <code>~/.profile</code>, and <code>~/.bash_profile</code>, however there is no way for a shell process to update the parent session environment variables. After installation, you should either close the shell and open a new one or refresh the environment variables as follows:</p>
 <pre><code>$ source ~/.profile</code></pre>
 <p>Perhaps, a more long term solution would be to configure/compile gcc in a way that those paths are built-in, like the packages from package manager. I have looked through the source code, and noticed that following files are responsible for updating the search paths:</p>
 <pre><code>file: &lt;gcc-source&gt;/gcc/incpath.c: functions such as add_path, add_cpp_dir_path, etc.
