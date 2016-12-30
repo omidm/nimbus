@@ -1,0 +1,53 @@
+-------------------------------------------------------------------------------
+How to create a water scenario with splashes:
+-------------------------------------------------------------------------------
+
+Our common water simulation setting does not create enough visually interesting
+features. One way to create splashes is to widen the water source. It could be
+done by modifying the applications/physbam/water/water_sources.cc as follows:
+
+[1mdiff --git a/src/nimbus/applications/physbam/water/water_sources.cc b/src/nimbus/applications/physbam/water/water_sources.cc[m
+[1mindex 4a402e2..1209522 100644[m
+[1m--- a/src/nimbus/applications/physbam/water/water_sources.cc[m
+[1m+++ b/src/nimbus/applications/physbam/water/water_sources.cc[m
+[36m@@ -31,8 +31,8 @@[m [mvoid WaterSources::Add_Source(WATER_EXAMPLE<VECTOR<T,3> > *example)[m
+ {[m
+     typedef VECTOR<T,3> TV;[m
+     TV point1,point2;CYLINDER<T> source;[m
+[31m-    point1=TV::All_Ones_Vector()*(T).8;point1(1)=.4;point1(3)=.95;point2=TV::All_Ones_Vector()*(T).8;point2(1)=.4;point2(3)=1;[m
+[31m-    source.Set_Endpoints(point1,point2);source.radius=.1;[m
+[32m+[m[32m    point1=TV::All_Ones_Vector()*(T).75;point1(1)=.4;point1(3)=.95;point2=TV::All_Ones_Vector()*(T).75;point2(1)=.4;point2(3)=1;[m
+[32m+[m[32m    source.Set_Endpoints(point1,point2);source.radius=.2;[m
+     IMPLICIT_OBJECT<TV>* analytic=new ANALYTIC_IMPLICIT_OBJECT<CYLINDER<T> >(source);[m
+     example->sources.Append(analytic);[m
+ }[m
+
+Also, note that the water source shuts off after 3 seconds (72 frames). You can
+change that by modifying the applications/physbam/water/water_example.cc files
+in two places, as follows:
+
+
+[1mdiff --git a/src/nimbus/applications/physbam/water/water_example.cc b/src/nimbus/applications/physbam/water/water_example.cc[m
+[1mindex d5e4c38..c795f17 100644[m
+[1m--- a/src/nimbus/applications/physbam/water/water_example.cc[m
+[1m+++ b/src/nimbus/applications/physbam/water/water_example.cc[m
+[36m@@ -271,7 +271,7 @@[m [mSet_Boundary_Conditions(const T time) {[m
+        iterator.Valid();[m
+        iterator.Next()) {[m
+     for (int i = 1; i <= sources.m; i++) {[m
+[31m-      if (time <= 3 && sources(i)->Lazy_Inside(iterator.Location())) {[m
+[32m+[m[32m      if (time <= 30 && sources(i)->Lazy_Inside(iterator.Location())) {[m
+         projection.elliptic_solver->psi_N(iterator.Full_Index()) = true;[m
+         if ((TV::dimension==2 && iterator.Axis()==1) ||[m
+             (TV::dimension==3 && iterator.Axis()==3)) {[m
+[36m@@ -288,7 +288,7 @@[m [mSet_Boundary_Conditions(const T time) {[m
+ template<class TV> void WATER_EXAMPLE<TV>::[m
+ Adjust_Phi_With_Sources(const T time)[m
+ {[m
+[31m-  if (time > 3) return;[m
+[32m+[m[32m  if (time > 30) return;[m
+   for (typename GRID<TV>::CELL_ITERATOR iterator(mac_grid);[m
+        iterator.Valid();[m
+        iterator.Next()) {[m
+
+
