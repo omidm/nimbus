@@ -85,4 +85,19 @@ In this case the iteration takes 122 seconds which is faster that one might
 expect. :(
 
 
+-------------------------------------------------------------------------------
+_RUN_STRAGGLER_SCENARIO
+-------------------------------------------------------------------------------
+
+If you uncomment the #define in the src/shared/nimbus_types.h directory, you
+can run a straggler scenario. It uses the "ec2/create-straggler.sh" script to
+launch the background processes on all the available cores and set the
+appropriate cpu shares.
+
+The scenario assumes that there are 8 workers and the 8th worker will straggler
+after 200 iteration, and killed after 400 iterations.  Iteration is marked by
+the job whoes names starts with "__MARK_STAT_".  These specific numbners are
+reasonable for running 128^3 water simulation for 20 frames over 8 workers,
+each with 8 cores, 4x4x4 parttioning and, controller "--split 4 1 2" argument. 
+
 

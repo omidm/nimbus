@@ -26,5 +26,6 @@ clean-logs:
 	\rm -f *.txt
 	\rm -rf _db_*
 	\rm -rf output/
+	\rm -rf split_output/
 	\rm -rf core
 

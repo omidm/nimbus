@@ -35,36 +35,90 @@
 #
 
 # This script makes the nimbus_worker process running on the current machine
-# straggle by a factor of 10. It assumes that the machine has 8 hyper-threaded
-# processors (16 concurrent threads) and the worker is using only 4 processors
-# (8 threads), launched for example with "taskset" command.
-
+# straggle by a factor of 10. It launches cpu bound processes on all available
+# cores and enforces the cpu share with cgroup.
+#
+# If the first argument is 't', it kills all background processes, and
+# essentially removes the straggler. The default straggling ration is 10x;
+# meaning 9 shares of cpu goes to the background process and 1 share goes to
+# nimbus_worker. You can change the ratio by passing an integer (>1) as the
+# first argument.  
+#
 # you might need to install cgroup:
 #    $ sudo apt-get install cgroup-bin
 # For more information refer to README-FAKE-STRAGGLER file in this directory.
 
 # Author: Omid Mashayekhi <omidm@stanford.edu>
 
+# **************************
+# Text Reset
+RCol='\x1B[0m'    
+# Regular           
+Bla='\x1B[0;90m';
+Red='\x1B[0;91m';
+Gre='\x1B[0;92m';
+Yel='\x1B[0;93m';
+Blu='\x1B[0;94m';
+Pur='\x1B[0;95m';
+Cya='\x1B[0;96m';
+Whi='\x1B[0;97m';
+# **************************
+
+
 if [ "$1" = t ]; then
-  sudo killall -v bg_process
+  echo -e "${Gre}Killing all bg_process's ...${RCol}"
+  COUNT=$(sudo killall -v bg_process 2>&1 | grep -v "no process found" | wc -l)
+  echo -e "${Gre}Killed ${COUNT} background processes.${RCol}"
   exit 0
 fi
 
-PID=`ps aux | grep nimbus_worker | grep -v grep | awk '{print $2}'`
-echo "PID:  " $PID
+CORE_NUM=$(grep -c ^processor /proc/cpuinfo)
+if [ -z ${CORE_NUM} ]; then
+  echo -e "${Red}Could not detect number of cores.${RCol}"
+  exit 1
+fi
+echo -e "${Gre}Detected ${CORE_NUM} cores.${RCol}"
 
-SPID=`ps -T -p $PID | grep -v SPID | awk '{print $2}'`
-echo "SPID: " $SPID
+PID=`ps aux | grep nimbus_worker | grep -v grep | awk '{print $2}'`
+if [ -z ${PID} ]; then
+  echo -e "${Red}Could not detect PID of nimbus_worker process!${RCol}"
+  exit 1
+fi
+echo -e "${Gre}PID:  ${PID}${RCol}"
+
+SPID=`ps -T -p ${PID} | grep -v SPID | awk '{print $2}'`
+if [ -z ${SPID} ]; then
+  echo -e "${Red}Could not detect SPID's of nimbus_worker threads!${RCol}"
+  exit 1
+fi
+echo -e "${Gre}SPID's:${RCol}"
+echo ${SPID}
+
+RATIO="10"
+re='^[0-9]+$'
+if [[ $1 =~ ${re} ]] ; then
+  RATIO=$1
+fi
+SHARE=$((1024 / ($RATIO - 1)))
+if [ -z ${SHARE} ]; then
+  echo -e "${Red}Could not compute the share.${RCol}"
+  exit 1
+fi
+echo -e "${Gre}RATIO: ${RATIO} - SHARE: ${SHARE}(/1024)${RCol}"
 
 sudo cgcreate -g cpu:/cpulimited
 sudo cgcreate -g cpu:/lesscpulimited
-sudo cgset -r cpu.shares=114 cpulimited
+sudo cgset -r cpu.shares=${SHARE} cpulimited
 
-for t in $SPID; do
-  sudo cgclassify -g cpu:/cpulimited $t
+for t in ${SPID}; do
+  sudo cgclassify -g cpu:/cpulimited ${t}
 done
 
-for i in {1..8}; do
-  cd bg_process/; sudo cgexec -g cpu:lesscpulimited taskset -c 0-3,8-11 ./bg_process -t 1 -s 1 &
+
+REL_PATH=`dirname $0`
+cd ${REL_PATH}/bg_process/
+for i in `seq 1 ${CORE_NUM}`; do
+  ls;sudo cgexec -g cpu:lesscpulimited ./bg_process -t 1 -s 1 &
 done
+cd - > /dev/null
 

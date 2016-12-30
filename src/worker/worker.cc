@@ -1598,6 +1598,19 @@ void Worker::PrintTimerStat() {
       static_cast<double>(j4) / 1e9,
       static_cast<double>(cas) / 1e9);
   fflush(temp);
+#ifdef _RUN_STRAGGLER_SCENARIO
+  static size_t iter_counter = 0;
+  ++iter_counter;
+  if (id_ == 8) {
+    if (iter_counter == 200) {
+      // straggling ratio is set to 10x.
+      system("../../ec2/create-straggler.sh 10");
+    } else if (iter_counter == 400) {
+      system("../../ec2/create-straggler.sh t");
+      exit(0);
+    }
+  }
+#endif
 }
 
 

@@ -48,6 +48,7 @@
 #include <string>
 
 // Uncomment any of the following and recompile the libarary for various scenarios.
+// #define _RUN_STRAGGLER_SCENARIO
 // #define _RUN_MIGRATION_SCENARIO
 // #define _RUN_MULTI_TENANT_SCENARIO
 // #define _RUN_MIX_SIMPLE_COMPLEX_SCENARIO
