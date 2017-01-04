@@ -1599,14 +1599,21 @@ void Worker::PrintTimerStat() {
       static_cast<double>(cas) / 1e9);
   fflush(temp);
 #ifdef _RUN_STRAGGLER_SCENARIO
-  static size_t iter_counter = 0;
-  ++iter_counter;
+  static double start_time = Log::GetRawTime();
   if (id_ == 8) {
-    if (iter_counter == 200) {
+    static int phase = 0;
+    if ((phase == 0) && ((Log::GetRawTime() - start_time) > 600)) {
+      ++phase;
       // straggling ratio is set to 10x.
       system("../../ec2/create-straggler.sh 10");
-    } else if (iter_counter == 400) {
+    }
+    if ((phase == 1) && ((Log::GetRawTime() - start_time) > 2100)) {
+      ++phase;
       system("../../ec2/create-straggler.sh t");
+    }
+  }
+  if (id_ == 1) {
+    if ((Log::GetRawTime() - start_time) > 2100) {
       exit(0);
     }
   }
