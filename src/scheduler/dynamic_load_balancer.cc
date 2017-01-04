@@ -43,7 +43,7 @@
 #include "./dynamic_load_balancer.h"
 #include <stdlib.h>
 
-#define LB_UPDATE_THRESHOLD (double)(0.4) // NOLINT
+#define LB_UPDATE_THRESHOLD (double)(0.5) // NOLINT
 #define LB_EXTREME_THRESHOLD (double)(0.9) // NOLINT
 
 namespace nimbus {
@@ -273,8 +273,9 @@ bool DynamicLoadBalancer::BalanceLoad(counter_t query_id) {
     }
     double load_imbalance = ((double)(std::abs(r1 - r2))) / ((double)(std::max(r1, r2))); // NOLINT
 #ifdef _RUN_STRAGGLER_SCENARIO
-    if (load_imbalance >= LB_EXTREME_THRESHOLD) {
-      return NotifyDownWorker(w2);
+    if (load_imbalance >= LB_EXTREME_THRESHOLD && (w1 == 8 && w2 == 7)) {
+      std::cout << "\n****** LB WORKER " << w1 << " IS AASUMED DOWN.\n";
+      return NotifyDownWorker(w1);
     }
 #endif
     if (load_imbalance >= LB_UPDATE_THRESHOLD) {
