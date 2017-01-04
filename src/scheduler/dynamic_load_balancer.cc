@@ -251,7 +251,7 @@ bool DynamicLoadBalancer::BalanceLoad(counter_t query_id) {
   WorkerMap::iterator w1_iter = worker_map_.begin();
   WorkerMap::iterator w2_iter = worker_map_.begin();
   ++w2_iter;
-  for (; w2_iter != worker_map_.end();) {
+  for (; w2_iter != worker_map_.end(); ++w1_iter, ++w2_iter) {
     worker_id_t w1 = w1_iter->first;
     worker_id_t w2 = w2_iter->first;
 
@@ -266,79 +266,37 @@ bool DynamicLoadBalancer::BalanceLoad(counter_t query_id) {
       assert(it != st->end());
       r2 = it->second->run_time_;
     }
+    if (r2 > r1) {
+      w1 = w2_iter->first;
+      w2 = w1_iter->first;
+    }
     double load_imbalance = ((double)(std::abs(r1 - r2))) / ((double)(std::max(r1, r2))); // NOLINT
     if (load_imbalance >= LB_UPDATE_THRESHOLD) {
-      if (r1 > r2) {
-        if (InBlackList(w2, w1)) {
-          std::cout << "\n****** LB IN BLACK LIST: "
-                    <<  w2 << " CANNOT grow into " << w1
-                    << " LIB factor :" << load_imbalance
-                    << std::endl;
-          ++w1_iter;
-          ++w2_iter;
-          continue;
-        }
-        if (CheckPossibleFluctuation(w2, w1, st)) {
-          std::cout << "\n****** LB BLACK LISTED: "
-                    <<  w2 << " CANNOT grow into " << w1
-                    << " LIB factor :" << load_imbalance
-                    << std::endl;
-          ++w1_iter;
-          ++w2_iter;
-          continue;
-        }
-        if (region_map_.BalanceRegions(w2, w1)) {
-          log_.log_WriteToFile(region_map_.Print());
-          // Update load balancing id.
-          ++load_balancing_id_;
+      if (InBlackList(w2, w1)) {
+        std::cout << "\n****** LB IN BLACK LIST: "
+                  <<  w2 << " CANNOT grow into " << w1
+                  << " LIB factor :" << load_imbalance
+                  << std::endl;
+      } else if (CheckPossibleFluctuation(w2, w1, st)) {
+        std::cout << "\n****** LB BLACK LISTED: "
+                  <<  w2 << " CANNOT grow into " << w1
+                  << " LIB factor :" << load_imbalance
+                  << std::endl;
+      } else if (region_map_.BalanceRegions(w2, w1)) {
+        log_.log_WriteToFile(region_map_.Print());
+        // Update load balancing id.
+        ++load_balancing_id_;
 
-          // Remember last exchange stats
-          last_exchange_ = std::make_pair(w2, w1);
-          last_global_run_time_ = GetGlobalRunTime(st);
+        // Remember last exchange stats
+        last_exchange_ = std::make_pair(w2, w1);
+        last_global_run_time_ = GetGlobalRunTime(st);
 
-          std::cout << "\n****** LB : "
-                    <<  w2 << " grows into " << w1
-                    << " LIB factor :" << load_imbalance
-                    << std::endl;
-        }
-      } else if (r2 > r1) {
-        if (InBlackList(w1, w2)) {
-          std::cout << "\n****** LB IN BLACK LIST: "
-                    <<  w1 << " CANNOT grow into " << w2
-                    << " LIB factor :" << load_imbalance
-                    << std::endl;
-          ++w1_iter;
-          ++w2_iter;
-          continue;
-        }
-        if (CheckPossibleFluctuation(w1, w2, st)) {
-          std::cout << "\n****** LB BLACK LISTED: "
-                    <<  w1 << " CANNOT grow into " << w2
-                    << " LIB factor :" << load_imbalance
-                    << std::endl;
-          ++w1_iter;
-          ++w2_iter;
-          continue;
-        }
-        if (region_map_.BalanceRegions(w1, w2)) {
-          log_.log_WriteToFile(region_map_.Print());
-          // Update load balancing id.
-          ++load_balancing_id_;
-
-          // Remember last exchange stats
-          last_exchange_ = std::make_pair(w1, w2);
-          last_global_run_time_ = GetGlobalRunTime(st);
-
-          std::cout << "\n****** LB : "
-                    <<  w1 << " grows into " << w2
-                    << " LIB factor :" << load_imbalance
-                    << std::endl;
-        }
+        std::cout << "\n****** LB : "
+                  <<  w2 << " grows into " << w1
+                  << " LIB factor :" << load_imbalance
+                  << std::endl;
       }
     }
-
-    ++w1_iter;
-    ++w2_iter;
   }
 
   return true;
