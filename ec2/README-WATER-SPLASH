@@ -6,48 +6,58 @@ Our common water simulation setting does not create enough visually interesting
 features. One way to create splashes is to widen the water source. It could be
 done by modifying the applications/physbam/water/water_sources.cc as follows:
 
-[1mdiff --git a/src/nimbus/applications/physbam/water/water_sources.cc b/src/nimbus/applications/physbam/water/water_sources.cc[m
-[1mindex 4a402e2..1209522 100644[m
-[1m--- a/src/nimbus/applications/physbam/water/water_sources.cc[m
-[1m+++ b/src/nimbus/applications/physbam/water/water_sources.cc[m
-[36m@@ -31,8 +31,8 @@[m [mvoid WaterSources::Add_Source(WATER_EXAMPLE<VECTOR<T,3> > *example)[m
- {[m
-     typedef VECTOR<T,3> TV;[m
-     TV point1,point2;CYLINDER<T> source;[m
-[31m-    point1=TV::All_Ones_Vector()*(T).8;point1(1)=.4;point1(3)=.95;point2=TV::All_Ones_Vector()*(T).8;point2(1)=.4;point2(3)=1;[m
-[31m-    source.Set_Endpoints(point1,point2);source.radius=.1;[m
-[32m+[m[32m    point1=TV::All_Ones_Vector()*(T).75;point1(1)=.4;point1(3)=.95;point2=TV::All_Ones_Vector()*(T).75;point2(1)=.4;point2(3)=1;[m
-[32m+[m[32m    source.Set_Endpoints(point1,point2);source.radius=.2;[m
-     IMPLICIT_OBJECT<TV>* analytic=new ANALYTIC_IMPLICIT_OBJECT<CYLINDER<T> >(source);[m
-     example->sources.Append(analytic);[m
- }[m
+diff --git a/src/nimbus/applications/physbam/water/water_sources.cc b/src/nimbus/applications/physbam/water/water_sources.cc
+index 4a402e2..1209522 100644
+--- a/src/nimbus/applications/physbam/water/water_sources.cc
++++ b/src/nimbus/applications/physbam/water/water_sources.cc
+@@ -31,8 +31,8 @@ void WaterSources::Add_Source(WATER_EXAMPLE<VECTOR<T,3> > *example)
+ {
+     typedef VECTOR<T,3> TV;
+     TV point1,point2;CYLINDER<T> source;
+-    point1=TV::All_Ones_Vector()*(T).8;point1(1)=.4;point1(3)=.95;point2=TV::All_Ones_Vector()*(T).8;point2(1)=.4;point2(3)=1;
+-    source.Set_Endpoints(point1,point2);source.radius=.1;
++    point1=TV::All_Ones_Vector()*(T).75;point1(1)=.4;point1(3)=.95;point2=TV::All_Ones_Vector()*(T).75;point2(1)=.4;point2(3)=1;
++    source.Set_Endpoints(point1,point2);source.radius=.2;
+     IMPLICIT_OBJECT<TV>* analytic=new ANALYTIC_IMPLICIT_OBJECT<CYLINDER<T> >(source);
+     example->sources.Append(analytic);
+ }
 
 Also, note that the water source shuts off after 3 seconds (72 frames). You can
 change that by modifying the applications/physbam/water/water_example.cc files
 in two places, as follows:
 
+diff --git a/src/nimbus/applications/physbam/water/water_example.cc b/src/nimbus/applications/physbam/water/water_example.cc
+index d5e4c38..c795f17 100644
+--- a/src/nimbus/applications/physbam/water/water_example.cc
++++ b/src/nimbus/applications/physbam/water/water_example.cc
+@@ -271,7 +271,7 @@ Set_Boundary_Conditions(const T time) {
+        iterator.Valid();
+        iterator.Next()) {
+     for (int i = 1; i <= sources.m; i++) {
+-      if (time <= 3 && sources(i)->Lazy_Inside(iterator.Location())) {
++      if (time <= 30 && sources(i)->Lazy_Inside(iterator.Location())) {
+         projection.elliptic_solver->psi_N(iterator.Full_Index()) = true;
+         if ((TV::dimension==2 && iterator.Axis()==1) ||
+             (TV::dimension==3 && iterator.Axis()==3)) {
+@@ -288,7 +288,7 @@ Set_Boundary_Conditions(const T time) {
+ template<class TV> void WATER_EXAMPLE<TV>::
+ Adjust_Phi_With_Sources(const T time)
+ {
+-  if (time > 3) return;
++  if (time > 30) return;
+   for (typename GRID<TV>::CELL_ITERATOR iterator(mac_grid);
+        iterator.Valid();
+        iterator.Next()) {
 
-[1mdiff --git a/src/nimbus/applications/physbam/water/water_example.cc b/src/nimbus/applications/physbam/water/water_example.cc[m
-[1mindex d5e4c38..c795f17 100644[m
-[1m--- a/src/nimbus/applications/physbam/water/water_example.cc[m
-[1m+++ b/src/nimbus/applications/physbam/water/water_example.cc[m
-[36m@@ -271,7 +271,7 @@[m [mSet_Boundary_Conditions(const T time) {[m
-        iterator.Valid();[m
-        iterator.Next()) {[m
-     for (int i = 1; i <= sources.m; i++) {[m
-[31m-      if (time <= 3 && sources(i)->Lazy_Inside(iterator.Location())) {[m
-[32m+[m[32m      if (time <= 30 && sources(i)->Lazy_Inside(iterator.Location())) {[m
-         projection.elliptic_solver->psi_N(iterator.Full_Index()) = true;[m
-         if ((TV::dimension==2 && iterator.Axis()==1) ||[m
-             (TV::dimension==3 && iterator.Axis()==3)) {[m
-[36m@@ -288,7 +288,7 @@[m [mSet_Boundary_Conditions(const T time) {[m
- template<class TV> void WATER_EXAMPLE<TV>::[m
- Adjust_Phi_With_Sources(const T time)[m
- {[m
-[31m-  if (time > 3) return;[m
-[32m+[m[32m  if (time > 30) return;[m
-   for (typename GRID<TV>::CELL_ITERATOR iterator(mac_grid);[m
-        iterator.Valid();[m
-        iterator.Next()) {[m
 
+The initial water level is set to 0.05 by passing the --wl argument to the water application:
+  $ scripts/start-workers.sh ... -l applications/physbam/water/libwater_app.so ... --wl 0.05 ...
+
+
+To generate the videos from the still images, use the ffmpeg program as follows:
+
+  $ ffmpeg -r 6 -f image2 -s 1920x1080 -i frame_%d.png -crf 20 -profile:v high -vb 5M -pix_fmt yuv420p water-r6.mp4
+
+For example, this sets the frame rate to 6 frames per second and 5Mb bit-rate
+(very high quality). It assumes that the frames are saved as frame_<1 to n>.png.
 
