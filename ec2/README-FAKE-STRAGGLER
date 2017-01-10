@@ -89,15 +89,58 @@ expect. :(
 _RUN_STRAGGLER_SCENARIO
 -------------------------------------------------------------------------------
 
-If you uncomment the #define in the src/shared/nimbus_types.h directory, you
-can run a straggler scenario. It uses the "ec2/create-straggler.sh" script to
-launch the background processes on all the available cores and set the
-appropriate cpu shares.
 
-The scenario assumes that there are 8 workers and the 8th worker will straggler
-after 200 iteration, and killed after 400 iterations.  Iteration is marked by
-the job whoes names starts with "__MARK_STAT_".  These specific numbners are
-reasonable for running 128^3 water simulation for 20 frames over 8 workers,
-each with 8 cores, 4x4x4 parttioning and, controller "--split 4 1 2" argument. 
+You can run a straggler scenario, by taking the following steps:
+  1. uncomment the #define _RUN_STRAGGLER_SCENARIO in the src/shared/nimbus_types.h file.
+  2. cd <nimbus-root>
+  3. make clean
+  4. make
+The scenario assumes that there are 8 workers and the 8th worker starts
+straggling after 10 minutes.  It uses the "ec2/create-straggler.sh" script to
+launch the background processes on all the available cores on the worker and
+set the appropriate CPU shares.  Also the first worker is killed after 35
+minutes, to test the fault tolerance.
 
+The controller dynamic load balancer in this case has two thresholds. If the
+load imbalance factor is greater than 0.5 then one partition is exchanged, if
+the load imbalance factor is greater than 0.9, then the worker is marked down
+and all the partitions are taken over by its neighbor.
+For more information look at the srs/scheduler/dynamic_load_balancer.cc
+(search for_RUN_STRAGGLER_SCENARIO).
+
+Followings are the settings I used for the experiment on Amazon EC2 to get the
+graph for SIGGRAPH. You can update the ec2/config.py file accordingly:
+
+CONTROLLER_INSTANCE_TYPE        = 'c3.4xlarge'
+WORKER_INSTANCE_TYPE            = 'c3.4xlarge'
+CONTROLLER_NUM                  = 1
+WORKER_NUM                      = 8
+
+ACTIVATE_LB                     = True
+ACTIVATE_FT                     = True
+LB_PERIOD                       = 10
+FT_PERIOD                       = 1800
+SPLIT_ARGS                      = '4 1 2' # str(WORKER_NUM) + ' 1 1'
+
+OTHREAD_NUM                     = 8
+APPLICATION                     = 'water' # 'lr' 'k-means' 'water' 
+DEACTIVATE_EXECUTION_TEMPLATE   = False
+RUN_WITH_TASKSET                = True
+WORKER_TASKSET                  = '0-3,8-11' # '0-1,4-5' # '0'
+
+# water
+SIMULATION_SCALE                = 256
+PART_X                          = 8
+PART_Y                          = 1
+PART_Z                          = 8
+PROJ_PART_X                     = 8
+PROJ_PART_Y                     = 1
+PROJ_PART_Z                     = 8
+FRAME_NUMBER                    = 30
+ITERATION_BATCH                 = 1
+MAX_ITERATION                   = 100
+WATER_LEVEL                     = 0.05
+PROJECTION_SMART_LEVEL          = 0
+NO_PROJ_BOTTLENECK              = False
+GLOBAL_WRITE                    = False
 
