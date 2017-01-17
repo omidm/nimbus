@@ -40,18 +40,18 @@
 #include <string>
 #include <vector>
 
-#include "application/smoke/app_utils.h"
-#include "application/smoke/cache_data_include.h"
-#include "application/smoke/cache_options.h"
-#include "application/smoke/cache_prototypes.h"
-#include "application/smoke/data_names.h"
-#include "application/smoke/options.h"
-#include "application/smoke/parameters.h"
-#include "application/smoke/physbam_utils.h"
-#include "application/smoke/smoke_driver.h"
-#include "application/smoke/smoke_example.h"
-#include "shared/geometric_region.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/smoke/app_utils.h"
+#include "applications/physbam/smoke/app_data_include.h"
+#include "applications/physbam/smoke/app_data_options.h"
+#include "applications/physbam/smoke/app_data_prototypes.h"
+#include "applications/physbam/smoke/data_names.h"
+#include "applications/physbam/smoke/options.h"
+#include "applications/physbam/smoke/parameters.h"
+#include "applications/physbam/smoke/physbam_utils.h"
+#include "applications/physbam/smoke/smoke_driver.h"
+#include "applications/physbam/smoke/smoke_example.h"
+#include "src/shared/geometric_region.h"
+#include "src/shared/nimbus.h"
 
 #define PHYSBAM_INIT_LOG
 
@@ -70,18 +70,18 @@ Range GridToRange(
   return Range(start, end);
 }
 
-void GetAppCacheObjects(
+void GetAppAppObjects(
     const InitConfig &init_config,
     const DataConfig &data_config,
     const nimbus::Job &job,
     const nimbus::DataArray &da,
-    AppCacheObjects *cache) {
+    AppAppObjects *cache) {
   nimbus::GeometricRegion local_region = init_config.local_region;
   nimbus::GeometricRegion array_reg(local_region);
   nimbus::GeometricRegion array_reg_outer_1(array_reg.NewEnlarged(1));
   nimbus::GeometricRegion array_reg_outer_3(array_reg.NewEnlarged(kGhostNum));
 
-  nimbus::CacheManager *cm = job.GetCacheManager();
+  nimbus::AppDataManager *cm = job.GetAppDataManager();
 
   // vector_b.
   if (data_config.GetFlag(DataConfig::VECTOR_B)) {
@@ -89,13 +89,13 @@ void GetAppCacheObjects(
     const std::string vector_b_string = std::string(APP_VECTOR_B);
     GetReadData(job, vector_b_string, da, &read);
     GetWriteData(job, vector_b_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* cache_var =
       cm->GetAppVar(
 	  read, array_reg,
 	  write, array_reg,
-	  kCacheVectorB, array_reg,
-	  nimbus::cache::EXCLUSIVE);
-    cache->vector_b = dynamic_cast<CacheVector*>(cache_var);
+	  kAppDataVectorB, array_reg,
+	  nimbus::app_data::EXCLUSIVE);
+    cache->vector_b = dynamic_cast<AppDataVector*>(cache_var);
     assert(cache->vector_b != NULL);
   }
   // matrix_a.
@@ -104,13 +104,13 @@ void GetAppCacheObjects(
     const std::string matrix_a_string = std::string(APP_MATRIX_A);
     GetReadData(job, matrix_a_string, da, &read);
     GetWriteData(job, matrix_a_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* cache_var =
       cm->GetAppVar(
 		    read, array_reg,
 		    write, array_reg,
-		    kCacheSparseMatrixA, array_reg,
-		    nimbus::cache::EXCLUSIVE);
-    cache->matrix_a = dynamic_cast<CacheSparseMatrix*>(cache_var);
+		    kAppDataSparseMatrixA, array_reg,
+		    nimbus::app_data::EXCLUSIVE);
+    cache->matrix_a = dynamic_cast<AppDataSparseMatrix*>(cache_var);
     assert(cache->matrix_a != NULL);
   }
   // index_m2c.
@@ -119,13 +119,13 @@ void GetAppCacheObjects(
     const std::string index_m2c_string = std::string(APP_INDEX_M2C);
     GetReadData(job, index_m2c_string, da, &read);
     GetWriteData(job, index_m2c_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* cache_var =
       cm->GetAppVar(
 		    read, array_reg,
 		    write, array_reg,
-		    kCacheArrayM2C, array_reg,
-		    nimbus::cache::EXCLUSIVE);
-    cache->index_m2c = dynamic_cast<CacheArrayM2C*>(cache_var);
+		    kAppDataArrayM2C, array_reg,
+		    nimbus::app_data::EXCLUSIVE);
+    cache->index_m2c = dynamic_cast<AppDataArrayM2C*>(cache_var);
     assert(cache->index_m2c != NULL);
   }
   // pressure.
@@ -134,13 +134,13 @@ void GetAppCacheObjects(
     const std::string pressure_string = std::string(APP_PRESSURE);
     GetReadData(job, pressure_string, da, &read);
     GetWriteData(job, pressure_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* cache_var =
         cm->GetAppVar(
             read, array_reg_outer_1,
             write, array_reg_outer_1,
-            kCachePressure, array_reg_outer_1,
-            nimbus::cache::EXCLUSIVE);
-    cache->pressure = dynamic_cast<CacheScalarArray<T>*>(cache_var);
+            kAppDataPressure, array_reg_outer_1,
+            nimbus::app_data::EXCLUSIVE);
+    cache->pressure = dynamic_cast<AppDataScalarArray<T>*>(cache_var);
     assert(cache->pressure != NULL);
   }
   // index_c2m.
@@ -149,13 +149,13 @@ void GetAppCacheObjects(
     const std::string index_c2m_string = std::string(APP_INDEX_C2M);
     GetReadData(job, index_c2m_string, da, &read);
     GetWriteData(job, index_c2m_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* cache_var =
       cm->GetAppVar(
 	  read, array_reg,
 	  write, array_reg,
-	  kCacheIndexC2M, array_reg,
-	  nimbus::cache::EXCLUSIVE);
-    cache->index_c2m = dynamic_cast<CacheRawGridArray*>(cache_var);
+	  kAppDataIndexC2M, array_reg,
+	  nimbus::app_data::EXCLUSIVE);
+    cache->index_c2m = dynamic_cast<AppDataRawGridArray*>(cache_var);
     assert(cache->index_c2m != NULL);
   }
   // filled_region_colors.
@@ -164,13 +164,13 @@ void GetAppCacheObjects(
     const std::string color_string = std::string(APP_FILLED_REGION_COLORS);
     GetReadData(job, color_string, da, &read);
     GetWriteData(job, color_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* cache_var =
         cm->GetAppVar(
             read, array_reg_outer_1,
             write, array_reg_outer_1,
-            kCacheColors, array_reg_outer_1,
-            nimbus::cache::EXCLUSIVE);
-    cache->color = dynamic_cast<CacheScalarArray<int>*>(cache_var);
+            kAppDataColors, array_reg_outer_1,
+            nimbus::app_data::EXCLUSIVE);
+    cache->color = dynamic_cast<AppDataScalarArray<int>*>(cache_var);
     assert(cache->color != NULL);
   }
   // divergence.
@@ -179,13 +179,13 @@ void GetAppCacheObjects(
     const std::string divergence_string = std::string(APP_DIVERGENCE);
     GetReadData(job, divergence_string, da, &read);
     GetWriteData(job, divergence_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* cache_var =
         cm->GetAppVar(
             read, array_reg_outer_1,
             write, array_reg_outer_1,
-            kCacheDivergence, array_reg_outer_1,
-            nimbus::cache::EXCLUSIVE);
-    cache->divergence = dynamic_cast<CacheScalarArray<T>*>(cache_var);
+            kAppDataDivergence, array_reg_outer_1,
+            nimbus::app_data::EXCLUSIVE);
+    cache->divergence = dynamic_cast<AppDataScalarArray<T>*>(cache_var);
     assert(cache->divergence != NULL);
   }
   // mac velocities
@@ -195,13 +195,13 @@ void GetAppCacheObjects(
     const std::string fvstring = std::string(APP_FACE_VEL);
     GetReadData(job, fvstring, da, &read);
     GetWriteData(job, fvstring, da, &write);
-    nimbus::CacheVar *cache_var =
+    nimbus::AppVar *cache_var =
       cm->GetAppVar(
           read, array_reg,
           write, array_reg,
-          kCacheFaceVel, array_reg,
-          nimbus::cache::EXCLUSIVE);
-    cache->fv = dynamic_cast<CacheFaceArray<T> *>(cache_var);
+          kAppDataFaceVel, array_reg,
+          nimbus::app_data::EXCLUSIVE);
+    cache->fv = dynamic_cast<AppDataFaceArray<T> *>(cache_var);
     assert(cache->fv != NULL);
   }
   // mac velocities ghost
@@ -211,13 +211,13 @@ void GetAppCacheObjects(
     const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
     GetReadData(job, fvgstring, da, &read);
     GetWriteData(job, fvgstring, da, &write);
-    nimbus::CacheObject *cache_var =
+    nimbus::AppObject *cache_var =
       cm->GetAppVar(
           read, array_reg_outer_3,
           write, array_reg_outer_3,
-          kCacheFaceVelGhost, array_reg_outer_3,
-          nimbus::cache::EXCLUSIVE);
-    cache->fvg = dynamic_cast<CacheFaceArray<T> *>(cache_var);
+          kAppDataFaceVelGhost, array_reg_outer_3,
+          nimbus::app_data::EXCLUSIVE);
+    cache->fvg = dynamic_cast<AppDataFaceArray<T> *>(cache_var);
     assert(cache->fvg != NULL);
   }  
   //density
@@ -227,12 +227,12 @@ void GetAppCacheObjects(
     const std::string dstring = std::string(APP_DENSITY);
     GetReadData(job, dstring, da, &read);
     GetWriteData(job, dstring, da, &write);
-    nimbus::CacheObject *cache_var = 
+    nimbus::AppObject *cache_var = 
       cm->GetAppVar(read, array_reg,
 		    write, array_reg,
-		    kCacheDensity, array_reg, 
-		    nimbus::cache::EXCLUSIVE);
-    cache->dens = dynamic_cast<CacheScalarArray<T> *>(cache_var);
+		    kAppDataDensity, array_reg, 
+		    nimbus::app_data::EXCLUSIVE);
+    cache->dens = dynamic_cast<AppDataScalarArray<T> *>(cache_var);
     assert(cache->dens != NULL);
   }
   //density ghost
@@ -242,12 +242,12 @@ void GetAppCacheObjects(
     const std::string dgstring = std::string(APP_DENSITY_GHOST);
     GetReadData(job, dgstring, da, &read);
     GetWriteData(job, dgstring, da, &write);
-    nimbus::CacheObject *cache_var = 
+    nimbus::AppObject *cache_var = 
       cm->GetAppVar(read, array_reg_outer_3, 
 		    write, array_reg_outer_3,
-		    kCacheDensityGhost, array_reg_outer_3,
-		    nimbus::cache::EXCLUSIVE);
-    cache->dens_ghost = dynamic_cast<CacheScalarArray<T> *>(cache_var);
+		    kAppDataDensityGhost, array_reg_outer_3,
+		    nimbus::app_data::EXCLUSIVE);
+    cache->dens_ghost = dynamic_cast<AppDataScalarArray<T> *>(cache_var);
     assert(cache->dens_ghost != NULL);
   }
   // psi_d.
@@ -257,13 +257,13 @@ void GetAppCacheObjects(
     const std::string psi_d_string = std::string(APP_PSI_D);
     GetReadData(job, psi_d_string, da, &read);
     GetWriteData(job, psi_d_string, da, &write);
-    nimbus::CacheVar *cache_var =
+    nimbus::AppVar *cache_var =
       cm->GetAppVar(
           read, array_reg_outer_1,
           write, array_reg_outer_1,
-          kCachePsiD, array_reg_outer_1,
-          nimbus::cache::EXCLUSIVE);
-    cache->psi_d = dynamic_cast<CacheScalarArray<bool> *>(cache_var);
+          kAppDataPsiD, array_reg_outer_1,
+          nimbus::app_data::EXCLUSIVE);
+    cache->psi_d = dynamic_cast<AppDataScalarArray<bool> *>(cache_var);
     assert(cache->psi_d != NULL);
   }
   // psi_n.
@@ -273,13 +273,13 @@ void GetAppCacheObjects(
     const std::string psi_n_string = std::string(APP_PSI_N);
     GetReadData(job, psi_n_string, da, &read);
     GetWriteData(job, psi_n_string, da, &write);
-    nimbus::CacheVar *cache_var =
+    nimbus::AppVar *cache_var =
       cm->GetAppVar(
           read, array_reg_outer_1,
           write, array_reg_outer_1,
-          kCachePsiN, array_reg_outer_1,
-          nimbus::cache::EXCLUSIVE);
-    cache->psi_n = dynamic_cast<CacheFaceArray<bool> *>(cache_var);
+          kAppDataPsiN, array_reg_outer_1,
+          nimbus::app_data::EXCLUSIVE);
+    cache->psi_n = dynamic_cast<AppDataFaceArray<bool> *>(cache_var);
     assert(cache->psi_n != NULL);
   }
 }
@@ -311,8 +311,8 @@ bool InitializeExampleAndDriver(
     struct timespec t;
     clock_gettime(CLOCK_REALTIME, &start_time);
     if (init_config.use_cache && kUseCache) {
-      AppCacheObjects cache;
-      GetAppCacheObjects(init_config, data_config, *job, da, &cache);
+      AppAppObjects cache;
+      GetAppAppObjects(init_config, data_config, *job, da, &cache);
       clock_gettime(CLOCK_REALTIME, &t);
       cache_lookup_time += difftime(t.tv_sec, start_time.tv_sec)
 	+ .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));

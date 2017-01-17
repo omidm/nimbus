@@ -44,18 +44,18 @@
 #include <PhysBAM_Tools/Parallel_Computation/SPARSE_MATRIX_PARTITION.h>
 #include <PhysBAM_Tools/Vectors/SPARSE_VECTOR_ND.h>
 
-#include "application/smoke/cache_prototypes.h"
-#include "application/smoke/data_include.h"
-#include "application/smoke/physbam_utils.h"
-#include "application/smoke/app_utils.h"
-#include "data/scalar_data.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/smoke/app_data_prototypes.h"
+#include "applications/physbam/smoke/data_include.h"
+#include "applications/physbam/smoke/physbam_utils.h"
+#include "applications/physbam/smoke/app_utils.h"
+#include "src/data/scalar_data.h"
+#include "src/shared/nimbus.h"
 
-#include "application/smoke/projection/projection_driver.h"
+#include "applications/physbam/smoke/projection/projection_driver.h"
 
 namespace PhysBAM {
 
-void ProjectionDriver::Cache_Initialize(int local_n, int interior_n) {
+void ProjectionDriver::AppData_Initialize(int local_n, int interior_n) {
   partition.interior_indices.min_corner = 1;
   partition.interior_indices.max_corner = interior_n;
 
@@ -91,15 +91,15 @@ void ProjectionDriver::Cache_Initialize(int local_n, int interior_n) {
   }
 }
 
-void set_up_meta_p(nimbus::CacheVar* cv, void* data) {
-  application::CacheCompressedScalarArray<float>* meta_p =
-      dynamic_cast<application::CacheCompressedScalarArray<float>*>(cv);
+void set_up_meta_p(nimbus::AppVar* cv, void* data) {
+  application::AppDataCompressedScalarArray<float>* meta_p =
+      dynamic_cast<application::AppDataCompressedScalarArray<float>*>(cv);
   MetaPAuxData* meta_p_data = reinterpret_cast<MetaPAuxData*>(data);
   meta_p->set_index_data(meta_p_data->pointer);
   meta_p->set_data_length(meta_p_data->local_n);
 }
 
-void ProjectionDriver::Cache_LoadFromNimbus(
+void ProjectionDriver::AppData_LoadFromNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
   nimbus::PdiVector pdv;
   GeometricRegion array_reg_central(init_config.local_region.x(),
@@ -114,7 +114,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
                                        init_config.local_region.dx()+2,
                                        init_config.local_region.dy()+2,
                                        init_config.local_region.dz()+2);
-  nimbus::CacheManager *cm = job->GetCacheManager();
+  nimbus::AppDataManager *cm = job->GetAppDataManager();
   Log log_timer;
 
   log_timer.StartTimer();
@@ -124,13 +124,13 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     const std::string pressure_string = std::string(APP_PRESSURE);
     application::GetReadData(*job, pressure_string, da, &read);
     application::GetWriteData(*job, pressure_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* cache_var =
         cm->GetAppVar(
             read, array_reg_thin_outer,
             write, array_reg_thin_outer,
-            application::kCachePressure, array_reg_thin_outer,
-            nimbus::cache::EXCLUSIVE);
-    cache_pressure = dynamic_cast<application::CacheScalarArray<T>*>(cache_var);
+            application::kAppDataPressure, array_reg_thin_outer,
+            nimbus::app_data::EXCLUSIVE);
+    cache_pressure = dynamic_cast<application::AppDataScalarArray<T>*>(cache_var);
     assert(cache_pressure != NULL);
     typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
     T_SCALAR_ARRAY* pressure = cache_pressure->data();
@@ -145,13 +145,13 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     const std::string matrix_a_string = std::string(APP_MATRIX_A);
     application::GetReadData(*job, matrix_a_string, da, &read);
     application::GetWriteData(*job, matrix_a_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* cache_var =
         cm->GetAppVar(
             read, array_reg_central,
             write, array_reg_central,
-            application::kCacheSparseMatrixA, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
-    cache_matrix_a = dynamic_cast<application::CacheSparseMatrix*>(cache_var);
+            application::kAppDataSparseMatrixA, array_reg_central,
+            nimbus::app_data::EXCLUSIVE);
+    cache_matrix_a = dynamic_cast<application::AppDataSparseMatrix*>(cache_var);
     assert(cache_matrix_a != NULL);
     assert(projection_data.matrix_a == NULL);
     projection_data.matrix_a = cache_matrix_a->data();
@@ -173,13 +173,13 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     const std::string matrix_c_string = std::string(APP_MATRIX_C);
     application::GetReadData(*job, matrix_c_string, da, &read);
     application::GetWriteData(*job, matrix_c_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* cache_var =
         cm->GetAppVar(
             read, array_reg_central,
             write, array_reg_central,
-            application::kCacheSparseMatrixC, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
-    cache_matrix_c = dynamic_cast<application::CacheSparseMatrix*>(cache_var);
+            application::kAppDataSparseMatrixC, array_reg_central,
+            nimbus::app_data::EXCLUSIVE);
+    cache_matrix_c = dynamic_cast<application::AppDataSparseMatrix*>(cache_var);
     assert(cache_matrix_c != NULL);
     projection_data.matrix_a->C = cache_matrix_c->data();
     assert(projection_data.matrix_a->C != NULL);
@@ -193,13 +193,13 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     const std::string index_m2c_string = std::string(APP_INDEX_M2C);
     application::GetReadData(*job, index_m2c_string, da, &read);
     application::GetWriteData(*job, index_m2c_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* cache_var =
         cm->GetAppVar(
             read, array_reg_central,
             write, array_reg_central,
-            application::kCacheArrayM2C, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
-    cache_index_m2c = dynamic_cast<application::CacheArrayM2C*>(cache_var);
+            application::kAppDataArrayM2C, array_reg_central,
+            nimbus::app_data::EXCLUSIVE);
+    cache_index_m2c = dynamic_cast<application::AppDataArrayM2C*>(cache_var);
     assert(cache_index_m2c != NULL);
     projection_data.matrix_index_to_cell_index = cache_index_m2c->data();
     assert(projection_data.matrix_index_to_cell_index != NULL);
@@ -213,13 +213,13 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     const std::string vector_string = std::string(APP_VECTOR_B);
     application::GetReadData(*job, vector_string, da, &read);
     application::GetWriteData(*job, vector_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* cache_var =
         cm->GetAppVar(
             read, array_reg_central,
             write, array_reg_central,
-            application::kCacheVectorB, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
-    cache_vector_b = dynamic_cast<application::CacheVector*>(cache_var);
+            application::kAppDataVectorB, array_reg_central,
+            nimbus::app_data::EXCLUSIVE);
+    cache_vector_b = dynamic_cast<application::AppDataVector*>(cache_var);
     assert(cache_vector_b != NULL);
     projection_data.vector_b.n = cache_vector_b->data()->n;
     projection_data.vector_b.x = cache_vector_b->data()->x;
@@ -233,13 +233,13 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     const std::string index_c2m_string = std::string(APP_INDEX_C2M);
     application::GetReadData(*job, index_c2m_string, da, &read);
     application::GetWriteData(*job, index_c2m_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* cache_var =
         cm->GetAppVar(
             read, array_reg_central,
             write, array_reg_central,
-            application::kCacheIndexC2M, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
-    cache_index_c2m = dynamic_cast<application::CacheRawGridArray*>(cache_var);
+            application::kAppDataIndexC2M, array_reg_central,
+            nimbus::app_data::EXCLUSIVE);
+    cache_index_c2m = dynamic_cast<application::AppDataRawGridArray*>(cache_var);
     assert(cache_index_c2m != NULL);
     typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
     T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
@@ -415,15 +415,15 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     MetaPAuxData meta_p_aux_data;
     meta_p_aux_data.pointer = &projection_data.cell_index_to_matrix_index;
     meta_p_aux_data.local_n = projection_data.local_n;
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* cache_var =
         cm->GetAppVar(
             read, array_reg_thin_outer,
             write, array_reg_thin_outer,
-            application::kCacheMetaP, array_reg_thin_outer,
-            nimbus::cache::EXCLUSIVE,
+            application::kAppDataMetaP, array_reg_thin_outer,
+            nimbus::app_data::EXCLUSIVE,
             set_up_meta_p,
             &meta_p_aux_data);
-    cache_meta_p = dynamic_cast<application::CacheCompressedScalarArray<T>*>(cache_var);
+    cache_meta_p = dynamic_cast<application::AppDataCompressedScalarArray<T>*>(cache_var);
     assert(cache_meta_p != NULL);
     projection_data.meta_p = *cache_meta_p->data();
     assert(projection_data.meta_p.Size() == projection_data.local_n);
@@ -439,13 +439,13 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     const std::string vector_string = std::string(APP_VECTOR_Z);
     application::GetReadData(*job, vector_string, da, &read);
     application::GetWriteData(*job, vector_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* cache_var =
         cm->GetAppVar(
             read, array_reg_central,
             write, array_reg_central,
-            application::kCacheVectorZ, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
-    cache_vector_z = dynamic_cast<application::CacheVector*>(cache_var);
+            application::kAppDataVectorZ, array_reg_central,
+            nimbus::app_data::EXCLUSIVE);
+    cache_vector_z = dynamic_cast<application::AppDataVector*>(cache_var);
     assert(cache_vector_z != NULL);
     projection_data.z_interior.n = cache_vector_z->data()->n;
     projection_data.z_interior.x = cache_vector_z->data()->x;
@@ -459,13 +459,13 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     const std::string vector_string = std::string(APP_VECTOR_TEMP);
     application::GetReadData(*job, vector_string, da, &read);
     application::GetWriteData(*job, vector_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* cache_var =
         cm->GetAppVar(
             read, array_reg_central,
             write, array_reg_central,
-            application::kCacheVectorTemp, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
-    cache_vector_temp = dynamic_cast<application::CacheVector*>(cache_var);
+            application::kAppDataVectorTemp, array_reg_central,
+            nimbus::app_data::EXCLUSIVE);
+    cache_vector_temp = dynamic_cast<application::AppDataVector*>(cache_var);
     assert(cache_vector_temp != NULL);
     projection_data.temp.n = cache_vector_temp->data()->n;
     projection_data.temp.x = cache_vector_temp->data()->x;
@@ -479,13 +479,13 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     const std::string vector_string = std::string(APP_VECTOR_PRESSURE);
     application::GetReadData(*job, vector_string, da, &read);
     application::GetWriteData(*job, vector_string, da, &write);
-    nimbus::CacheVar* cache_var =
+    nimbus::AppVar* cache_var =
         cm->GetAppVar(
             read, array_reg_central,
             write, array_reg_central,
-            application::kCacheVectorPressure, array_reg_central,
-            nimbus::cache::EXCLUSIVE);
-    cache_vector_pressure = dynamic_cast<application::CacheVector*>(cache_var);
+            application::kAppDataVectorPressure, array_reg_central,
+            nimbus::app_data::EXCLUSIVE);
+    cache_vector_pressure = dynamic_cast<application::AppDataVector*>(cache_var);
     assert(cache_vector_pressure != NULL);
     projection_data.vector_pressure.n = cache_vector_pressure->data()->n;
     projection_data.vector_pressure.x = cache_vector_pressure->data()->x;
@@ -493,11 +493,11 @@ void ProjectionDriver::Cache_LoadFromNimbus(
   dbg(APP_LOG, "[PROJECTION] LOAD, vector_pressure time:%f.\n", log_timer.timer());
 
   log_timer.StartTimer();
-  Cache_Initialize(projection_data.local_n, projection_data.interior_n);
+  AppData_Initialize(projection_data.local_n, projection_data.interior_n);
   dbg(APP_LOG, "[PROJECTION] LOAD, else time:%f.\n", log_timer.timer());
 }
 
-void ProjectionDriver::Cache_SaveToNimbus(
+void ProjectionDriver::AppData_SaveToNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
   nimbus::PdiVector pdv;
   GeometricRegion array_reg_central(init_config.local_region.x(),
@@ -513,7 +513,7 @@ void ProjectionDriver::Cache_SaveToNimbus(
                                        init_config.local_region.dy()+2,
                                        init_config.local_region.dz()+2);
 
-  nimbus::CacheManager *cm = job->GetCacheManager();
+  nimbus::AppDataManager *cm = job->GetAppDataManager();
 
   Log log_timer;
 

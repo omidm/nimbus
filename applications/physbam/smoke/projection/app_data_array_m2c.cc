@@ -38,49 +38,66 @@
 
 #include <string>
 
-#include "application/smoke/physbam_include.h"
-#include "application/smoke/physbam_tools.h"
-#include "data/cache/cache_var.h"
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
+#include "applications/physbam/smoke//physbam_include.h"
+#include "applications/physbam/smoke//physbam_tools.h"
+#include "src/data/app_data/app_var.h"
+#include "src/shared/dbg.h"
+#include "src/shared/geometric_region.h"
+#include "src/worker/data.h"
 
-#include "application/smoke/projection/data_raw_vector_nd.h"
-#include "application/smoke/projection/cache_vector.h"
+#include "applications/physbam/smoke//projection/app_data_array_m2c.h"
 
 namespace application {
 
-CacheVector::CacheVector(const nimbus::GeometricRegion &global_reg,
-                         bool make_proto)
+AppDataArrayM2C::AppDataArrayM2C() {
+  data_ = NULL;
+}
+
+AppDataArrayM2C::AppDataArrayM2C(const nimbus::GeometricRegion &global_reg,
+                             bool make_proto,
+                             const std::string& name)
     : global_region_(global_reg) {
+  set_name(name);
+  data_ = NULL;
   if (make_proto)
     MakePrototype();
 }
 
-CacheVector::CacheVector(const nimbus::GeometricRegion &global_reg,
-                         const nimbus::GeometricRegion &ob_reg)
-    : CacheVar(ob_reg), global_region_(global_reg), local_region_(ob_reg) {
+AppDataArrayM2C::AppDataArrayM2C(const nimbus::GeometricRegion &global_reg,
+                             const nimbus::GeometricRegion &ob_reg)
+    : AppVar(ob_reg), global_region_(global_reg), local_region_(ob_reg) {
   data_ = new DATA_TYPE;
 }
 
-nimbus::CacheVar* CacheVector::CreateNew(
-    const nimbus::GeometricRegion &ob_reg) const {
-  return new CacheVector(global_region_, ob_reg);
+AppDataArrayM2C::~AppDataArrayM2C() {
+  Destroy();
 }
 
-void CacheVector::ReadToCache(const nimbus::DataArray &read_set,
-                              const nimbus::GeometricRegion &read_reg) {
+void AppDataArrayM2C::Destroy() {
+  if (data_)
+    delete data_;
+}
+
+nimbus::AppVar* AppDataArrayM2C::CreateNew(
+    const nimbus::GeometricRegion &ob_reg) const {
+  nimbus::AppVar* temp = new AppDataArrayM2C(global_region_, ob_reg);
+  temp->set_name(name());
+  return temp;
+}
+
+void AppDataArrayM2C::ReadAppData(const nimbus::DataArray &read_set,
+                                const nimbus::GeometricRegion &read_reg) {
   if (read_set.size() == 0) {
     return;
   }
   assert(read_set.size() == 1);
   assert(read_set[0]->region().IsEqual(&read_reg));
   assert(object_region().IsEqual(&read_reg));
-  assert(dynamic_cast<DataRawVectorNd*>(read_set[0]));
-  dynamic_cast<DataRawVectorNd*>(read_set[0])->LoadFromNimbus(data_);
+  assert(dynamic_cast<DataRawArrayM2C*>(read_set[0]));
+  dynamic_cast<DataRawArrayM2C*>(read_set[0])->LoadFromNimbus(data_);
 }
 
-void CacheVector::WriteFromCache(
+void AppDataArrayM2C::WriteAppData(
     const nimbus::DataArray &write_set,
     const nimbus::GeometricRegion &write_reg) const {
   if (write_set.size() == 0) {
@@ -91,8 +108,8 @@ void CacheVector::WriteFromCache(
   assert(write_set.size() == 1);
   assert(write_set[0]->region().IsEqual(&write_reg));
   assert(object_region().IsEqual(&write_reg));
-  assert(dynamic_cast<DataRawVectorNd*>(write_set[0]));
-  dynamic_cast<DataRawVectorNd*>(write_set[0])->SaveToNimbus(*data_);
+  assert(dynamic_cast<DataRawArrayM2C*>(write_set[0]));
+  dynamic_cast<DataRawArrayM2C*>(write_set[0])->SaveToNimbus(*data_);
 }
 
 } // namespace application

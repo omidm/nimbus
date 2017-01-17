@@ -39,14 +39,14 @@
 #include <sstream>
 #include <string>
 
-#include "application/smoke/app_utils.h"
-#include "application/smoke/physbam_utils.h"
-#include "application/smoke/smoke_driver.h"
-#include "application/smoke/smoke_example.h"
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/smoke/app_utils.h"
+#include "applications/physbam/smoke/physbam_utils.h"
+#include "applications/physbam/smoke/smoke_driver.h"
+#include "applications/physbam/smoke/smoke_example.h"
+#include "src/shared/dbg.h"
+#include "src/shared/nimbus.h"
 
-#include "application/smoke/job_write_output.h"
+#include "applications/physbam/smoke/job_write_output.h"
 
 namespace application {
 
@@ -92,13 +92,13 @@ void JobWriteOutput::Execute(nimbus::Parameter params,
     InitializeExampleAndDriver(init_config, data_config,
 			       this, da, example, driver);
   }
-  *thread_queue_hook() = example->nimbus_thread_queue;
+  // *thread_queue_hook() = example->nimbus_thread_queue;
 
   dbg(APP_LOG, "Job WRITE_OUTPUT starts.\n");
   // Write frame.
   driver->WriteOutputSplitImpl(this, da, true, dt, rank);
 
-  *thread_queue_hook() = NULL;
+  // *thread_queue_hook() = NULL;
   {
     application::ScopeTimer scope_timer(name() + "-save");
     example->Save_To_Nimbus(this, da, driver->current_frame + 1);

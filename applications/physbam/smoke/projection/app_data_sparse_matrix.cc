@@ -38,48 +38,65 @@
 
 #include <string>
 
-#include "application/smoke/physbam_include.h"
-#include "application/smoke/physbam_tools.h"
-#include "data/cache/cache_var.h"
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
+#include "applications/physbam/smoke//physbam_include.h"
+#include "applications/physbam/smoke//physbam_tools.h"
+#include "src/data/app_data/app_var.h"
+#include "src/shared/dbg.h"
+#include "src/shared/geometric_region.h"
+#include "src/worker/data.h"
 
-#include "application/smoke/projection/cache_array_m2c.h"
+#include "applications/physbam/smoke//projection/app_data_sparse_matrix.h"
 
 namespace application {
 
-CacheArrayM2C::CacheArrayM2C(const nimbus::GeometricRegion &global_reg,
-                             bool make_proto)
+AppDataSparseMatrix::AppDataSparseMatrix() {
+  data_ = NULL;
+}
+
+AppDataSparseMatrix::AppDataSparseMatrix(const nimbus::GeometricRegion &global_reg,
+                                     bool make_proto, const std::string& name)
     : global_region_(global_reg) {
+  set_name(name);
+  data_ = NULL;
   if (make_proto)
     MakePrototype();
 }
 
-CacheArrayM2C::CacheArrayM2C(const nimbus::GeometricRegion &global_reg,
-                             const nimbus::GeometricRegion &ob_reg)
-    : CacheVar(ob_reg), global_region_(global_reg), local_region_(ob_reg) {
+AppDataSparseMatrix::AppDataSparseMatrix(const nimbus::GeometricRegion &global_reg,
+                                     const nimbus::GeometricRegion &ob_reg)
+    : AppVar(ob_reg), global_region_(global_reg), local_region_(ob_reg) {
   data_ = new DATA_TYPE;
 }
 
-nimbus::CacheVar* CacheArrayM2C::CreateNew(
-    const nimbus::GeometricRegion &ob_reg) const {
-  return new CacheArrayM2C(global_region_, ob_reg);
+AppDataSparseMatrix::~AppDataSparseMatrix() {
+  Destroy();
 }
 
-void CacheArrayM2C::ReadToCache(const nimbus::DataArray &read_set,
-                                const nimbus::GeometricRegion &read_reg) {
+void AppDataSparseMatrix::Destroy() {
+  if (data_)
+    delete data_;
+}
+
+nimbus::AppVar* AppDataSparseMatrix::CreateNew(
+    const nimbus::GeometricRegion &ob_reg) const {
+  nimbus::AppVar* temp = new AppDataSparseMatrix(global_region_, ob_reg);
+  temp->set_name(name());
+  return temp;
+}
+
+void AppDataSparseMatrix::ReadAppData(const nimbus::DataArray &read_set,
+                                   const nimbus::GeometricRegion &read_reg) {
   if (read_set.size() == 0) {
     return;
   }
   assert(read_set.size() == 1);
   assert(read_set[0]->region().IsEqual(&read_reg));
   assert(object_region().IsEqual(&read_reg));
-  assert(dynamic_cast<DataRawArrayM2C*>(read_set[0]));
-  dynamic_cast<DataRawArrayM2C*>(read_set[0])->LoadFromNimbus(data_);
+  assert(dynamic_cast<DataSparseMatrix*>(read_set[0]));
+  dynamic_cast<DataSparseMatrix*>(read_set[0])->LoadFromNimbus(data_);
 }
 
-void CacheArrayM2C::WriteFromCache(
+void AppDataSparseMatrix::WriteAppData(
     const nimbus::DataArray &write_set,
     const nimbus::GeometricRegion &write_reg) const {
   if (write_set.size() == 0) {
@@ -90,8 +107,8 @@ void CacheArrayM2C::WriteFromCache(
   assert(write_set.size() == 1);
   assert(write_set[0]->region().IsEqual(&write_reg));
   assert(object_region().IsEqual(&write_reg));
-  assert(dynamic_cast<DataRawArrayM2C*>(write_set[0]));
-  dynamic_cast<DataRawArrayM2C*>(write_set[0])->SaveToNimbus(*data_);
+  assert(dynamic_cast<DataSparseMatrix*>(write_set[0]));
+  dynamic_cast<DataSparseMatrix*>(write_set[0])->SaveToNimbus(*data_);
 }
 
 } // namespace application

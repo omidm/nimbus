@@ -42,16 +42,16 @@
  */
 
 
-#include "application/smoke/app_utils.h"
-#include "application/smoke/job_loop_frame.h"
-#include "application/smoke/smoke_driver.h"
-#include "application/smoke/smoke_example.h"
-#include "application/smoke/job_names.h"
-#include "application/smoke/data_names.h"
-#include "application/smoke/reg_def.h"
-#include "data/physbam/physbam_data.h"
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/smoke/app_utils.h"
+#include "applications/physbam/smoke/job_loop_frame.h"
+#include "applications/physbam/smoke/smoke_driver.h"
+#include "applications/physbam/smoke/smoke_example.h"
+#include "applications/physbam/smoke/job_names.h"
+#include "applications/physbam/smoke/data_names.h"
+#include "applications/physbam/smoke/reg_def.h"
+#include "src/data/physbam/physbam_data.h"
+#include "src/shared/dbg.h"
+#include "src/shared/nimbus.h"
 #include <sstream>
 #include <string>
 

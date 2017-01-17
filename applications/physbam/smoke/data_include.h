@@ -40,13 +40,13 @@
 #ifndef NIMBUS_APPLICATION_SMOKE_DATA_INCLUDE_H_
 #define NIMBUS_APPLICATION_SMOKE_DATA_INCLUDE_H_
 
-#include "application/smoke/data_face_array.h"
-#include "application/smoke/data_names.h"
-#include "application/smoke/data_scalar_array.h"
-#include "application/smoke/data_compressed_scalar_array.h"
-#include "application/smoke/projection/data_raw_array_m2c.h"
-#include "application/smoke/projection/data_raw_grid_array.h"
-#include "application/smoke/projection/data_raw_vector_nd.h"
-#include "application/smoke/projection/data_sparse_matrix.h"
+#include "applications/physbam/smoke/data_face_array.h"
+#include "applications/physbam/smoke/data_names.h"
+#include "applications/physbam/smoke/data_scalar_array.h"
+#include "applications/physbam/smoke/data_compressed_scalar_array.h"
+#include "applications/physbam/smoke/projection/data_raw_array_m2c.h"
+#include "applications/physbam/smoke/projection/data_raw_grid_array.h"
+#include "applications/physbam/smoke/projection/data_raw_vector_nd.h"
+#include "applications/physbam/smoke/projection/data_sparse_matrix.h"
 
 #endif  // NIMBUS_APPLICATION_SMOKE_DATA_INCLUDE_H_

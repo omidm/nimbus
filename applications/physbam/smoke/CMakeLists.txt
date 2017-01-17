@@ -15,7 +15,11 @@ SET(PROJECT_NAME smoke_app)
 PROJECT(${PROJECT_NAME})
 
 #Set Nimbus root and prtobuf files directory
-SET(NIMBUS_ROOT ${PROJECT_SOURCE_DIR}/../..)
+SET(NIMBUS_ROOT ${PROJECT_SOURCE_DIR}/../../..)
+
+# Add the include path for nimbus, boost, leveldb, and protobuf.
+INCLUDE(${NIMBUS_ROOT}/Makeinclude.cmake)
+add_definitions(${IFLAGS})
 
 include_directories(${NIMBUS_ROOT})
 LINK_DIRECTORIES(${NIMBUS_ROOT})
@@ -23,10 +27,10 @@ LINK_DIRECTORIES(${NIMBUS_ROOT})
 #Manually list your cpp and h files here - do NOT use GLOB/GLOB_RECURSE
 SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/app_utils.cc
-    ${PROJECT_SOURCE_DIR}/cache_face_array.cc
-    ${PROJECT_SOURCE_DIR}/cache_prototypes.cc
-    ${PROJECT_SOURCE_DIR}/cache_scalar_array.cc
-    ${PROJECT_SOURCE_DIR}/cache_compressed_scalar_array.cc
+    ${PROJECT_SOURCE_DIR}/app_data_face_array.cc
+    ${PROJECT_SOURCE_DIR}/app_data_prototypes.cc
+    ${PROJECT_SOURCE_DIR}/app_data_scalar_array.cc
+    ${PROJECT_SOURCE_DIR}/app_data_compressed_scalar_array.cc
     ${PROJECT_SOURCE_DIR}/data_def.cc
     ${PROJECT_SOURCE_DIR}/data_face_array.cc
     ${PROJECT_SOURCE_DIR}/data_scalar_array.cc
@@ -50,10 +54,10 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/smoke_driver.cc
     ${PROJECT_SOURCE_DIR}/smoke_driver_initializers.cc
     ${PROJECT_SOURCE_DIR}/smoke_example.cc
-    ${PROJECT_SOURCE_DIR}/projection/cache_array_m2c.cc
-    ${PROJECT_SOURCE_DIR}/projection/cache_sparse_matrix.cc
-    ${PROJECT_SOURCE_DIR}/projection/cache_vector.cc
-    ${PROJECT_SOURCE_DIR}/projection/cache_raw_grid_array.cc
+    ${PROJECT_SOURCE_DIR}/projection/app_data_array_m2c.cc
+    ${PROJECT_SOURCE_DIR}/projection/app_data_sparse_matrix.cc
+    ${PROJECT_SOURCE_DIR}/projection/app_data_vector.cc
+    ${PROJECT_SOURCE_DIR}/projection/app_data_raw_grid_array.cc
     ${PROJECT_SOURCE_DIR}/projection/data_raw_grid_array.cc
     ${PROJECT_SOURCE_DIR}/projection/data_raw_array_m2c.cc
     ${PROJECT_SOURCE_DIR}/projection/data_raw_vector_nd.cc
@@ -80,17 +84,17 @@ SET(${PROJECT_NAME}_cpp
     )
 SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/app_utils.h
-    ${PROJECT_SOURCE_DIR}/cache_data_include.h
-    ${PROJECT_SOURCE_DIR}/cache_face_array.h
-    ${PROJECT_SOURCE_DIR}/cache_options.h
-    ${PROJECT_SOURCE_DIR}/cache_prototypes.h
-    ${PROJECT_SOURCE_DIR}/cache_scalar_array.h
+    ${PROJECT_SOURCE_DIR}/app_data_include.h
+    ${PROJECT_SOURCE_DIR}/app_data_face_array.h
+    ${PROJECT_SOURCE_DIR}/app_data_options.h
+    ${PROJECT_SOURCE_DIR}/app_data_prototypes.h
+    ${PROJECT_SOURCE_DIR}/app_data_scalar_array.h
     ${PROJECT_SOURCE_DIR}/data_include.h
     ${PROJECT_SOURCE_DIR}/data_names.h
     ${PROJECT_SOURCE_DIR}/data_def.h
     ${PROJECT_SOURCE_DIR}/data_face_array.h
     ${PROJECT_SOURCE_DIR}/data_scalar_array.h
-    ${PROJECT_SOURCE_DIR}/cache_compressed_scalar_array.h
+    ${PROJECT_SOURCE_DIR}/app_data_compressed_scalar_array.h
     ${PROJECT_SOURCE_DIR}/data_compressed_scalar_array.h
     ${PROJECT_SOURCE_DIR}/job_include.h
     ${PROJECT_SOURCE_DIR}/job_names.h
@@ -115,10 +119,10 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/smoke_app.h
     ${PROJECT_SOURCE_DIR}/smoke_driver.h
     ${PROJECT_SOURCE_DIR}/smoke_example.h
-    ${PROJECT_SOURCE_DIR}/projection/cache_array_m2c.h
-    ${PROJECT_SOURCE_DIR}/projection/cache_sparse_matrix.h
-    ${PROJECT_SOURCE_DIR}/projection/cache_vector.h
-    ${PROJECT_SOURCE_DIR}/projection/cache_raw_grid_array.h
+    ${PROJECT_SOURCE_DIR}/projection/app_data_array_m2c.h
+    ${PROJECT_SOURCE_DIR}/projection/app_data_sparse_matrix.h
+    ${PROJECT_SOURCE_DIR}/projection/app_data_vector.h
+    ${PROJECT_SOURCE_DIR}/projection/app_data_raw_grid_array.h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_grid_array.h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_array_m2c.h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_vector_nd.h
@@ -147,16 +151,18 @@ SET(${PROJECT_NAME}_h
 #List the libraries you want to link against - including a higher-level
 #library automatically includes the lower-level ones
 SET(LIBRARIES_TO_LINK PhysBAM_Rendering-OpenGL)
-SET(PROTO_LIB protobuf)
-SET(NIMBUS_LIB nimbus)
-SET(BOOST_THREAD boost_thread)
-SET(BOOST_SYSTEM boost_system)
-LIST(APPEND LIBRARIES_TO_LINK ${PROTO_LIB})
-LIST(APPEND LIBRARIES_TO_LINK ${NIMBUS_LIB})
-LIST(APPEND LIBRARIES_TO_LINK ${BOOST_THREAD})
-LIST(APPEND LIBRARIES_TO_LINK ${BOOST_SYSTEM})
+# The rest of the libraries, will be linked by the executable that uses the
+# shared library generated here. -omidm
+# SET(PROTO_LIB protobuf)
+# SET(NIMBUS_LIB nimbus)
+# SET(BOOST_THREAD boost_thread)
+# SET(BOOST_SYSTEM boost_system)
+# LIST(APPEND LIBRARIES_TO_LINK ${PROTO_LIB})
+# LIST(APPEND LIBRARIES_TO_LINK ${NIMBUS_LIB})
+# LIST(APPEND LIBRARIES_TO_LINK ${BOOST_THREAD})
+# LIST(APPEND LIBRARIES_TO_LINK ${BOOST_SYSTEM})
 
 #you can force cache variables to be on or off here
 #SET(PHYSBAM_USE_CUDA ON CACHE BOOL ON FORCE)
 
-INCLUDE(${NIMBUS_ROOT}/application/physbam-lib/Scripts/CMake/Nimbus_Application_Library.cmake)
+INCLUDE(${NIMBUS_ROOT}/applications/physbam/physbam-lib/Scripts/CMake/Nimbus_Application_Library.cmake)

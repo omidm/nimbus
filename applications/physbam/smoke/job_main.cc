@@ -39,138 +39,138 @@
  * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  */
 
-#include "application/smoke/app_utils.h"
-#include "application/smoke/data_def.h"
-#include "application/smoke/data_names.h"
-#include "application/smoke/job_main.h"
-#include "application/smoke/job_names.h"
-#include "application/smoke/reg_def.h"
-#include "data/scratch_data_helper.h"
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
-#include "worker/job_query.h"
+#include "applications/physbam/smoke/app_utils.h"
+#include "applications/physbam/smoke/data_def.h"
+#include "applications/physbam/smoke/data_names.h"
+#include "applications/physbam/smoke/job_main.h"
+#include "applications/physbam/smoke/job_names.h"
+#include "applications/physbam/smoke/reg_def.h"
+#include "src/data/scratch_data_helper.h"
+#include "src/shared/dbg.h"
+#include "src/shared/nimbus.h"
+// #include "src/worker/job_query.h"
 #include <vector>
 
 namespace application {
 
-JobMain::JobMain(nimbus::Application *app) {
-  set_application(app);
-};
-
-nimbus::Job* JobMain::Clone() {
-  return new JobMain(application());
-}
-
-void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
-  nimbus::JobQuery job_query(this);
-  dbg(APP_LOG, "Executing main job\n");
-  DefineNimbusData(this);
-
-  // Job setup
-  int init_job_num = kAppPartNum;
-  std::vector<nimbus::job_id_t> init_job_ids;
-  GetNewJobID(&init_job_ids, init_job_num);
-
-  int write_output_job_num = kAppPartNum;
-  std::vector<nimbus::job_id_t> write_output_job_ids;
-  GetNewJobID(&write_output_job_ids, write_output_job_num);
-
-  int loop_frame_job_num = 1;
-  std::vector<nimbus::job_id_t> loop_frame_job_ids;
-  GetNewJobID(&loop_frame_job_ids, loop_frame_job_num);
-
-
-  nimbus::IDSet<nimbus::logical_data_id_t> read, write;
-
-  int frame = 0;
-  T time = 0;
-  T dt = 0;
-
-  /*
-   * Spawning initialize stage over multiple workers
-   */
-  for (int i = 0; i < init_job_num; ++i) {
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_FACE_VEL_GHOST, 
-			APP_DENSITY, APP_DENSITY_GHOST, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, APP_PSI_N, NULL);
-
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL, APP_FACE_VEL_GHOST, 
-			APP_DENSITY, APP_DENSITY_GHOST, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[i],
-                        APP_PRESSURE,APP_PSI_D, APP_PSI_N,  NULL);
-
-    nimbus::Parameter init_params;
-    std::string init_str;
-    SerializeParameter(frame, time, dt, kDefaultRegion, kRegY2W3Central[i], &init_str);
-    init_params.set_ser_data(SerializedData(init_str));
-    job_query.StageJob(INITIALIZE,
-                       init_job_ids[i],
-                       read, write,
-                       init_params, true);
-  }
-  job_query.CommitStagedJobs();
-
-  if (kUseGlobalWrite) {
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_DENSITY, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D,
-                        APP_PSI_N, NULL);
-    write.clear();
-
-    nimbus::Parameter temp_params;
-    std::string temp_str;
-    SerializeParameter(frame - 1, time + dt, 0, -1, kDefaultRegion, kDefaultRegion,
-                       &temp_str);
-    temp_params.set_ser_data(SerializedData(temp_str));
-    job_query.StageJob(WRITE_OUTPUT,
-                       write_output_job_ids[0],
-                       read, write,
-                       temp_params, true);
-    job_query.CommitStagedJobs();
-  } else {
-    for (int i = 0; i < write_output_job_num; ++i) {
-      read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_DENSITY, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D,
-                          APP_PSI_N, NULL);
-      write.clear();
-
-      nimbus::Parameter temp_params;
-      std::string temp_str;
-      SerializeParameter(frame - 1, time + dt, 0, i+1, kDefaultRegion, kRegY2W3Central[i],
-                         &temp_str);
-      temp_params.set_ser_data(SerializedData(temp_str));
-      job_query.StageJob(WRITE_OUTPUT,
-                         write_output_job_ids[i],
-                         read, write,
-                         temp_params, true);
-    }
-    job_query.CommitStagedJobs();
-  }
-
-  /*
-   * Spawning loop frame job.
-   */
-  read.clear();
-  write.clear();
-
-  nimbus::Parameter loop_params;
-  std::string loop_str;
-  SerializeParameter(frame, kDefaultRegion, &loop_str);
-  loop_params.set_ser_data(SerializedData(loop_str));
-
-  job_query.StageJob(LOOP_FRAME,
-                     loop_frame_job_ids[0],
-                     read, write,
-                     loop_params, false, true);
-  job_query.CommitStagedJobs();
-
-  dbg(APP_LOG, "Completed executing main job\n");
-
-  dbg(APP_LOG, "Print job dependency figure.\n");
-  job_query.GenerateDotFigure("job_main.dot");
-}
+// JobMain::JobMain(nimbus::Application *app) {
+//   set_application(app);
+// };
+// 
+// nimbus::Job* JobMain::Clone() {
+//   return new JobMain(application());
+// }
+// 
+// void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
+//   nimbus::JobQuery job_query(this);
+//   dbg(APP_LOG, "Executing main job\n");
+//   DefineNimbusData(this);
+// 
+//   // Job setup
+//   int init_job_num = kAppPartNum;
+//   std::vector<nimbus::job_id_t> init_job_ids;
+//   GetNewJobID(&init_job_ids, init_job_num);
+// 
+//   int write_output_job_num = kAppPartNum;
+//   std::vector<nimbus::job_id_t> write_output_job_ids;
+//   GetNewJobID(&write_output_job_ids, write_output_job_num);
+// 
+//   int loop_frame_job_num = 1;
+//   std::vector<nimbus::job_id_t> loop_frame_job_ids;
+//   GetNewJobID(&loop_frame_job_ids, loop_frame_job_num);
+// 
+// 
+//   nimbus::IDSet<nimbus::logical_data_id_t> read, write;
+// 
+//   int frame = 0;
+//   T time = 0;
+//   T dt = 0;
+// 
+//   /*
+//    * Spawning initialize stage over multiple workers
+//    */
+//   for (int i = 0; i < init_job_num; ++i) {
+//     read.clear();
+//     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_FACE_VEL_GHOST, 
+// 			APP_DENSITY, APP_DENSITY_GHOST, NULL);
+//     LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, APP_PSI_N, NULL);
+// 
+//     write.clear();
+//     LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL, APP_FACE_VEL_GHOST, 
+// 			APP_DENSITY, APP_DENSITY_GHOST, NULL);
+//     LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[i],
+//                         APP_PRESSURE,APP_PSI_D, APP_PSI_N,  NULL);
+// 
+//     nimbus::Parameter init_params;
+//     std::string init_str;
+//     SerializeParameter(frame, time, dt, kDefaultRegion, kRegY2W3Central[i], &init_str);
+//     init_params.set_ser_data(SerializedData(init_str));
+//     job_query.StageJob(INITIALIZE,
+//                        init_job_ids[i],
+//                        read, write,
+//                        init_params, true);
+//   }
+//   job_query.CommitStagedJobs();
+// 
+//   if (kUseGlobalWrite) {
+//     read.clear();
+//     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_DENSITY, NULL);
+//     LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D,
+//                         APP_PSI_N, NULL);
+//     write.clear();
+// 
+//     nimbus::Parameter temp_params;
+//     std::string temp_str;
+//     SerializeParameter(frame - 1, time + dt, 0, -1, kDefaultRegion, kDefaultRegion,
+//                        &temp_str);
+//     temp_params.set_ser_data(SerializedData(temp_str));
+//     job_query.StageJob(WRITE_OUTPUT,
+//                        write_output_job_ids[0],
+//                        read, write,
+//                        temp_params, true);
+//     job_query.CommitStagedJobs();
+//   } else {
+//     for (int i = 0; i < write_output_job_num; ++i) {
+//       read.clear();
+//       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_DENSITY, NULL);
+//       LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D,
+//                           APP_PSI_N, NULL);
+//       write.clear();
+// 
+//       nimbus::Parameter temp_params;
+//       std::string temp_str;
+//       SerializeParameter(frame - 1, time + dt, 0, i+1, kDefaultRegion, kRegY2W3Central[i],
+//                          &temp_str);
+//       temp_params.set_ser_data(SerializedData(temp_str));
+//       job_query.StageJob(WRITE_OUTPUT,
+//                          write_output_job_ids[i],
+//                          read, write,
+//                          temp_params, true);
+//     }
+//     job_query.CommitStagedJobs();
+//   }
+// 
+//   /*
+//    * Spawning loop frame job.
+//    */
+//   read.clear();
+//   write.clear();
+// 
+//   nimbus::Parameter loop_params;
+//   std::string loop_str;
+//   SerializeParameter(frame, kDefaultRegion, &loop_str);
+//   loop_params.set_ser_data(SerializedData(loop_str));
+// 
+//   job_query.StageJob(LOOP_FRAME,
+//                      loop_frame_job_ids[0],
+//                      read, write,
+//                      loop_params, false, true);
+//   job_query.CommitStagedJobs();
+// 
+//   dbg(APP_LOG, "Completed executing main job\n");
+// 
+//   dbg(APP_LOG, "Print job dependency figure.\n");
+//   job_query.GenerateDotFigure("job_main.dot");
+// }
 
 } // namespace application

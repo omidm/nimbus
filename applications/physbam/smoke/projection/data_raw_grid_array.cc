@@ -41,10 +41,10 @@
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#include "data/physbam/physbam_data.h"
-#include "shared/nimbus.h"
+#include "src/data/physbam/physbam_data.h"
+#include "src/shared/nimbus.h"
 
-#include "application/smoke/projection/data_raw_grid_array.h"
+#include "applications/physbam/smoke/projection/data_raw_grid_array.h"
 
 namespace application {
 

@@ -7,19 +7,19 @@
 #include <PhysBAM_Tools/Read_Write/Grids_Uniform/READ_WRITE_GRID.h>
 #include <PhysBAM_Tools/Read_Write/Grids_Uniform_Arrays/READ_WRITE_FACE_ARRAYS.h>
 #include <pthread.h>
-#include "application/smoke/app_utils.h"
-#include "application/smoke/cache_prototypes.h"
-#include "application/smoke/cache_options.h"
-#include "application/smoke/data_include.h"
-#include "application/smoke/options.h"
-#include "application/smoke/parameters.h"
-#include "application/smoke/reg_def.h"
-#include "application/smoke/smoke_example.h"
-#include "data/physbam/translator_physbam_old.h"
-#include "data/scalar_data.h"
-#include "shared/nimbus.h"
-#include "shared/dbg.h"
-#include "worker/physical_data_instance.h"
+#include "applications/physbam/smoke/app_utils.h"
+#include "applications/physbam/smoke/app_data_prototypes.h"
+#include "applications/physbam/smoke/app_data_options.h"
+#include "applications/physbam/smoke/data_include.h"
+#include "applications/physbam/smoke/options.h"
+#include "applications/physbam/smoke/parameters.h"
+#include "applications/physbam/smoke/reg_def.h"
+#include "applications/physbam/smoke/smoke_example.h"
+#include "src/data/physbam/translator_physbam_old.h"
+#include "src/data/scalar_data.h"
+#include "src/shared/nimbus.h"
+#include "src/shared/dbg.h"
+#include "src/worker/physical_data_instance.h"
 
 // TODO(quhang) In three places where nimbus_thread_queue is introduced.
 
@@ -31,8 +31,8 @@ template<class TV> SMOKE_EXAMPLE<TV>::
 SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
               bool use_threading,
               int thread_quota) :
-    nimbus_thread_queue(use_threading ?
-                        new nimbus::NimbusThreadQueue(thread_quota) : NULL),
+    // nimbus_thread_queue(use_threading ?
+    //                     new nimbus::NimbusThreadQueue(thread_quota) : NULL),
     stream_type(stream_type_input),
     initial_time(0),
     first_frame(0),
@@ -71,11 +71,11 @@ SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
 //#####################################################################
 template<class TV> SMOKE_EXAMPLE<TV>::
 SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
-              application::AppCacheObjects *cache,
+              application::AppAppObjects *cache,
               bool use_threading,
               int thread_quota) :
-    nimbus_thread_queue(use_threading ?
-			new nimbus::NimbusThreadQueue(thread_quota) : NULL),
+    // nimbus_thread_queue(use_threading ?
+		// 	new nimbus::NimbusThreadQueue(thread_quota) : NULL),
     stream_type(stream_type_input),
     initial_time(0),
     first_frame(0),
@@ -458,7 +458,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
                             local_region.dy()+2*application::kGhostNum,
                             local_region.dz()+2*application::kGhostNum);
 
-    nimbus::CacheManager *cm = job->GetCacheManager();
+    nimbus::AppDataManager *cm = job->GetAppDataManager();
     // mac velocities
     if (cache_fv) {
         T_FACE_ARRAY *fv = cache_fv->data();

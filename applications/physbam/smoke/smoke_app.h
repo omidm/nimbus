@@ -39,8 +39,8 @@
 #ifndef NIMBUS_APPLICATION_SMOKE_SMOKE_APP_H_
 #define NIMBUS_APPLICATION_SMOKE_SMOKE_APP_H_
 
-#include "shared/log.h"
-#include "shared/nimbus.h"
+#include "src/shared/log.h"
+#include "src/shared/nimbus.h"
 
 namespace application {
 

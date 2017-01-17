@@ -33,26 +33,51 @@
  */
 
 /*
- * This file contains the scalar advance job, which is one of the sub
- * jobs in the iteration of computing a simulation frame.
- *
- * Author: Andrew Lim <alim16@stanford.edu>
+ * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_SMOKE_JOB_SCALAR_ADVANCE_H_
-#define NIMBUS_APPLICATION_SMOKE_JOB_SCALAR_ADVANCE_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_
 
-#include "src/shared/nimbus.h"
+#include "applications/physbam/smoke//app_data_include.h"
+#include "applications/physbam/smoke//parameters.h"
 
 namespace application {
 
-    class JobScalarAdvance : public nimbus::Job {
-        public:
-            explicit JobScalarAdvance(nimbus::Application *app);
-            virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
-            virtual nimbus::Job* Clone();
-    };
+extern AppDataFaceArray<T> kAppDataFaceVel;
+extern AppDataFaceArray<T> kAppDataFaceVelGhost;
+extern AppDataFaceArray<bool> kAppDataPsiN;
+
+extern AppDataScalarArray<T> kAppDataDensity;
+extern AppDataScalarArray<T> kAppDataDensityGhost;
+
+extern AppDataScalarArray<T> kAppDataPhi3;
+extern AppDataScalarArray<T> kAppDataPhi7;
+extern AppDataScalarArray<T> kAppDataPhi8;
+extern AppDataScalarArray<bool> kAppDataPsiD;
+
+// Varibales for projection.
+extern AppDataScalarArray<T> kAppDataPressure;
+extern AppDataScalarArray<int> kAppDataColors;
+extern AppDataScalarArray<T> kAppDataDivergence;
+extern AppDataRawGridArray kAppDataIndexC2M;
+
+// extern AppDataParticleLevelsetEvolution<float> kAppDataPLE;
+
+extern AppDataSparseMatrix kAppDataSparseMatrixA;
+extern AppDataSparseMatrix kAppDataSparseMatrixC;
+
+extern AppDataArrayM2C kAppDataArrayM2C;
+
+extern AppDataCompressedScalarArray<float> kAppDataMetaP;
+
+extern AppDataVector kAppDataVectorB;
+extern AppDataVector kAppDataVectorPressure;
+extern AppDataVector kAppDataVectorZ;
+extern AppDataVector kAppDataVectorTemp;
+
+void InitializeAppDataPrototypes(nimbus::GeometricRegion kRegion);
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_SMOKE_JOB_SCALAR_ADVANCE_H_
+#endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_

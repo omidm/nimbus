@@ -36,8 +36,8 @@
  * Author: Hang Qu<quhang@stanford.edu>
  */
 
-#include "application/smoke/app_utils.h"
-#include "application/smoke/projection/projection_helper.h"
+#include "applications/physbam/smoke/app_utils.h"
+#include "applications/physbam/smoke/projection/projection_helper.h"
 
 namespace PhysBAM {
 

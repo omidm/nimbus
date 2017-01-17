@@ -42,9 +42,9 @@
 #ifndef NIMBUS_APPLICATION_SMOKE_PARAMETERS_H_
 #define NIMBUS_APPLICATION_SMOKE_PARAMETERS_H_
 
-#include "application/smoke/physbam_include.h"
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
+#include "applications/physbam/smoke/physbam_include.h"
+#include "src/shared/dbg.h"
+#include "src/shared/geometric_region.h"
 
 #define APP_LOG DBG_TEMP
 #define APP_LOG_STR "temp"

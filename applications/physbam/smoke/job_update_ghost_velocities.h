@@ -42,7 +42,7 @@
 #ifndef NIMBUS_APPLICATION_SMOKE_JOB_UPDATE_GHOST_VELOCITIES_H_
 #define NIMBUS_APPLICATION_SMOKE_JOB_UPDATE_GHOST_VELOCITIES_H_
 
-#include "shared/nimbus.h"
+#include "src/shared/nimbus.h"
 
 namespace application {
 

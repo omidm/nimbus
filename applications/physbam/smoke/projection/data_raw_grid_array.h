@@ -45,8 +45,8 @@
 
 #include <PhysBAM_Tools/Grids_Uniform_Arrays/ARRAYS_ND.h>
 #include <PhysBAM_Tools/Vectors/VECTOR.h>
-#include "data/physbam/physbam_data.h"
-#include "shared/nimbus.h"
+#include "src/data/physbam/physbam_data.h"
+#include "src/shared/nimbus.h"
 
 namespace application {
 

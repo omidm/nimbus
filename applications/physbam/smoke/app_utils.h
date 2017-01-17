@@ -47,14 +47,14 @@
 #include <stdarg.h>
 #include <pthread.h>
 
-#include "application/smoke/data_names.h"
-#include "application/smoke/parameters.h"
-#include "data/scratch_data_helper.h"
-#include "shared/geometric_region.h"
-#include "shared/nimbus.h"
-#include "shared/nimbus_types.h"
-#include "shared/timer.h"
-#include "worker/physical_data_instance.h"
+#include "applications/physbam/smoke/data_names.h"
+#include "applications/physbam/smoke/parameters.h"
+#include "src/data/scratch_data_helper.h"
+#include "src/shared/geometric_region.h"
+#include "src/shared/nimbus.h"
+#include "src/shared/nimbus_types.h"
+#include "src/shared/timer.h"
+#include "src/worker/physical_data_instance.h"
 
 using nimbus::Data;
 using nimbus::GeometricRegion;

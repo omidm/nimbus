@@ -6,9 +6,9 @@
 #define __SMOKE_DRIVER__
 
 #include <PhysBAM_Tools/Vectors/VECTOR.h>
-#include "application/smoke/app_utils.h"
-#include "application/smoke/options.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/smoke/app_utils.h"
+#include "applications/physbam/smoke/options.h"
+#include "src/shared/nimbus.h"
 
 namespace PhysBAM{
 

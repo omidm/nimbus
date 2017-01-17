@@ -12,14 +12,14 @@
 #include <PhysBAM_Tools/Grids_Uniform_PDE_Linear/PROJECTION_UNIFORM.h>
 #include <PhysBAM_Tools/Read_Write/Utilities/FILE_UTILITIES.h>
 #include <PhysBAM_Tools/Vectors/VECTOR.h>
-#include "application/smoke/cache_data_include.h"
-#include "application/smoke/cache_face_array.h"
-#include "application/smoke/cache_options.h"
-#include "application/smoke/nimbus_thread_queue.h"
-#include "application/smoke/options.h"
-#include "application/smoke/projection/laplace_solver_wrapper.h"
-#include "data/physbam/translator_physbam_old.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/smoke/app_data_include.h"
+#include "applications/physbam/smoke/app_data_face_array.h"
+#include "applications/physbam/smoke/app_data_options.h"
+#include "applications/physbam/smoke/nimbus_thread_queue.h"
+#include "applications/physbam/smoke/options.h"
+#include "applications/physbam/smoke/projection/laplace_solver_wrapper.h"
+#include "src/data/physbam/translator_physbam_old.h"
+#include "src/shared/nimbus.h"
 namespace PhysBAM{
 
 template<class TV>
@@ -77,30 +77,30 @@ public:
 
     // cache objects
     bool use_cache;
-    typedef typename application::CacheFaceArray<T> TCacheFaceArray;
-    typedef typename application::CacheFaceArray<bool> BoolCacheFaceArray;
-    typedef typename application::CacheScalarArray<T> TCacheScalarArray;
-    typedef typename application::CacheScalarArray<int> IntCacheScalarArray;
-    typedef typename application::CacheScalarArray<bool> BoolCacheScalarArray;
-    typedef application::CacheSparseMatrix TCacheSparseMatrix;
-    typedef application::CacheArrayM2C TCacheArrayM2C;
-    TCacheFaceArray *cache_fv;
-    TCacheFaceArray *cache_fvg;
-    BoolCacheFaceArray *cache_psi_n;
-    TCacheScalarArray *cache_dens, *cache_dens_ghost;
-    TCacheScalarArray *cache_pressure, *cache_divergence;
-    IntCacheScalarArray *cache_colors;
-    application::CacheRawGridArray *cache_index_c2m;
-    BoolCacheScalarArray *cache_psi_d;
-    TCacheSparseMatrix *cache_matrix_a;
-    TCacheArrayM2C *cache_index_m2c;
-    application::CacheVector *cache_vector_b;
+    typedef typename application::AppDataFaceArray<T> TAppDataFaceArray;
+    typedef typename application::AppDataFaceArray<bool> BoolAppDataFaceArray;
+    typedef typename application::AppDataScalarArray<T> TAppDataScalarArray;
+    typedef typename application::AppDataScalarArray<int> IntAppDataScalarArray;
+    typedef typename application::AppDataScalarArray<bool> BoolAppDataScalarArray;
+    typedef application::AppDataSparseMatrix TAppDataSparseMatrix;
+    typedef application::AppDataArrayM2C TAppDataArrayM2C;
+    TAppDataFaceArray *cache_fv;
+    TAppDataFaceArray *cache_fvg;
+    BoolAppDataFaceArray *cache_psi_n;
+    TAppDataScalarArray *cache_dens, *cache_dens_ghost;
+    TAppDataScalarArray *cache_pressure, *cache_divergence;
+    IntAppDataScalarArray *cache_colors;
+    application::AppDataRawGridArray *cache_index_c2m;
+    BoolAppDataScalarArray *cache_psi_d;
+    TAppDataSparseMatrix *cache_matrix_a;
+    TAppDataArrayM2C *cache_index_m2c;
+    application::AppDataVector *cache_vector_b;
 
     SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
                   bool use_threading,
                   int core_quota);
     SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
-                  application::AppCacheObjects *cache,
+                  application::AppAppObjects *cache,
                   bool use_threading,
                   int core_quota);
     virtual ~SMOKE_EXAMPLE();

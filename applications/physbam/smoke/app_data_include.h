@@ -33,53 +33,19 @@
  */
 
 /*
- * Author: Hang Qu <quhang@stanford.edu>
+ * Author: Chinmayee Shah <chshah@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  */
 
-#ifndef NIMBUS_APPLICATION_SMOKE_CACHE_ARRAY_M2C_H_
-#define NIMBUS_APPLICATION_SMOKE_CACHE_ARRAY_M2C_H_
+#ifndef NIMBUS_APPLICATION_SMOKE_CACHE_DATA_INCLUDE_H_
+#define NIMBUS_APPLICATION_SMOKE_CACHE_DATA_INCLUDE_H_
 
-#include <string>
+#include "applications/physbam/smoke/app_data_compressed_scalar_array.h"
+#include "applications/physbam/smoke/app_data_face_array.h"
+#include "applications/physbam/smoke/app_data_scalar_array.h"
+#include "applications/physbam/smoke/projection/app_data_sparse_matrix.h"
+#include "applications/physbam/smoke/projection/app_data_array_m2c.h"
+#include "applications/physbam/smoke/projection/app_data_vector.h"
+#include "applications/physbam/smoke/projection/app_data_raw_grid_array.h"
 
-#include "application/smoke/parameters.h"
-#include "application/smoke/physbam_include.h"
-#include "application/smoke/projection/data_raw_array_m2c.h"
-#include "data/cache/cache_var.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
-
-namespace application {
-
-class CacheArrayM2C : public nimbus::CacheVar {
- public:
-  typedef PhysBAM::ARRAY<application::TV_INT> DATA_TYPE;
-  explicit CacheArrayM2C(const nimbus::GeometricRegion& global_reg,
-                         bool make_proto = false);
-
-  DATA_TYPE* data() {
-    return data_;
-  }
-  void set_data(DATA_TYPE* d) {
-    data_ = d;
-  }
-
- protected:
-  explicit CacheArrayM2C(const nimbus::GeometricRegion& global_reg,
-                         const nimbus::GeometricRegion& ob_reg);
-
-  virtual nimbus::CacheVar* CreateNew(const nimbus::GeometricRegion &ob_reg) const;
-
-  virtual void ReadToCache(const nimbus::DataArray& read_set,
-                           const nimbus::GeometricRegion& read_reg);
-  virtual void WriteFromCache(const nimbus::DataArray& write_set,
-                              const nimbus::GeometricRegion& write_reg) const;
-
- private:
-  nimbus::GeometricRegion global_region_;
-  nimbus::GeometricRegion local_region_;
-  DATA_TYPE* data_;
-};  // class CacheArrayM2C
-
-}  // namespace application
-
-#endif  // NIMBUS_APPLICATION_SMOKE_CACHE_ARRAY_M2C_H_
+#endif // NIMBUS_APPLICATION_SMOKE_CACHE_DATA_INCLUDE_H_

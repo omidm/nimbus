@@ -10,19 +10,19 @@
 #include <PhysBAM_Tools/Parallel_Computation/BOUNDARY_MPI.h>
 #include <PhysBAM_Tools/Parallel_Computation/BOUNDARY_THREADED.h>
 
-#include "application/smoke/app_utils.h"
-#include "application/smoke/data_names.h"
-#include "application/smoke/job_names.h"
-#include "application/smoke/parameters.h"
-#include "application/smoke/projection/laplace_solver_wrapper.h"
-#include "application/smoke/projection/projection_helper.h"
-#include "application/smoke/smoke_driver.h"
-#include "application/smoke/smoke_example.h"
-#include "data/physbam/translator_physbam.h"
-#include "shared/dbg_modes.h"
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/smoke/app_utils.h"
+#include "applications/physbam/smoke/data_names.h"
+#include "applications/physbam/smoke/job_names.h"
+#include "applications/physbam/smoke/parameters.h"
+#include "applications/physbam/smoke/projection/laplace_solver_wrapper.h"
+#include "applications/physbam/smoke/projection/projection_helper.h"
+#include "applications/physbam/smoke/smoke_driver.h"
+#include "applications/physbam/smoke/smoke_example.h"
+#include "src/data/physbam/translator_physbam.h"
+#include "src/shared/dbg_modes.h"
+#include "src/shared/dbg.h"
+#include "src/shared/geometric_region.h"
+#include "src/shared/nimbus.h"
 
 using namespace PhysBAM;
 namespace{

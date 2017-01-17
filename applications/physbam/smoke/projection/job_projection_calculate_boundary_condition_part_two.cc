@@ -38,14 +38,14 @@
 #include <sstream>
 #include <string>
 
-#include "application/smoke/app_utils.h"
-#include "application/smoke/physbam_utils.h"
-#include "application/smoke/smoke_driver.h"
-#include "application/smoke/smoke_example.h"
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/smoke/app_utils.h"
+#include "applications/physbam/smoke/physbam_utils.h"
+#include "applications/physbam/smoke/smoke_driver.h"
+#include "applications/physbam/smoke/smoke_example.h"
+#include "src/shared/dbg.h"
+#include "src/shared/nimbus.h"
 
-#include "application/smoke/projection/job_projection_calculate_boundary_condition_part_two.h"
+#include "applications/physbam/smoke/projection/job_projection_calculate_boundary_condition_part_two.h"
 
 namespace application {
 

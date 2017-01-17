@@ -36,25 +36,27 @@
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_SMOKE_CACHE_SPARSE_MATRIX_H_
-#define NIMBUS_APPLICATION_SMOKE_CACHE_SPARSE_MATRIX_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_RAW_GRID_ARRAY_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_RAW_GRID_ARRAY_H_
 
 #include <string>
 
-#include <PhysBAM_Tools/Matrices/SPARSE_MATRIX_FLAT_NXN.h>
-#include "application/smoke/physbam_include.h"
-#include "application/smoke/projection/data_sparse_matrix.h"
-#include "data/cache/cache_var.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
+#include "applications/physbam/smoke//parameters.h"
+#include "applications/physbam/smoke//physbam_include.h"
+#include "src/data/app_data/app_var.h"
+#include "src/shared/geometric_region.h"
+#include "src/worker/data.h"
 
 namespace application {
 
-class CacheSparseMatrix : public nimbus::CacheVar {
+class AppDataRawGridArray : public nimbus::AppVar {
  public:
-  typedef PhysBAM::SPARSE_MATRIX_FLAT_NXN<float> DATA_TYPE;
-  explicit CacheSparseMatrix(const nimbus::GeometricRegion& global_reg,
-                             bool make_proto = false);
+  typedef PhysBAM::ARRAY<int, TV_INT> DATA_TYPE;
+  AppDataRawGridArray();
+  explicit AppDataRawGridArray(const nimbus::GeometricRegion& global_reg,
+                             bool make_proto,
+                             const std::string& name);
+  ~AppDataRawGridArray();
 
   DATA_TYPE* data() {
     return data_;
@@ -63,23 +65,29 @@ class CacheSparseMatrix : public nimbus::CacheVar {
     data_ = d;
   }
 
+  virtual size_t memory_size() {
+    return data_ ? sizeof(*this) + data_->memory_size() : sizeof(*this);
+  }
+
  protected:
-  explicit CacheSparseMatrix(const nimbus::GeometricRegion& global_reg,
-                             const nimbus::GeometricRegion& ob_reg);
+  explicit AppDataRawGridArray(const nimbus::GeometricRegion& global_reg,
+                       const nimbus::GeometricRegion& ob_reg);
 
-  virtual nimbus::CacheVar* CreateNew(const nimbus::GeometricRegion &ob_reg) const;
+  virtual nimbus::AppVar* CreateNew(const nimbus::GeometricRegion &ob_reg) const;
 
-  virtual void ReadToCache(const nimbus::DataArray& read_set,
+  virtual void ReadAppData(const nimbus::DataArray& read_set,
                            const nimbus::GeometricRegion& read_reg);
-  virtual void WriteFromCache(const nimbus::DataArray& write_set,
+  virtual void WriteAppData(const nimbus::DataArray& write_set,
                               const nimbus::GeometricRegion& write_reg) const;
+
+  virtual void Destroy();
 
  private:
   nimbus::GeometricRegion global_region_;
   nimbus::GeometricRegion local_region_;
   DATA_TYPE* data_;
-};  // class CacheSparseMatrix
+};  // class AppDataRawGridArray
 
 }  // namespace application
 
-#endif  // NIMBUS_APPLICATION_SMOKE_CACHE_SPARSE_MATRIX_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_RAW_GRID_ARRAY_H_

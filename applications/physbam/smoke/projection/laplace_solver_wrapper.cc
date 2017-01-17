@@ -36,15 +36,15 @@
  * Author: Hang Qu<quhang@stanford.edu>
  */
 
-#include "application/smoke/app_utils.h"
+#include "applications/physbam/smoke/app_utils.h"
 
-#include "application/smoke/projection/data_sparse_matrix.h"
-#include "application/smoke/projection/data_raw_array_m2c.h"
-#include "application/smoke/projection/data_raw_grid_array.h"
-#include "application/smoke/projection/data_raw_vector_nd.h"
-#include "application/smoke/projection/projection_helper.h"
+#include "applications/physbam/smoke/projection/data_sparse_matrix.h"
+#include "applications/physbam/smoke/projection/data_raw_array_m2c.h"
+#include "applications/physbam/smoke/projection/data_raw_grid_array.h"
+#include "applications/physbam/smoke/projection/data_raw_vector_nd.h"
+#include "applications/physbam/smoke/projection/projection_helper.h"
 
-#include "application/smoke/projection/laplace_solver_wrapper.h"
+#include "applications/physbam/smoke/projection/laplace_solver_wrapper.h"
 
 namespace PhysBAM {
 
@@ -136,7 +136,7 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
 
   } else {
     laplace->tolerance = 0;
-    dbg(APP_LOG, "No water in this region!\n");
+    dbg(APP_LOG, "No smoke in this region!\n");
   }
 }
 

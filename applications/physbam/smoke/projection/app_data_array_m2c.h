@@ -33,33 +33,62 @@
  */
 
 /*
- * This file contains job PROJECTION_LOCAL_INITIALIZE that:
- *     initializes the data structure associated with each application
- *     partition that is used during projection. Notice that job
- *     PROJECTION_GLOBAL_INITIALIZE initializes similar data structures that
- *     require global coordination.
- * The read set:
- *
- * The write set:
- *
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_LOCAL_INITIALIZE_H_
-#define NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_LOCAL_INITIALIZE_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_ARRAY_M2C_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_ARRAY_M2C_H_
 
-#include "src/shared/nimbus.h"
+#include <string>
+
+#include "applications/physbam/smoke//parameters.h"
+#include "applications/physbam/smoke//physbam_include.h"
+#include "applications/physbam/smoke//projection/data_raw_array_m2c.h"
+#include "src/data/app_data/app_var.h"
+#include "src/shared/geometric_region.h"
+#include "src/worker/data.h"
 
 namespace application {
 
-class JobProjectionLocalInitialize : public nimbus::Job {
+class AppDataArrayM2C : public nimbus::AppVar {
  public:
-  explicit JobProjectionLocalInitialize(nimbus::Application *app);
-  virtual void Execute(nimbus::Parameter params,
-                       const nimbus::DataArray& da);
-  virtual nimbus::Job* Clone();
-};
+  typedef PhysBAM::ARRAY<application::TV_INT> DATA_TYPE;
+  AppDataArrayM2C();
+  explicit AppDataArrayM2C(const nimbus::GeometricRegion& global_reg,
+                         bool make_proto,
+                         const std::string& name);
+  ~AppDataArrayM2C();
+
+  DATA_TYPE* data() {
+    return data_;
+  }
+  void set_data(DATA_TYPE* d) {
+    data_ = d;
+  }
+
+  virtual size_t memory_size() {
+    return data_ ? sizeof(*this) + data_->memory_size() : sizeof(*this);
+  }
+
+ protected:
+  explicit AppDataArrayM2C(const nimbus::GeometricRegion& global_reg,
+                         const nimbus::GeometricRegion& ob_reg);
+
+  virtual nimbus::AppVar* CreateNew(const nimbus::GeometricRegion &ob_reg) const;
+
+  virtual void ReadAppData(const nimbus::DataArray& read_set,
+                           const nimbus::GeometricRegion& read_reg);
+  virtual void WriteAppData(const nimbus::DataArray& write_set,
+                              const nimbus::GeometricRegion& write_reg) const;
+
+  virtual void Destroy();
+
+ private:
+  nimbus::GeometricRegion global_region_;
+  nimbus::GeometricRegion local_region_;
+  DATA_TYPE* data_;
+};  // class AppDataArrayM2C
 
 }  // namespace application
 
-#endif  // NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_LOCAL_INITIALIZE_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_ARRAY_M2C_H_

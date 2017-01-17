@@ -47,12 +47,12 @@
 #ifndef NIMBUS_APPLICATION_SMOKE_PHYSBAM_UTILS_H_
 #define NIMBUS_APPLICATION_SMOKE_PHYSBAM_UTILS_H_
 
-#include "application/smoke/app_utils.h"
-#include "application/smoke/cache_options.h"
-#include "application/smoke/options.h"
-#include "application/smoke/parameters.h"
-#include "shared/geometric_region.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/smoke/app_utils.h"
+#include "applications/physbam/smoke/app_data_options.h"
+#include "applications/physbam/smoke/options.h"
+#include "applications/physbam/smoke/parameters.h"
+#include "src/shared/geometric_region.h"
+#include "src/shared/nimbus.h"
 
 namespace PhysBAM {
 template<typename TV> class SMOKE_DRIVER;
@@ -75,7 +75,7 @@ void GetAppCacheObjects(
     const DataConfig &data_config,
     const nimbus::Job &job,
     const nimbus::DataArray &da,
-    AppCacheObjects *cache);
+    AppAppObjects *cache);
 
 // Initialzes SMOKE_EXAMPLE and SMOKE_DRIVER with the given "init_config"
 // and the simulation variables in data array.

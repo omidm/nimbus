@@ -39,16 +39,16 @@
 #include <sstream>
 #include <string>
 
-#include "application/smoke/app_utils.h"
-#include "application/smoke/physbam_utils.h"
-#include "application/smoke/projection/projection_driver.h"
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/smoke/app_utils.h"
+#include "applications/physbam/smoke/physbam_utils.h"
+#include "applications/physbam/smoke/projection/projection_driver.h"
+#include "src/shared/dbg.h"
+#include "src/shared/nimbus.h"
 
-#include "data/scalar_data.h"
-#include "application/smoke/data_include.h"
+#include "src/data/scalar_data.h"
+#include "applications/physbam/smoke/data_include.h"
 
-#include "application/smoke/projection/job_projection_transform_pressure.h"
+#include "applications/physbam/smoke/projection/job_projection_transform_pressure.h"
 
 namespace application {
 

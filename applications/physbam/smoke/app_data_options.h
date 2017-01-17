@@ -33,26 +33,63 @@
  */
 
 /*
- * This file contains the scalar advance job, which is one of the sub
- * jobs in the iteration of computing a simulation frame.
- *
- * Author: Andrew Lim <alim16@stanford.edu>
+ * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_SMOKE_JOB_SCALAR_ADVANCE_H_
-#define NIMBUS_APPLICATION_SMOKE_JOB_SCALAR_ADVANCE_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_
 
-#include "src/shared/nimbus.h"
+#include "applications/physbam/smoke//app_data_include.h"
+#include "applications/physbam/smoke//app_data_prototypes.h"
 
 namespace application {
 
-    class JobScalarAdvance : public nimbus::Job {
-        public:
-            explicit JobScalarAdvance(nimbus::Application *app);
-            virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
-            virtual nimbus::Job* Clone();
-    };
+struct AppAppObjects {
+  AppDataFaceArray<T> *fv;
+  AppDataFaceArray<T> *fvg;
+  AppDataFaceArray<bool> *psi_n;
+  AppDataScalarArray<T> *phi3;
+  AppDataScalarArray<T> *phi7;
+  AppDataScalarArray<T> *phi8;
+  AppDataScalarArray<bool> *psi_d;
+  AppDataScalarArray<T> *dens;
+  AppDataScalarArray<T> *dens_ghost;
+  // AppDataParticleLevelsetEvolution<T> *ple;
+  AppDataScalarArray<T> *pressure;
+  AppDataScalarArray<int> *color;
+  AppDataScalarArray<T> *divergence;
+  AppDataSparseMatrix *matrix_a;
+  AppDataArrayM2C * index_m2c;
+  AppDataRawGridArray *index_c2m;
+  AppDataVector* vector_b;
+  // StaticConfigValidMask* static_config_valid_mask;
+  // StaticConfigUInterface* static_config_u_interface;
+  // StaticConfigForce* static_config_force;
 
-} // namespace application
+  AppAppObjects() {
+    fv    = NULL;
+    fvg   = NULL;
+    psi_n = NULL;
+    phi3  = NULL;
+    phi7  = NULL;
+    phi8  = NULL;
+    psi_d = NULL;
+    dens = NULL;
+    dens_ghost = NULL;
+    // ple   = NULL;
+    pressure = NULL;
+    color = NULL;
+    divergence = NULL;
+    matrix_a = NULL;
+    index_m2c = NULL;
+    index_c2m = NULL;
+    vector_b = NULL;
+    // static_config_valid_mask = NULL;
+    // static_config_u_interface = NULL;
+    // static_config_force = NULL;
+  }
+};
 
-#endif  // NIMBUS_APPLICATION_SMOKE_JOB_SCALAR_ADVANCE_H_
+}  // namespace application
+
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_

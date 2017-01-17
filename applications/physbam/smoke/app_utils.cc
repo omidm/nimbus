@@ -36,22 +36,22 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  * Modifier for smoke: Andrew Lim <alim16@stanford.edu>
  *
- * Note: The messages for smoke parameters are the same as that for water.
- * As a result, the water_parameter protobuf has been reused for the smoke
+ * Note: The messages for smoke parameters are the same as that for smoke.
+ * As a result, the smoke_parameter protobuf has been reused for the smoke
  * application.
  */
 
 #include <limits>
 #include <set>
 #include <string>
-#include "application/smoke/app_utils.h"
-#include "application/smoke/data_names.h"
-#include "application/smoke/reg_def.h"
-#include "data/physbam/physbam_data.h"
-#include "data/physbam/protobuf_compiled/water_parameter.pb.h"
-#include "shared/logical_data_object.h"
-#include "shared/nimbus.h"
-#include "worker/physical_data_instance.h"
+#include "applications/physbam/smoke/app_utils.h"
+#include "applications/physbam/smoke/data_names.h"
+#include "applications/physbam/smoke/reg_def.h"
+#include "src/data/physbam/physbam_data.h"
+#include "src/data/physbam/protobuf_compiled/water_parameter.pb.h"
+#include "src/shared/logical_data_object.h"
+#include "src/shared/nimbus.h"
+#include "src/worker/physical_data_instance.h"
 
 namespace application {
 
@@ -365,12 +365,12 @@ namespace application {
         const int frame,
         const GeometricRegion& global_region,
         std::string* result) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.set_frame(frame);
+      nimbus_message::WaterParameter smoke_parameter;
+      smoke_parameter.set_frame(frame);
       SerializeRegionHelper(
           global_region,
-          water_parameter.mutable_global_region());
-      water_parameter.SerializeToString(result);
+          smoke_parameter.mutable_global_region());
+      smoke_parameter.SerializeToString(result);
       return true;
     }
 
@@ -379,13 +379,13 @@ namespace application {
         const T time,
         const GeometricRegion& global_region,
         std::string* result) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.set_frame(frame);
-      water_parameter.set_time(time);
+      nimbus_message::WaterParameter smoke_parameter;
+      smoke_parameter.set_frame(frame);
+      smoke_parameter.set_time(time);
       SerializeRegionHelper(
           global_region,
-          water_parameter.mutable_global_region());
-      water_parameter.SerializeToString(result);
+          smoke_parameter.mutable_global_region());
+      smoke_parameter.SerializeToString(result);
       return true;
     }
 
@@ -396,17 +396,17 @@ namespace application {
         const GeometricRegion& global_region,
         const GeometricRegion& local_region,
         std::string *result) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.set_frame(frame);
-      water_parameter.set_time(time);
-      water_parameter.set_dt(dt);
+      nimbus_message::WaterParameter smoke_parameter;
+      smoke_parameter.set_frame(frame);
+      smoke_parameter.set_time(time);
+      smoke_parameter.set_dt(dt);
       SerializeRegionHelper(
           global_region,
-          water_parameter.mutable_global_region());
+          smoke_parameter.mutable_global_region());
       SerializeRegionHelper(
           local_region,
-          water_parameter.mutable_local_region());
-      water_parameter.SerializeToString(result);
+          smoke_parameter.mutable_local_region());
+      smoke_parameter.SerializeToString(result);
       return true;
     }
 
@@ -418,18 +418,18 @@ namespace application {
         const GeometricRegion& global_region,
         const GeometricRegion& local_region,
         std::string *result) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.set_frame(frame);
-      water_parameter.set_time(time);
-      water_parameter.set_dt(dt);
-      water_parameter.set_rank(rank);
+      nimbus_message::WaterParameter smoke_parameter;
+      smoke_parameter.set_frame(frame);
+      smoke_parameter.set_time(time);
+      smoke_parameter.set_dt(dt);
+      smoke_parameter.set_rank(rank);
       SerializeRegionHelper(
           global_region,
-          water_parameter.mutable_global_region());
+          smoke_parameter.mutable_global_region());
       SerializeRegionHelper(
           local_region,
-          water_parameter.mutable_local_region());
-      water_parameter.SerializeToString(result);
+          smoke_parameter.mutable_local_region());
+      smoke_parameter.SerializeToString(result);
       return true;
     }
 
@@ -441,18 +441,18 @@ namespace application {
         const GeometricRegion& local_region,
         const int iteration,
         std::string *result) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.set_frame(frame);
-      water_parameter.set_time(time);
-      water_parameter.set_dt(dt);
-      water_parameter.set_iteration(iteration);
+      nimbus_message::WaterParameter smoke_parameter;
+      smoke_parameter.set_frame(frame);
+      smoke_parameter.set_time(time);
+      smoke_parameter.set_dt(dt);
+      smoke_parameter.set_iteration(iteration);
       SerializeRegionHelper(
           global_region,
-          water_parameter.mutable_global_region());
+          smoke_parameter.mutable_global_region());
       SerializeRegionHelper(
           local_region,
-          water_parameter.mutable_local_region());
-      water_parameter.SerializeToString(result);
+          smoke_parameter.mutable_local_region());
+      smoke_parameter.SerializeToString(result);
       return true;
     }
 
@@ -468,12 +468,12 @@ namespace application {
         const std::string str,
         int* frame,
         GeometricRegion* global_region) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.ParseFromString(str);
-      assert(water_parameter.has_frame());
-      *frame = water_parameter.frame();
-      assert(water_parameter.has_global_region());
-      DeserializeRegionHelper(water_parameter.global_region(),
+      nimbus_message::WaterParameter smoke_parameter;
+      smoke_parameter.ParseFromString(str);
+      assert(smoke_parameter.has_frame());
+      *frame = smoke_parameter.frame();
+      assert(smoke_parameter.has_global_region());
+      DeserializeRegionHelper(smoke_parameter.global_region(),
                               global_region);
       return true;
     }
@@ -483,14 +483,14 @@ namespace application {
         int* frame,
         T* time,
         GeometricRegion* global_region) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.ParseFromString(str);
-      assert(water_parameter.has_frame());
-      *frame = water_parameter.frame();
-      assert(water_parameter.has_time());
-      *time = water_parameter.time();
-      assert(water_parameter.has_global_region());
-      DeserializeRegionHelper(water_parameter.global_region(),
+      nimbus_message::WaterParameter smoke_parameter;
+      smoke_parameter.ParseFromString(str);
+      assert(smoke_parameter.has_frame());
+      *frame = smoke_parameter.frame();
+      assert(smoke_parameter.has_time());
+      *time = smoke_parameter.time();
+      assert(smoke_parameter.has_global_region());
+      DeserializeRegionHelper(smoke_parameter.global_region(),
                               global_region);
       return true;
     }
@@ -502,19 +502,19 @@ namespace application {
         T* dt,
         GeometricRegion* global_region,
         GeometricRegion* local_region) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.ParseFromString(str);
-      assert(water_parameter.has_frame());
-      *frame = water_parameter.frame();
-      assert(water_parameter.has_time());
-      *time = water_parameter.time();
-      assert(water_parameter.has_dt());
-      *dt = water_parameter.dt();
-      assert(water_parameter.has_global_region());
-      DeserializeRegionHelper(water_parameter.global_region(),
+      nimbus_message::WaterParameter smoke_parameter;
+      smoke_parameter.ParseFromString(str);
+      assert(smoke_parameter.has_frame());
+      *frame = smoke_parameter.frame();
+      assert(smoke_parameter.has_time());
+      *time = smoke_parameter.time();
+      assert(smoke_parameter.has_dt());
+      *dt = smoke_parameter.dt();
+      assert(smoke_parameter.has_global_region());
+      DeserializeRegionHelper(smoke_parameter.global_region(),
                               global_region);
-      assert(water_parameter.has_local_region());
-      DeserializeRegionHelper(water_parameter.local_region(),
+      assert(smoke_parameter.has_local_region());
+      DeserializeRegionHelper(smoke_parameter.local_region(),
                               local_region);
       return true;
     }
@@ -527,21 +527,21 @@ namespace application {
         int* rank,
         GeometricRegion* global_region,
         GeometricRegion* local_region) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.ParseFromString(str);
-      assert(water_parameter.has_frame());
-      *frame = water_parameter.frame();
-      assert(water_parameter.has_time());
-      *time = water_parameter.time();
-      assert(water_parameter.has_dt());
-      *dt = water_parameter.dt();
-      assert(water_parameter.has_rank());
-      *rank = water_parameter.rank();
-      assert(water_parameter.has_global_region());
-      DeserializeRegionHelper(water_parameter.global_region(),
+      nimbus_message::WaterParameter smoke_parameter;
+      smoke_parameter.ParseFromString(str);
+      assert(smoke_parameter.has_frame());
+      *frame = smoke_parameter.frame();
+      assert(smoke_parameter.has_time());
+      *time = smoke_parameter.time();
+      assert(smoke_parameter.has_dt());
+      *dt = smoke_parameter.dt();
+      assert(smoke_parameter.has_rank());
+      *rank = smoke_parameter.rank();
+      assert(smoke_parameter.has_global_region());
+      DeserializeRegionHelper(smoke_parameter.global_region(),
                               global_region);
-      assert(water_parameter.has_local_region());
-      DeserializeRegionHelper(water_parameter.local_region(),
+      assert(smoke_parameter.has_local_region());
+      DeserializeRegionHelper(smoke_parameter.local_region(),
                               local_region);
       return true;
     }
@@ -554,21 +554,21 @@ namespace application {
         GeometricRegion* global_region,
         GeometricRegion* local_region,
         int* iteration) {
-      nimbus_message::WaterParameter water_parameter;
-      water_parameter.ParseFromString(str);
-      assert(water_parameter.has_frame());
-      *frame = water_parameter.frame();
-      assert(water_parameter.has_time());
-      *time = water_parameter.time();
-      assert(water_parameter.has_dt());
-      *dt = water_parameter.dt();
-      assert(water_parameter.has_iteration());
-      *iteration = water_parameter.iteration();
-      assert(water_parameter.has_global_region());
-      DeserializeRegionHelper(water_parameter.global_region(),
+      nimbus_message::WaterParameter smoke_parameter;
+      smoke_parameter.ParseFromString(str);
+      assert(smoke_parameter.has_frame());
+      *frame = smoke_parameter.frame();
+      assert(smoke_parameter.has_time());
+      *time = smoke_parameter.time();
+      assert(smoke_parameter.has_dt());
+      *dt = smoke_parameter.dt();
+      assert(smoke_parameter.has_iteration());
+      *iteration = smoke_parameter.iteration();
+      assert(smoke_parameter.has_global_region());
+      DeserializeRegionHelper(smoke_parameter.global_region(),
                               global_region);
-      assert(water_parameter.has_local_region());
-      DeserializeRegionHelper(water_parameter.local_region(),
+      assert(smoke_parameter.has_local_region());
+      DeserializeRegionHelper(smoke_parameter.local_region(),
                               local_region);
       return true;
     }

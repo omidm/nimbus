@@ -52,7 +52,7 @@
 #ifndef NIMBUS_APPLICATION_SMOKE_PROJECTION_LAPLACE_SOLVER_WRAPPER_H_
 #define NIMBUS_APPLICATION_SMOKE_PROJECTION_LAPLACE_SOLVER_WRAPPER_H_
 
-#include "application/smoke/app_utils.h"
+#include "applications/physbam/smoke/app_utils.h"
 
 namespace PhysBAM {
 

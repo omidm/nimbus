@@ -35,25 +35,25 @@
  * Author: Andrew Lim <alim16@stanford.edu>
  */
 
-#include "application/smoke/app_utils.h"
-#include "application/smoke/cache_data_include.h"
-#include "application/smoke/cache_prototypes.h"
-#include "application/smoke/data_include.h"
-#include "application/smoke/job_include.h"
-#include "application/smoke/reg_def.h"
-#include "application/smoke/smoke_app.h"
-#include "data/physbam/translator_physbam.h"
-#include "data/physbam/translator_physbam_old.h"
-#include "data/scalar_data.h"
-#include "data/scratch_data_helper.h"
+#include "applications/physbam/smoke/app_utils.h"
+#include "applications/physbam/smoke/app_data_include.h"
+#include "applications/physbam/smoke/app_data_prototypes.h"
+#include "applications/physbam/smoke/data_include.h"
+#include "applications/physbam/smoke/job_include.h"
+#include "applications/physbam/smoke/reg_def.h"
+#include "applications/physbam/smoke/smoke_app.h"
+#include "src/data/physbam/translator_physbam.h"
+#include "src/data/physbam/translator_physbam_old.h"
+#include "src/data/scalar_data.h"
+#include "src/data/scratch_data_helper.h"
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>
 #include <PhysBAM_Tools/Read_Write/Utilities/FILE_UTILITIES.h>
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
-#include "shared/log.h"
-#include "shared/nimbus.h"
-#include "shared/timer.h"
+#include "src/shared/dbg.h"
+#include "src/shared/geometric_region.h"
+#include "src/shared/log.h"
+#include "src/shared/nimbus.h"
+#include "src/shared/timer.h"
 #include "stdio.h"
 
 namespace application {

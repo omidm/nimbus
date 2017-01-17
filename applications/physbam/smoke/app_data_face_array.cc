@@ -38,31 +38,39 @@
 
 #include <string>
 
-#include "application/smoke/cache_face_array.h"
-#include "application/smoke/physbam_include.h"
-#include "application/smoke/physbam_tools.h"
-#include "data/cache/cache_var.h"
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
+#include "applications/physbam/smoke//app_data_face_array.h"
+#include "applications/physbam/smoke//physbam_include.h"
+#include "applications/physbam/smoke//physbam_tools.h"
+#include "src/data/app_data/app_var.h"
+#include "src/shared/dbg.h"
+#include "src/shared/geometric_region.h"
+#include "src/worker/data.h"
 
 namespace application {
 
-template<class T, class TS> CacheFaceArray<T, TS>::
-CacheFaceArray(const nimbus::GeometricRegion &global_reg,
+template<class T, class TS> AppDataFaceArray<T, TS>::
+AppDataFaceArray() {
+  data_ = NULL;
+}
+
+template<class T, class TS> AppDataFaceArray<T, TS>::
+AppDataFaceArray(const nimbus::GeometricRegion &global_reg,
                const int ghost_width,
-               bool make_proto)
+               bool make_proto,
+               const std::string& name)
     : global_region_(global_reg),
       ghost_width_(ghost_width) {
+    set_name(name);
+    data_ = NULL;
     if (make_proto)
         MakePrototype();
 }
 
-template<class T, class TS> CacheFaceArray<T, TS>::
-CacheFaceArray(const nimbus::GeometricRegion &global_reg,
+template<class T, class TS> AppDataFaceArray<T, TS>::
+AppDataFaceArray(const nimbus::GeometricRegion &global_reg,
                const nimbus::GeometricRegion &ob_reg,
                const int ghost_width)
-    : CacheVar(ob_reg),
+    : AppVar(ob_reg),
       global_region_(global_reg),
       local_region_(ob_reg.NewEnlarged(-ghost_width)),
       ghost_width_(ghost_width) {
@@ -78,15 +86,30 @@ CacheFaceArray(const nimbus::GeometricRegion &global_reg,
     }
 }
 
-template<class T, class TS> nimbus::CacheVar *CacheFaceArray<T, TS>::
-CreateNew(const nimbus::GeometricRegion &ob_reg) const {
-    return new CacheFaceArray(global_region_,
-                              ob_reg,
-                              ghost_width_);
+template<class T, class TS> AppDataFaceArray<T, TS>::
+~AppDataFaceArray() {
+    Destroy();
 }
 
-template<class T, class TS> void CacheFaceArray<T, TS>::
-ReadToCache(const nimbus::DataArray &read_set,
+template<class T, class TS> void AppDataFaceArray<T, TS>::
+Destroy() {
+    if (data_) {
+        delete data_;
+        data_ = NULL;
+    }
+}
+
+template<class T, class TS> nimbus::AppVar *AppDataFaceArray<T, TS>::
+CreateNew(const nimbus::GeometricRegion &ob_reg) const {
+    nimbus::AppVar* temp = new AppDataFaceArray(global_region_,
+                                                ob_reg,
+                                                ghost_width_);
+    temp->set_name(name());
+    return temp;
+}
+
+template<class T, class TS> void AppDataFaceArray<T, TS>::
+ReadAppData(const nimbus::DataArray &read_set,
             const nimbus::GeometricRegion &read_reg) {
     //dbg(DBG_WARN, "\n--- Reading %i elements into face array for region %s\n", read_set.size(), reg.ToNetworkData().c_str());
     nimbus::GeometricRegion ob_reg = object_region();
@@ -97,8 +120,8 @@ ReadToCache(const nimbus::DataArray &read_set,
         ReadFaceArray<T>(final_read_reg, local_region_, shift_, read_set, data_);
 }
 
-template<class T, class TS> void CacheFaceArray<T, TS>::
-WriteFromCache(const nimbus::DataArray &write_set,
+template<class T, class TS> void AppDataFaceArray<T, TS>::
+WriteAppData(const nimbus::DataArray &write_set,
                const nimbus::GeometricRegion &write_reg) const {
     //dbg(DBG_WARN, "\n Writing %i elements into face array for region %s\n", write_set.size(), reg.ToNetworkData().c_str());
     if (write_reg.dx() <= 0 || write_reg.dy() <= 0 || write_reg.dz() <= 0)
@@ -111,7 +134,16 @@ WriteFromCache(const nimbus::DataArray &write_set,
         WriteFaceArray<T>(final_write_reg, shift_, write_set, data_);
 }
 
-template class CacheFaceArray<float, float>;
-template class CacheFaceArray<bool, float>;
+template<class T, class TS> void AppDataFaceArray<T, TS>::
+DumpData(std::string file_name) {
+    std::ofstream file(file_name.c_str());
+    int size = data_->buffer_size;
+    const char *dptr = reinterpret_cast<char * >(data_->base_pointer);
+    file.write(dptr, sizeof(T) * size);
+    file.close();
+}
+
+template class AppDataFaceArray<float, float>;
+template class AppDataFaceArray<bool, float>;
 
 } // namespace application

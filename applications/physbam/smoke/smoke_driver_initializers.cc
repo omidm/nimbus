@@ -5,15 +5,15 @@
 #include "stdio.h"
 #include "string.h"
 
-#include "application/smoke/app_utils.h"
-#include "application/smoke/data_names.h"
-#include "application/smoke/parameters.h"
-#include "application/smoke/physbam_include.h"
-#include "application/smoke/smoke_driver.h"
-#include "application/smoke/smoke_example.h"
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/smoke/app_utils.h"
+#include "applications/physbam/smoke/data_names.h"
+#include "applications/physbam/smoke/parameters.h"
+#include "applications/physbam/smoke/physbam_include.h"
+#include "applications/physbam/smoke/smoke_driver.h"
+#include "applications/physbam/smoke/smoke_example.h"
+#include "src/shared/dbg.h"
+#include "src/shared/geometric_region.h"
+#include "src/shared/nimbus.h"
 
 using namespace PhysBAM;
 

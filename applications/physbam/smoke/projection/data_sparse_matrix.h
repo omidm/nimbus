@@ -44,8 +44,8 @@
 #define NIMBUS_APPLICATION_SMOKE_PROJECTION_DATA_SPARSE_MATRIX_H_
 
 #include <PhysBAM_Tools/Matrices/SPARSE_MATRIX_FLAT_NXN.h>
-#include "data/physbam/physbam_data.h"
-#include "shared/nimbus.h"
+#include "src/data/physbam/physbam_data.h"
+#include "src/shared/nimbus.h"
 
 namespace application {
 

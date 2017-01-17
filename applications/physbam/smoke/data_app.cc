@@ -39,9 +39,9 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "application/smoke/data_app.h"
-#include "data/physbam/physbam_data.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/smoke/data_app.h"
+#include "src/data/physbam/physbam_data.h"
+#include "src/shared/nimbus.h"
 #include "string.h"
 #include "stdio.h"
 

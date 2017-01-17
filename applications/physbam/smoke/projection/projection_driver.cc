@@ -46,13 +46,13 @@
 #include <PhysBAM_Tools/Parallel_Computation/SPARSE_MATRIX_PARTITION.h>
 #include <PhysBAM_Tools/Vectors/SPARSE_VECTOR_ND.h>
 
-#include "application/smoke/cache_prototypes.h"
-#include "application/smoke/data_include.h"
-#include "application/smoke/physbam_utils.h"
-#include "data/scalar_data.h"
-#include "shared/nimbus.h"
+#include "applications/physbam/smoke/app_data_prototypes.h"
+#include "applications/physbam/smoke/data_include.h"
+#include "applications/physbam/smoke/physbam_utils.h"
+#include "src/data/scalar_data.h"
+#include "src/shared/nimbus.h"
 
-#include "application/smoke/projection/projection_driver.h"
+#include "applications/physbam/smoke/projection/projection_driver.h"
 
 namespace PhysBAM {
 
@@ -286,7 +286,7 @@ void ProjectionDriver::LoadFromNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
   application::ScopeTimer scope_timer("projection_load");
   if (application::kUseCache) {
-    Cache_LoadFromNimbus(job, da);
+    AppData_LoadFromNimbus(job, da);
     return;
   }
   nimbus::int_dimension_t array_shift[3] = {
@@ -657,7 +657,7 @@ void ProjectionDriver::SaveToNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
   application::ScopeTimer scope_timer("projection_save");
   if (application::kUseCache) {
-    Cache_SaveToNimbus(job, da);
+    AppData_SaveToNimbus(job, da);
     return;
   }
   nimbus::int_dimension_t array_shift[3] = {

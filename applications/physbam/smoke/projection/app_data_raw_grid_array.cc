@@ -38,28 +38,34 @@
 
 #include <string>
 
-#include "application/smoke/physbam_include.h"
-#include "application/smoke/physbam_tools.h"
-#include "data/cache/cache_var.h"
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
+#include "applications/physbam/smoke//physbam_include.h"
+#include "applications/physbam/smoke//physbam_tools.h"
+#include "src/data/app_data/app_var.h"
+#include "src/shared/dbg.h"
+#include "src/shared/geometric_region.h"
+#include "src/worker/data.h"
 
-#include "application/smoke/projection/data_raw_grid_array.h"
-#include "application/smoke/projection/cache_raw_grid_array.h"
+#include "applications/physbam/smoke//projection/data_raw_grid_array.h"
+#include "applications/physbam/smoke//projection/app_data_raw_grid_array.h"
 
 namespace application {
 
-CacheRawGridArray::CacheRawGridArray(const nimbus::GeometricRegion &global_reg,
-                         bool make_proto)
+AppDataRawGridArray::AppDataRawGridArray() {
+  data_ = NULL;
+}
+
+AppDataRawGridArray::AppDataRawGridArray(const nimbus::GeometricRegion &global_reg,
+                         bool make_proto, const std::string& name)
     : global_region_(global_reg) {
+  set_name(name);
+  data_ = NULL;
   if (make_proto)
     MakePrototype();
 }
 
-CacheRawGridArray::CacheRawGridArray(const nimbus::GeometricRegion &global_reg,
+AppDataRawGridArray::AppDataRawGridArray(const nimbus::GeometricRegion &global_reg,
                          const nimbus::GeometricRegion &ob_reg)
-    : CacheVar(ob_reg), global_region_(global_reg), local_region_(ob_reg) {
+    : AppVar(ob_reg), global_region_(global_reg), local_region_(ob_reg) {
   data_ = new DATA_TYPE;
   data_->Resize(
       PhysBAM::RANGE<TV_INT>(TV_INT(0, 0, 0),
@@ -68,12 +74,23 @@ CacheRawGridArray::CacheRawGridArray(const nimbus::GeometricRegion &global_reg,
                                     local_region_.dz()+1)));
 }
 
-nimbus::CacheVar* CacheRawGridArray::CreateNew(
-    const nimbus::GeometricRegion &ob_reg) const {
-  return new CacheRawGridArray(global_region_, ob_reg);
+AppDataRawGridArray::~AppDataRawGridArray() {
+  Destroy();
 }
 
-void CacheRawGridArray::ReadToCache(const nimbus::DataArray &read_set,
+void AppDataRawGridArray::Destroy() {
+  if (data_)
+    delete data_;
+}
+
+nimbus::AppVar* AppDataRawGridArray::CreateNew(
+    const nimbus::GeometricRegion &ob_reg) const {
+  nimbus::AppVar* temp = new AppDataRawGridArray(global_region_, ob_reg);
+  temp->set_name(name());
+  return temp;
+}
+
+void AppDataRawGridArray::ReadAppData(const nimbus::DataArray &read_set,
                               const nimbus::GeometricRegion &read_reg) {
   if (read_set.size() == 0) {
     return;
@@ -85,7 +102,7 @@ void CacheRawGridArray::ReadToCache(const nimbus::DataArray &read_set,
   dynamic_cast<DataRawGridArray*>(read_set[0])->LoadFromNimbus(data_);
 }
 
-void CacheRawGridArray::WriteFromCache(
+void AppDataRawGridArray::WriteAppData(
     const nimbus::DataArray &write_set,
     const nimbus::GeometricRegion &write_reg) const {
   if (write_set.size() == 0) {

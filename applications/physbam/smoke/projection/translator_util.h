@@ -53,7 +53,7 @@
 #include <PhysBAM_Tools/Arrays/ARRAY_VIEW.h>
 #include <PhysBAM_Tools/Vectors/VECTOR_ND.h>
 
-#include "shared/nimbus.h"
+#include "src/shared/nimbus.h"
 
 // An internal data structure used to represent a buffer.
 struct Buffer {

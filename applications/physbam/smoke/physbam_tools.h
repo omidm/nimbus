@@ -39,8 +39,8 @@
 #ifndef NIMBUS_APPLICATION_SMOKE_PHYSBAM_TOOLS_H_
 #define NIMBUS_APPLICATION_SMOKE_PHYSBAM_TOOLS_H_
 
-#include "application/smoke/physbam_include.h"
-#include "shared/geometric_region.h"
+#include "applications/physbam/smoke/physbam_include.h"
+#include "src/shared/geometric_region.h"
 
 namespace application {
 
