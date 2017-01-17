@@ -50,6 +50,10 @@ AppDataFaceArray<T> kAppDataFaceVelGhost;
 AppDataFaceArray<bool> kAppDataPsiN;
 AppDataScalarArray<bool> kAppDataPsiD;
 
+//density
+AppDataScalarArray<T> kAppDataDensity;
+AppDataScalarArray<T> kAppDataDensityGhost;
+
 // phi
 AppDataScalarArray<T> kAppDataPhi3;
 AppDataScalarArray<T> kAppDataPhi7;
