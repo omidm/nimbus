@@ -31,6 +31,7 @@ template<class TV> SMOKE_EXAMPLE<TV>::
 SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
               bool use_threading,
               int thread_quota) :
+    nimbus_thread_queue(NULL),
     // nimbus_thread_queue(use_threading ?
     //                     new nimbus::NimbusThreadQueue(thread_quota) : NULL),
     stream_type(stream_type_input),
@@ -74,6 +75,7 @@ SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
               application::AppAppObjects *cache,
               bool use_threading,
               int thread_quota) :
+    nimbus_thread_queue(NULL),
     // nimbus_thread_queue(use_threading ?
 		// 	new nimbus::NimbusThreadQueue(thread_quota) : NULL),
     stream_type(stream_type_input),

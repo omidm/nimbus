@@ -7,10 +7,10 @@
 # will be generated. Definitions for inner and outer will not be generated in
 # that case.
 
-RegW3  : (256, 256, 256), (1, 1, 1), (3, 3, 3) : central, outer, inner
-RegW1  : (256, 256, 256), (1, 1, 1), (1, 1, 1) : central, outer, inner
-RegW0  : (256, 256, 256), (1, 1, 1), (0, 0, 0) : central
+RegW3  : (64, 64, 64), (1, 1, 1), (3, 3, 3) : central, outer, inner
+RegW1  : (64, 64, 64), (1, 1, 1), (1, 1, 1) : central, outer, inner
+RegW0  : (64, 64, 64), (1, 1, 1), (0, 0, 0) : central
 
-RegY2W3 : (256, 256, 256), (2, 2, 2), (3, 3, 3) : central, outer, inner, central_w_gb
-RegY2W1 : (256, 256, 256), (2, 2, 2), (1, 1, 1) : central, outer, inner, central_w_gb
-RegY2W0 : (256, 256, 256), (2, 2, 2), (0, 0, 0) : central
+RegY2W3 : (64, 64, 64), (2, 2, 2), (3, 3, 3) : central, outer, inner, central_w_gb
+RegY2W1 : (64, 64, 64), (2, 2, 2), (1, 1, 1) : central, outer, inner, central_w_gb
+RegY2W0 : (64, 64, 64), (2, 2, 2), (0, 0, 0) : central

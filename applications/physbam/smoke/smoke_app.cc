@@ -208,6 +208,9 @@ namespace application {
         // Region constants
         InitializeRegions();
 
+        // Initialize the app data prototypes.
+        InitializeAppDataPrototypes(kDefaultRegion);
+
         // PhysBAM logging and R/W
         PhysBAM::LOG::Initialize_Logging(false, false, 1<<30, true, kThreadsNum);
         PhysBAM::FILE_UTILITIES::Create_Directory(kOutputDir+"/common");

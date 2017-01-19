@@ -54,186 +54,231 @@
 
 namespace application {
 
-// JobLoopIterationPartTwo::JobLoopIterationPartTwo(nimbus::Application *app) {
-//   set_application(app);
-// };
-// 
-// nimbus::Job* JobLoopIterationPartTwo::Clone() {
-//   return new JobLoopIterationPartTwo(application());
-// }
-// 
-// void JobLoopIterationPartTwo::Execute(
-//     nimbus::Parameter params,
-//     const nimbus::DataArray& da) {
-//   dbg(APP_LOG, "Executing LOOP_ITERATION_PART_TWO job\n");
-// 
-//   InitConfig init_config;
-//   // Threading settings.
-//   init_config.use_threading = use_threading();
-//   init_config.core_quota = core_quota();
-//   T dt;
-//   std::string params_str(params.ser_data().data_ptr_raw(),
-//                          params.ser_data().size());
-//   LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
-//                 &init_config.global_region, &init_config.local_region);
-//   dbg(APP_LOG, "Frame %i in LOOP_ITERATION_PART_TWO job\n", init_config.frame);
-// 
-//   const int& frame = init_config.frame;
-//   const T& time = init_config.time;
-// 
-//   dbg(APP_LOG, "Frame %i and time %f in iteration job\n",
-//       frame, time);
-// 
-//   // Initialize the state of example and driver.
-//   PhysBAM::SMOKE_EXAMPLE<TV>* example =
-//       new PhysBAM::SMOKE_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())), false, 1);
-// 
-//   // check whether the frame is done or not
-//   bool done = false;
-//   if (time + dt >= example->Time_At_Frame(frame + 1)) {
-//     done = true;
-//   }
-// 
-//   delete example;
-// 
-//   SpawnJobs(
-//       done, frame, time, dt, da, init_config.global_region);
-// 
-// }
-// 
-// void JobLoopIterationPartTwo::SpawnJobs(
-//     bool done, int frame, T time, T dt, const nimbus::DataArray& da,
-//     const nimbus::GeometricRegion& global_region) {
-//   struct timeval start_time;
-//   gettimeofday(&start_time, NULL);
-// 
-//   nimbus::JobQuery job_query(this);
-// 
-//   int job_num = 2;
-//   std::vector<nimbus::job_id_t> job_ids;
-//   GetNewJobID(&job_ids, job_num);
-//   nimbus::IDSet<nimbus::logical_data_id_t> read, write;
-// 
-//   int write_output_job_num = kAppPartNum;
-//   std::vector<nimbus::job_id_t> write_output_job_ids;
-//   GetNewJobID(&write_output_job_ids, write_output_job_num);
-// 
-//   int calculate_dt_job_num = kAppPartNum;
-//   std::vector<nimbus::job_id_t> calculate_dt_job_ids;
-//   GetNewJobID(&calculate_dt_job_ids, calculate_dt_job_num);
-// 
-//   if (done) {
-//     dbg(APP_LOG, "[CONTROL FLOW] Second part, Loop done.\n");
-//   } else {
-//     dbg(APP_LOG, "[CONTROL FLOW] Second part, Loop not done.\n");
-//   }
-//   dbg(APP_LOG, "[CONTROL FLOW] Second part, Frame=%d, Time=%f, dt=%f\n",
-//       frame, time, dt);
-// 
-//   if (!done) {
-// 
-//     // Spawning loop iteration for next iteration.
-// 
-//     for (int i = 0; i < calculate_dt_job_num; ++i) {
-//       read.clear();
-//       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
-//       write.clear();
-//       LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_DT, NULL);
-// 
-//       nimbus::Parameter dt_params;
-//       std::string dt_str;
-//       SerializeParameter(frame, time, 0, global_region,
-//                          kRegY2W3Central[i], &dt_str);
-//       dt_params.set_ser_data(SerializedData(dt_str));
-//       job_query.StageJob(SUBSTEP, calculate_dt_job_ids[i],
-//                          read, write,
-//                          dt_params, true);
-//     }
-//     job_query.CommitStagedJobs();
-// 
-//     read.clear();
-//     LoadLogicalIdsInSet(this, &read, kRegW3Central[0], APP_DT, NULL);
-//     write.clear();
-//     nimbus::Parameter iter_params;
-//     std::string iter_str;
-//     SerializeParameter(frame, time + dt, global_region, &iter_str);
-//     iter_params.set_ser_data(SerializedData(iter_str));
-//     job_query.StageJob(LOOP_ITERATION, job_ids[1],
-//                        read, write,
-//                        iter_params, false, true);
-//     job_query.CommitStagedJobs();
-// 
-//   } else {
-// 
-//     std::vector<nimbus::job_id_t> loop_job_id;
-//     GetNewJobID(&loop_job_id, 1);
-// 
-//     if (kUseGlobalWrite) {
-//       read.clear();
-//       LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_DENSITY, NULL);
-//       LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D,
-//                           APP_PSI_N, NULL);
-//       write.clear();
-// 
-//       nimbus::Parameter temp_params;
-//       std::string temp_str;
-//       SerializeParameter(frame, time, dt, -1, global_region, global_region,
-//                          &temp_str);
-//       temp_params.set_ser_data(SerializedData(temp_str));
-//       job_query.StageJob(WRITE_OUTPUT,
-//                          write_output_job_ids[0],
-//                          read, write,
-//                          temp_params, true);
-//       job_query.CommitStagedJobs();
-//     } else {
-//       for (int i = 0; i < write_output_job_num; ++i) {
-//         read.clear();
-// 	LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_DENSITY, NULL);
-//         LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D,
-//                             APP_PSI_N, NULL);
-//         write.clear();
-// 
-//         nimbus::Parameter temp_params;
-//         std::string temp_str;
-//         SerializeParameter(frame, time, dt, i+1, global_region, kRegY2W3Central[i],
-//                            &temp_str);
-//         temp_params.set_ser_data(SerializedData(temp_str));
-//         job_query.StageJob(WRITE_OUTPUT,
-//                            write_output_job_ids[i],
-//                            read, write,
-//                            temp_params, true);
-//       }
-//       job_query.CommitStagedJobs();
-//     }
-// 
-//     // Spawning loop frame to compute next frame.
-// 
-//     read.clear();
-//     write.clear();
-// 
-//     nimbus::Parameter frame_params;
-//     std::string frame_str;
-//     SerializeParameter(frame + 1, global_region, &frame_str);
-//     frame_params.set_ser_data(SerializedData(frame_str));
-//     job_query.StageJob(LOOP_FRAME, loop_job_id[0],
-//                        read, write,
-//                        frame_params, false, true);
-//     job_query.CommitStagedJobs();
-// 
-//   }  // end loop "if (done)".
-//   if (time == 0) {
-//     dbg(APP_LOG, "Print job dependency figure.\n");
-//     job_query.GenerateDotFigure("loop_iteration_part_two.dot");
-//   }
-//   {
-//     struct timeval t;
-//     gettimeofday(&t, NULL);
-//     double time  = (static_cast<double>(t.tv_sec - start_time.tv_sec)) +
-//         .000001 * (static_cast<double>(t.tv_usec - start_time.tv_usec));
-//     dbg(APP_LOG, "\nThe query time spent in job LOOP_ITERATION_PART_TWO is %f seconds.\n",
-//         time);
-//   }
-// }
+JobLoopIterationPartTwo::JobLoopIterationPartTwo(nimbus::Application *app) {
+  set_application(app);
+};
+
+nimbus::Job* JobLoopIterationPartTwo::Clone() {
+  return new JobLoopIterationPartTwo(application());
+}
+
+void JobLoopIterationPartTwo::Execute(
+    nimbus::Parameter params,
+    const nimbus::DataArray& da) {
+  dbg(APP_LOG, "Executing LOOP_ITERATION_PART_TWO job\n");
+
+  InitConfig init_config;
+  // Threading settings.
+  init_config.use_threading = use_threading();
+  init_config.core_quota = core_quota();
+  T dt;
+  std::string params_str(params.ser_data().data_ptr_raw(),
+                         params.ser_data().size());
+  LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
+                &init_config.global_region, &init_config.local_region);
+  dbg(APP_LOG, "Frame %i in LOOP_ITERATION_PART_TWO job\n", init_config.frame);
+
+  const int& frame = init_config.frame;
+  const T& time = init_config.time;
+
+  dbg(APP_LOG, "Frame %i and time %f in iteration job\n",
+      frame, time);
+
+  // Initialize the state of example and driver.
+  PhysBAM::SMOKE_EXAMPLE<TV>* example =
+      new PhysBAM::SMOKE_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())), false, 1);
+
+  // check whether the frame is done or not
+  bool done = false;
+  if (time + dt >= example->Time_At_Frame(frame + 1)) {
+    done = true;
+  }
+
+  delete example;
+
+  SpawnJobs(
+      done, frame, time, dt, da, init_config.global_region);
+
+}
+
+void JobLoopIterationPartTwo::SpawnJobs(
+    bool done, int frame, T time, T dt, const nimbus::DataArray& da,
+    const nimbus::GeometricRegion& global_region) {
+  struct timeval start_time;
+  gettimeofday(&start_time, NULL);
+
+  int job_num = 2;
+  std::vector<nimbus::job_id_t> job_ids;
+  GetNewJobID(&job_ids, job_num);
+
+  int write_output_job_num = kAppPartNum;
+  std::vector<nimbus::job_id_t> write_output_job_ids;
+  GetNewJobID(&write_output_job_ids, write_output_job_num);
+
+  int calculate_dt_job_num = kAppPartNum;
+  std::vector<nimbus::job_id_t> calculate_dt_job_ids;
+  GetNewJobID(&calculate_dt_job_ids, calculate_dt_job_num);
+
+  nimbus::IDSet<nimbus::logical_data_id_t> read, write;
+  nimbus::IDSet<nimbus::job_id_t> before, after;
+
+  if (done) {
+    dbg(APP_LOG, "[CONTROL FLOW] Second part, Loop done.\n");
+  } else {
+    dbg(APP_LOG, "[CONTROL FLOW] Second part, Loop not done.\n");
+  }
+  dbg(APP_LOG, "[CONTROL FLOW] Second part, Frame=%d, Time=%f, dt=%f\n",
+      frame, time, dt);
+
+  if (!done) {
+
+    // Spawning loop iteration for next iteration.
+
+    for (int i = 0; i < calculate_dt_job_num; ++i) {
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_DT, NULL);
+
+      nimbus::Parameter dt_params;
+      std::string dt_str;
+      SerializeParameter(frame, time, 0, global_region,
+                         kRegY2W3Central[i], &dt_str);
+      dt_params.set_ser_data(SerializedData(dt_str));
+
+      after.clear();
+      before.clear();
+      StageJobAndLoadBeforeSet(&before, SUBSTEP,
+                               calculate_dt_job_ids[i],
+                               read, write);
+      SpawnComputeJob(SUBSTEP,
+                      calculate_dt_job_ids[i],
+                      read, write, before, after,
+                      dt_params, true,
+                      kRegY2W3Central[i]);
+    }
+
+    MarkEndOfStage();
+
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegW3Central[0], APP_DT, NULL);
+    write.clear();
+    nimbus::Parameter iter_params;
+    std::string iter_str;
+    SerializeParameter(frame, time + dt, global_region, &iter_str);
+    iter_params.set_ser_data(SerializedData(iter_str));
+
+    after.clear();
+    before.clear();
+    StageJobAndLoadBeforeSet(&before, LOOP_ITERATION,
+                             job_ids[1],
+                             read, write,
+                             true);
+    SpawnComputeJob(LOOP_ITERATION,
+                    job_ids[1],
+                    read, write, before, after,
+                    iter_params, false,
+                    kRegW3Central[0]);
+ 
+    MarkEndOfStage();
+
+  } else {
+
+    std::vector<nimbus::job_id_t> loop_job_id;
+    GetNewJobID(&loop_job_id, 1);
+
+    if (kUseGlobalWrite) {
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_DENSITY, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D,
+                          APP_PSI_N, NULL);
+      write.clear();
+
+      nimbus::Parameter temp_params;
+      std::string temp_str;
+      SerializeParameter(frame, time, dt, -1, global_region, global_region,
+                         &temp_str);
+      temp_params.set_ser_data(SerializedData(temp_str));
+
+      after.clear();
+      before.clear();
+      StageJobAndLoadBeforeSet(&before, WRITE_OUTPUT,
+                               write_output_job_ids[0],
+                               read, write);
+      SpawnComputeJob(WRITE_OUTPUT,
+                      write_output_job_ids[0],
+                      read, write, before, after,
+                      temp_params, true,
+                      kRegW3Central[0]);
+    } else {
+      for (int i = 0; i < write_output_job_num; ++i) {
+        read.clear();
+        LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_DENSITY, NULL);
+        LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D,
+                            APP_PSI_N, NULL);
+        write.clear();
+
+        nimbus::Parameter temp_params;
+        std::string temp_str;
+        SerializeParameter(frame, time, dt, i+1, global_region, kRegY2W3Central[i],
+                           &temp_str);
+        temp_params.set_ser_data(SerializedData(temp_str));
+
+        after.clear();
+        before.clear();
+        StageJobAndLoadBeforeSet(&before, WRITE_OUTPUT,
+                                 write_output_job_ids[i],
+                                 read, write);
+        SpawnComputeJob(WRITE_OUTPUT,
+                        write_output_job_ids[i],
+                        read, write, before, after,
+                        temp_params, true,
+                        kRegY2W3Central[i]);
+      }
+    }
+
+    MarkEndOfStage();
+
+    // Spawning loop frame to compute next frame.
+
+    read.clear();
+    write.clear();
+
+    nimbus::Parameter frame_params;
+    std::string frame_str;
+    SerializeParameter(frame + 1, global_region, &frame_str);
+    frame_params.set_ser_data(SerializedData(frame_str));
+
+
+    after.clear();
+    before.clear();
+    StageJobAndLoadBeforeSet(&before, LOOP_FRAME,
+                             job_ids[0],
+                             read, write,
+                             true);
+    SpawnComputeJob(LOOP_FRAME,
+                    job_ids[0],
+                    read, write, before, after,
+                    frame_params, false,
+                    kRegW3Central[0]);
+ 
+    MarkEndOfStage();
+
+  }  // end loop "if (done)".
+
+  // if (time == 0) {
+  //   dbg(APP_LOG, "Print job dependency figure.\n");
+  //   job_query.GenerateDotFigure("loop_iteration_part_two.dot");
+  // }
+  // {
+  //   struct timeval t;
+  //   gettimeofday(&t, NULL);
+  //   double time  = (static_cast<double>(t.tv_sec - start_time.tv_sec)) +
+  //       .000001 * (static_cast<double>(t.tv_usec - start_time.tv_usec));
+  //   dbg(APP_LOG, "\nThe query time spent in job LOOP_ITERATION_PART_TWO is %f seconds.\n",
+  //       time);
+  // }
+}
 
 
 }  // namespace application

@@ -231,7 +231,7 @@ template<class TV> bool SMOKE_DRIVER<TV>::InitializeProjectionHelper(
     const GRID<TV>& grid_input,
     PROJECTION_UNIFORM<GRID<TV> >* projection) {
   typedef application::DataConfig DataConfig;
-  assert(grid_input.Is_MAC_GRID());
+  // assert(grid_input.Is_MAC_GRID());
   projection->p_grid = grid_input;
   // Laplace solver is used.
   assert(projection->poisson == NULL);
@@ -286,7 +286,7 @@ template<class TV> bool SMOKE_DRIVER<TV>::InitializeProjectionHelper(
   }
 
   //dsd is not considered.
-  assert(projection->dsd == NULL);
+  // assert(projection->dsd == NULL);
   return true;
 }
 

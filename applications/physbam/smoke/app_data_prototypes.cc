@@ -90,10 +90,8 @@ void InitializeAppDataPrototypes(nimbus::GeometricRegion kRegion) {
   kAppDataFaceVel = AppDataFaceArray<T>(kRegion, 0, true, "face_vel");
   kAppDataFaceVelGhost = AppDataFaceArray<T>(kRegion, 3, true, "face_vel_ghost");
   
-  // AppDataScalarArray<T> kAppDataDensity(kDefaultRegion, 0, true);
-  // AppDataScalarArray<T> kAppDataDensityGhost(kDefaultRegion, 3, true);
-  AppDataScalarArray<T> kAppDataDensity(kRegion, 0, true, "density");
-  AppDataScalarArray<T> kAppDataDensityGhost(kRegion, 3, true, "density_ghost");
+  kAppDataDensity = AppDataScalarArray<T>(kRegion, 0, true, "density");
+  kAppDataDensityGhost = AppDataScalarArray<T>(kRegion, 3, true, "density_ghost");
 
   // psi
   kAppDataPsiN = AppDataFaceArray<bool>(kRegion, 1, true, "psi_n");

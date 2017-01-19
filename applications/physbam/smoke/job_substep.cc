@@ -49,69 +49,69 @@
 #include "applications/physbam/smoke/reg_def.h"
 #include "src/shared/dbg.h"
 #include "src/shared/nimbus.h"
-// #include "src/worker/job_query.h"
+#include "src/worker/dependency_query.h"
 #include <sstream>
 #include <string>
 
 namespace application {
 
-// JobSubstep::JobSubstep(nimbus::Application *app) {
-//   set_application(app);
-// };
-// 
-// nimbus::Job* JobSubstep::Clone() {
-//   return new JobSubstep(application());
-// }
-// 
-// void JobSubstep::Execute(
-//     nimbus::Parameter params,
-//     const nimbus::DataArray& da) {
-//   dbg(APP_LOG, "Executing substep job.\n");
-//   InitConfig init_config;
-//   T dt_dumb;
-//   std::string params_str(params.ser_data().data_ptr_raw(),
-//                          params.ser_data().size());
-//   LoadParameter(params_str, &init_config.frame, &init_config.time, &dt_dumb,
-//                 &init_config.global_region, &init_config.local_region);
-// 
-//   // initialize configuration and state
-//   PhysBAM::SMOKE_EXAMPLE<TV> *example;
-//   PhysBAM::SMOKE_DRIVER<TV> *driver;
-// 
-//   init_config.set_boundary_condition = false;
-//   init_config.use_cache = true;
-//   // Threading settings.
-//   init_config.use_threading = use_threading();
-//   init_config.core_quota = core_quota();
-// 
-//   DataConfig data_config;
-//   data_config.SetFlag(DataConfig::VELOCITY);
-//   data_config.SetFlag(DataConfig::DENSITY);
-//   data_config.SetFlag(DataConfig::DT);
-// 
-//   {
-//     application::ScopeTimer scope_timer(name() + "-load");
-//     InitializeExampleAndDriver(init_config, data_config,
-// 			       this, da, example, driver);
-//   }
-//   *thread_queue_hook() = example->nimbus_thread_queue;
-// 
-//   {
-//     application::ScopeTimer scope_timer(name());
-//     T dt = example->cfl * example->CFL(example->face_velocities);
-//     dbg(APP_LOG, "[CONTROL FLOW] dt=%f\n", dt);
-//     example->dt_buffer = dt;
-//   }
-// 
-//   *thread_queue_hook() = NULL;
-//   {
-//     application::ScopeTimer scope_timer(name() + "-save");
-//     example->Save_To_Nimbus(this, da, driver->current_frame + 1);
-//   }
-// 
-//   // Free resources.
-//   DestroyExampleAndDriver(example, driver);
-//   dbg(APP_LOG, "Completed executing substep.\n");
-// }
+JobSubstep::JobSubstep(nimbus::Application *app) {
+  set_application(app);
+};
+
+nimbus::Job* JobSubstep::Clone() {
+  return new JobSubstep(application());
+}
+
+void JobSubstep::Execute(
+    nimbus::Parameter params,
+    const nimbus::DataArray& da) {
+  // dbg(APP_LOG, "Executing substep job.\n");
+  // InitConfig init_config;
+  // T dt_dumb;
+  // std::string params_str(params.ser_data().data_ptr_raw(),
+  //                        params.ser_data().size());
+  // LoadParameter(params_str, &init_config.frame, &init_config.time, &dt_dumb,
+  //               &init_config.global_region, &init_config.local_region);
+
+  // // initialize configuration and state
+  // PhysBAM::SMOKE_EXAMPLE<TV> *example;
+  // PhysBAM::SMOKE_DRIVER<TV> *driver;
+
+  // init_config.set_boundary_condition = false;
+  // init_config.use_cache = true;
+  // // Threading settings.
+  // init_config.use_threading = use_threading();
+  // init_config.core_quota = core_quota();
+
+  // DataConfig data_config;
+  // data_config.SetFlag(DataConfig::VELOCITY);
+  // data_config.SetFlag(DataConfig::DENSITY);
+  // data_config.SetFlag(DataConfig::DT);
+
+  // {
+  //   application::ScopeTimer scope_timer(name() + "-load");
+  //   InitializeExampleAndDriver(init_config, data_config,
+	// 		       this, da, example, driver);
+  // }
+  // *thread_queue_hook() = example->nimbus_thread_queue;
+
+  // {
+  //   application::ScopeTimer scope_timer(name());
+  //   T dt = example->cfl * example->CFL(example->face_velocities);
+  //   dbg(APP_LOG, "[CONTROL FLOW] dt=%f\n", dt);
+  //   example->dt_buffer = dt;
+  // }
+
+  // *thread_queue_hook() = NULL;
+  // {
+  //   application::ScopeTimer scope_timer(name() + "-save");
+  //   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
+  // }
+
+  // // Free resources.
+  // DestroyExampleAndDriver(example, driver);
+  // dbg(APP_LOG, "Completed executing substep.\n");
+}
 
 } // namespace application
