@@ -101,7 +101,6 @@ void JobSubstep::Execute(
     T dt = example->cfl * example->CFL(example->face_velocities);
     dbg(APP_LOG, "[CONTROL FLOW] dt=%f\n", dt);
     example->dt_buffer = dt;
-    std::cout << "OMID dt: " << dt << std::endl;
   }
 
   // *thread_queue_hook() = NULL;

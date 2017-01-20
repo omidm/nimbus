@@ -34,20 +34,20 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeFirstDistributed(
        &example.projection);
     
     if (example.data_config.GetFlag(DataConfig::VELOCITY)) {
-      LOG::Time("Velocity memory allocated.\n");
+      // LOG::Time("Velocity memory allocated.\n");
       example.face_velocities.Resize(example.mac_grid);
     }
     if (example.data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
-      LOG::Time("Ghost Velocity memory allocated.\n");
+      // LOG::Time("Ghost Velocity memory allocated.\n");
       example.face_velocities_ghost.Resize(example.mac_grid,
           example.number_of_ghost_cells, false);
     }
     if (example.data_config.GetFlag(DataConfig::DENSITY)) {
-      LOG::Time("Density memory allocated.\n");
+      // LOG::Time("Density memory allocated.\n");
       example.density.Resize(example.mac_grid.Domain_Indices(0));
     }
     if (example.data_config.GetFlag(DataConfig::DENSITY_GHOST)) {
-      LOG::Time("Ghost Density memory allocated.\n");
+      // LOG::Time("Ghost Density memory allocated.\n");
       example.density_ghost.Resize(example.mac_grid.Domain_Indices(3));
     }
   }
@@ -113,20 +113,20 @@ template<class TV> void SMOKE_DRIVER<TV>::Initialize(
        &example.projection);
 
     if (example.data_config.GetFlag(DataConfig::VELOCITY)) {
-      LOG::Time("Velocity memory allocated.\n");
+      // LOG::Time("Velocity memory allocated.\n");
       example.face_velocities.Resize(example.mac_grid);
     }
     if (example.data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
-      LOG::Time("Ghost Velocity memory allocated.\n");
+      // LOG::Time("Ghost Velocity memory allocated.\n");
       example.face_velocities_ghost.Resize(example.mac_grid,
           example.number_of_ghost_cells, false);
     }
     if (example.data_config.GetFlag(DataConfig::DENSITY)) {
-      LOG::Time("Density memory allocated.\n");
+      // LOG::Time("Density memory allocated.\n");
       example.density.Resize(example.mac_grid.Domain_Indices(0));
     }
     if (example.data_config.GetFlag(DataConfig::DENSITY_GHOST)) {
-      LOG::Time("Ghost Density memory allocated.\n");
+      // LOG::Time("Ghost Density memory allocated.\n");
       example.density_ghost.Resize(example.mac_grid.Domain_Indices(3));
     }
   }

@@ -200,8 +200,8 @@ namespace application {
     void SmokeApp::Load() {
         //nimbus::Timer::Initialize();
 
-        dbg_add_mode(APP_LOG_STR);
-        dbg_add_mode(TRANSLATE_STR);
+        // dbg_add_mode(APP_LOG_STR);
+        // dbg_add_mode(TRANSLATE_STR);
 
         dbg(APP_LOG, "Loading smoke application\n");
 
