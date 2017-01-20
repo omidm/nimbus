@@ -96,7 +96,7 @@ void JobProjectionLoopIteration::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_DESIRED_ITERATIONS);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
-  pcg_temp.Set_Maximum_Iterations(1000);
+  pcg_temp.Set_Maximum_Iterations(100);
   pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
   pcg_temp.cg_restart_iterations = 40;
 
@@ -125,9 +125,11 @@ void JobProjectionLoopIteration::Execute(
   // Decides whether to spawn a new projection loop or finish it.
   if (projection_driver.projection_data.residual <=
       projection_driver.projection_data.global_tolerance ||
-      projection_driver.projection_data.iteration ==
+      projection_driver.projection_data.iteration >=
       projection_driver.projection_data.desired_iterations) {
     // Finishes projection iterating.
+    StartTemplate("projection_loop_iteration_end");
+
     int projection_job_num = 2;
     std::vector<nimbus::job_id_t> projection_job_ids;
     GetNewJobID(&projection_job_ids, projection_job_num);
@@ -228,12 +230,16 @@ void JobProjectionLoopIteration::Execute(
 
     MarkEndOfStage();
 
+    EndTemplate("projection_loop_iteration_end");
+
     // if (time == 0) {
     //   dbg(APP_LOG, "Print job dependency figure.\n");
     //   job_query.GenerateDotFigure("projection_iteration_last.dot");
     // }
   } else {
     // Spawns a new projection iteration.
+    StartTemplate("projection_loop_iteration");
+
     nimbus::Parameter default_params;
     std::string default_params_str;
     SerializeParameter(frame, time, dt, global_region, global_region, iteration,
@@ -484,6 +490,8 @@ void JobProjectionLoopIteration::Execute(
     //   dbg(APP_LOG, "Print job dependency figure.\n");
     //   job_query.GenerateDotFigure("projection_iteration_first.dot");
     // }
+
+    EndTemplate("projection_loop_iteration");
   }
 
   // TODO(quhang), removes the saving if possible.
@@ -491,6 +499,7 @@ void JobProjectionLoopIteration::Execute(
     application::ScopeTimer scope_timer(name() + "-save");
     projection_driver.SaveToNimbus(this, da);
   }
+
 
   // dbg(APP_LOG, "Completed executing PROJECTION_LOOP_ITERATION job\n");
   // {

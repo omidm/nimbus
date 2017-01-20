@@ -90,7 +90,7 @@ void JobProjectionStepFour::Execute(
   data_config.SetFlag(DataConfig::VECTOR_PRESSURE);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
-  pcg_temp.Set_Maximum_Iterations(1000);
+  pcg_temp.Set_Maximum_Iterations(100);
   pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
   pcg_temp.cg_restart_iterations = 40;
 
