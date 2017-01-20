@@ -62,7 +62,7 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeFirstDistributed(
 
     // setup laplace
     example.projection.elliptic_solver->Set_Relative_Tolerance(1e-9);
-    example.projection.elliptic_solver->pcg.Set_Maximum_Iterations(1000);
+    example.projection.elliptic_solver->pcg.Set_Maximum_Iterations(100);
     example.projection.elliptic_solver->pcg.evolution_solver_type = krylov_solver_cg;
     example.projection.elliptic_solver->pcg.cg_restart_iterations = 40;
 
@@ -139,7 +139,7 @@ template<class TV> void SMOKE_DRIVER<TV>::Initialize(
 
     // setup laplace
     example.projection.elliptic_solver->Set_Relative_Tolerance(1e-9);
-    example.projection.elliptic_solver->pcg.Set_Maximum_Iterations(1000);
+    example.projection.elliptic_solver->pcg.Set_Maximum_Iterations(100);
     example.projection.elliptic_solver->pcg.evolution_solver_type = krylov_solver_cg;
     example.projection.elliptic_solver->pcg.cg_restart_iterations = 40;
 
@@ -194,7 +194,7 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeUseCache(
 
     //setup laplace
     example.projection.elliptic_solver->Set_Relative_Tolerance(1e-9);
-    example.projection.elliptic_solver->pcg.Set_Maximum_Iterations(1000);
+    example.projection.elliptic_solver->pcg.Set_Maximum_Iterations(100);
     example.projection.elliptic_solver->pcg.evolution_solver_type = krylov_solver_cg;
     example.projection.elliptic_solver->pcg.cg_restart_iterations = 40;
 
