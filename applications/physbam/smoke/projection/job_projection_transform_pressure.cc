@@ -82,7 +82,7 @@ void JobProjectionTransformPressure::Execute(
   data_config.SetFlag(DataConfig::INDEX_M2C);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
-  pcg_temp.Set_Maximum_Iterations(100);
+  pcg_temp.Set_Maximum_Iterations(10);
   pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
   pcg_temp.cg_restart_iterations = 40;
 
