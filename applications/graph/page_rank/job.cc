@@ -59,7 +59,7 @@
 
 namespace nimbus {
 
-void LoadParameter(Parameter* parameter, size_t *value) {
+void LoadParameter(Parameter* parameter, uint64_t *value) {
   std::string params_str(parameter->ser_data().data_ptr_raw(),
                          parameter->ser_data().size());
   parameter_msg::ParameterMsg msg;
@@ -180,7 +180,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
   GraphLOs* graph = page_rank->graph_helper();
   size_t num_partitions = graph->num_partitions();
 
-  size_t loop_counter;
+  uint64_t loop_counter;
   LoadParameter(&params, &loop_counter);
 
   // run this loop?
