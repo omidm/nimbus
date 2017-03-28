@@ -1,6 +1,6 @@
 
 # add subdirs space separated
-SUBDIRS = simple ml graph
+SUBDIRS = page_rank graph_partitioner graph_library
 
 .PHONY: subdirs $(SUBDIRS) clean
 
