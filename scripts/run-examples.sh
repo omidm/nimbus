@@ -57,7 +57,7 @@ function print_usage {
   echo -e "./scripts/run-examples.sh"
   echo -e "                    <example-name>"
   echo -e "                    [example options]"
-  echo -e ">> example-name is one of the following: [stencil_1d, job_spawner, lr, k-means]."
+  echo -e ">> example-name is one of the following: [stencil_1d, job_spawner, lr, k-means, page-rank]."
   echo -e ">> to get available options for each example pass -h."
   echo -e "${RCol}"
 }
@@ -99,6 +99,8 @@ elif [[ ${EXAMPLE} == "lr" ]]; then
   ${NIMBUS_HOME}/scripts/start-workers.sh 1 --fg -l applications/ml/logistic_regression/liblr.so ${ARGS}
 elif [[ ${EXAMPLE} == "k-means" ]]; then
   ${NIMBUS_HOME}/scripts/start-workers.sh 1 --fg -l applications/ml/k_means/libk_means.so ${ARGS}
+elif [[ ${EXAMPLE} == "page-rank" ]]; then
+  ${NIMBUS_HOME}/scripts/start-workers.sh 1 --fg -l applications/graph/page_rank/libpagerank.so ${ARGS}
 else
   echo -e "${Red}ERROR: unknown application name!${RCol}"
   ${NIMBUS_HOME}/scripts/stop-controller.sh

@@ -77,7 +77,6 @@ void PageRank::Load() {
   RegisterData(EDGES, new EdgeData(EDGES));
   RegisterData(NODES, new NodeData(NODES));
   // read in graph information
-  std::cout << "OMID: " << input_dir() << "\n";
   assert(boost::filesystem::is_directory(input_dir()));
   GraphLOs* graph = new GraphLOs();
   set_graph_helper(graph);

@@ -250,7 +250,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
   } else {
     if (loop_counter > 0) {
       // dump all output
-      std::cout << "Saving result\n";
+      dbg(DBG_APP, "Saving result.\n");
 
       // dump job
       {
@@ -405,7 +405,7 @@ Job* Scatter::Clone() {
 }
 
 void Scatter::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Scatter job on " << region().x() << "\n";
+  dbg(DBG_APP, "Scatter job on %ld .\n", region().x());
   // get read set consisting of nodes
   std::vector<Data*> nodes_vector;
   GetReadData(*this, NODES, da, &nodes_vector);
@@ -441,7 +441,7 @@ Job* Gather::Clone() {
 }
 
 void Gather::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Gather job on " << region().x() << "\n";
+  dbg(DBG_APP, "Gather job on %ld .\n", region().x());
   PageRank *page_rank = static_cast<PageRank*>(application());
   // get read set consisting of edges
   std::vector<Data*> edges_vector;
