@@ -17,12 +17,12 @@ water-physbam: dependencies physbam-lib
 	cd physbam-app/water/Build/Release; cmake ../..
 	$(MAKE) -C physbam-app/water/Build/Release
 
-water-nimbus: dependencies physbam-lib
+water-nimbus: dependencies physbam-lib water-physbam
 	cd water/; mkdir -p Build/Release;
 	cd water/Build/Release; cmake ../..
 	$(MAKE) -C water/Build/Release
 
-opengl_3d: dependencies physbam-lib
+opengl_3d: dependencies physbam-lib water-physbam water-nimbus
 	cd physbam-app/opengl_3d/; mkdir -p Build/Release;
 	cd physbam-app/opengl_3d/Build/Release; cmake ../..
 	$(MAKE) -C physbam-app/opengl_3d/Build/Release
