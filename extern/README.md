@@ -161,15 +161,29 @@ It is straight forward to make and install from the source code:
     $ tar -xvzf gcc-4.5.3.tar.gz
     $ mkdir <objdir>
     $ cd <objdir>
-    $ <srcdir>/configure --prefix=/usr/ --program-suffix=-4.5 --enable-languages=c,c++
+    $ <srcdir>/configure --prefix=<local-dir> --program-suffix=-4.5 --enable-languages=c,c++ MAKEINFO=missing
     $ make
     $ sudo make install
 
 by default the binaries  will be installed in `/usr/local` which is searched in
 `$PATH` before `/usr/`. This effectively makes gcc/g++ 4.5 the default
 compiler. It is better to change the install path as used above with the
-`--prefix=/usr/` option, and then switch the compiler version with alternatives
-as explained in the following.
+`--prefix` option. Then, switch the compiler version with alternatives as
+explained in the following.  Note that if you use a common installation path
+such as, `--prefix=/usr/`, then the installation might changes some of the
+libraries on your Linux distribution and cause problems for programs installed
+by the package manager. For example, I noticed that if the installation path is
+set to `/usr/`, then the `libgomp` library was overwritten and some binaries
+were not working with the older version of the `libgomp` (e.g. inkscape). The
+fix was forcing the reinstallation of the overwritten library with:
+
+    $ sudo apt-get --reinstall install libgomp1
+
+
+The documentation of older GCC versions (E.G. 4.35.x) contain constructs that
+are no longer accepted by recent (5.x) versions of makeinfo, breaking the
+build.  The documentation isn't really needed, so work around it by disabling
+documentation with `MAKEINFO=missing` config argument .
 
 
 If source code is compiled as given, there are few known issues. Here is a list
@@ -191,7 +205,7 @@ In file `gcc-4.5.3/libgcc/../gcc/config/i386/linux-unwind.h` replace `struct sig
 
 ### Fix `libs/libgcj.so: undefined reference to '__cxa_call_unexpected'`
 
-If youwant to also install java compiler you need to update
+If you want to also install java compiler you need to update
 `gcc-4.5.3/libjava/prims.cc` file as follows:
 
      #ifndef DISABLE_GETENV_PROPERTIES

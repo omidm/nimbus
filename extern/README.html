@@ -82,10 +82,12 @@ file: &lt;gcc-source&gt;/gcc/doc/gccint.info: for definition of macros.</code></
 <pre><code>$ tar -xvzf gcc-4.5.3.tar.gz
 $ mkdir &lt;objdir&gt;
 $ cd &lt;objdir&gt;
-$ &lt;srcdir&gt;/configure --prefix=/usr/ --program-suffix=-4.5 --enable-languages=c,c++
+$ &lt;srcdir&gt;/configure --prefix=&lt;local-dir&gt; --program-suffix=-4.5 --enable-languages=c,c++ MAKEINFO=missing
 $ make
 $ sudo make install</code></pre>
-<p>by default the binaries will be installed in <code>/usr/local</code> which is searched in <code>$PATH</code> before <code>/usr/</code>. This effectively makes gcc/g++ 4.5 the default compiler. It is better to change the install path as used above with the <code>--prefix=/usr/</code> option, and then switch the compiler version with alternatives as explained in the following.</p>
+<p>by default the binaries will be installed in <code>/usr/local</code> which is searched in <code>$PATH</code> before <code>/usr/</code>. This effectively makes gcc/g++ 4.5 the default compiler. It is better to change the install path as used above with the <code>--prefix</code> option. Then, switch the compiler version with alternatives as explained in the following. Note that if you use a common installation path such as, <code>--prefix=/usr/</code>, then the installation might changes some of the libraries on your Linux distribution and cause problems for programs installed by the package manager. For example, I noticed that if the installation path is set to <code>/usr/</code>, then the <code>libgomp</code> library was overwritten and some binaries were not working with the older version of the <code>libgomp</code> (e.g. inkscape). The fix was forcing the reinstallation of the overwritten library with:</p>
+<pre><code>$ sudo apt-get --reinstall install libgomp1</code></pre>
+<p>The documentation of older GCC versions (E.G. 4.35.x) contain constructs that are no longer accepted by recent (5.x) versions of makeinfo, breaking the build. The documentation isn't really needed, so work around it by disabling documentation with <code>MAKEINFO=missing</code> config argument .</p>
 <p>If source code is compiled as given, there are few known issues. Here is a list you can fix as follows:</p>
 <h3 id="fix-the-unknown-syscdefs.h-file">Fix the unknown <code>sys/cdefs.h</code> file</h3>
 <pre><code>$ sudo apt-get install libc6-dev-i386</code></pre>
@@ -95,7 +97,7 @@ $ sudo make install</code></pre>
 <p>In file <code>gcc-4.5.3/libgcc/../gcc/config/i386/linux-unwind.h</code> replace <code>struct siginfo</code> with <code>siginfo_t</code>:</p>
 <pre><code>$ sed -i &#39;s/struct siginfo/siginfo_t/g&#39; gcc-4.5.3/libgcc/../gcc/config/i386/linux-unwind.h</code></pre>
 <h3 id="fix-libslibgcj.so-undefined-reference-to-__cxa_call_unexpected">Fix <code>libs/libgcj.so: undefined reference to '__cxa_call_unexpected'</code></h3>
-<p>If youwant to also install java compiler you need to update <code>gcc-4.5.3/libjava/prims.cc</code> file as follows:</p>
+<p>If you want to also install java compiler you need to update <code>gcc-4.5.3/libjava/prims.cc</code> file as follows:</p>
 <pre><code> #ifndef DISABLE_GETENV_PROPERTIES
 +#ifdef __GLIBC__
 +/* glibc 2.15+ provides even for C++ inline optimized ::isspace etc.
