@@ -162,7 +162,9 @@ $ install_name_tool -change libboost_system.dylib @executable_path/../../extern/
 <pre><code>$ install_name_tool libboost_thread.dylib -id @rpath/libboost_thread.dylib
 $ install_name_tool -change libboost_system.dylib @rpath/libboost_system.dylib libboost_thread.dylib
 $ install_name_tool libboost_system.dylib -id @rpath/libboost_system.dylib
-$ install_name_tool libboost_program_options.dylib -id @rpath/libboost_program_options.dylib</code></pre>
+$ install_name_tool libboost_program_options.dylib -id @rpath/libboost_program_options.dylib
+$ install_name_tool libboost_filesystem.dylib -id @rpath/libboost_filesystem.dylib
+$ install_name_tool -change libboost_system.dylib @rpath/libboost_system.dylib libboost_filesystem.dylib</code></pre>
 <p>Then, remake the nimbus_controller and libnimbus.so.</p>
 <p><strong>IMPORTANT</strong>: you could also replace the <code>@rpath</code> with <code>$(pwd)</code> to give the full-absolute-path, this is a beter solution.</p>
 <h2 id="note">Note:</h2>

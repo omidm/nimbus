@@ -29,6 +29,8 @@ if [ "$#" == 1 ]; then
   install_name_tool -change libboost_system.dylib @rpath/libboost_system.dylib libboost_thread.dylib
   install_name_tool libboost_system.dylib -id @rpath/libboost_system.dylib
   install_name_tool libboost_program_options.dylib -id @rpath/libboost_program_options.dylib
+  install_name_tool libboost_filesystem.dylib -id @rpath/libboost_filesystem.dylib
+  install_name_tool -change libboost_system.dylib @rpath/libboost_system.dylib libboost_filesystem.dylib
   cd -
 fi
 
