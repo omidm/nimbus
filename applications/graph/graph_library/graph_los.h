@@ -40,13 +40,13 @@
  * Author: Chinmayee Shah
  */
 
-#ifndef NIMBUS_APPLICATION_GRAPH_LIBRARY_GRAPH_LOS_H_
-#define NIMBUS_APPLICATION_GRAPH_LIBRARY_GRAPH_LOS_H_
+#ifndef NIMBUS_APPLICATIONS_GRAPH_GRAPH_LIBRARY_GRAPH_LOS_H_
+#define NIMBUS_APPLICATIONS_GRAPH_GRAPH_LIBRARY_GRAPH_LOS_H_
 
 #include <map>
 #include <string>
 #include <vector>
-#include "shared/nimbus.h"
+#include "src/shared/nimbus.h"
 
 namespace nimbus {
 
@@ -82,4 +82,4 @@ class GraphLOs {
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_APPLICATION_GRAPH_LIBRARY_GRAPH_LOS_H_
+#endif  // NIMBUS_APPLICATIONS_GRAPH_GRAPH_LIBRARY_GRAPH_LOS_H_

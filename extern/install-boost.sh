@@ -6,7 +6,7 @@
 TAR_FILE="boost_1_61_0.tar.bz2"
 UNTAR_DIR="_temp_boost_build"
 INSTALL_DIR="boost"
-LIBS_TO_INSTALL="thread,system,program_options"
+LIBS_TO_INSTALL="thread,system,program_options,filesystem"
 
 rm -rf ${UNTAR_DIR} && mkdir -p ${UNTAR_DIR}
 rm -rf ${INSTALL_DIR} && mkdir -p ${INSTALL_DIR}

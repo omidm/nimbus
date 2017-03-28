@@ -36,12 +36,12 @@
  * Author: Chinmayee Shah
  */
 
-#ifndef NIMBUS_APPLICATION_PAGE_RANK_NODE_DATA_H_
-#define NIMBUS_APPLICATION_PAGE_RANK_NODE_DATA_H_
+#ifndef NIMBUS_APPLICATIONS_GRAPH_PAGE_RANK_NODE_DATA_H_
+#define NIMBUS_APPLICATIONS_GRAPH_PAGE_RANK_NODE_DATA_H_
 
 #include <boost/unordered_map.hpp>
 #include <string>
-#include "shared/nimbus.h"
+#include "src/shared/nimbus.h"
 
 #define NODES "nodes"
 
@@ -75,4 +75,4 @@ class NodeData : public Data {
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_APPLICATION_PAGE_RANK_NODE_DATA_H_
+#endif  // NIMBUS_APPLICATIONS_GRAPH_PAGE_RANK_NODE_DATA_H_

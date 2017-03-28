@@ -48,11 +48,12 @@
 #include <cassert>
 #include <cstdlib>
 #include <fstream>  // NOLINT
+#include <iostream> // NOLINT
 #include <map>
 #include <sstream>
 #include <string>
 #include <vector>
-#include "application/graph_library/graph_partitioner.h"
+#include "applications/graph/graph_library/graph_partitioner.h"
 
 namespace nimbus {
 

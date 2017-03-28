@@ -1,45 +1,47 @@
-all: check app_t
 
-NIMBUS_ROOT = ../..
-include $(NIMBUS_ROOT)/Makeinclude
-
-CFLAGS += -fPIC
-LFLAGS += -lnimbus -lboost_thread -lboost_system -lpthread -lprotobuf -lboost_program_options -lboost_filesystem
-LDFLAGS += -Wl,-rpath
-
-CFILES = $(wildcard *.cc)
-OBJFILES = $(subst .cc,.o,$(CFILES))
-TARGET = libpage_rank.so
-SHARED_FLAGS = -shared -fPIC
-
-GRAPH_LIB_DIR = ../graph_library
-GRAPH_LIB_CFILES = $(wildcard $(GRAPH_LIB_DIR)/*.cc)
-GRAPH_LIB_OBJFILES = $(subst .cc,.o,$(GRAPH_LIB_CFILES))
+TARGET = libpagerank.so
 
 PDIR_SOURCE = protobuf_source/
+GRAPH_LIB_DIR = ../graph_library
+
+# add subdirs space separated
+SUBDIRS = $(PDIR_SOURCE) $(GRAPH_LIB_DIR)
+
+.PHONY: default check $(TARGET) $(SUBDIRS) clean
+
+default: check $(TARGET) $(SUBDIRS)
+
+NIMBUS_ROOT = ../../..
+include $(NIMBUS_ROOT)/Makeinclude
+
+CFILES = $(wildcard *.cc)
+HFILES = $(wildcard *.h)
+OBJFILES = $(subst .cc,.o,$(CFILES))
+
 PDIR_COMPILED = protobuf_compiled/
 PROTO_FILES = $(wildcard $(PDIR_SOURCE)*.proto)
-TEMP_OBJFILES = $(subst .proto,.pb.o,$(PROTO_FILES))
-PROTO_OBJFILES = $(subst $(PDIR_SOURCE),$(PDIR_COMPILED),$(TEMP_OBJFILES))
+TEMP_OBJECT_FILES = $(subst .proto,.pb.o,$(PROTO_FILES))
+PROTO_OBJECT_FILES = $(subst $(PDIR_SOURCE),$(PDIR_COMPILED),$(TEMP_OBJECT_FILES))
+OBJFILES += $(PROTO_OBJECT_FILES)
 
-ifdef OS_DARWIN
-  LINK_FLAG = -install_name @rpath/$(LIBRARY)
-endif
+GRAPH_LIB_CFILES = $(wildcard $(GRAPH_LIB_DIR)/*.cc)
+GRAPH_LIB_OBJFILES = $(subst .cc,.o,$(GRAPH_LIB_CFILES))
+OBJFILES += $(GRAPH_LIB_OBJFILES)
+
+$(TARGET): $(SUBDIRS) $(OBJFILES)
+	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(OBJFILES) -o $(TARGET) $(LDFLAGS) $(LFLAGS)
 
 %.o: %.cc
-	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
+	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(IFLAGS) -c $< -o $@ 
 
-graph_library_t:
-	make -C $(GRAPH_LIB_DIR)
+%.o: $(SUBDIRS)
 
-proto_t:
-	make -C $(PDIR_SOURCE)
-
-$(TARGET): proto_t $(OBJFILES) graph_library_t
-	$(CPP) $(SHARED_FLAGS) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(PROTO_OBJFILES) $(GRAPH_LIB_OBJFILES) $(OBJFILES) -o $(TARGET) $(LINK_FLAG)
+$(SUBDIRS):
+	$(MAKE) -C $@
 
 clean: clean-files
-	make -C ../graph_library clean
-	\rm -f $(PDIR_COMPILED)*.pb.*
+	for dir in $(SUBDIRS); do \
+    $(MAKE) -C $$dir clean; \
+  done
+	\rm -f $(TARGET)
 
-app_t: $(TARGET)

@@ -50,9 +50,9 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "application/graph_library/graph_los.h"
-#include "shared/nimbus.h"
-#include "worker/job.h"
+#include "applications/graph/graph_library/graph_los.h"
+#include "src/shared/nimbus.h"
+#include "src/worker/job.h"
 
 namespace nimbus {
 

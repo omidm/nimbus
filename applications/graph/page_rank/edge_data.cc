@@ -37,9 +37,9 @@
  */
 
 #include <string>
-#include "application/page_rank/edge_data.h"
-#include "application/page_rank/protobuf_compiled/data_msgs.pb.h"
-#include "shared/nimbus.h"
+#include "applications/graph/page_rank/edge_data.h"
+#include "applications/graph/page_rank/protobuf_compiled/data_msgs.pb.h"
+#include "src/shared/nimbus.h"
 
 namespace nimbus {
 

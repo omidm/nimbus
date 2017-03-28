@@ -47,13 +47,13 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "application/graph_library/graph_los.h"
-#include "application/page_rank/app.h"
-#include "application/page_rank/edge_data.h"
-#include "application/page_rank/node_data.h"
-#include "application/page_rank/job.h"
-#include "application/page_rank/protobuf_compiled/parameter_msg.pb.h"
-#include "shared/nimbus.h"
+#include "applications/graph/graph_library/graph_los.h"
+#include "applications/graph/page_rank/app.h"
+#include "applications/graph/page_rank/edge_data.h"
+#include "applications/graph/page_rank/node_data.h"
+#include "applications/graph/page_rank/job.h"
+#include "applications/graph/page_rank/protobuf_compiled/parameter_msg.pb.h"
+#include "src/shared/nimbus.h"
 
 #define ALPHA 0.15
 

@@ -36,12 +36,12 @@
  * Author: Chinmayee Shah
  */
 
-#ifndef NIMBUS_APPLICATION_PAGE_RANK_APP_H_
-#define NIMBUS_APPLICATION_PAGE_RANK_APP_H_
+#ifndef NIMBUS_APPLICATIONS_GRAPH_PAGE_RANK_APP_H_
+#define NIMBUS_APPLICATIONS_GRAPH_PAGE_RANK_APP_H_
 
 #include <string>
-#include "application/graph_library/graph_los.h"
-#include "shared/nimbus.h"
+#include "applications/graph/graph_library/graph_los.h"
+#include "src/shared/nimbus.h"
 
 namespace nimbus {
 
@@ -68,4 +68,4 @@ class PageRank : public Application {
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_APPLICATION_PAGE_RANK_APP_H_
+#endif  // NIMBUS_APPLICATIONS_GRAPH_PAGE_RANK_APP_H_

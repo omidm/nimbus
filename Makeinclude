@@ -40,7 +40,7 @@ LFLAGS   = -lnimbus
 LFLAGS  += -lpthread -ldl
 LFLAGS  += -lleveldb
 LFLAGS  += -lprotobuf
-LFLAGS  += -lboost_thread -lboost_system -lboost_program_options
+LFLAGS  += -lboost_thread -lboost_system -lboost_program_options -lboost_filesystem
 
 # -L params for linking invocation, only for executables
 LDFLAGS  = -L${NIMBUS_ROOT}/lib                 # Link with nimbus library

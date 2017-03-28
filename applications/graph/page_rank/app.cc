@@ -36,12 +36,19 @@
  * Author: Chinmayee Shah
  */
 
+#include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
-#include "application/page_rank/app.h"
-#include "application/page_rank/edge_data.h"
-#include "application/page_rank/node_data.h"
-#include "application/page_rank/job.h"
-#include "shared/nimbus.h"
+#include "applications/graph/page_rank/app.h"
+#include "applications/graph/page_rank/edge_data.h"
+#include "applications/graph/page_rank/node_data.h"
+#include "applications/graph/page_rank/job.h"
+#include "src/shared/nimbus.h"
+
+// NOTE: The directory paths should be either absolute or relative to
+// "nimbus_worker" executable located at "<nimbus-root>/nodes/nimbus_worker/"
+#define DEFAULT_INPUT_DIR "../../applications/graph/page_rank/input-sample"
+#define DEFAULT_OUTPUT_DIR "output"
+#define DEFAULT_ITERATION_NUM 10
 
 namespace nimbus {
 
@@ -70,6 +77,7 @@ void PageRank::Load() {
   RegisterData(EDGES, new EdgeData(EDGES));
   RegisterData(NODES, new NodeData(NODES));
   // read in graph information
+  std::cout << "OMID: " << input_dir() << "\n";
   assert(boost::filesystem::is_directory(input_dir()));
   GraphLOs* graph = new GraphLOs();
   set_graph_helper(graph);
@@ -103,4 +111,50 @@ void PageRank::set_graph_helper(GraphLOs* graph_helper) {
   graph_helper_ = graph_helper;
 }
 
+
+extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
+  namespace po = boost::program_options;
+
+  std::string input_dir;
+  std::string output_dir;
+  size_t iteration_num;
+
+  po::options_description desc("Page Rank Options");
+  desc.add_options()
+    ("help,h", "produce help message")
+    ("input_dir,g", po::value<std::string>(&input_dir)->default_value(DEFAULT_INPUT_DIR), "input directory that holds partitioned graph (absolute path or relative to nimbus_worker executable located at <nimbus-root>/nodes/nimbus_worker)") // NOLINT
+    ("output_dir,o", po::value<std::string>(&output_dir)->default_value(DEFAULT_OUTPUT_DIR), "output directory that saves the ranks (absolute path or relative to nimbus_worker executable located at <nimbus-root>/nodes/nimbus_worker)") // NOLINT
+    ("iteration,i", po::value<std::size_t>(&iteration_num)->default_value(DEFAULT_ITERATION_NUM), "number of iterations"); // NOLINT
+
+  po::variables_map vm;
+  try {
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+  }
+  catch(std::exception& e) { // NOLINT
+    std::cerr << "ERROR: " << e.what() << "\n";
+    return NULL;
+  }
+
+  if (vm.count("help")) {
+    std::cout << desc << "\n";
+    return NULL;
+  }
+
+  try {
+    po::notify(vm);
+  }
+  catch(std::exception& e) { // NOLINT
+    std::cerr << "ERROR: " << e.what() << "\n";
+    return NULL;
+  }
+
+  PageRank *app = new PageRank(input_dir,
+                               output_dir,
+                               iteration_num);
+
+  return app;
+}
+
+
 }  // namespace nimbus
+

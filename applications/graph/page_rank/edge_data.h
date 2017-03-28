@@ -36,11 +36,11 @@
  * Author: Chinmayee Shah
  */
 
-#ifndef NIMBUS_APPLICATION_PAGE_RANK_EDGE_DATA_H_
-#define NIMBUS_APPLICATION_PAGE_RANK_EDGE_DATA_H_
+#ifndef NIMBUS_APPLICATIONS_GRAPH_PAGE_RANK_EDGE_DATA_H_
+#define NIMBUS_APPLICATIONS_GRAPH_PAGE_RANK_EDGE_DATA_H_
 
 #include <string>
-#include "shared/nimbus.h"
+#include "src/shared/nimbus.h"
 
 #define EDGES "edges"
 
@@ -75,4 +75,4 @@ class EdgeData : public Data {
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_APPLICATION_PAGE_RANK_EDGE_DATA_H_
+#endif  // NIMBUS_APPLICATIONS_GRAPH_PAGE_RANK_EDGE_DATA_H_

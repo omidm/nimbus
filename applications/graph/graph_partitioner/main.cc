@@ -41,12 +41,16 @@
 #include <boost/program_options.hpp>
 #include <iostream>  // NOLINT
 
-#include "application/graph_library/graph_partitioner.h"
+#include "applications/graph/graph_library/graph_partitioner.h"
 
 int main(int argc, char **argv) {
   nimbus::GraphPartitioner graph;
 
   size_t num_passes = 0;
+  size_t step1 = 0;
+  size_t step2 = 0;
+  std::string partitioner = "random";
+  std::string partition_file = "partitions";
 
   namespace po = boost::program_options;
   po::options_description desc("Options");
@@ -55,10 +59,12 @@ int main(int argc, char **argv) {
     ("nodefile", po::value<std::string>()->required(), "node file name")
     ("edgefile", po::value<std::string>()->required(), "edge file name")
     ("partitions", po::value<int>()->required(), "number of partitions")
-    ("passes", po::value<size_t>(&num_passes),
-     "number of times to refine partitions")
-    ("outdir", po::value<std::string>()->required(),
-     "output partitions and logical regions to this directory")
+    ("partitioner", po::value<std::string>(&partitioner), "partitioner : random, refine, coelesce, passes, fromfile")  // NOLINT
+    ("partition_file", po::value<std::string>(&partition_file), "partition_file")
+    ("step1", po::value<size_t>(&step1), "step1")
+    ("step2", po::value<size_t>(&step2), "step1")
+    ("passes", po::value<size_t>(&num_passes), "number of times to refine partitions")  // NOLINT
+    ("outdir", po::value<std::string>()->required(), "output partitions and logical regions to this directory")  // NOLINT
     ;  // NOLINT
 
   po::variables_map vm;
@@ -80,7 +86,18 @@ int main(int argc, char **argv) {
 
   graph.LoadFromTSV(vm["nodefile"].as<std::string>().c_str(),
                     vm["edgefile"].as<std::string>().c_str());
-  graph.PartitionRandomEdgeCutAndRefine(vm["partitions"].as<int>(), num_passes);
+  if (partitioner == "random")
+    graph.PartitionRandomEdgeCut(vm["partitions"].as<int>());
+  else if (partitioner == "refine")
+    graph.PartitionRandomEdgeCutRefine(vm["partitions"].as<int>(), step1, step2);
+  else if (partitioner == "coelesce")
+    graph.PartitionRandomEdgeCutCoelesce(vm["partitions"].as<int>(), step1, step2);
+  else if (partitioner == "passes")
+    graph.PartitionRandomEdgeCutPasses(vm["partitions"].as<int>(), num_passes);
+  else if (partitioner == "fromfile")
+    graph.PartitionUsingInput(vm["partitions"].as<int>(), partition_file);
+  else
+    assert(false);
   graph.DetermineLogicalObjects();
   graph.SaveGraphInEachPartition(vm["outdir"].as<std::string>().c_str());
   graph.SaveLogicalObjects(vm["outdir"].as<std::string>().c_str());
