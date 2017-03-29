@@ -33,7 +33,7 @@ Since the files are big, they are not included in the repository. But, you can
 find a compressed version of the files (1.5GB) in the nimbus-data repo.
 
 
-# wikispeedia
+## wikispeedia
 
 Smaller version of wikipedia with two files:
 
