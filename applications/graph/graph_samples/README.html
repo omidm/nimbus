@@ -1,0 +1,24 @@
+<h1 id="sample-graphs">Sample Graphs</h1>
+<h2 id="wikipedia">wikipedia</h2>
+<p>This folder has the scripts to generate the graph meta data from wikidump. You van download the wikidump online. The pipeline line is to first trim the wikidump with the <code>trim_wikidump.py</code> script:</p>
+<pre><code>$ ./trim_wikidump.py &lt;pages-file&gt; &lt;links-file&gt;</code></pre>
+<p>This will create a folder names <code>result/trim</code> with two files, <code>pages</code> and <code>linkes</code>, in it. Next step is to feed these files into the <code>generate_wikigraph.py</code> script, as follows:</p>
+<pre><code>$ ./generate_wikigraph.py -p &lt;trimmed-page-file&gt;
+                          -l &lt;trimmed-link-file&gt;
+                          -n &lt;output-node-file-name&gt;
+                          -e &lt;output-edges-file-name&gt;
+                          -j &lt;output-node-number-file-name&gt;
+                          -k &lt;output-edge-number-file-name&gt;</code></pre>
+<p>The final results would be a four files as follows:</p>
+<pre><code>1. nodes: each line is an integer.
+2. edges: each line is two integers specifying the source and destination of
+          the edge.
+3. num_nodes: an integer specifying the number of nodes.
+4. num_edges: an integer specifying the number of edges.</code></pre>
+<p>Since the files are big, they are not included in the repository. But, you can find a compressed version of the files (1.5GB) in the nimbus-data repo.</p>
+<h1 id="wikispeedia">wikispeedia</h1>
+<p>Smaller version of wikipedia with two files:</p>
+<ol style="list-style-type: decimal">
+<li>articles.tsv: each line is a name of a article.</li>
+<li>links.tsv: each line is to article names specifying the source and destination of the edge.</li>
+</ol>
