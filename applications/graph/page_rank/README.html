@@ -1,0 +1,24 @@
+<h1 id="pagerank">PageRank</h1>
+<p>The PageRank algorithm implemented for edge-cut partitioned graphs. You can build the application library by issuing <code>make</code> in the current directory. The application can be run by launching a controller and worker and passing the page rank library to the worker, as follows</p>
+<pre><code>$ cd &lt;nimbus-root&gt;
+$ ./scripts/start-controller.sh
+$ ./scripts/start-workers.sh 1 --fg -l applications/graph/page_rank/libpagerank.so</code></pre>
+<p>You can pass options to the application, as follows:</p>
+<pre><code>$ ./scripts/start-workers.sh 1 --fg -l applications/graph/page_rank/libpagerank.so
+          -h [ --help ]                         produce help message
+          -g [ --input_dir ] arg (=../../applications/graph/page_rank/input-sample)
+                                                input directory that holds partitioned 
+                                                graph (absolute path or relative to 
+                                                nimbus_worker executable located at 
+                                                &lt;nimbus-root&gt;/nodes/nimbus_worker)
+          -o [ --output_dir ] arg (=output)     output directory that saves the ranks 
+                                                (absolute path or relative to 
+                                                nimbus_worker executable located at 
+                                                &lt;nimbus-root&gt;/nodes/nimbus_worker)
+          -i [ --iteration ] arg (=10)          number of iterations</code></pre>
+<p>The input files to page rank include the graph partitions, each with sets of nodes and edges grouped as a single logical object. The application is written to match the output files that the <code>graph_partitioner</code> generates. There are two sample input files in this directory. Both partition the wikispeedia graph in <code>graph_samples</code> folder into 10 pieces:</p>
+<ol style="list-style-type: decimal">
+<li>`input-sample': random partitioning (the default input)</li>
+<li>`input-sample-metis': partitioned by METIS</li>
+</ol>
+<p>For more information on the input format of the page rank algorithm and how to generate the graph partitions, please refer to the README file in the <code>graph_partitioner</code> folder.</p>
