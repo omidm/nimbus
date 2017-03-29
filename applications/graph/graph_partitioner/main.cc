@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
   namespace po = boost::program_options;
   po::options_description desc("Options");
   desc.add_options()
-    ("help", "produce help message")
+    ("help,h", "produce help message")
     ("nodefile", po::value<std::string>()->required(), "node file name")
     ("edgefile", po::value<std::string>()->required(), "edge file name")
     ("partitions", po::value<int>()->required(), "number of partitions")
