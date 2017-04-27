@@ -1134,6 +1134,10 @@ def GetHeaderGuardCPPVariable(filename):
   fileinfo = FileInfo(filename)
   file_path_from_root = fileinfo.RepositoryName()
   
+  # this is a hack to make the lint pass after transitioning to github and
+  # changing the directory structure. -omidm
+  file_path_from_root = "nimbus/" + file_path_from_root
+
   if _root:
     file_path_from_root = re.sub('^' + _root + os.sep, '', file_path_from_root)
   return re.sub(r'[-./\s]', '_', file_path_from_root).upper() + '_'
