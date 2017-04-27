@@ -3,8 +3,8 @@ TARGET = docs
 HEADER = header.html
 AFTER = after-body.html
 BEFORE = before-body.html
-CUSTCSS = ../css/custom.css
-MAINCSS = ../css/bootstrap.css
+CUSTCSS = css/custom.css
+MAINCSS = css/bootstrap.css
 
 .PHONY: default clean $(TARGET)
 

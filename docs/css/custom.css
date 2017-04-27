@@ -1,0 +1,146 @@
+
+body {
+    /* leave some space for the nav bars at top */
+    padding-top: 70px;
+    /* leave some blank space at the bottom */
+    padding-bottom: 70px;
+}
+
+a:hover {
+  color: #449d44;
+  text-decoration: none;
+}
+
+a {
+  color: #5CB85C;
+}
+
+
+/** leave some space for the nav bars */
+.jumbotron {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+
+/**
+ * Make dropdown menus in nav bars show on hover instead of click
+ * using solution at http://stackoverflow.com/questions/8878033/how-
+ * to-make-twitter-bootstrap-menu-dropdown-on-hover-rather-than-click
+ **/
+ul.nav li.dropdown:hover ul.dropdown-menu{
+  display: block;
+}
+
+a.menu:after, .dropdown-toggle:after {
+  content: none;
+}
+
+/** Make the submenus open on hover on the parent menu item */
+ul.nav li.dropdown ul.dropdown-menu li.dropdown-submenu:hover ul.dropdown-menu {
+  display: block;
+}
+
+/** Make the submenus be invisible until the parent menu item is hovered upon */
+ul.nav li.dropdown ul.dropdown-menu li.dropdown-submenu ul.dropdown-menu {
+  display: none;
+}
+
+/**
+ * Made the navigation bar buttons not grey out when clicked.
+ * Essentially making nav bar buttons not react to clicks, only hover events.
+ */
+.navbar .nav li.dropdown.open > .dropdown-toggle {
+  background-color: transparent;
+}
+
+
+
+
+/**
+ * Customizing the navbar using the solution at
+ * http://stackoverflow.com/questions/18529274/change-navbar-color-in-twitter-bootstrap-3
+ */
+/*
+
+/* navbar */
+.navbar-default {
+    background-color: #5CB85C;/* #F8F8F8;*/
+    border-color: #E7E7E7;
+}
+/* title */
+.navbar-default .navbar-brand {
+    color: #fff;/*#777;*/
+}
+.navbar-default .navbar-brand:hover,
+.navbar-default .navbar-brand:focus {
+    color: #5E5E5E;
+}
+/* link */
+.navbar-default .navbar-nav > li > a {
+    color: #fff;/*#777;*/
+}
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus {
+    color: #333;
+}
+.navbar-default .navbar-nav > .active > a, 
+.navbar-default .navbar-nav > .active > a:hover, 
+.navbar-default .navbar-nav > .active > a:focus {
+    color: #fff;/*#555;*/
+    background-color: #449d44;/*#E7E7E7;*/
+}
+.navbar-default .navbar-nav > .open > a, 
+.navbar-default .navbar-nav > .open > a:hover, 
+.navbar-default .navbar-nav > .open > a:focus {
+    color: #555;
+    background-color: #D5D5D5;
+}
+/* caret */
+.navbar-default .navbar-nav > .dropdown > a .caret {
+    border-top-color: #777;
+    border-bottom-color: #777;
+}
+.navbar-default .navbar-nav > .dropdown > a:hover .caret,
+.navbar-default .navbar-nav > .dropdown > a:focus .caret {
+    border-top-color: #333;
+    border-bottom-color: #333;
+}
+.navbar-default .navbar-nav > .open > a .caret, 
+.navbar-default .navbar-nav > .open > a:hover .caret, 
+.navbar-default .navbar-nav > .open > a:focus .caret {
+    border-top-color: #555;
+    border-bottom-color: #555;
+}
+/* mobile version */
+.navbar-default .navbar-toggle {
+    border-color: #DDD;
+}
+.navbar-default .navbar-toggle:hover,
+.navbar-default .navbar-toggle:focus {
+    background-color: #DDD;
+}
+.navbar-default .navbar-toggle .icon-bar {
+    background-color: #CCC;
+}
+@media (max-width: 767px) {
+    .navbar-default .navbar-nav .open .dropdown-menu > li > a {
+        color: #777;
+    }
+    .navbar-default .navbar-nav .open .dropdown-menu > li > a:hover,
+    .navbar-default .navbar-nav .open .dropdown-menu > li > a:focus {
+        color: #333;
+    }
+}
+
+/* added by omidm */
+.dropdown-menu > li > a:hover,
+.dropdown-menu > li > a:focus {
+  color: #fff;
+  background-color: #5CB85C;;
+}
+
+
+
+
+
