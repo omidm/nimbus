@@ -15,7 +15,7 @@
 # US West (Oregon) Region
 EC2_LOCATION                    = 'us-west-2'
 UBUNTU_AMI                      = 'ami-fa9cf1ca'
-NIMBUS_AMI                      = 'ami-dd64b7bd'
+NIMBUS_AMI                      = 'ami-8c4fd7ec'
 CONTROLLER_INSTANCE_TYPE        = 'c3.4xlarge'
 WORKER_INSTANCE_TYPE            = 'c3.2xlarge'
 PLACEMENT                       = 'us-west-2c' # None

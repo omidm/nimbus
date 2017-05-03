@@ -19,7 +19,7 @@ WORKER_PER_ITER_STAT_LOG        = 'main_timers.txt'
 OUTPUT_PATH                     = 'output/'
 
 # Path configuration
-NIMBUS_ROOT                     = '~/cloud/src/nimbus/'
+NIMBUS_ROOT                     = '~/nimbus/'
 REL_LOGS_PATH                   = 'logs/'
 REL_CONTROLLER_PATH             = 'nodes/nimbus_controller/'
 REL_WORKER_PATH                 = 'nodes/nimbus_worker/'
@@ -152,7 +152,7 @@ def start_worker(controller_p_ip, worker_ip, worker_p_ip, num):
   worker_command += 'sudo sysctl -p &>>' + str(num) + '_' + STD_OUT_LOG + ';'
   worker_command += 'ulimit -c unlimited;'
   if config.RUN_WITH_TASKSET:
-    worker_command += 'taskset -c ' + config.WORKER_TASKSET + './scripts/start-workers.sh 1'
+    worker_command += 'taskset -c ' + config.WORKER_TASKSET + ' ./scripts/start-workers.sh 1'
   else:
     worker_command += './scripts/start-workers.sh 1'
 
