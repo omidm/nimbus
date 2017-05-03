@@ -56,9 +56,16 @@ CLEANSUBDIRS += physbam-app/opengl_3d/Build/Debug
 CLEANSUBDIRS += water/Build/Release
 CLEANSUBDIRS += water/Build/Debug
 
+CMAKECACHE  = physbam-lib/External_Libraries/src/fltk-build/CMakeCache.txt
+CMAKECACHE += physbam-lib/External_Libraries/src/zlib-build/CMakeCache.txt 
+CMAKECACHE += physbam-lib/External_Libraries/src/freeglut-build/CMakeCache.txt
+CMAKECACHE += physbam-lib/External_Libraries/src/libjpeg-build/CMakeCache.txt
+CMAKECACHE += physbam-lib/External_Libraries/src/libpng-build/CMakeCache.txt
+
 .PHONY: $(CLEANSUBDIRS) clean
 
 clean: $(CLEANSUBDIRS)
+	rm $(CMAKECACHE)
 
 $(CLEANSUBDIRS):
 	if [ -d $@ ]; then \
