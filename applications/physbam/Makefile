@@ -64,12 +64,16 @@ CMAKECACHE += physbam-lib/External_Libraries/src/libpng-build/CMakeCache.txt
 
 .PHONY: $(CLEANSUBDIRS) clean
 
-clean: $(CLEANSUBDIRS)
-	rm $(CMAKECACHE)
+clean: $(CLEANSUBDIRS) $(CMAKECACHE)
 
 $(CLEANSUBDIRS):
-	if [ -d $@ ]; then \
+	@if [ -d $@ ]; then \
     $(MAKE) -C $@ clean; \
 	  cd $@; cd ../..; rm -rf Build; \
+  fi
+
+$(CMAKECACHE):
+	@if [ -f $@ ]; then \
+    rm $@;\
   fi
 
