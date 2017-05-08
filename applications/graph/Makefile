@@ -6,7 +6,7 @@ SUBDIRS = page_rank graph_partitioner graph_library
 
 subdirs: $(SUBDIRS)
 
-$(SUBDIRS):
+$(SUBDIRS): graph_library
 	$(MAKE) -C $@
 
 clean:
