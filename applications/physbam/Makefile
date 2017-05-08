@@ -62,7 +62,7 @@ CMAKECACHE += physbam-lib/External_Libraries/src/freeglut-build/CMakeCache.txt
 CMAKECACHE += physbam-lib/External_Libraries/src/libjpeg-build/CMakeCache.txt
 CMAKECACHE += physbam-lib/External_Libraries/src/libpng-build/CMakeCache.txt
 
-.PHONY: $(CLEANSUBDIRS) clean
+.PHONY: $(CLEANSUBDIRS) $(CMAKECACHE) clean
 
 clean: $(CLEANSUBDIRS) $(CMAKECACHE)
 
