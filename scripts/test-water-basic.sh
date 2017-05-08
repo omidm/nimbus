@@ -67,12 +67,11 @@ WORKER_ARGS="2 --othread 2 "
 APPLICATION_ARGS="--wl 0.35 -e 10"
 APPLICATION_LIB="applications/physbam/water/libwater_app.so"
 
-
-echo -e "${Yel}[ WARNING ] this test requires building physbam librray and applications first.${RCol}"
-echo -e "${Yel}            if not built yet, you can issue \'make physbam\' in the nimbus root.${RCol}"
-echo -e "${Yel}            it is not automated since physbam Makefile is flaky and it may build${RCol}"
-echo -e "${Yel}            everything from scratch again, even after successful build.${RCol}"
-
+if ! [ -f "${APPLICATION_LIB}"]; then
+  echo -e "${Yel}[ WARNING ] watrer application is not installed, skipping the test.${RCol}"
+  echo -e "${Yel}            you can issue 'make physbam' in the nimbus root to install.${RCol}"
+  exit 0
+fi
 
 echo -e "${Cya}Checking that old output files are removed:${RCol}"
 

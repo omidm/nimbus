@@ -44,5 +44,5 @@ clean: clean-files
 	@for dir in $(SUBDIRS); do \
     $(MAKE) -C $$dir clean; \
   done
-	@\rm -f $(TARGET)*
+	@\rm -rf $(TARGET)*
 
