@@ -67,7 +67,7 @@ WORKER_ARGS="2 --othread 2 "
 APPLICATION_ARGS="--wl 0.35 -e 10"
 APPLICATION_LIB="applications/physbam/water/libwater_app.so"
 
-if ! [ -f "${APPLICATION_LIB}"]; then
+if ! [ -f "${APPLICATION_LIB}" ]; then
   echo -e "${Yel}[ WARNING ] watrer application is not installed, skipping the test.${RCol}"
   echo -e "${Yel}            you can issue 'make physbam' in the nimbus root to install.${RCol}"
   exit 0
@@ -79,7 +79,7 @@ make ${NIMBUS_HOME}/ clean-logs &> /dev/null
 
 FOLDER=$(ls ${NIMBUS_HOME}/nodes/nimbus_worker/output/ 2>/dev/null)
 
-if [ -z "${FOLDER}"]; then
+if [ -z "${FOLDER}" ]; then
   echo -e "${Gre}[ SUCCESS ] no old output file found${RCol}"
 else
   echo -e "${Red}[ FAILED  ] seems that there are still old output files!${RCol}"
