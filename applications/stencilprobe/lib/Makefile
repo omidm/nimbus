@@ -10,6 +10,17 @@ CLDFLAGS = $(PAPI)
 # should be set to -DHAVE_PAPI or -DHAVEGETTIMEOFDAY or unset.
 #TIMER = -DHAVE_PAPI
 
+# the library build is added to link against nimbus applications -omidm
+TARGET = libstencilprobe.so
+.PHONY: default clean
+default: probe $(TARGET)
+NIMBUS_ROOT = ../../..
+include $(NIMBUS_ROOT)/Makeinclude
+$(TARGET): util.o probe_heat.o util.h cycle.h common.h
+	$(CPP) $(CFLAGS) $(SHARED_FLAGS) util.o probe_heat.o -o $(TARGET) $(LDFLAGS) $(LFLAGS)
+%.o: %.c
+	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(IFLAGS) -c $< -o $@
+
 probe:	main.c util.c run.h probe_heat.c cycle.h
 	$(CC) $(COPTFLAGS) $(TIMER) -DRANDOMVALUES main.c util.c probe_heat.c $(CLDFLAGS) -o probe
 
@@ -30,3 +41,4 @@ test:	main.c util.c run.h probe_heat.c cycle.h  probe_heat_blocked.c probe_heat_
 
 clean:
 	rm -f *.o probe	
+	rm -f $(TARGET)
