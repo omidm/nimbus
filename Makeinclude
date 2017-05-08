@@ -68,19 +68,23 @@ HFILES = $(wildcard *.h)
 CHECKDIR = checkdir
 DEPNAMES = $(subst .cc,.cc.ck ,$(CFILES)) $(subst .h,.h.ck ,$(HFILES))
 DEPFILES = $(addprefix $(CHECKDIR)/,$(DEPNAMES))
+CHECKFILE = $(CHECKDIR)/checkfile
 
 $(CHECKDIR)/%.ck: %
 	@/bin/echo -n "Checking code style in $^: "
-	@${NIMBUS_CCLINT} --root=src $^ 
+	@${NIMBUS_CCLINT} $^
 	@touch $@
 
-fcheck:
+$(CHECKDIR):
+	mkdir $(CHECKDIR)
+
+$(CHECKFILE):
 	@${NIMBUS_FILENAMES}
+	@touch $@
 
 lint: $(CHECKDIR) ${DEPFILES}
 
-$(CHECKDIR): 
-	mkdir $(CHECKDIR)
+fcheck: $(CHECKDIR) $(CHECKFILE)
 
 check: fcheck lint
 

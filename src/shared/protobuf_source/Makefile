@@ -17,7 +17,7 @@ PROTO_OBJECT_FILES = $(subst $(PDIR_SOURCE),$(PDIR_COMPILED),$(TEMP))
 
 $(PDIR_COMPILED)%.pb.o: %.proto
 	$(PROTOC) --cpp_out=$(PDIR_COMPILED) $<
-	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(IFLAGS) -c $(subst .o,.cc,$@) -o $@
+	$(CPP) $(CFLAGS) -w $(SHARED_FLAGS) $(IFLAGS) -c $(subst .o,.cc,$@) -o $@
 
 $(TARGET): $(PROTO_OBJECT_FILES)
 
