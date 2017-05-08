@@ -166,20 +166,20 @@ for f in ${files}; do
 done
 
 # set the nimbus root
-sed -i '.bak' "s+NIMBUS_ROOT = ../../+NIMBUS_ROOT = ${NIMBUS_ROOT}+g" ${ADIR}/Makefile
+sed -i.bak "s+NIMBUS_ROOT = ../../+NIMBUS_ROOT = ${NIMBUS_ROOT}+g" ${ADIR}/Makefile
 rm ${ADIR}/Makefile.bak
 
-sed -i '.bak' "s+NIMBUS_ROOT = ../../../+NIMBUS_ROOT = ${NIMBUS_ROOT}+g" ${ADIR}/protobuf_source/Makefile
+sed -i.bak "s+NIMBUS_ROOT = ../../../+NIMBUS_ROOT = ${NIMBUS_ROOT}+g" ${ADIR}/protobuf_source/Makefile
 rm ${ADIR}/protobuf_source/Makefile.bak
 
 # set the app  name
-sed -i '.bak' "s+ScaffoldApp+${NAME}+g" ${ADIR}/*.h
-sed -i '.bak' "s+ScaffoldApp+${NAME}+g" ${ADIR}/*.cc
+sed -i.bak "s+ScaffoldApp+${NAME}+g" ${ADIR}/*.h
+sed -i.bak "s+ScaffoldApp+${NAME}+g" ${ADIR}/*.cc
 rm ${ADIR}/*.bak
 
 # set the app library name
 LIBNAME=`echo "${NAME}" | awk '{print tolower($0)}'`
-sed -i '.bak' "s+TARGET = libscaffold.so+TARGET = lib${LIBNAME}.so+g" ${ADIR}/Makefile
+sed -i.bak "s+TARGET = libscaffold.so+TARGET = lib${LIBNAME}.so+g" ${ADIR}/Makefile
 rm ${ADIR}/Makefile.bak
 
 
