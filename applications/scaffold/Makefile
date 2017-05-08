@@ -8,7 +8,7 @@ SUBDIRS = protobuf_source
 
 default: $(TARGET)
 
-NIMBUS_ROOT = ../..
+NIMBUS_ROOT = ../../
 include $(NIMBUS_ROOT)/Makeinclude
 
 CFILES = $(wildcard *.cc)

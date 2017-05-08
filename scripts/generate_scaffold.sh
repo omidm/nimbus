@@ -75,9 +75,11 @@ function print_usage {
   echo -e "${RCol}"
 }
 
-if [ -z "${NIMBUS_HOME}" ]; then
-  export NIMBUS_HOME="$(cd "`dirname "$0"`"/..; pwd)"
+if [ -z "${NIMBUS_ROOT}" ]; then
+  export NIMBUS_ROOT="$(cd "`dirname "$0"`"/..; pwd)"
 fi
+
+SRC=${NIMBUS_ROOT}/applications/scaffold/
 
 ARGS="$@"
 
@@ -86,13 +88,13 @@ if [[ ${ARGS} = *--help* ]] || [[ ${ARGS} = *-h* ]]; then
   exit 0
 fi
 
-
-PATH=""
+# get the arguments
+ADIR=""
 NAME=""
 while (( "$#" )); do
   if [ "--path" == "$1" ] || [ "-p" == "$1" ]; then
     shift
-    PATH="$1"
+    ADIR="$1"
   elif [ "--name" == "$1" ] || [ "-n" == "$1" ]; then
     shift
     NAME="$1"
@@ -101,7 +103,7 @@ while (( "$#" )); do
   fi
 done
 
-if [ "${PATH}" == "" ]; then
+if [ "${ADIR}" == "" ]; then
   echo -e "${Red}ERROR: provide a path for the application!${RCol}"
   echo -e "${Red}Use -h option for the usage.${RCol}"
   exit 1
@@ -112,6 +114,74 @@ if [ "${NAME}" == "" ]; then
   echo -e "${Red}Use \"-h\" option for the usage.${RCol}"
   exit 1
 fi
+
+# create the directory
+if [ -d ${ADIR} ] || [ -f ${ADIR} ]; then
+  echo -e "${Red}ERROR: the folder/file already exists at: ${ADIR}${RCol}"
+  exit 1
+fi
+
+mkdir ${ADIR} &> /dev/null
+if [ ! $? == 0 ]; then
+  echo -e "${Red}ERROR: could not create a directory at: \"${ADIR}\"${RCol}"
+  exit 1
+fi
+
+# create sub directories
+dirs="protobuf_source protobuf_compiled" 
+for d in ${dirs}; do
+  mkdir ${ADIR}/${d} &> /dev/null
+  if [ ! $? == 0 ]; then
+    echo -e "${Red}ERROR: could not create a directory at: \"${ADIR}/${d}\"${RCol}"
+    exit 1
+  fi
+done
+
+# copy the files
+files="app.cc app.h job.cc job.h data.cc data.h utils.cc utils.h Makefile"
+for f in ${files}; do
+  cp ${SRC}/${f} ${ADIR}
+  if [ ! $? == 0 ]; then
+    echo -e "${Red}ERROR: could not copy: \"${SRC}/${f}\" to \"${ADIR}\"${RCol}"
+    exit 1
+  fi
+done
+
+files="parameter_msg.proto vector_msg.proto Makefile"
+for f in ${files}; do
+  cp ${SRC}/protobuf_source/${f} ${ADIR}/protobuf_source/
+  if [ ! $? == 0 ]; then
+    echo -e "${Red}ERROR: could not copy: \"${SRC}/${f}\" to \"${ADIR}\"${RCol}"
+    exit 1
+  fi
+done
+
+files=".gitignore"
+for f in ${files}; do
+  cp ${SRC}/protobuf_compiled/${f} ${ADIR}/protobuf_compiled/
+  if [ ! $? == 0 ]; then
+    echo -e "${Red}ERROR: could not copy: \"${SRC}/${f}\" to \"${ADIR}\"${RCol}"
+    exit 1
+  fi
+done
+
+# set the nimbus root
+sed -i '.bak' "s+NIMBUS_ROOT = ../../+NIMBUS_ROOT = ${NIMBUS_ROOT}+g" ${ADIR}/Makefile
+rm ${ADIR}/Makefile.bak
+
+sed -i '.bak' "s+NIMBUS_ROOT = ../../../+NIMBUS_ROOT = ${NIMBUS_ROOT}+g" ${ADIR}/protobuf_source/Makefile
+rm ${ADIR}/protobuf_source/Makefile.bak
+
+# set the app  name
+sed -i '.bak' "s+ScaffoldApp+${NAME}+g" ${ADIR}/*.h
+sed -i '.bak' "s+ScaffoldApp+${NAME}+g" ${ADIR}/*.cc
+rm ${ADIR}/*.bak
+
+# set the app library name
+LIBNAME=`echo "${NAME}" | awk '{print tolower($0)}'`
+sed -i '.bak' "s+TARGET = libscaffold.so+TARGET = lib${LIBNAME}.so+g" ${ADIR}/Makefile
+rm ${ADIR}/Makefile.bak
+
 
 
 
