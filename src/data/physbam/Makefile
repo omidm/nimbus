@@ -33,7 +33,7 @@ $(PDIR_COMPILED)%.pb.o: $(PDIR_SOURCE)%.proto
 	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(IFLAGS) -c $< -o $@
 
 clean: clean-files
-	for dir in $(SUBDIRS); do \
+	@for dir in $(SUBDIRS); do \
     $(MAKE) -C $$dir clean; \
   done
 

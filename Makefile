@@ -21,26 +21,26 @@ physbam: src
 # add subdirs space separated
 CLEAN_SUBDIRS = src nodes applications ec2
 clean: clean-logs
-	for dir in $(CLEAN_SUBDIRS); do \
-    $(MAKE) -C $$dir clean; \
+	@for dir in $(CLEAN_SUBDIRS); do \
+    $(MAKE) -C $$dir clean > /dev/null; \
   done
 
 
 # add subdirs space separated
 CLEAN_H_SUBDIRS = extern src nodes applications ec2 applications/physbam
 clean-hard: clean-logs
-	for dir in $(CLEAN_H_SUBDIRS); do \
-    $(MAKE) -C $$dir clean; \
+	@for dir in $(CLEAN_H_SUBDIRS); do \
+    $(MAKE) -C $$dir clean > /dev/null; \
   done
 
 
 # add subdirs space separated
 CLEAN_L_SUBDIRS = nodes/nimbus_controller nodes/nimbus_worker ec2/bg_process
 clean-logs:
-	for dir in $(CLEAN_L_SUBDIRS); do \
-    $(MAKE) -C $$dir clean-logs; \
+	@for dir in $(CLEAN_L_SUBDIRS); do \
+    $(MAKE) -C $$dir clean-logs > /dev/null; \
   done
-	\rm -rf logs/
+	@\rm -rf logs/
 
 
 .PHONY: stop test test-stencil test-lr test-water

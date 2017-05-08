@@ -19,10 +19,10 @@ $(TARGET): $(OBJFILES)
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
 clean: clean-files
-	\rm -f $(TARGET)
+	@\rm -f $(TARGET)
 
 clean-logs:
-	\rm -f *log*
-	\rm -f *.txt
-	\rm -rf core
+	@\rm -f *log*
+	@\rm -f *.txt
+	@\rm -rf core
 

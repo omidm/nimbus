@@ -27,5 +27,5 @@ $(GRAPH_LIB_DIR)%.o: $(GRAPH_LIB_DIR)%.cc
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
 clean: clean-files
-	make -C $(GRAPH_LIB_DIR) clean
-	\rm -rf $(TARGET)
+	@$(MAKE) -C $(GRAPH_LIB_DIR) clean
+	@\rm -rf $(TARGET)

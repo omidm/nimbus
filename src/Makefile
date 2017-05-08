@@ -44,8 +44,8 @@ $(TARGET): $(SUBDIRS)
 	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(OBJFILES) -o $(TARGET) $(INSTALL_FLAG) $(LDFLAGS) $(LFLAGS)
 
 clean: clean-files
-	for dir in $(SUBDIRS); do \
+	@for dir in $(SUBDIRS); do \
     $(MAKE) -C $$dir clean; \
   done
-	\rm -f $(TARGET)
+	@\rm -f $(TARGET)
 

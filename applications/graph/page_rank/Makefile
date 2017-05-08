@@ -41,8 +41,8 @@ $(GRAPH_LIB_DIR)%.o: $(GRAPH_LIB_DIR)%.cc
 	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(IFLAGS) -c $< -o $@
 
 clean: clean-files
-	for dir in $(SUBDIRS); do \
+	@for dir in $(SUBDIRS); do \
     $(MAKE) -C $$dir clean; \
   done
-	\rm -f $(TARGET)
+	@\rm -f $(TARGET)*
 

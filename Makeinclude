@@ -76,7 +76,7 @@ $(CHECKDIR)/%.ck: %
 	@touch $@
 
 $(CHECKDIR):
-	mkdir $(CHECKDIR)
+	@mkdir $(CHECKDIR)
 
 $(CHECKFILE):
 	@${NIMBUS_FILENAMES}
@@ -90,8 +90,8 @@ check: fcheck lint
 
 # General clean directives
 clean-files:
-	\rm -f *.o *~ \#* 
-	\rm -Rf $(CHECKDIR)
+	@\rm -f *.o *~ \#* 
+	@\rm -Rf $(CHECKDIR)
 
 
 # Detect if we are running Darwin -- should be replaced by autoconf eventually

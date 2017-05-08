@@ -22,6 +22,6 @@ $(PDIR_COMPILED)%.pb.o: %.proto
 $(TARGET): $(PROTO_OBJECT_FILES)
 
 clean:
-	\rm -f $(PDIR_COMPILED)*.pb.*
+	@\rm -f $(PDIR_COMPILED)*.pb.*
 
 
