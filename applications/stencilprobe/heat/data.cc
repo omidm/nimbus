@@ -43,6 +43,8 @@
 using vector_msg::VectorMsg;
 
 Vec::Vec() {
+  data_ = NULL;
+  size_ = 0;
 };
 
 Vec::~Vec() {
@@ -58,14 +60,17 @@ void Vec::Create() {
 };
 
 void Vec::Destroy() {
-  delete data_;
+  if (data_ != NULL) {
+    delete data_;
+  }
+  size_ = 0;
 };
 
 void Vec::Copy(Data* from) {
   Vec *d = static_cast<Vec*>(from);
   assert(d);
   assert(size_ == d->size_);
-  for (int i = 0; i < size_; i++) {
+  for (size_t i = 0; i < size_; ++i) {
     data_[i] = d->data_[i];
   }
 }
@@ -91,7 +96,7 @@ bool Vec::DeSerialize(const SerializedData& ser_data, Data** result) {
   Vec* vec = new Vec();
   vec->data_ = new double[size_];
   vec->size_ = size_;
-  for (size_t i = 0; (i < size_) && (i < vec_msg.elem_size()); i++)
+  for (size_t i = 0; (i < size_) && (i < (size_t)vec_msg.elem_size()); ++i)
      vec->data_[i] = vec_msg.elem(i);
 
   *result = vec;

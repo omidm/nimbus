@@ -49,22 +49,24 @@ class AppDataVec : public AppVar {
   public:
     AppDataVec();
     AppDataVec(const nimbus::GeometricRegion &global_reg,
-               const int ghost_width,
-               bool make_proto,
-               const std::string& name);
+               const std::string& name,
+               bool make_proto);
     ~AppDataVec();
 
-    double *data() {
+    double* data() {
         return data_;
+    }
+
+    size_t size() {
+        return size_;
     }
 
   protected:
     AppDataVec(const nimbus::GeometricRegion &global_reg,
-               const nimbus::GeometricRegion &ob_reg,
-               const int ghost_width,
+               const nimbus::GeometricRegion &local_reg,
                const std::string& name);
 
-    virtual nimbus::AppVar* CreateNew(const nimbus::GeometricRegion &ob_reg) const;
+    virtual nimbus::AppVar* CreateNew(const nimbus::GeometricRegion &local_reg) const;
 
     virtual void ReadAppData(const nimbus::DataArray &read_set,
                              const nimbus::GeometricRegion &read_reg);
@@ -76,9 +78,9 @@ class AppDataVec : public AppVar {
 
   private:
     double *data_;
+    size_t size_;
     nimbus::GeometricRegion global_region_;
     nimbus::GeometricRegion local_region_;
-    int ghost_width_;
     nimbus::Coord shift_;
 };
 

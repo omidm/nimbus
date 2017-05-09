@@ -45,6 +45,7 @@
 
 nimbus::PartitionHandler ph;
 AppDataVec AppDataVecPrototype;
+GeometricRegion GlobalRegion;
 
 Heat::Heat(size_t iter_num,
            int nx, int ny, int nz,
@@ -80,8 +81,8 @@ void Heat::Load() {
                    pnx_, pny_, pnz_,
                    nimbus::PartitionHandler::OUTER);
 
-  GeometricRegion global_region(0, 0, 0, nx_, ny_, nz_);
-  AppDataVecPrototype = AppDataVec(global_region, 1, true, DATA_NAME);
+  GlobalRegion.Rebuild(1, 1, 1, nx_, ny_, nz_);
+  AppDataVecPrototype = AppDataVec(GlobalRegion, DATA_NAME, true);
 };
 
 

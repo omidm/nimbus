@@ -52,6 +52,7 @@ using nimbus::Application;
 
 extern nimbus::PartitionHandler ph;
 extern AppDataVec AppDataVecPrototype;
+extern GeometricRegion GlobalRegion;
 
 class Heat : public Application {
   public:
