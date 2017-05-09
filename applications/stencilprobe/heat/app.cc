@@ -72,7 +72,7 @@ void Heat::Load() {
                    nx_, ny_, nz_,
                    1, 1, 1, // bandwidth
                    pnx_, pny_, pnz_,
-                   nimbus::PartitionHandler::INNER);
+                   nimbus::PartitionHandler::CENTRAL);
 
   ph.AddPartitions("kRegions",
                    nx_, ny_, nz_,

@@ -142,11 +142,11 @@ void Loop::Execute(Parameter params, const DataArray& da) {
       read.clear();
       LoadLdoIdsInSet(&read, ph.map()["kRegionsOuter"][i], DATA_NAME, NULL);
       write.clear();
-      LoadLdoIdsInSet(&write, ph.map()["kRegionsInner"][i], DATA_NAME, NULL);
+      LoadLdoIdsInSet(&write, ph.map()["kRegionsCentral"][i], DATA_NAME, NULL);
       before.clear();
       StageJobAndLoadBeforeSet(&before, STENCIL_JOB_NAME, stencil_job_ids[i], read, write);
       SerializeParameter(&par, i);
-      SpawnComputeJob(STENCIL_JOB_NAME, stencil_job_ids[i], read, write, before, after, par, true, ph.map()["kRegionsInner"][i]);
+      SpawnComputeJob(STENCIL_JOB_NAME, stencil_job_ids[i], read, write, before, after, par, true, ph.map()["kRegionsCentral"][i]);
       printf("SPAWNED STENCIL\n");
     }
 
@@ -204,8 +204,8 @@ void Stencil::Execute(Parameter params, const DataArray& da) {
   nimbus::AppVar *app_var =
     cm->GetAppVar(
         read, ph.map()["kRegionsOuter"][part_num],
-        write, ph.map()["kRegionsInner"][part_num],
-        AppDataVecPrototype, ph.map()["kRegionsInner"][part_num],
+        write, ph.map()["kRegionsCentral"][part_num],
+        AppDataVecPrototype, ph.map()["kRegionsCentral"][part_num],
         nimbus::app_data::SHARED);
   double *data = dynamic_cast<AppDataVec*>(app_var)->data();
   // Compute
