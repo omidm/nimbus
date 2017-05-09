@@ -5,7 +5,7 @@ TARGET = protobuf
 
 default: $(TARGET)
 
-NIMBUS_ROOT = /home/omidm/git/nimbus
+NIMBUS_ROOT = ../../../../
 include $(NIMBUS_ROOT)/Makeinclude
 
 PDIR_SOURCE = ../protobuf_source/
