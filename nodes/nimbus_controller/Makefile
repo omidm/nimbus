@@ -1,7 +1,7 @@
 
 TARGET = nimbus_controller
 
-.PHONY: default check $(TARGET) clean clean-logs
+.PHONY: default check clean clean-logs
 
 default: check $(TARGET)
 

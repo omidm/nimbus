@@ -1,7 +1,7 @@
 
 TARGET = nimbus_worker
 
-.PHONY: default check $(TARGET) clean clean-logs
+.PHONY: default check clean clean-logs
 
 default: check $(TARGET)
 
