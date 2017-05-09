@@ -58,30 +58,28 @@ class AppDataVec : public AppVar {
         return data_;
     }
 
-    void set_data(double *d) {
-        data_ = d;
-    }
-
   protected:
-    explicit AppDataVec(const nimbus::GeometricRegion &global_reg,
-                            const nimbus::GeometricRegion &ob_reg,
-                            const int ghost_width);
+    AppDataVec(const nimbus::GeometricRegion &global_reg,
+               const nimbus::GeometricRegion &ob_reg,
+               const int ghost_width,
+               const std::string& name);
 
-    virtual nimbus::AppVar *CreateNew(const nimbus::GeometricRegion &ob_reg) const;
+    virtual nimbus::AppVar* CreateNew(const nimbus::GeometricRegion &ob_reg) const;
 
     virtual void ReadAppData(const nimbus::DataArray &read_set,
                              const nimbus::GeometricRegion &read_reg);
+
     virtual void WriteAppData(const nimbus::DataArray &write_set,
-                                const nimbus::GeometricRegion &write_reg) const;
+                              const nimbus::GeometricRegion &write_reg) const;
 
     virtual void Destroy();
 
   private:
+    double *data_;
     nimbus::GeometricRegion global_region_;
     nimbus::GeometricRegion local_region_;
     int ghost_width_;
     nimbus::Coord shift_;
-    double *data_;
 };
 
 #endif  // NIMBUS_APPLICATIONS_SCAFFOLD_APP_DATA_H_

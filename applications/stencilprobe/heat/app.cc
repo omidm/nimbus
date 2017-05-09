@@ -79,6 +79,9 @@ void Heat::Load() {
                    1, 1, 1, // bandwidth
                    pnx_, pny_, pnz_,
                    nimbus::PartitionHandler::OUTER);
+
+  GeometricRegion global_region(0, 0, 0, nx_, ny_, nz_);
+  AppDataVecPrototype = AppDataVec(global_region, 1, true, DATA_NAME);
 };
 
 

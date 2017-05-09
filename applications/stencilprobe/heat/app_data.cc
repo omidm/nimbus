@@ -45,9 +45,9 @@ AppDataVec::AppDataVec() {
 }
 
 AppDataVec::AppDataVec(const nimbus::GeometricRegion &global_reg,
-               const int ghost_width,
-               bool make_proto,
-               const std::string& name)
+                       const int ghost_width,
+                       bool make_proto,
+                       const std::string& name)
     : global_region_(global_reg),
       ghost_width_(ghost_width) {
     set_name(name);
@@ -57,22 +57,23 @@ AppDataVec::AppDataVec(const nimbus::GeometricRegion &global_reg,
 }
 
 AppDataVec::AppDataVec(const nimbus::GeometricRegion &global_reg,
-               const nimbus::GeometricRegion &ob_reg,
-               const int ghost_width)
+                       const nimbus::GeometricRegion &ob_reg,
+                       const int ghost_width,
+                       const std::string& name)
     : AppVar(ob_reg),
       global_region_(global_reg),
-      local_region_(ob_reg.NewEnlarged(-ghost_width)),
+      // local_region_(ob_reg.NewEnlarged(-ghost_width)),
+      local_region_(ob_reg),
       ghost_width_(ghost_width) {
+    set_name(name);
     shift_.x = local_region_.x() - global_reg.x();
     shift_.y = local_region_.y() - global_reg.y();
     shift_.z = local_region_.z() - global_reg.z();
-    if (local_region_.dx() > 0 && local_region_.dy() > 0 &&
-        local_region_.dz() > 0) {
-      // Range domain = RangeFromRegions<TV>(global_reg, local_region_);
-      // TV_INT count = CountFromRegion(local_region_);
-      // mac_grid_.Initialize(count, domain, true);
-      // data_ = new PhysBAMFaceArray(mac_grid_, ghost_width, false);
-      data_ = new double[100];
+    size_t size = local_region_.dx() * local_region_.dy() * local_region_.dz();
+    if (size > 0) {
+      data_ = new double[size];
+    } else {
+      data_ = NULL;
     }
 }
 
@@ -89,15 +90,15 @@ void AppDataVec::Destroy() {
 
 nimbus::AppVar* AppDataVec::CreateNew(const nimbus::GeometricRegion &ob_reg) const {
     nimbus::AppVar* temp = new AppDataVec(global_region_,
-                                                ob_reg,
-                                                ghost_width_);
-    temp->set_name(name());
+                                          ob_reg,
+                                          ghost_width_,
+                                          name());
     return temp;
 }
 
 void AppDataVec::ReadAppData(const nimbus::DataArray &read_set,
-            const nimbus::GeometricRegion &read_reg) {
-    dbg(DBG_WARN, "\n--- Reading %i elements into face array for region %s\n", read_set.size(), read_reg.ToNetworkData().c_str());
+                             const nimbus::GeometricRegion &read_reg) {
+    dbg(DBG_APP, "--- Reading %i elements into app data for region %s\n", read_set.size(), read_reg.ToNetworkData().c_str());
     nimbus::GeometricRegion ob_reg = object_region();
     nimbus::GeometricRegion final_read_reg =
         nimbus::GeometricRegion::GetIntersection(read_reg, ob_reg);
@@ -108,7 +109,7 @@ void AppDataVec::ReadAppData(const nimbus::DataArray &read_set,
 
 void AppDataVec::WriteAppData(const nimbus::DataArray &write_set,
                const nimbus::GeometricRegion &write_reg) const {
-    dbg(DBG_WARN, "\n Writing %i elements into face array for region %s\n", write_set.size(), write_reg.ToNetworkData().c_str());
+    dbg(DBG_APP, "--- Writing %i elements from app data for region %s\n", write_set.size(), write_reg.ToNetworkData().c_str());
     if (write_reg.dx() <= 0 || write_reg.dy() <= 0 || write_reg.dz() <= 0)
         return;
     nimbus::GeometricRegion ob_reg = object_region();
