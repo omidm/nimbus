@@ -60,12 +60,12 @@ class Vec : public Data {
     virtual bool Serialize(SerializedData* ser_data);
     virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
 
-    int size();
-    int* arr();
+    size_t size();
+    double* data();
 
   private:
-    int size_;
-    int *arr_;
+    size_t size_;
+    double *data_;
 };
 
 #endif  // NIMBUS_APPLICATIONS_SCAFFOLD_DATA_H_

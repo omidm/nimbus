@@ -48,17 +48,17 @@ Vec::Vec() {
 Vec::~Vec() {
 };
 
-Data * Vec::Clone() {
+Data* Vec::Clone() {
   return new Vec();
 };
 
 void Vec::Create() {
   size_ = abs(region().dx() * region().dy() * region().dz());
-  arr_ = new int[size_];
+  data_ = new double[size_];
 };
 
 void Vec::Destroy() {
-  delete arr_;
+  delete data_;
 };
 
 void Vec::Copy(Data* from) {
@@ -66,14 +66,14 @@ void Vec::Copy(Data* from) {
   assert(d);
   assert(size_ == d->size_);
   for (int i = 0; i < size_; i++) {
-    arr_[i] = d->arr()[i];
+    data_[i] = d->data_[i];
   }
 }
 
 bool Vec::Serialize(SerializedData* ser_data) {
   VectorMsg vec_msg;
-  for (int i = 0; i < size_; i++) {
-    vec_msg.add_elem(arr_[i]);
+  for (size_t i = 0; i < size_; i++) {
+    vec_msg.add_elem(data_[i]);
   }
   std::string str;
   vec_msg.SerializeToString(&str);
@@ -89,20 +89,20 @@ bool Vec::DeSerialize(const SerializedData& ser_data, Data** result) {
   std::string str(ser_data.data_ptr_raw(), ser_data.size());
   vec_msg.ParseFromString(str);
   Vec* vec = new Vec();
-  vec->arr_ = new int[size_];
+  vec->data_ = new double[size_];
   vec->size_ = size_;
-  for (int i = 0; (i < size_) && (i < vec_msg.elem_size()); i++)
-     vec->arr_[i] = vec_msg.elem(i);
+  for (size_t i = 0; (i < size_) && (i < vec_msg.elem_size()); i++)
+     vec->data_[i] = vec_msg.elem(i);
 
   *result = vec;
   return true;
 }
 
-int Vec::size() {
+size_t Vec::size() {
   return size_;
 }
 
-int* Vec::arr() {
-  return arr_;
+double* Vec::data() {
+  return data_;
 }
 
