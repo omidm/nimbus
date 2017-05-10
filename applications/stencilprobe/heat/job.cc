@@ -57,7 +57,6 @@ Main::Main(Application* app) {
 };
 
 Job * Main::Clone() {
-  dbg(DBG_APP, "Cloning main job!\n");
   return new Main(application());
 };
 
@@ -69,7 +68,13 @@ void Main::Execute(Parameter params, const DataArray& da) {
    */
   nimbus::DataDefiner df(this);
 
-  df.DefineData(DATA_NAME,
+  df.DefineData(DATA_NAME_MAIN,
+                NX, NY, NZ,
+                1, 1, 1,
+                PNX, PNY, PNZ,
+                false);  // No global boundary.
+
+  df.DefineData(DATA_NAME_SHADOW,
                 NX, NY, NZ,
                 1, 1, 1,
                 PNX, PNY, PNZ,
@@ -117,8 +122,7 @@ Loop::Loop(Application* app) {
   set_application(app);
 };
 
-Job * Loop::Clone() {
-  dbg(DBG_APP, "Cloning loop job!\n");
+Job* Loop::Clone() {
   return new Loop(application());
 };
 
@@ -128,26 +132,44 @@ void Loop::Execute(Parameter params, const DataArray& da) {
   LoadParameter(&params, &iter_num);
   printf("Iteration number remaining: %lu\n", iter_num);
 
+  IDSet<logical_data_id_t> read, write;
+  IDSet<job_id_t> before, after;
+    Parameter par;
+
   if (iter_num > 0) {
     StartTemplate("__MARK_STAT_for_loop");
     /*
-     * Spawning stencil jobs
+     * Spawning stencil jobs that reads maid data writes shadow date
      */
-    std::vector<job_id_t> stencil_job_ids;
-    GetNewJobID(&stencil_job_ids, PART_NUM);
-    IDSet<logical_data_id_t> read, write;
-    IDSet<job_id_t> before, after;
-    Parameter par;
+    std::vector<job_id_t> first_step_job_ids;
+    GetNewJobID(&first_step_job_ids, PART_NUM);
     for (int i = 0; i < PART_NUM; ++i) {
       read.clear();
-      LoadLdoIdsInSet(&read, ph.map()["kRegionsOuter"][i], DATA_NAME, NULL);
+      LoadLdoIdsInSet(&read, ph.map()["kRegionsOuter"][i], DATA_NAME_MAIN, NULL);
       write.clear();
-      LoadLdoIdsInSet(&write, ph.map()["kRegionsCentral"][i], DATA_NAME, NULL);
+      LoadLdoIdsInSet(&write, ph.map()["kRegionsCentral"][i], DATA_NAME_SHADOW, NULL);
       before.clear();
-      StageJobAndLoadBeforeSet(&before, STENCIL_JOB_NAME, stencil_job_ids[i], read, write);
+      StageJobAndLoadBeforeSet(&before, STENCIL_JOB_NAME, first_step_job_ids[i], read, write);
       SerializeParameter(&par, i);
-      SpawnComputeJob(STENCIL_JOB_NAME, stencil_job_ids[i], read, write, before, after, par, true, ph.map()["kRegionsCentral"][i]);
-      printf("SPAWNED STENCIL\n");
+      SpawnComputeJob(STENCIL_JOB_NAME, first_step_job_ids[i], read, write, before, after, par, true, ph.map()["kRegionsCentral"][i]);
+    }
+
+    MarkEndOfStage();
+
+    /*
+     * Spawning stencil jobs that reads shadow data writes main date
+     */
+    std::vector<job_id_t> second_step_job_ids;
+    GetNewJobID(&second_step_job_ids, PART_NUM);
+    for (int i = 0; i < PART_NUM; ++i) {
+      read.clear();
+      LoadLdoIdsInSet(&read, ph.map()["kRegionsOuter"][i], DATA_NAME_SHADOW, NULL);
+      write.clear();
+      LoadLdoIdsInSet(&write, ph.map()["kRegionsCentral"][i], DATA_NAME_MAIN, NULL);
+      before.clear();
+      StageJobAndLoadBeforeSet(&before, STENCIL_JOB_NAME, second_step_job_ids[i], read, write);
+      SerializeParameter(&par, i + PART_NUM);
+      SpawnComputeJob(STENCIL_JOB_NAME, second_step_job_ids[i], read, write, before, after, par, true, ph.map()["kRegionsCentral"][i]);
     }
 
     MarkEndOfStage();
@@ -167,7 +189,6 @@ void Loop::Execute(Parameter params, const DataArray& da) {
     }
     EndTemplate("__MARK_STAT_for_loop");
   } else {  // if (iter_num > 0)
-
     TerminateApplication();
   }
 };
@@ -178,40 +199,46 @@ Stencil::Stencil(Application *app) {
 };
 
 Job * Stencil::Clone() {
-  dbg(DBG_APP, "Cloning stencil job!\n");
   return new Stencil(application());
 };
 
+
+// StencilProbe is implemented in the library, just the signature here.
+void StencilProbe(double *A0, double *Anext, int nx, int ny, int nz,
+                  int tx, int ty, int tz, int timesteps);
+
 void Stencil::Execute(Parameter params, const DataArray& da) {
-  dbg(DBG_APP, "Executing the stencil job\n");
   size_t part_num;
   LoadParameter(&params, &part_num);
-  printf("PRINT: Stencil %lu\n", part_num);
+  dbg(DBG_APP, "Executing the stencil job part %lu.\n", part_num);
 
-  // DataArray::const_iterator iter = da.begin();
-  // std::cout << "There are " << da.size() << std::endl;
-  // for (; iter != da.end(); ++ iter) {
-  //   std::cout << (*iter)->region().ToNetworkData() << std::endl;
-  // }
-  
-
-  nimbus::DataArray read, write;
+  nimbus::DataArray read, write, empty;
   GetDataAccess(this, da, READ, &read);
   GetDataAccess(this, da, WRITE, &write);
-  printf("Read size: %lu, Write size: %lu\n", read.size(), write.size());
 
   nimbus::AppDataManager *cm = this->GetAppDataManager();
-  nimbus::AppVar *app_var =
+
+  nimbus::AppVar *app_var_read =
     cm->GetAppVar(
-        read, ph.map()["kRegionsOuter"][part_num],
-        write, ph.map()["kRegionsCentral"][part_num],
-        AppDataVecPrototype, ph.map()["kRegionsCentral"][part_num],
-        nimbus::app_data::SHARED);
-  double *data = dynamic_cast<AppDataVec*>(app_var)->data();
-  // Compute
-  cm->ReleaseAccess(app_var);
+        read, ph.map()["kRegionsOuter"][part_num % PART_NUM],
+        empty, GeometricRegion(0, 0, 0, 0, 0, 0),
+        AppDataVecPrototype, ph.map()["kRegionsCentral"][part_num % PART_NUM],
+        nimbus::app_data::EXCLUSIVE);
+  double *read_data = static_cast<AppDataVec*>(app_var_read)->data();
 
+  nimbus::AppVar *app_var_write =
+    cm->GetAppVar(
+        empty, GeometricRegion(0, 0, 0, 0, 0, 0),
+        write, ph.map()["kRegionsCentral"][part_num % PART_NUM],
+        AppDataVecPrototype, ph.map()["kRegionsCentral"][part_num % PART_NUM],
+        nimbus::app_data::EXCLUSIVE);
+  double *write_data = static_cast<AppDataVec*>(app_var_write)->data();
 
+  // Perform computations
+  // StencilProbe(read_data, write_data, NX, NY, NZ, 0, 0, 0, 1);
+
+  cm->ReleaseAccess(app_var_read);
+  cm->ReleaseAccess(app_var_write);
 };
 
 

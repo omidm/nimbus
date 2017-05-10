@@ -44,7 +44,8 @@
 #include "src/shared/nimbus.h"
 #include "protobuf_compiled/vector_msg.pb.h"
 
-#define DATA_NAME "velocity"
+#define DATA_NAME_MAIN "heat-main"
+#define DATA_NAME_SHADOW "heat-shadow"
 
 using namespace nimbus; // NOLINT
 

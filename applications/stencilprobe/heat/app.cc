@@ -67,7 +67,8 @@ void Heat::Load() {
   RegisterJob(LOOP_JOB_NAME, new Loop(this));
   RegisterJob(STENCIL_JOB_NAME, new Stencil(this));
 
-  RegisterData(DATA_NAME, new Vec());
+  RegisterData(DATA_NAME_MAIN, new Vec());
+  RegisterData(DATA_NAME_SHADOW, new Vec());
 
   ph.AddPartitions("kRegions",
                    nx_, ny_, nz_,
@@ -82,7 +83,7 @@ void Heat::Load() {
                    nimbus::PartitionHandler::OUTER);
 
   GlobalRegion.Rebuild(1, 1, 1, nx_, ny_, nz_);
-  AppDataVecPrototype = AppDataVec(GlobalRegion, DATA_NAME, true);
+  AppDataVecPrototype = AppDataVec(GlobalRegion, "heat-proto", true);
 };
 
 

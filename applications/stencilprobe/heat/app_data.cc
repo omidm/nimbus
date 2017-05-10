@@ -97,7 +97,9 @@ nimbus::AppVar* AppDataVec::CreateNew(const nimbus::GeometricRegion &local_reg) 
 
 void AppDataVec::ReadAppData(const nimbus::DataArray &read_set,
                              const nimbus::GeometricRegion &read_reg) {
-  dbg(DBG_APP, "--- Reading %i elements into app data for region %s\n", read_set.size(), read_reg.ToNetworkData().c_str());
+  if (read_reg.dx() <= 0 || read_reg.dy() <= 0 || read_reg.dz() <= 0)
+    return;
+  size_t counter = 0;
   assert(local_region_ == object_region());
   nimbus::GeometricRegion final_read_reg =
     nimbus::GeometricRegion::GetIntersection(read_reg, local_region_);
@@ -120,17 +122,19 @@ void AppDataVec::ReadAppData(const nimbus::DataArray &read_set,
           assert(d->size() > Index3DShifted(r.dx(), r.dy(), i, j, k, data_shift));
           data_[Index3DShifted(local_region_.dx(), local_region_.dy(), i, j, k, shift_)] =
             d->data()[Index3DShifted(r.dx(), r.dy(), i, j, k, data_shift)];
+          ++counter;
         }
       }
     }
   }
+  dbg(DBG_APP, ">>> Reading %4i elements into app data for region %s\n", counter, read_reg.ToNetworkData().c_str());
 }
 
 void AppDataVec::WriteAppData(const nimbus::DataArray &write_set,
                const nimbus::GeometricRegion &write_reg) const {
-  dbg(DBG_APP, "--- Writing %i elements from app data for region %s\n", write_set.size(), write_reg.ToNetworkData().c_str());
   if (write_reg.dx() <= 0 || write_reg.dy() <= 0 || write_reg.dz() <= 0)
     return;
+  size_t counter = 0;
   assert(local_region_ == object_region());
   nimbus::GeometricRegion final_write_reg =
     nimbus::GeometricRegion::GetIntersection(write_reg, local_region_);
@@ -153,10 +157,12 @@ void AppDataVec::WriteAppData(const nimbus::DataArray &write_set,
           assert(d->size() > Index3DShifted(r.dx(), r.dy(), i, j, k, data_shift));
           d->data()[Index3DShifted(r.dx(), r.dy(), i, j, k, data_shift)] =
             data_[Index3DShifted(local_region_.dx(), local_region_.dy(), i, j, k, shift_)];
+          counter++;
         }
       }
     }
   }
+  dbg(DBG_APP, "<<< Writing %4i elements from app data for region %s\n", counter, write_reg.ToNetworkData().c_str());
 }
 
 
