@@ -47,7 +47,7 @@
 #include "./app.h"
 #include "src/shared/dbg.h"
 
-#define LOOP_JOB_NAME "loop"
+#define LOOP_JOB_NAME "__MARK_STAT_loop"
 #define STENCIL_JOB_NAME "stencil"
 
 using namespace nimbus; // NOLINT

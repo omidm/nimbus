@@ -50,6 +50,9 @@ GeometricRegion GlobalRegion;
 Heat::Heat(size_t iter_num,
            int nx, int ny, int nz,
            int pnx, int pny, int pnz) {
+  assert(nx % pnx == 0);
+  assert(ny % pny == 0);
+  assert(nz % pnz == 0);
   iter_num_ = iter_num;
   nx_ = nx;
   ny_ = ny;
