@@ -76,6 +76,17 @@ if not config.GLOBAL_WRITE:
 if config.NO_PROJ_BOTTLENECK:
   WATER_APP_OPTIONS += ' --dpb '
 
+# heat
+HEAT_REL_APP_PATH = 'applications/stencilprobe/heat/libheat.so'
+HEAT_APP_OPTIONS  = ' '
+HEAT_APP_OPTIONS += ' -i ' + str(config.ITER_NUM)
+HEAT_APP_OPTIONS += ' -x ' + str(config.NX)
+HEAT_APP_OPTIONS += ' -y ' + str(config.NY)
+HEAT_APP_OPTIONS += ' -z ' + str(config.NZ)
+HEAT_APP_OPTIONS += ' --pnx ' + str(config.PNX)
+HEAT_APP_OPTIONS += ' --pny ' + str(config.PNY)
+HEAT_APP_OPTIONS += ' --pnz ' + str(config.PNZ)
+
 
 if (config.APPLICATION == 'lr'):
   REL_APP_PATH = LR_REL_APP_PATH
@@ -86,9 +97,12 @@ elif (config.APPLICATION == 'k-means'):
 elif (config.APPLICATION == 'water'):
   REL_APP_PATH = WATER_REL_APP_PATH
   APP_OPTIONS  = WATER_APP_OPTIONS
+elif (config.APPLICATION == 'heat'):
+  REL_APP_PATH = HEAT_REL_APP_PATH
+  APP_OPTIONS  = HEAT_APP_OPTIONS
 else:
   print "ERROR: unknown application: " + config.APPLICATION
-  exit(0)
+  exit(1)
 
 
 def start_experiment(controller_ip, controller_p_ip, worker_ips, worker_p_ips):

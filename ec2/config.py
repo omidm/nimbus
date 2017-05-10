@@ -15,10 +15,10 @@
 # US West (Oregon) Region
 EC2_LOCATION                    = 'us-west-2'
 UBUNTU_AMI                      = 'ami-fa9cf1ca'
-NIMBUS_AMI                      = 'ami-8c4fd7ec'
+NIMBUS_AMI                      = 'ami-4f5c392f'
 CONTROLLER_INSTANCE_TYPE        = 'c3.4xlarge'
 WORKER_INSTANCE_TYPE            = 'c3.2xlarge'
-PLACEMENT                       = 'us-west-2c' # None
+PLACEMENT                       = 'us-west-2a' # None
 PLACEMENT_GROUP                 = 'nimbus-cluster' # None / '*'
 SECURITY_GROUP                  = 'nimbus_sg_uswest2'
 KEY_NAME                        = 'sing-key-pair-us-west-2'
@@ -52,7 +52,7 @@ SPLIT_ARGS                      = str(WORKER_NUM) + ' 1 1' # '2 2 2' '4 4 4'
 
 # Worker configurations
 OTHREAD_NUM                     = 8
-APPLICATION                     = 'lr' # 'lr' 'k-means' 'water' 
+APPLICATION                     = 'lr' # 'lr' 'k-means' 'water' 'heat'
 DEACTIVATE_EXECUTION_TEMPLATE   = False
 RUN_WITH_TASKSET                = False
 WORKER_TASKSET                  = '0-1,4-5' # '0-3,8-11'
@@ -86,5 +86,14 @@ WATER_LEVEL                     = 0.35
 PROJECTION_SMART_LEVEL          = 0
 NO_PROJ_BOTTLENECK              = False
 GLOBAL_WRITE                    = False
+
+# heat
+ITER_NUM                        = 30
+NX                              = 952
+NY                              = 952
+NZ                              = 952
+PNX                             = 8
+PNY                             = 8
+PNZ                             = 8
 
 
