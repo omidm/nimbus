@@ -1,12 +1,12 @@
 
 # add subdirs space separated
-SUBDIRS = simple ml graph stencilprobe
+SUBDIRS = lib heat
 
 .PHONY: subdirs $(SUBDIRS) clean
 
 subdirs: $(SUBDIRS)
 
-$(SUBDIRS):
+$(SUBDIRS): lib
 	$(MAKE) -C $@
 
 clean:

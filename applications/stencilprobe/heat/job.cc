@@ -235,7 +235,7 @@ void Stencil::Execute(Parameter params, const DataArray& da) {
   double *write_data = static_cast<AppDataVec*>(app_var_write)->data();
 
   // Perform computations
-  // StencilProbe(read_data, write_data, NX, NY, NZ, 0, 0, 0, 1);
+  StencilProbe(read_data, write_data, NX, NY, NZ, 0, 0, 0, 1);
 
   cm->ReleaseAccess(app_var_read);
   cm->ReleaseAccess(app_var_write);
