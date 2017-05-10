@@ -71,7 +71,8 @@ function print_usage {
   echo -e "${RCol}"
 }
 
-LOCALHOST=$(hostname)
+# LOCALHOST=$(hostname)
+LOCALHOST="127.0.0.1"
 
 if [ -z "${NIMBUS_HOME}" ]; then
   export NIMBUS_HOME="$(cd "`dirname "$0"`"/..; pwd)"
