@@ -15,9 +15,13 @@ TARGET = libstencilprobe.so
 .PHONY: default clean
 default: probe $(TARGET)
 NIMBUS_ROOT = ../../..
-include $(NIMBUS_ROOT)/Makeinclude
+include $(NIMBUS_ROOT)/Makeinclude\
+# INSTALL_FLAG is not needed for linux
+ifdef OS_DARWIN
+  INSTALL_FLAG = -install_name @rpath/$(TARGET)
+endif
 $(TARGET): util.o probe_heat.o util.h cycle.h common.h
-	$(CPP) $(CFLAGS) $(SHARED_FLAGS) util.o probe_heat.o -o $(TARGET) $(LDFLAGS) $(LFLAGS)
+	$(CPP) $(CFLAGS) $(SHARED_FLAGS) util.o probe_heat.o -o $(TARGET) $(INSTALL_FLAG) $(LDFLAGS) $(LFLAGS)
 %.o: %.c
 	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(IFLAGS) -c $< -o $@
 
