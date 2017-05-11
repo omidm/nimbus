@@ -48,12 +48,17 @@ AppDataVec AppDataVecPrototype;
 GeometricRegion GlobalRegion;
 
 Heat::Heat(size_t iter_num,
+           int bw,
            int nx, int ny, int nz,
            int pnx, int pny, int pnz) {
   assert(nx % pnx == 0);
   assert(ny % pny == 0);
   assert(nz % pnz == 0);
+  assert(nx / pnx > 2 * bw);
+  assert(ny / pny > 2 * bw);
+  assert(nz / pnz > 2 * bw);
   iter_num_ = iter_num;
+  bw_ = bw;
   nx_ = nx;
   ny_ = ny;
   nz_ = nz;
@@ -75,13 +80,13 @@ void Heat::Load() {
 
   ph.AddPartitions("kRegions",
                    nx_, ny_, nz_,
-                   1, 1, 1, // bandwidth
+                   bw_, bw_, bw_,
                    pnx_, pny_, pnz_,
                    nimbus::PartitionHandler::CENTRAL);
 
   ph.AddPartitions("kRegions",
                    nx_, ny_, nz_,
-                   1, 1, 1, // bandwidth
+                   bw_, bw_, bw_,
                    pnx_, pny_, pnz_,
                    nimbus::PartitionHandler::OUTER);
 
@@ -94,6 +99,7 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
   namespace po = boost::program_options;
 
   size_t iter_num = 30;
+  int bw = 1;
   int nx = 10;
   int ny = 10;
   int nz = 10;
@@ -107,6 +113,7 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
 
     // Optinal arguments
     ("iter_num,i", po::value<size_t>(&iter_num), "number of iterations [default = 30]") //NOLINT
+    ("bandwidth,w", po::value<int>(&bw), "bandwidth size [default = 1]") //NOLINT
     ("nx,x", po::value<int>(&nx), "size of x axis [default = 10]") //NOLINT
     ("ny,y", po::value<int>(&ny), "size of y axis [default = 10]") //NOLINT
     ("nz,z", po::value<int>(&nz), "size of z axis [default = 10]") //NOLINT
@@ -136,7 +143,11 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
     return NULL;
   }
 
+  dbg(DBG_APP, "Running application with i: %lu, bw: %i, nx: %i, ny: %i, nz: %i, pnx:%i, pny: %i, pnz: %i\n",
+      iter_num, bw, nx, ny, nz, pnx, pny, pnz);
+
   return new Heat(iter_num,
+                  bw,
                   nx, ny, nz,
                   pnx, pny, pnz);
 }

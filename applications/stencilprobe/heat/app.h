@@ -57,12 +57,14 @@ extern GeometricRegion GlobalRegion;
 class Heat : public Application {
   public:
     Heat(size_t iter_num,
+         int bw,
          int nx, int ny, int nz,
          int pnx, int pny, int pnz);
     ~Heat();
     virtual void Load();
 
     size_t iter_num_;
+    int bw_;
     int nx_;
     int ny_;
     int nz_;

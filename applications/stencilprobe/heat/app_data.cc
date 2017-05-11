@@ -97,13 +97,12 @@ nimbus::AppVar* AppDataVec::CreateNew(const nimbus::GeometricRegion &local_reg) 
 
 void AppDataVec::ReadAppData(const nimbus::DataArray &read_set,
                              const nimbus::GeometricRegion &read_reg) {
-  if (read_reg.dx() <= 0 || read_reg.dy() <= 0 || read_reg.dz() <= 0)
-    return;
   size_t counter = 0;
   assert(local_region_ == object_region());
   nimbus::GeometricRegion final_read_reg =
     nimbus::GeometricRegion::GetIntersection(read_reg, local_region_);
-  assert(final_read_reg.dx() > 0 && final_read_reg.dy() > 0 && final_read_reg.dz() > 0);
+  if (final_read_reg.dx() <= 0 || final_read_reg.dy() <= 0 || final_read_reg.dz() <= 0)
+    return;
 
   DataArray::const_iterator iter = read_set.begin();
   for (; iter != read_set.end(); ++iter) {
@@ -132,13 +131,12 @@ void AppDataVec::ReadAppData(const nimbus::DataArray &read_set,
 
 void AppDataVec::WriteAppData(const nimbus::DataArray &write_set,
                const nimbus::GeometricRegion &write_reg) const {
-  if (write_reg.dx() <= 0 || write_reg.dy() <= 0 || write_reg.dz() <= 0)
-    return;
   size_t counter = 0;
   assert(local_region_ == object_region());
   nimbus::GeometricRegion final_write_reg =
     nimbus::GeometricRegion::GetIntersection(write_reg, local_region_);
-  assert(final_write_reg.dx() > 0 && final_write_reg.dy() > 0 && final_write_reg.dz() > 0);
+  if (final_write_reg.dx() <= 0 || final_write_reg.dy() <= 0 || final_write_reg.dz() <= 0)
+    return;
 
   DataArray::const_iterator iter = write_set.begin();
   for (; iter != write_set.end(); ++iter) {

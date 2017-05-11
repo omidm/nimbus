@@ -43,6 +43,8 @@
 #include "src/application_utils/data_definer.h"
 
 
+#define ITER_NUM static_cast<Heat*>(application())->iter_num_
+#define BW static_cast<Heat*>(application())->bw_
 #define NX static_cast<Heat*>(application())->nx_
 #define NY static_cast<Heat*>(application())->ny_
 #define NZ static_cast<Heat*>(application())->nz_
@@ -50,7 +52,6 @@
 #define PNY static_cast<Heat*>(application())->pny_
 #define PNZ static_cast<Heat*>(application())->pnz_
 #define PART_NUM PNX*PNY*PNZ
-#define ITER_NUM static_cast<Heat*>(application())->iter_num_
 
 Main::Main(Application* app) {
   set_application(app);
@@ -70,13 +71,13 @@ void Main::Execute(Parameter params, const DataArray& da) {
 
   df.DefineData(DATA_NAME_MAIN,
                 NX, NY, NZ,
-                1, 1, 1,
+                BW, BW, BW,
                 PNX, PNY, PNZ,
                 false);  // No global boundary.
 
   df.DefineData(DATA_NAME_SHADOW,
                 NX, NY, NZ,
-                1, 1, 1,
+                BW, BW, BW,
                 PNX, PNY, PNZ,
                 false);  // No global boundary.
 
@@ -86,23 +87,6 @@ void Main::Execute(Parameter params, const DataArray& da) {
   IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   Parameter par;
-
-  // // Spawning init jobs
-  // std::vector<job_id_t> job_ids;
-  // GetNewJobID(&job_ids, 1);
-  // for (size_t i = 0; i < PART_NUM; ++i) {
-  //   GeometricRegion region(i, 0, 0, 1, 1, 1);
-  //   read.clear();
-  //   LoadLdoIdsInSet(&read, region, DATA_NAME, NULL);
-  //   write.clear();
-  //   LoadLdoIdsInSet(&write, region, DATA_NAME, NULL);
-  //   before.clear();
-  //   StageJobAndLoadBeforeSet(&before, LOOP_JOB_NAME, job_ids[i], read, write);
-  //   SerializeParameter(&par, i);
-  //   SpawnComputeJob(LOOP_JOB_NAME, job_ids[i], read, write, before, after, par, true, region);
-  // }
-
-  // MarkEndOfStage();
 
   // Spawning loop job
   std::vector<job_id_t> loop_job_id;
@@ -235,7 +219,7 @@ void Stencil::Execute(Parameter params, const DataArray& da) {
   double *write_data = static_cast<AppDataVec*>(app_var_write)->data();
 
   // Perform computations
-  StencilProbe(read_data, write_data, NX/PNX + 2 * 1, NY/PNY + 2 * 1, NZ/PNZ + 2 * 1, 0, 0, 0, 1);
+  StencilProbe(read_data, write_data, NX/PNX + 2 * BW, NY/PNY + 2 * BW, NZ/PNZ + 2 * BW, 0, 0, 0, 1);
 
   cm->ReleaseAccess(app_var_read);
   cm->ReleaseAccess(app_var_write);
