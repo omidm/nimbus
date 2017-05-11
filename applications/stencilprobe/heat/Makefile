@@ -1,10 +1,13 @@
 
 TARGET = libheat.so
 
-# add subdirs space separated
-SUBDIRS = protobuf_source
+LIB_PATH = ../lib/
+LIB_NAME = libstencilprobe.so
 
-.PHONY: default clean libstencilprobe_t
+# add subdirs space separated
+SUBDIRS = protobuf_source ${LIB_PATH}
+
+.PHONY: default clean
 
 default: $(TARGET)
 
@@ -26,11 +29,11 @@ OBJFILES += $(PROTO_OBJECT_FILES)
 # because it is immediately used by the compiler, here. However, the rpath
 # option should be absolute path so that when the worker executable loads the
 # generated libheat.so, it can find the location of libstencilprobe.so.
-LFLAGS  += -lstencilprobe
-LDFLAGS += -L${NIMBUS_ROOT}/applications/stencilprobe/lib
-LDFLAGS += -Wl,-rpath `pwd`/../lib
+LFLAGS  += -l:${LIB_NAME}
+LDFLAGS += -L${LIB_PATH}
+LDFLAGS += -Wl,-rpath `pwd`/${LIB_PATH}
 
-$(TARGET): $(OBJFILES) libstencilprobe_t
+$(TARGET): $(OBJFILES) ${LIB_PATH}/${LIB_NAME}
 	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(OBJFILES) -o $(TARGET) $(LDFLAGS) $(LFLAGS)
 
 $(PDIR_COMPILED)%.pb.o: $(PDIR_SOURCE)%.proto
@@ -39,7 +42,7 @@ $(PDIR_COMPILED)%.pb.o: $(PDIR_SOURCE)%.proto
 %.o: %.cc $(PROTO_OBJECT_FILES)
 	$(CPP) $(CFLAGS) $(SHARED_FLAGS) $(IFLAGS) -c $< -o $@
 
-libstencilprobe_t:
+${LIB_PATH}/${LIB_NAME}:
 	$(MAKE) -C ../lib/
 
 clean: clean-files
