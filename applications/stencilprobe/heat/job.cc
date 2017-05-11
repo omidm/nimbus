@@ -222,7 +222,7 @@ void Stencil::Execute(Parameter params, const DataArray& da) {
     cm->GetAppVar(
         read, ph.map()["kRegionsOuter"][part_num % PART_NUM],
         empty, GeometricRegion(0, 0, 0, 0, 0, 0),
-        AppDataVecPrototype, ph.map()["kRegionsCentral"][part_num % PART_NUM],
+        AppDataVecPrototype, ph.map()["kRegionsOuter"][part_num % PART_NUM],
         nimbus::app_data::EXCLUSIVE);
   double *read_data = static_cast<AppDataVec*>(app_var_read)->data();
 
@@ -230,12 +230,12 @@ void Stencil::Execute(Parameter params, const DataArray& da) {
     cm->GetAppVar(
         empty, GeometricRegion(0, 0, 0, 0, 0, 0),
         write, ph.map()["kRegionsCentral"][part_num % PART_NUM],
-        AppDataVecPrototype, ph.map()["kRegionsCentral"][part_num % PART_NUM],
+        AppDataVecPrototype, ph.map()["kRegionsOuter"][part_num % PART_NUM],
         nimbus::app_data::EXCLUSIVE);
   double *write_data = static_cast<AppDataVec*>(app_var_write)->data();
 
   // Perform computations
-  StencilProbe(read_data, write_data, NX/PNX, NY/PNY, NZ/PNZ, 0, 0, 0, 1);
+  StencilProbe(read_data, write_data, NX/PNX + 2 * 1, NY/PNY + 2 * 1, NZ/PNZ + 2 * 1, 0, 0, 0, 1);
 
   cm->ReleaseAccess(app_var_read);
   cm->ReleaseAccess(app_var_write);
