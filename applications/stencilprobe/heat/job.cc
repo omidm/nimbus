@@ -232,7 +232,7 @@ void Stencil::Execute(Parameter params, const DataArray& da) {
     StencilProbe(read_data, write_data, NX/PNX + 2 * BW, NY/PNY + 2 * BW, NZ/PNZ + 2 * BW, 0, 0, 0, 1);
   }
   log.log_StopTimer();
-  dbg(DBG_ERROR, "Job time: %f\n", log.timer());
+  dbg(DBG_APP, "Job time: %f\n", log.timer());
 
   cm->ReleaseAccess(app_var_read);
   cm->ReleaseAccess(app_var_write);

@@ -114,13 +114,21 @@ void AppDataVec::ReadAppData(const nimbus::DataArray &read_set,
     data_shift.z = global_region_.z() - data_reg.z();
     nimbus::GeometricRegion r =
       nimbus::GeometricRegion::GetIntersection(final_read_reg, data_reg);
-    for (int_dimension_t i = r.x(); i < (r.x() + r.dx()); ++i) {
-      for (int_dimension_t j = r.y(); j < (r.y() + r.dy()); ++j) {
-        for (int_dimension_t k = r.z(); k < (r.z() + r.dz()); ++k) {
-          assert(size_ > Index3DShifted(local_region_.dx(), local_region_.dy(), i, j, k, shift_));
-          assert(d->size() > Index3DShifted(r.dx(), r.dy(), i, j, k, data_shift));
-          data_[Index3DShifted(local_region_.dx(), local_region_.dy(), i, j, k, shift_)] =
-            d->data()[Index3DShifted(r.dx(), r.dy(), i, j, k, data_shift)];
+    int_dimension_t xs = r.x(); int_dimension_t xe = r.x() + r.dx();
+    int_dimension_t ys = r.y(); int_dimension_t ye = r.y() + r.dy();
+    int_dimension_t zs = r.z(); int_dimension_t ze = r.z() + r.dz();
+    for (int_dimension_t k = zs; k < ze; ++k) {
+      int_dimension_t s_dz = r.dy() * (k + data_shift.z - 1);
+      int_dimension_t d_dz = local_region_.dy() * (k + shift_.z - 1);
+      for (int_dimension_t j = ys; j < ye; ++j) {
+        int_dimension_t s_dyz = r.dx() * ((j + data_shift.y - 1) + s_dz);
+        int_dimension_t d_dyz = local_region_.dx() * ((j + shift_.y - 1) + d_dz);
+        for (int_dimension_t i = xs; i < xe; ++i) {
+          data_[i + shift_.x - 1 + d_dyz] = d->data()[i + data_shift.x - 1 + s_dyz];
+          // assert(size_ > Index3DShifted(local_region_.dx(), local_region_.dy(), i, j, k, shift_));
+          // assert(d->size() > Index3DShifted(r.dx(), r.dy(), i, j, k, data_shift));
+          // data_[Index3DShifted(local_region_.dx(), local_region_.dy(), i, j, k, shift_)] =
+          //   d->data()[Index3DShifted(r.dx(), r.dy(), i, j, k, data_shift)];
           ++counter;
         }
       }
@@ -148,13 +156,21 @@ void AppDataVec::WriteAppData(const nimbus::DataArray &write_set,
     data_shift.z = global_region_.z() - data_reg.z();
     nimbus::GeometricRegion r =
       nimbus::GeometricRegion::GetIntersection(final_write_reg, data_reg);
-    for (int_dimension_t i = r.x(); i < (r.x() + r.dx()); ++i) {
-      for (int_dimension_t j = r.y(); j < (r.y() + r.dy()); ++j) {
-        for (int_dimension_t k = r.z(); k < (r.z() + r.dz()); ++k) {
-          assert(size_ > Index3DShifted(local_region_.dx(), local_region_.dy(), i, j, k, shift_));
-          assert(d->size() > Index3DShifted(r.dx(), r.dy(), i, j, k, data_shift));
-          d->data()[Index3DShifted(r.dx(), r.dy(), i, j, k, data_shift)] =
-            data_[Index3DShifted(local_region_.dx(), local_region_.dy(), i, j, k, shift_)];
+    int_dimension_t xs = r.x(); int_dimension_t xe = r.x() + r.dx();
+    int_dimension_t ys = r.y(); int_dimension_t ye = r.y() + r.dy();
+    int_dimension_t zs = r.z(); int_dimension_t ze = r.z() + r.dz();
+    for (int_dimension_t k = zs; k < ze; ++k) {
+      int_dimension_t d_dz = r.dy() * (k + data_shift.z - 1);
+      int_dimension_t s_dz = local_region_.dy() * (k + shift_.z - 1);
+      for (int_dimension_t j = ys; j < ye; ++j) {
+        int_dimension_t d_dyz = r.dx() * ((j + data_shift.y - 1) + d_dz);
+        int_dimension_t s_dyz = local_region_.dx() * ((j + shift_.y - 1) + s_dz);
+        for (int_dimension_t i = xs; i < xe; ++i) {
+          d->data()[i + data_shift.x - 1 + d_dyz] = data_[i + shift_.x - 1 + s_dyz];
+          // assert(size_ > Index3DShifted(local_region_.dx(), local_region_.dy(), i, j, k, shift_));
+          // assert(d->size() > Index3DShifted(r.dx(), r.dy(), i, j, k, data_shift));
+          // d->data()[Index3DShifted(r.dx(), r.dy(), i, j, k, data_shift)] =
+          //   data_[Index3DShifted(local_region_.dx(), local_region_.dy(), i, j, k, shift_)];
           counter++;
         }
       }
