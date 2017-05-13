@@ -167,6 +167,8 @@ def start_worker(controller_p_ip, worker_ip, worker_p_ip, num):
   worker_command += 'sudo scripts/configure_tcp.sh &> ' + str(num) + '_' + STD_OUT_LOG + ';'
   worker_command += 'sudo sysctl -p &>>' + str(num) + '_' + STD_OUT_LOG + ';'
   worker_command += 'ulimit -c unlimited;'
+  if config.DISABLE_HYPERTHREADING:
+    worker_command += 'sudo scripts/disable_hyperthreading.sh &>> ' + str(num) + '_' + STD_OUT_LOG + ';'
   if config.RUN_WITH_TASKSET:
     worker_command += 'taskset -c ' + config.WORKER_TASKSET + ' ./scripts/start-workers.sh 1'
   else:
