@@ -40,6 +40,7 @@
 #include "./job.h"
 #include "./data.h"
 #include "./utils.h"
+#include "src/shared/helpers.h"
 #include "src/application_utils/data_definer.h"
 
 
@@ -51,7 +52,8 @@
 #define PNX static_cast<Heat*>(application())->pnx_
 #define PNY static_cast<Heat*>(application())->pny_
 #define PNZ static_cast<Heat*>(application())->pnz_
-#define PART_NUM PNX*PNY*PNZ
+#define PART_NUM (PNX*PNY*PNZ)
+#define SPIN_WAIT_US static_cast<Heat*>(application())->spin_wait_us_
 
 Main::Main(Application* app) {
   set_application(app);
@@ -218,8 +220,19 @@ void Stencil::Execute(Parameter params, const DataArray& da) {
         nimbus::app_data::EXCLUSIVE);
   double *write_data = static_cast<AppDataVec*>(app_var_write)->data();
 
+  Log log(Log::NO_FILE);
+  log.log_StartTimer();
+
   // Perform computations
-  StencilProbe(read_data, write_data, NX/PNX + 2 * BW, NY/PNY + 2 * BW, NZ/PNZ + 2 * BW, 0, 0, 0, 1);
+
+  if (SPIN_WAIT_US != 0) {
+    dbg(DBG_APP, "Replacing gradient computation with spin wait for %lu us.\n", SPIN_WAIT_US / PNX / PNY / PNZ);
+    spin_wait(SPIN_WAIT_US / PNX / PNY / PNZ);
+  } else {
+    StencilProbe(read_data, write_data, NX/PNX + 2 * BW, NY/PNY + 2 * BW, NZ/PNZ + 2 * BW, 0, 0, 0, 1);
+  }
+  log.log_StopTimer();
+  dbg(DBG_ERROR, "Job time: %f\n", log.timer());
 
   cm->ReleaseAccess(app_var_read);
   cm->ReleaseAccess(app_var_write);

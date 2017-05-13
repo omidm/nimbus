@@ -48,6 +48,7 @@ AppDataVec AppDataVecPrototype;
 GeometricRegion GlobalRegion;
 
 Heat::Heat(size_t iter_num,
+           size_t spin_wait_us,
            int bw,
            int nx, int ny, int nz,
            int pnx, int pny, int pnz) {
@@ -58,6 +59,7 @@ Heat::Heat(size_t iter_num,
   assert(ny / pny > 2 * bw);
   assert(nz / pnz > 2 * bw);
   iter_num_ = iter_num;
+  spin_wait_us_ = spin_wait_us;
   bw_ = bw;
   nx_ = nx;
   ny_ = ny;
@@ -99,6 +101,7 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
   namespace po = boost::program_options;
 
   size_t iter_num = 30;
+  size_t spin_wait_us = 0;
   int bw = 1;
   int nx = 10;
   int ny = 10;
@@ -113,13 +116,14 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
 
     // Optinal arguments
     ("iter_num,i", po::value<size_t>(&iter_num), "number of iterations [default = 30]") //NOLINT
-    ("bandwidth,w", po::value<int>(&bw), "bandwidth size [default = 1]") //NOLINT
     ("nx,x", po::value<int>(&nx), "size of x axis [default = 10]") //NOLINT
     ("ny,y", po::value<int>(&ny), "size of y axis [default = 10]") //NOLINT
     ("nz,z", po::value<int>(&nz), "size of z axis [default = 10]") //NOLINT
     ("pnx", po::value<int>(&pnx), "partition number along x axis [default = 2]") //NOLINT
     ("pny", po::value<int>(&pny), "partition number along y axis [default = 2]") //NOLINT
-    ("pnz", po::value<int>(&pnz), "partition number along z axis [default = 2]"); //NOLINT
+    ("pnz", po::value<int>(&pnz), "partition number along z axis [default = 2]") //NOLINT
+    ("bandwidth,b", po::value<int>(&bw), "bandwidth size [default = 1]") //NOLINT
+    ("spin_wait,w", po::value<std::size_t>(&spin_wait_us), "enforced length of the stencil operation over the entire bounding box in micro seconds. if non-zero, replaces all stencil operation with a fixed spin wait. the length of the spin wait is proportional to the size of the local bounding box for the operation (arg-val / pnx / pny/ pnz) [default = 0]"); // NOLINT
 
   po::variables_map vm;
   try {
@@ -143,10 +147,11 @@ extern "C" Application * ApplicationBuilder(int argc, char *argv[]) {
     return NULL;
   }
 
-  dbg(DBG_APP, "Running application with i: %lu, bw: %i, nx: %i, ny: %i, nz: %i, pnx:%i, pny: %i, pnz: %i\n",
-      iter_num, bw, nx, ny, nz, pnx, pny, pnz);
+  dbg(DBG_APP, "Running application with i: %lu, sw: %lu, bw: %i, nx: %i, ny: %i, nz: %i, pnx:%i, pny: %i, pnz: %i\n",
+      iter_num, spin_wait_us, bw, nx, ny, nz, pnx, pny, pnz);
 
   return new Heat(iter_num,
+                  spin_wait_us,
                   bw,
                   nx, ny, nz,
                   pnx, pny, pnz);
