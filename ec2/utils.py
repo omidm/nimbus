@@ -86,6 +86,8 @@ HEAT_APP_OPTIONS += ' -z ' + str(config.NZ)
 HEAT_APP_OPTIONS += ' --pnx ' + str(config.PNX)
 HEAT_APP_OPTIONS += ' --pny ' + str(config.PNY)
 HEAT_APP_OPTIONS += ' --pnz ' + str(config.PNZ)
+HEAT_APP_OPTIONS += ' -w ' + str(config.SW_US)
+HEAT_APP_OPTIONS += ' -b ' + str(config.BW)
 
 
 if (config.APPLICATION == 'lr'):

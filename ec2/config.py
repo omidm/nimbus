@@ -89,11 +89,13 @@ GLOBAL_WRITE                    = False
 
 # heat
 ITER_NUM                        = 30
-NX                              = 952
-NY                              = 952
-NZ                              = 952
-PNX                             = 8
-PNY                             = 8
-PNZ                             = 8
+NX                              = 800
+NY                              = 800
+NZ                              = 800
+PNX                             = 2
+PNY                             = 2
+PNZ                             = 2
+BW                              = 1
+SW_US                           = 0
 
 
