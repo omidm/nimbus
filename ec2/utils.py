@@ -181,6 +181,10 @@ def start_worker(controller_p_ip, worker_ip, worker_p_ip, num):
   worker_command += ' --othread ' + str(config.OTHREAD_NUM)
   if config.DEACTIVATE_EXECUTION_TEMPLATE:
     worker_command += ' --det '
+  if config.DEACTIVATE_CACHE_MANAGER:
+    worker_command += ' --dcm '
+  if config.DEACTIVATE_VDATA_MANAGER:
+    worker_command += ' --dvd '
   worker_command += ' -l ' + REL_APP_PATH
   worker_command += ' ' + APP_OPTIONS
   worker_command += ' &>> ' + str(num) + '_' + STD_OUT_LOG
