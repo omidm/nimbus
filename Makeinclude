@@ -76,15 +76,16 @@ $(CHECKDIR)/%.ck: %
 	@touch $@
 
 $(CHECKDIR):
-	@mkdir $(CHECKDIR)
+	@mkdir -p $(CHECKDIR)
 
 $(CHECKFILE):
 	@${NIMBUS_FILENAMES}
+	@mkdir -p $(CHECKDIR)
 	@touch $@
 
 lint: $(CHECKDIR) ${DEPFILES}
 
-fcheck: $(CHECKDIR) $(CHECKFILE)
+fcheck: $(CHECKFILE)
 
 check: fcheck lint
 
