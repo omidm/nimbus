@@ -71,7 +71,9 @@ int main(int argc, char *argv[]) {
     ("ip", po::value<std::string>(&ip_address), "forced ip address of the worker, not known by controller") // NOLINT
     ("ithread", po::value<uint64_t>(&WorkerManager::inside_job_parallism), "number of threads within one job") //NOLINT
     ("othread", po::value<uint64_t>(&WorkerManager::across_job_parallism), "number of threads at worker for job execution") //NOLINT
-    ("det", "deactivate execution template");
+    ("det", "deactivate execution template")
+    ("dcm", "deactivate cache manager (write through instead of write back)")
+    ("dvd", "deactivate virtual data manager (do not free the central physical object)"); // NOLINT
 
   int argc_worker = 0;
   while (argc_worker < argc) {
@@ -138,6 +140,14 @@ int main(int argc, char *argv[]) {
 
   if (vm.count("det")) {
     w->set_execution_template_active(false);
+  }
+
+  if (vm.count("dcm")) {
+    w->set_cache_manager_active(false);
+  }
+
+  if (vm.count("dvd")) {
+    w->set_vdata_manager_active(false);
   }
 
   w->Run();

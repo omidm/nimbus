@@ -143,6 +143,8 @@ class Worker {
   void set_id(worker_id_t id);
   void set_ip_address(std::string ip);
   void set_execution_template_active(bool flag);
+  void set_cache_manager_active(bool flag);
+  void set_vdata_manager_active(bool flag);
   virtual PhysicalDataMap* data_map();
 
   // TODO(quhang) maybe not a good interface.
@@ -163,6 +165,8 @@ class Worker {
   port_t scheduler_port_;
   port_t listening_port_;
   bool execution_template_active_;
+  bool cache_manager_active_;
+  bool vdata_manager_active_;
 
  private:
   static const uint64_t max_hint_size_ = 10000;

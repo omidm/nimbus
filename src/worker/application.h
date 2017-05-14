@@ -183,6 +183,9 @@ class Application {
   AppDataManager* app_data_manager() const;
   StaticConfigManager* static_config_manager() const;
 
+  void set_cache_manager_active(bool flag);
+  void set_vdata_manager_active(bool flag);
+
  private:
   app_id_t id_;
   size_t priority_;
@@ -203,6 +206,8 @@ class Application {
   WorkerLdoMap* ldo_map_;
   AppDataManager* app_data_manager_;
   StaticConfigManager* static_config_manager_;
+  bool cache_manager_active_;
+  bool vdata_manager_active_;
   class LockGuard {
    public:
     explicit LockGuard(pthread_mutex_t* lock) {

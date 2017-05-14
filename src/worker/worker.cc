@@ -80,6 +80,8 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     id_ = -1;
     ip_address_ = NIMBUS_RECEIVER_KNOWN_IP;
     execution_template_active_ = true;
+    cache_manager_active_ = true;
+    vdata_manager_active_ = true;
     worker_manager_ = new WorkerManager();
     ddb_ = new DistributedDB();
     DUMB_JOB_ID = std::numeric_limits<job_id_t>::max();
@@ -154,6 +156,8 @@ void Worker::SetupTimers() {
 }
 
 void Worker::SetupApplication() {
+  application_->set_cache_manager_active(cache_manager_active_);
+  application_->set_vdata_manager_active(vdata_manager_active_);
   application_->Start(client_, id_maker_, ldo_map_);
 }
 
@@ -926,6 +930,14 @@ void Worker::set_ip_address(std::string ip) {
 
 void Worker::set_execution_template_active(bool flag) {
   execution_template_active_ = flag;
+}
+
+void Worker::set_cache_manager_active(bool flag) {
+  cache_manager_active_ = flag;
+}
+
+void Worker::set_vdata_manager_active(bool flag) {
+  vdata_manager_active_ = flag;
 }
 
 PhysicalDataMap* Worker::data_map() {

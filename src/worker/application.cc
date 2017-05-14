@@ -41,20 +41,17 @@
 #include <time.h>
 #include "src/worker/application.h"
 #include "src/worker/app_data_manager.h"
-// NOTE: include application data manager implementation here
-#if defined N_APP_CACHE
 #include "src/worker/app_data_managers/simple_app_data_manager.h"
-#elif defined V_APP_CACHE
 #include "src/worker/app_data_managers/vdata_cache_manager.h"
-#else
 #include "src/worker/app_data_managers/cache_manager.h"
-#endif
 #include "src/worker/static_config_manager.h"
 
 using namespace nimbus; // NOLINT
 
 Application::Application() {
   app_data_manager_ = NULL;
+  cache_manager_active_ = true;
+  vdata_manager_active_ = true;
   static_config_manager_ = new StaticConfigManager;
   pthread_mutex_init(&lock_job_table_, NULL);
   pthread_mutex_init(&lock_data_table_, NULL);
@@ -81,16 +78,22 @@ void Application::Start(SchedulerClient* client,
   client_ = client;
   id_maker_ = id_maker;
   ldo_map_ = ldo_map;
-  // NOTE: define which application data manager to use here
-  // TODO(chinmayee): should we move this to an interface for application?
-#if defined N_APP_CACHE
-  app_data_manager_ = new SimpleAppDataManager();
-#elif defined V_APP_CACHE
-  app_data_manager_ = new VDataCacheManager();
-#else
-  app_data_manager_ = new CacheManager();
-#endif
+  if (cache_manager_active_ && vdata_manager_active_) {
+    app_data_manager_ = new VDataCacheManager();
+  } else if (cache_manager_active_) {
+    app_data_manager_ = new CacheManager();
+  } else {
+    app_data_manager_ = new SimpleAppDataManager();
+  }
   Load();
+}
+
+void Application::set_cache_manager_active(bool flag) {
+  cache_manager_active_ = flag;
+}
+
+void Application::set_vdata_manager_active(bool flag) {
+  vdata_manager_active_ = flag;
 }
 
 // Thread-safe.
