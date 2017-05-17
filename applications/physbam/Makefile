@@ -1,50 +1,54 @@
 
-.PHONY: dependencies physbam-lib water-physbam water-nimbus opengl_3d
+.PHONY: default dependencies_t release debug
 
-all: physbam-lib water-physbam water-nimbus opengl_3d
+default: release
 
-dependencies:
-	./install-dependencies.sh
+dependencies_t:
+	sudo ./install-dependencies.sh
 
-physbam-lib:
+release:
 	cd physbam-lib/Public_Library; mkdir -p Build/Release;
 	cd physbam-lib/Public_Library/Build/Release; \
-    cmake -D PHYSBAM_USE_OPENMPI=ON -D PHYSBAM_USE_LAMMPI=OFF ../..
+    cmake -D PHYSBAM_USE_OPENMPI=ON -D PHYSBAM_USE_LAMMPI=OFF ../..; cmake -LH ../..
 	$(MAKE) -C physbam-lib/Public_Library/Build/Release
-
-water-physbam: physbam-lib
+	cd water/; mkdir -p Build/Release;
+	cd water/Build/Release; \
+    cmake -D PHYSBAM_USE_OPENMPI=ON -D PHYSBAM_USE_LAMMPI=OFF ../..; cmake -LH ../..
+	$(MAKE) -C water/Build/Release
+	cd smoke/; mkdir -p Build/Release;
+	cd smoke/Build/Release; \
+    cmake -D PHYSBAM_USE_OPENMPI=ON -D PHYSBAM_USE_LAMMPI=OFF ../..; cmake -LH ../..
+	$(MAKE) -C smoke/Build/Release
+	cd physbam-app/opengl_3d/; mkdir -p Build/Release;
+	cd physbam-app/opengl_3d/Build/Release; \
+    cmake -D PHYSBAM_USE_OPENMPI=ON -D PHYSBAM_USE_LAMMPI=OFF ../..; cmake -LH ../..
+	$(MAKE) -C physbam-app/opengl_3d/Build/Release
 	cd physbam-app/water/; mkdir -p Build/Release;
-	cd physbam-app/water/Build/Release; cmake ../..
+	cd physbam-app/water/Build/Release; \
+    cmake -D PHYSBAM_USE_OPENMPI=ON -D PHYSBAM_USE_LAMMPI=OFF ../..; cmake -LH ../..
 	$(MAKE) -C physbam-app/water/Build/Release
 
-water-nimbus: physbam-lib water-physbam
-	cd water/; mkdir -p Build/Release;
-	cd water/Build/Release; cmake ../..
-	$(MAKE) -C water/Build/Release
-
-opengl_3d: physbam-lib water-physbam water-nimbus
-	cd physbam-app/opengl_3d/; mkdir -p Build/Release;
-	cd physbam-app/opengl_3d/Build/Release; cmake ../..
-	$(MAKE) -C physbam-app/opengl_3d/Build/Release
-
-
-.PHONY: physbam-lib-debug water-physbam-debug water-nimbus-debug
-
-physbam-lib-debug:
+debug:
 	cd physbam-lib/Public_Library; mkdir -p Build/Debug;
 	cd physbam-lib/Public_Library/Build/Debug; \
-    cmake -D PHYSBAM_USE_OPENMPI=ON -D PHYSBAM_USE_LAMMPI=OFF ../..
+    cmake -D PHYSBAM_USE_OPENMPI=ON -D PHYSBAM_USE_LAMMPI=OFF ../..; cmake -LH ../..
 	$(MAKE) -C physbam-lib/Public_Library/Build/Debug
-
-water-physbam-debug: physbam-lib-debug
-	cd physbam-app/water/; mkdir -p Build/Debug;
-	cd physbam-app/water/Build/Debug; cmake ../..
-	$(MAKE) -C physbam-app/water/Build/Debug
-
-water-nimbus-debug: physbam-lib-debug
 	cd water/; mkdir -p Build/Debug;
-	cd water/Build/Debug; cmake ../..
+	cd water/Build/Debug; \
+    cmake -D PHYSBAM_USE_OPENMPI=ON -D PHYSBAM_USE_LAMMPI=OFF ../..; cmake -LH ../..
 	$(MAKE) -C water/Build/Debug
+	cd smoke/; mkdir -p Build/Debug;
+	cd smoke/Build/Debug; \
+    cmake -D PHYSBAM_USE_OPENMPI=ON -D PHYSBAM_USE_LAMMPI=OFF ../..; cmake -LH ../..
+	$(MAKE) -C smoke/Build/Debug
+	cd physbam-app/opengl_3d/; mkdir -p Build/Debug;
+	cd physbam-app/opengl_3d/Build/Debug; \
+    cmake -D PHYSBAM_USE_OPENMPI=ON -D PHYSBAM_USE_LAMMPI=OFF ../..; cmake -LH ../..
+	$(MAKE) -C physbam-app/opengl_3d/Build/Debug
+	cd physbam-app/water/; mkdir -p Build/Debug;
+	cd physbam-app/water/Build/Debug; \
+    cmake -D PHYSBAM_USE_OPENMPI=ON -D PHYSBAM_USE_LAMMPI=OFF ../..; cmake -LH ../..
+	$(MAKE) -C physbam-app/water/Build/Debug
 
 
 CLEANSUBDIRS  = physbam-lib/Public_Library/Build/Release
@@ -73,7 +77,5 @@ $(CLEANSUBDIRS):
   fi
 
 $(CMAKECACHE):
-	@if [ -f $@ ]; then \
-    rm $@;\
-  fi
+	@rm -f $@;\
 
