@@ -723,6 +723,11 @@ void Job::set_wait_time(const double& wait_time) {
   wait_time_ = wait_time;
 }
 
+void Job::refresh_dependency_query() {
+  delete dependency_query_;
+  dependency_query_ = new DependencyQuery();
+}
+
 AppDataManager* Job::GetAppDataManager() const {
   return application_->app_data_manager();
 }

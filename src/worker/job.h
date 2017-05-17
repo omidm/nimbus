@@ -253,6 +253,8 @@ class Job {
     // TODO(quhang) should add accesssors.
     DataArray data_array;
 
+    void refresh_dependency_query();
+
     AppDataManager* GetAppDataManager() const;
     StaticConfigManager* GetStaticConfigManager() const;
 

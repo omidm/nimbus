@@ -687,6 +687,8 @@ void ExecutionTemplate::ComputeJobTemplate::Refresh(
   job_->set_id(ID<job_id_t>(*job_id_ptr_));
   job_->set_future_job_id(ID<job_id_t>(*future_job_id_ptr_));
 
+  job_->refresh_dependency_query();
+
   job_->clear_template_variables();
 
   IDSet<physical_data_id_t> read_set, write_set, scratch_set, reduce_set;
