@@ -22,6 +22,7 @@ DataScalarArray   : divergence           : (64, 64, 64), (2, 2, 2), (1, 1, 1) : 
 # float.
 DataFaceArray     : u_interface          : (64, 64, 64), (2, 2, 2), (0, 0, 0) : none
 
+# The following data partitions should be changed if you want to run projection in different granularity.
 # Group II.
 DataSparseMatrix  : matrix_a             : (64, 64, 64), (2, 2, 2), (0, 0, 0) : none
 DataRawVectorNd   : vector_b             : (64, 64, 64), (2, 2, 2), (0, 0, 0) : none

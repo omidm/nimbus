@@ -50,7 +50,6 @@
 #include "applications/physbam/smoke/smoke_example.h"
 #include "applications/physbam/smoke/job_names.h"
 #include "applications/physbam/smoke/data_names.h"
-#include "applications/physbam/smoke/reg_def.h"
 #include "src/shared/dbg.h"
 #include "src/shared/nimbus.h"
 #include "src/worker/dependency_query.h"
@@ -165,14 +164,14 @@ namespace application {
 
     for (int i = 0; i < update_ghost_densities_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_DENSITY, NULL);
+      LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Outer"][i], APP_DENSITY, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_DENSITY_GHOST, NULL);
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_DENSITY, NULL);
+      LoadLogicalIdsInSet(this, &write, ph.map()["kRegY2W3CentralWGB"][i], APP_DENSITY_GHOST, NULL);
+      LoadLogicalIdsInSet(this, &write, ph.map()["kRegY2W3Central"][i], APP_DENSITY, NULL);
 
       nimbus::Parameter update_ghost_densities_params;
       std::string update_ghost_densities_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &update_ghost_densities_str);
+      SerializeParameter(frame, time, dt, global_region, ph.map()["kRegY2W3Central"][i], &update_ghost_densities_str);
       update_ghost_densities_params.set_ser_data(SerializedData(update_ghost_densities_str));
 
       after.clear();
@@ -184,20 +183,20 @@ namespace application {
                       update_ghost_densities_job_ids[i],
                       read, write, before, after,
                       update_ghost_densities_params, true,
-                      kRegY2W3Central[i]);
+                      ph.map()["kRegY2W3Central"][i]);
     }      
 
     MarkEndOfStage();
 
     for (int i = 0; i < scalar_advance_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_DENSITY, APP_DENSITY_GHOST, NULL);
+      LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, APP_DENSITY, APP_DENSITY_GHOST, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_DENSITY, NULL);
+      LoadLogicalIdsInSet(this, &write, ph.map()["kRegY2W3Central"][i], APP_DENSITY, NULL);
 
       nimbus::Parameter scalar_params;
       std::string scalar_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &scalar_str);
+      SerializeParameter(frame, time, dt, global_region, ph.map()["kRegY2W3Central"][i], &scalar_str);
       scalar_params.set_ser_data(SerializedData(scalar_str));
 
 
@@ -210,20 +209,20 @@ namespace application {
                       scalar_advance_job_ids[i],
                       read, write, before, after,
                       scalar_params, true,
-                      kRegY2W3Central[i]);
+                      ph.map()["kRegY2W3Central"][i]);
     }
 
     MarkEndOfStage();
 
     for (int i = 0; i < update_ghost_velocities_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
+      LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, NULL);
+      LoadLogicalIdsInSet(this, &write, ph.map()["kRegY2W3CentralWGB"][i], APP_FACE_VEL_GHOST, NULL);
 
       nimbus::Parameter update_ghost_velocities_params;
       std::string update_ghost_velocities_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &update_ghost_velocities_str);
+      SerializeParameter(frame, time, dt, global_region, ph.map()["kRegY2W3Central"][i], &update_ghost_velocities_str);
       update_ghost_velocities_params.set_ser_data(SerializedData(update_ghost_velocities_str));
 
       after.clear();
@@ -235,22 +234,22 @@ namespace application {
                       update_ghost_velocities_job_ids[i],
                       read, write, before, after,
                       update_ghost_velocities_params, true,
-                      kRegY2W3Central[i]);
+                      ph.map()["kRegY2W3Central"][i]);
     }
 
     MarkEndOfStage();
 
     for (int i = 0; i < convect_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL_GHOST, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Central[i], APP_FACE_VEL, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, APP_PSI_N, NULL);
+      LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL_GHOST, NULL);
+      LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Central"][i], APP_FACE_VEL, NULL);
+      LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W1Outer"][i], APP_PSI_D, APP_PSI_N, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, NULL);
+      LoadLogicalIdsInSet(this, &write, ph.map()["kRegY2W3Central"][i], APP_FACE_VEL, NULL);
 
       nimbus::Parameter convect_params;
       std::string convect_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i],
+      SerializeParameter(frame, time, dt, global_region, ph.map()["kRegY2W3Central"][i],
           &convect_str);
       convect_params.set_ser_data(SerializedData(convect_str));
 
@@ -263,7 +262,7 @@ namespace application {
                       convect_job_ids[i],
                       read, write, before, after,
                       convect_params, true,
-                      kRegY2W3Central[i]);
+                      ph.map()["kRegY2W3Central"][i]);
     }
 
     MarkEndOfStage();
@@ -290,7 +289,7 @@ namespace application {
                     projection_main_job_ids[0],
                     read, write, before, after,
                     projection_main_params, false,
-                    kRegW3Central[0]);
+                    ph.map()["kRegW3Central"][0]);
  
 
     MarkEndOfStage();

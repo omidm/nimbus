@@ -50,6 +50,33 @@ namespace application {
             Log *translator_log;
             SmokeApp();
             virtual void Load();
+
+            void set_scale(uint64_t scale);
+            void set_part_num_x(uint64_t part_num_x);
+            void set_part_num_y(uint64_t part_num_y);
+            void set_part_num_z(uint64_t part_num_z);
+            void set_projection_part_num_x(uint64_t projection_part_num_x);
+            void set_projection_part_num_y(uint64_t projection_part_num_y);
+            void set_projection_part_num_z(uint64_t projection_part_num_z);
+            void set_last_frame(uint64_t last_frame);
+            void set_max_iterations(uint64_t max_iterations);
+            void set_global_write(bool flag);
+
+            uint64_t projection_part_num_x() {return projection_part_num_x_;}
+            uint64_t projection_part_num_y() {return projection_part_num_y_;}
+            uint64_t projection_part_num_z() {return projection_part_num_z_;}
+
+        private:
+            uint64_t scale_;
+            uint64_t part_num_x_;
+            uint64_t part_num_y_;
+            uint64_t part_num_z_;
+            uint64_t projection_part_num_x_;
+            uint64_t projection_part_num_y_;
+            uint64_t projection_part_num_z_;
+            uint64_t last_frame_;
+            uint64_t max_iterations_;
+            bool global_write_;
     };
 
 } // namespace application

@@ -31,7 +31,6 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/app_data_prototypes.cc
     ${PROJECT_SOURCE_DIR}/app_data_scalar_array.cc
     ${PROJECT_SOURCE_DIR}/app_data_compressed_scalar_array.cc
-    ${PROJECT_SOURCE_DIR}/data_def.cc
     ${PROJECT_SOURCE_DIR}/data_face_array.cc
     ${PROJECT_SOURCE_DIR}/data_scalar_array.cc
     ${PROJECT_SOURCE_DIR}/data_compressed_scalar_array.cc
@@ -49,7 +48,6 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/nimbus_thread_queue.cc
     ${PROJECT_SOURCE_DIR}/physbam_tools.cc
     ${PROJECT_SOURCE_DIR}/physbam_utils.cc
-    ${PROJECT_SOURCE_DIR}/reg_def.cc
     ${PROJECT_SOURCE_DIR}/smoke_app.cc
     ${PROJECT_SOURCE_DIR}/smoke_driver.cc
     ${PROJECT_SOURCE_DIR}/smoke_driver_initializers.cc
@@ -91,7 +89,6 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/app_data_scalar_array.h
     ${PROJECT_SOURCE_DIR}/data_include.h
     ${PROJECT_SOURCE_DIR}/data_names.h
-    ${PROJECT_SOURCE_DIR}/data_def.h
     ${PROJECT_SOURCE_DIR}/data_face_array.h
     ${PROJECT_SOURCE_DIR}/data_scalar_array.h
     ${PROJECT_SOURCE_DIR}/app_data_compressed_scalar_array.h
@@ -115,7 +112,6 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/physbam_include.h
     ${PROJECT_SOURCE_DIR}/physbam_tools.h
     ${PROJECT_SOURCE_DIR}/physbam_utils.h
-    ${PROJECT_SOURCE_DIR}/reg_def.h
     ${PROJECT_SOURCE_DIR}/smoke_app.h
     ${PROJECT_SOURCE_DIR}/smoke_driver.h
     ${PROJECT_SOURCE_DIR}/smoke_example.h

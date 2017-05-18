@@ -65,7 +65,6 @@ void JobProjectionCalculateBoundaryConditionPartOne::Execute(
       "Executing PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE job.\n");
 
   InitConfig init_config;
-  init_config.use_cache = true;
   init_config.set_boundary_condition = false;
 
   T dt;

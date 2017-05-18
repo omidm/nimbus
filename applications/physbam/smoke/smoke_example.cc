@@ -13,7 +13,6 @@
 #include "applications/physbam/smoke/data_include.h"
 #include "applications/physbam/smoke/options.h"
 #include "applications/physbam/smoke/parameters.h"
-#include "applications/physbam/smoke/reg_def.h"
 #include "applications/physbam/smoke/smoke_example.h"
 #include "src/data/physbam/translator_physbam_old.h"
 #include "src/data/scalar_data.h"
@@ -51,7 +50,6 @@ SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
     boundary(0)
 {
     pthread_mutex_init(&lock, 0);
-    use_cache   = false;
     cache_fv    = NULL;
     cache_fvg   = NULL;
     cache_psi_n = NULL;
@@ -96,7 +94,6 @@ SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
 
 {
     pthread_mutex_init(&lock, 0);
-    use_cache   = false;
     cache_fv    = cache->fv;
     cache_fvg   = cache->fvg;
     cache_psi_n = cache->psi_n;
@@ -440,10 +437,6 @@ template<class TV> void SMOKE_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
     application::ScopeTimer sope_timer("saving_in");
-    if (!(use_cache && application::kUseCache)) {
-      Save_To_Nimbus_No_Cache(job, da, frame);
-      return;
-    }
 
     // nimbus::int_dimension_t array_shift[3] = {
     //     local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
@@ -808,10 +801,6 @@ template<class TV> void SMOKE_EXAMPLE<TV>::
 Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
     application::ScopeTimer scope_timer("loading_in");
-    if (!(use_cache && application::kUseCache)) {
-      Load_From_Nimbus_No_Cache(job, da, frame);
-      return;
-    }
 
     // nimbus::int_dimension_t array_shift[3] = {
     //    local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};

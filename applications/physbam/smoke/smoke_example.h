@@ -76,7 +76,6 @@ public:
     nimbus::TranslatorPhysBAMOld<TV> translator;
 
     // cache objects
-    bool use_cache;
     typedef typename application::AppDataFaceArray<T> TAppDataFaceArray;
     typedef typename application::AppDataFaceArray<bool> BoolAppDataFaceArray;
     typedef typename application::AppDataScalarArray<T> TAppDataScalarArray;

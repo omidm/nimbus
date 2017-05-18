@@ -69,7 +69,6 @@ void JobProjectionStepThree::Execute(
   dbg(APP_LOG, "Executing PROJECTION_STEP_THREE job.\n");
 
   InitConfig init_config;
-  init_config.use_cache = true;
   T dt;
   int iteration;
   std::string params_str(params.ser_data().data_ptr_raw(),
@@ -88,7 +87,7 @@ void JobProjectionStepThree::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
-  pcg_temp.Set_Maximum_Iterations(10);
+  pcg_temp.Set_Maximum_Iterations(application::kMaxIterations);
   pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
   pcg_temp.cg_restart_iterations = 40;
 

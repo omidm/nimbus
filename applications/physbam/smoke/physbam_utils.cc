@@ -305,29 +305,12 @@ bool InitializeExampleAndDriver(
   dbg(APP_LOG, "Global region: %s\n", init_config.global_region.ToNetworkData().c_str());
   dbg(APP_LOG, "Local region: %s\n", init_config.local_region.ToNetworkData().c_str());
   {
-    double cache_lookup_time = 0;
-    double init_example_time = 0;
-    struct timespec start_time;
-    struct timespec t;
-    clock_gettime(CLOCK_REALTIME, &start_time);
-    if (init_config.use_cache && kUseCache) {
-      AppAppObjects cache;
-      GetAppAppObjects(init_config, data_config, *job, da, &cache);
-      clock_gettime(CLOCK_REALTIME, &t);
-      cache_lookup_time += difftime(t.tv_sec, start_time.tv_sec)
-	+ .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
-      clock_gettime(CLOCK_REALTIME, &start_time);
-      example = new PhysBAM::SMOKE_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
-					       &cache,
-					       init_config.use_threading,
-					       init_config.core_quota);
-      example->use_cache = true;
-    } else {
-      example = new PhysBAM::SMOKE_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
-                                               init_config.use_threading,
-                                               init_config.core_quota);
-      example->use_cache = false;
-    }
+    AppAppObjects cache;
+    GetAppAppObjects(init_config, data_config, *job, da, &cache);
+    example = new PhysBAM::SMOKE_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
+				       &cache,
+				       init_config.use_threading,
+				       init_config.core_quota);
     // parameters for nimbus
     example->local_region = init_config.local_region;
     example->kScale = init_config.global_region.dx();
@@ -346,12 +329,6 @@ bool InitializeExampleAndDriver(
     example->source.min_corner=point1;example->source.max_corner=point2;
 
     example->data_config.Set(data_config);
-    clock_gettime(CLOCK_REALTIME, &t);
-    init_example_time += difftime(t.tv_sec, start_time.tv_sec)
-      + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
-    dbg(APP_LOG, "\n[TIME] Job cache_loopup, %f seconds.\n", cache_lookup_time);
-    dbg(APP_LOG, "\n[TIME] Job init_example, %f seconds.\n", init_example_time);
-
   }
   {
     application::ScopeTimer scope_timer("init_driver");
@@ -364,10 +341,8 @@ bool InitializeExampleAndDriver(
     // physbam initialization
     if (init_config.init_phase)
       driver->InitializeFirstDistributed(job, da);
-    else if (init_config.use_cache && kUseCache)
-      driver->InitializeUseCache(job, da);
     else
-      driver->Initialize(job, da);
+      driver->InitializeUseCache(job, da);
   }
 
   dbg(APP_LOG, "Exit initialize_example_driver.\n");

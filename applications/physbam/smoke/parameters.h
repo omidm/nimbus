@@ -45,12 +45,29 @@
 #include "applications/physbam/smoke/physbam_include.h"
 #include "src/shared/dbg.h"
 #include "src/shared/geometric_region.h"
+#include "src/application_utils/partition_handler.h"
 
 #define APP_LOG DBG_TEMP
 #define APP_LOG_STR "temp"
 #define TRANSLATE_STR "translate"
 
+// chnage the default variables here -omidm
+#define DEFAULT_SCALE 64
+#define DEFAULT_APP_PART_NUM_X 2
+#define DEFAULT_APP_PART_NUM_Y 2
+#define DEFAULT_APP_PART_NUM_Z 2
+#define DEFAULT_APP_PROJ_PART_NUM_X 2
+#define DEFAULT_APP_PROJ_PART_NUM_Y 2
+#define DEFAULT_APP_PROJ_PART_NUM_Z 2
+#define DEFAULT_LAST_FRAME 10
+#define DEFAULT_MAX_ITERATIONS 40
+#define DEFAULT_USE_GLOBAL_WRITE true
+
+
 namespace application {
+
+    // Partition Handler used by the jobs. 
+    extern nimbus::PartitionHandler ph;
 
     // simulation dimension
     const int kDimension = 3;
@@ -63,20 +80,27 @@ namespace application {
     typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
     typedef typename PhysBAM::ARRAY<T, FaceIndex> FaceArray;
 
-    // application specific parameters and constants
-    const bool kUseGlobalWrite = true;
-    const bool kUseCache = true;
+    // application specific variables, set by SmokeApp::Load() -omidm
+    extern uint64_t kScale;
+    extern uint64_t kAppPartNum;
+    extern uint64_t kAppPartNumX;
+    extern uint64_t kAppPartNumY;
+    extern uint64_t kAppPartNumZ;
+    extern uint64_t kProjAppPartNum;
+    extern uint64_t kProjAppPartNumX;
+    extern uint64_t kProjAppPartNumY;
+    extern uint64_t kProjAppPartNumZ;
+    extern uint64_t kLastFrame;
+    extern uint64_t kMaxIterations;
+    extern bool kUseGlobalWrite;
+    extern nimbus::GeometricRegion kDefaultRegion;
+
+    // constant application specific parameters.
     const int kThreadsNum = 1;
-    const int kScale = 64;
-    const int kAppPartNum = 8;
     const int kGhostNum = 3;
     const int kGhostW[3] = {kGhostNum, kGhostNum, kGhostNum};
     const int kPressureGhostNum = 1;
-    const int kLastFrame = 10;
     const std::string kOutputDir = "output";
-    // follow physbam convenctions here, otherwise translator becomes messy
-    const nimbus::GeometricRegion kDefaultRegion(1, 1, 1, kScale, kScale, kScale);
-
 } // namespace application
 
 #endif  // NIMBUS_APPLICATION_SMOKE_PARAMETERS_H_

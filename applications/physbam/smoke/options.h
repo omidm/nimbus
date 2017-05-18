@@ -59,7 +59,6 @@ struct InitConfig {
   bool set_boundary_condition;
   GeometricRegion global_region;
   GeometricRegion local_region;
-  bool use_cache;
   bool use_threading;
   int core_quota;
 
@@ -72,7 +71,6 @@ struct InitConfig {
     init_phase = false;
     init_part = 0;
     set_boundary_condition = true;
-    use_cache = false;
     use_threading = false;
     core_quota = 1;
   }

@@ -66,7 +66,6 @@ void JobProjectionTransformPressure::Execute(
   dbg(APP_LOG, "Executing PROJECTION_TRANSFORM_PRESSURE job.\n");
 
   InitConfig init_config;
-  init_config.use_cache = true;
   init_config.set_boundary_condition = false;
   T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
@@ -82,7 +81,7 @@ void JobProjectionTransformPressure::Execute(
   data_config.SetFlag(DataConfig::INDEX_M2C);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
-  pcg_temp.Set_Maximum_Iterations(10);
+  pcg_temp.Set_Maximum_Iterations(application::kMaxIterations);
   pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
   pcg_temp.cg_restart_iterations = 40;
 

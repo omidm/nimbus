@@ -46,7 +46,6 @@
 #include <string>
 #include "applications/physbam/smoke/app_utils.h"
 #include "applications/physbam/smoke/data_names.h"
-#include "applications/physbam/smoke/reg_def.h"
 #include "src/data/physbam/physbam_data.h"
 #include "src/data/physbam/protobuf_compiled/water_parameter.pb.h"
 #include "src/shared/logical_data_object.h"
@@ -281,7 +280,7 @@ namespace application {
           if (result == NULL) {
             result = d;
           } else if (result != d) {
-            dbg(DBG_ERROR, "More than one physical data instances matches, "
+            dbg(DBG_APP, "More than one physical data instances matches, "
                 "but only one is expected.\n");
             // return NULL;
             // [TODO] Variable in read/write set will appear twice. Maybe it

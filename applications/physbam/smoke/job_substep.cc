@@ -46,7 +46,6 @@
 #include "applications/physbam/smoke/smoke_example.h"
 #include "applications/physbam/smoke/job_names.h"
 #include "applications/physbam/smoke/data_names.h"
-#include "applications/physbam/smoke/reg_def.h"
 #include "src/shared/dbg.h"
 #include "src/shared/nimbus.h"
 #include "src/worker/dependency_query.h"
@@ -79,7 +78,6 @@ void JobSubstep::Execute(
   PhysBAM::SMOKE_DRIVER<TV> *driver;
 
   init_config.set_boundary_condition = false;
-  init_config.use_cache = true;
   // Threading settings.
   init_config.use_threading = use_threading();
   init_config.core_quota = core_quota();

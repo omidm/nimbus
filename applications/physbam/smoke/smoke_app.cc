@@ -40,7 +40,6 @@
 #include "applications/physbam/smoke/app_data_prototypes.h"
 #include "applications/physbam/smoke/data_include.h"
 #include "applications/physbam/smoke/job_include.h"
-#include "applications/physbam/smoke/reg_def.h"
 #include "applications/physbam/smoke/smoke_app.h"
 #include "src/data/physbam/translator_physbam.h"
 #include "src/data/physbam/translator_physbam_old.h"
@@ -57,8 +56,6 @@
 #include "stdio.h"
 
 
-
-
 #include <boost/program_options.hpp>
 extern "C" nimbus::Application * ApplicationBuilder(int argc, char *argv[]) {
   namespace po = boost::program_options;
@@ -72,9 +69,6 @@ extern "C" nimbus::Application * ApplicationBuilder(int argc, char *argv[]) {
   uint64_t projection_part_num_z;
   uint64_t last_frame;
   uint64_t max_iterations;
-  uint64_t iteration_batch;
-  uint64_t smart_projection_level;
-  float water_level;
 
   po::options_description desc("Smoke Application Options");
   desc.add_options()
@@ -90,10 +84,6 @@ extern "C" nimbus::Application * ApplicationBuilder(int argc, char *argv[]) {
     ("ppnz", po::value<uint64_t>(&projection_part_num_z), "projection partition number along z") //NOLINT
     ("last_frame,e", po::value<uint64_t>(&last_frame), "last frame to compute") //NOLINT
     ("maxi", po::value<uint64_t>(&max_iterations), "maximum projection iterations") //NOLINT
-    ("ibatch", po::value<uint64_t>(&iteration_batch), "projection iteration batch") //NOLINT
-    ("psl", po::value<uint64_t>(&smart_projection_level), "smart projection level") //NOLINT
-    ("wl", po::value<float>(&water_level), "initial water level, float between 0 and 1") //NOLINT
-    ("dpb", "deactivate projection bottleneck job")
     ("dgw", "deactivate one global write per frame");
 
   po::variables_map vm;
@@ -121,78 +111,120 @@ extern "C" nimbus::Application * ApplicationBuilder(int argc, char *argv[]) {
 
   application::SmokeApp *app = new application::SmokeApp();
 
-  // if (vm.count("scale")) {
-  //   app->set_scale(scale);
-  // }
+  if (vm.count("scale")) {
+    app->set_scale(scale);
+  }
 
-  // if (vm.count("pnx")) {
-  //   app->set_part_num_x(part_num_x);
-  // }
+  if (vm.count("pnx")) {
+    app->set_part_num_x(part_num_x);
+  }
 
-  // if (vm.count("pny")) {
-  //   app->set_part_num_y(part_num_y);
-  // }
+  if (vm.count("pny")) {
+    app->set_part_num_y(part_num_y);
+  }
 
-  // if (vm.count("pnz")) {
-  //   app->set_part_num_z(part_num_z);
-  // }
+  if (vm.count("pnz")) {
+    app->set_part_num_z(part_num_z);
+  }
 
-  // if (vm.count("ppnx")) {
-  //   app->set_projection_part_num_x(projection_part_num_x);
-  // }
+  if (vm.count("ppnx")) {
+    app->set_projection_part_num_x(projection_part_num_x);
+  }
 
-  // if (vm.count("ppny")) {
-  //   app->set_projection_part_num_y(projection_part_num_y);
-  // }
+  if (vm.count("ppny")) {
+    app->set_projection_part_num_y(projection_part_num_y);
+  }
 
-  // if (vm.count("ppnz")) {
-  //   app->set_projection_part_num_z(projection_part_num_z);
-  // }
+  if (vm.count("ppnz")) {
+    app->set_projection_part_num_z(projection_part_num_z);
+  }
 
-  // if (vm.count("last_frame")) {
-  //   app->set_last_frame(last_frame);
-  // }
+  if (vm.count("last_frame")) {
+    app->set_last_frame(last_frame);
+  }
 
-  // if (vm.count("psl")) {
-  //   app->set_smart_projection(smart_projection_level);
-  // }
+  if (vm.count("maxi")) {
+    app->set_max_iterations(max_iterations);
+  }
 
-  // if (vm.count("wl")) {
-  //   app->set_water_level(water_level);
-  // }
-
-  // if (vm.count("maxi")) {
-  //   app->set_max_iterations(max_iterations);
-  // }
-
-  // if (vm.count("ibatch")) {
-  //   app->set_iteration_batch(iteration_batch);
-  // }
-
-  // if (vm.count("dpb")) {
-  //   app->set_spawn_projection_loop_bottleneck(false);
-  // }
-
-  // if (vm.count("dgw")) {
-  //   app->set_global_write(false);
-  // }
+  if (vm.count("dgw")) {
+    app->set_global_write(false);
+  }
 
   return app;
 }
 
 
-
-
-
-
-
-
-
-
 namespace application {
 
+nimbus::PartitionHandler ph;
+
+uint64_t kScale;
+uint64_t kAppPartNum;
+uint64_t kAppPartNumX;
+uint64_t kAppPartNumY;
+uint64_t kAppPartNumZ;
+uint64_t kProjAppPartNum;
+uint64_t kProjAppPartNumX;
+uint64_t kProjAppPartNumY;
+uint64_t kProjAppPartNumZ;
+uint64_t kLastFrame;
+uint64_t kMaxIterations;
+bool kUseGlobalWrite;
+nimbus::GeometricRegion kDefaultRegion;
+
     SmokeApp::SmokeApp() {
+      scale_ = DEFAULT_SCALE;
+      part_num_x_ = DEFAULT_APP_PART_NUM_X;
+      part_num_y_ = DEFAULT_APP_PART_NUM_Y;
+      part_num_z_ = DEFAULT_APP_PART_NUM_Z;
+      projection_part_num_x_ = DEFAULT_APP_PROJ_PART_NUM_X;
+      projection_part_num_y_ = DEFAULT_APP_PROJ_PART_NUM_Y;
+      projection_part_num_z_ = DEFAULT_APP_PROJ_PART_NUM_Z;
+      last_frame_ = DEFAULT_LAST_FRAME;
+      max_iterations_ = DEFAULT_MAX_ITERATIONS;
+      global_write_ = DEFAULT_USE_GLOBAL_WRITE;
       translator_log = NULL;
+    }
+
+    void SmokeApp::set_scale(uint64_t scale) {
+      scale_ = scale;
+    }
+
+    void SmokeApp::set_part_num_x(uint64_t part_num_x) {
+      part_num_x_ = part_num_x;
+    }
+
+    void SmokeApp::set_part_num_y(uint64_t part_num_y) {
+      part_num_y_ = part_num_y;
+    }
+
+    void SmokeApp::set_part_num_z(uint64_t part_num_z) {
+      part_num_z_ = part_num_z;
+    }
+
+    void SmokeApp::set_projection_part_num_x(uint64_t projection_part_num_x) {
+      projection_part_num_x_ = projection_part_num_x;
+    }
+
+    void SmokeApp::set_projection_part_num_y(uint64_t projection_part_num_y) {
+      projection_part_num_y_ = projection_part_num_y;
+    }
+
+    void SmokeApp::set_projection_part_num_z(uint64_t projection_part_num_z) {
+      projection_part_num_z_ = projection_part_num_z;
+    }
+
+    void SmokeApp::set_last_frame(uint64_t last_frame) {
+      last_frame_ = last_frame;
+    }
+
+    void SmokeApp::set_max_iterations(uint64_t max_iterations) {
+      max_iterations_ = max_iterations;
+    }
+
+    void SmokeApp::set_global_write(bool flag) {
+      global_write_ = flag;
     }
 
     /* Register data and job types and initialize constant quantities used by
@@ -203,13 +235,151 @@ namespace application {
         // dbg_add_mode(APP_LOG_STR);
         // dbg_add_mode(TRANSLATE_STR);
 
-        dbg(APP_LOG, "Loading smoke application\n");
+        // initialize application specific parameters and constants
+        assert((part_num_x_ % projection_part_num_x_) == 0);
+        assert((part_num_y_ % projection_part_num_y_) == 0);
+        assert((part_num_z_ % projection_part_num_z_) == 0);
+        kScale = scale_;
+        kAppPartNumX = part_num_x_;
+        kAppPartNumY = part_num_y_;
+        kAppPartNumZ = part_num_z_;
+        kAppPartNum = part_num_x_ * part_num_y_ * part_num_z_;
+        kProjAppPartNumX = projection_part_num_x_;
+        kProjAppPartNumY = projection_part_num_y_;
+        kProjAppPartNumZ = projection_part_num_z_;
+        kProjAppPartNum = projection_part_num_x_ * projection_part_num_y_ * projection_part_num_z_;
+        kDefaultRegion.Rebuild(1, 1, 1, scale_, scale_, scale_);
+        kLastFrame = last_frame_;
+        kMaxIterations = max_iterations_;
+        kUseGlobalWrite = global_write_;
 
-        // Region constants
-        InitializeRegions();
 
         // Initialize the app data prototypes.
         InitializeAppDataPrototypes(kDefaultRegion);
+
+        dbg(APP_LOG, "Loading smoke application\n");
+
+        // Region constants
+        // Old code, using the code generated by python scripts -omidm
+        // InitializeRegions();
+
+        ph.AddPartitions("kRegW3",
+                         kScale, kScale, kScale, 3, 3, 3, 1, 1, 1,
+                         nimbus::PartitionHandler::CENTRAL);
+
+        ph.AddPartitions("kRegW3",
+                         kScale, kScale, kScale, 3, 3, 3, 1, 1, 1,
+                         nimbus::PartitionHandler::OUTER);
+
+        ph.AddPartitions("kRegW3",
+                         kScale, kScale, kScale, 3, 3, 3, 1, 1, 1,
+                         nimbus::PartitionHandler::INNER);
+
+        ph.AddPartitions("kRegW1",
+                         kScale, kScale, kScale, 1, 1, 1, 1, 1, 1,
+                         nimbus::PartitionHandler::CENTRAL);
+
+        ph.AddPartitions("kRegW1",
+                         kScale, kScale, kScale, 1, 1, 1, 1, 1, 1,
+                         nimbus::PartitionHandler::OUTER);
+
+        ph.AddPartitions("kRegW1",
+                         kScale, kScale, kScale, 1, 1, 1, 1, 1, 1,
+                         nimbus::PartitionHandler::INNER);
+
+        ph.AddPartitions("kRegW0",
+                         kScale, kScale, kScale, 0, 0, 0, 1, 1, 1,
+                         nimbus::PartitionHandler::CENTRAL);
+
+        ph.AddPartitions("kRegY2W3",
+                         kScale, kScale, kScale, 3, 3, 3,
+                         kAppPartNumX, kAppPartNumY, kAppPartNumZ,
+                         nimbus::PartitionHandler::CENTRAL);
+
+        ph.AddPartitions("kRegY2W3",
+                         kScale, kScale, kScale, 3, 3, 3,
+                         kAppPartNumX, kAppPartNumY, kAppPartNumZ,
+                         nimbus::PartitionHandler::OUTER);
+
+        ph.AddPartitions("kRegY2W3",
+                         kScale, kScale, kScale, 3, 3, 3,
+                         kAppPartNumX, kAppPartNumY, kAppPartNumZ,
+                         nimbus::PartitionHandler::INNER);
+
+        ph.AddPartitions("kRegY2W3",
+                         kScale, kScale, kScale, 3, 3, 3,
+                         kAppPartNumX, kAppPartNumY, kAppPartNumZ,
+                         nimbus::PartitionHandler::CENTRAL_WGB);
+
+        ph.AddPartitions("kRegY2W1",
+                         kScale, kScale, kScale, 1, 1, 1,
+                         kAppPartNumX, kAppPartNumY, kAppPartNumZ,
+                         nimbus::PartitionHandler::CENTRAL);
+
+        ph.AddPartitions("kRegY2W1",
+                         kScale, kScale, kScale, 1, 1, 1,
+                         kAppPartNumX, kAppPartNumY, kAppPartNumZ,
+                         nimbus::PartitionHandler::OUTER);
+
+        ph.AddPartitions("kRegY2W1",
+                         kScale, kScale, kScale, 1, 1, 1,
+                         kAppPartNumX, kAppPartNumY, kAppPartNumZ,
+                         nimbus::PartitionHandler::INNER);
+
+        ph.AddPartitions("kRegY2W1",
+                         kScale, kScale, kScale, 1, 1, 1,
+                         kAppPartNumX, kAppPartNumY, kAppPartNumZ,
+                         nimbus::PartitionHandler::CENTRAL_WGB);
+
+        ph.AddPartitions("kRegY2W0",
+                         kScale, kScale, kScale, 0, 0, 0,
+                         kAppPartNumX, kAppPartNumY, kAppPartNumZ,
+                         nimbus::PartitionHandler::CENTRAL);
+
+        ph.AddPartitions("kProjRegY2W3",
+                         kScale, kScale, kScale, 3, 3, 3,
+                         kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
+                         nimbus::PartitionHandler::CENTRAL);
+
+        ph.AddPartitions("kProjRegY2W3",
+                         kScale, kScale, kScale, 3, 3, 3,
+                         kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
+                         nimbus::PartitionHandler::OUTER);
+
+        ph.AddPartitions("kProjRegY2W3",
+                         kScale, kScale, kScale, 3, 3, 3,
+                         kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
+                         nimbus::PartitionHandler::INNER);
+
+        ph.AddPartitions("kProjRegY2W3",
+                         kScale, kScale, kScale, 3, 3, 3,
+                         kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
+                         nimbus::PartitionHandler::CENTRAL_WGB);
+
+        ph.AddPartitions("kProjRegY2W1",
+                         kScale, kScale, kScale, 1, 1, 1,
+                         kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
+                         nimbus::PartitionHandler::CENTRAL);
+
+        ph.AddPartitions("kProjRegY2W1",
+                         kScale, kScale, kScale, 1, 1, 1,
+                         kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
+                         nimbus::PartitionHandler::OUTER);
+
+        ph.AddPartitions("kProjRegY2W1",
+                         kScale, kScale, kScale, 1, 1, 1,
+                         kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
+                         nimbus::PartitionHandler::INNER);
+
+        ph.AddPartitions("kProjRegY2W1",
+                         kScale, kScale, kScale, 1, 1, 1,
+                         kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
+                         nimbus::PartitionHandler::CENTRAL_WGB);
+
+        ph.AddPartitions("kProjRegY2W0",
+                         kScale, kScale, kScale, 0, 0, 0,
+                         kProjAppPartNumX, kProjAppPartNumY, kProjAppPartNumZ,
+                         nimbus::PartitionHandler::CENTRAL);
 
         // PhysBAM logging and R/W
         PhysBAM::LOG::Initialize_Logging(false, false, 1<<30, true, kThreadsNum);
@@ -220,11 +390,11 @@ namespace application {
         RegisterData(APP_FACE_VEL, new DataFaceArray<float>(APP_FACE_VEL));
         dbg(APP_LOG, "Registering %s\n", APP_FACE_VEL_GHOST);
         RegisterData(APP_FACE_VEL_GHOST, new DataFaceArray<float>(APP_FACE_VEL_GHOST));
-	dbg(APP_LOG, "Registering %s\n", APP_DENSITY);
+	      dbg(APP_LOG, "Registering %s\n", APP_DENSITY);
         RegisterData(APP_DENSITY, new DataScalarArray<float>(APP_DENSITY));
-	dbg(APP_LOG, "Registering %s\n", APP_DENSITY_GHOST);
-	RegisterData(APP_DENSITY_GHOST, new DataScalarArray<float>(APP_DENSITY_GHOST));
-	dbg(APP_LOG, "Registering %s\n", APP_DT);
+	      dbg(APP_LOG, "Registering %s\n", APP_DENSITY_GHOST);
+	      RegisterData(APP_DENSITY_GHOST, new DataScalarArray<float>(APP_DENSITY_GHOST));
+	      dbg(APP_LOG, "Registering %s\n", APP_DT);
         RegisterData(APP_DT, new nimbus::ScalarData<float>(APP_DT));
 
         // These Nimbus data types are used in projection but not used in
@@ -330,17 +500,17 @@ namespace application {
         // MATRIX_C.
         dbg(APP_LOG, "Registering %s\n", APP_MATRIX_C);
         RegisterData(APP_MATRIX_C, new DataSparseMatrix(APP_MATRIX_C));
-	// VECTOR_PRESSURE.
-	dbg(APP_LOG, "Registering %s\n", APP_VECTOR_PRESSURE);
-	RegisterData(APP_VECTOR_PRESSURE,
+	      // TOR_PRESSURE.
+	      dbg(APP_LOG, "Registering %s\n", APP_VECTOR_PRESSURE);
+	      RegisterData(APP_VECTOR_PRESSURE,
 		     new DataRawVectorNd(APP_VECTOR_PRESSURE));
         // VECTOR_Z.
         dbg(APP_LOG, "Registering %s\n", APP_VECTOR_Z);
         RegisterData(APP_VECTOR_Z, new DataRawVectorNd(APP_VECTOR_Z));
-	// VECTOR_P_META_FORMAT.
-	dbg(APP_LOG, "Registering %s\n", APP_VECTOR_P_META_FORMAT);
-	RegisterData(APP_VECTOR_P_META_FORMAT,
-		     new DataCompressedScalarArray<float>(APP_VECTOR_P_META_FORMAT));
+	      // VECTOR_P_META_FORMAT.
+	      dbg(APP_LOG, "Registering %s\n", APP_VECTOR_P_META_FORMAT);
+        RegisterData(APP_VECTOR_P_META_FORMAT,
+		                 new DataCompressedScalarArray<float>(APP_VECTOR_P_META_FORMAT));
         // VECTOR_TEMP.
         dbg(APP_LOG, "Registering %s\n", APP_VECTOR_TEMP);
         RegisterData(APP_VECTOR_TEMP, new DataRawVectorNd(APP_VECTOR_TEMP));
@@ -348,11 +518,11 @@ namespace application {
         RegisterJob(MAIN, new JobMain(this));
         RegisterJob(INITIALIZE, new JobInitialize(this));
 	
-	RegisterJob(SUBSTEP, new JobSubstep(this));
-	RegisterJob(UPDATE_GHOST_DENSITIES, new JobUpdateGhostDensities(this));
-	RegisterJob(SCALAR_ADVANCE, new JobScalarAdvance(this));
-	RegisterJob(UPDATE_GHOST_VELOCITIES, new JobUpdateGhostVelocities(this));
-	RegisterJob(CONVECT, new JobConvect(this));
+	      RegisterJob(SUBSTEP, new JobSubstep(this));
+	      RegisterJob(UPDATE_GHOST_DENSITIES, new JobUpdateGhostDensities(this));
+	      RegisterJob(SCALAR_ADVANCE, new JobScalarAdvance(this));
+	      RegisterJob(UPDATE_GHOST_VELOCITIES, new JobUpdateGhostVelocities(this));
+	      RegisterJob(CONVECT, new JobConvect(this));
 
         RegisterJob(LOOP_ITERATION, new JobLoopIteration(this));
         RegisterJob(LOOP_ITERATION_PART_TWO, new JobLoopIterationPartTwo(this));
@@ -360,8 +530,8 @@ namespace application {
         RegisterJob(WRITE_OUTPUT, new JobWriteOutput(this));
 
         RegisterJob(PROJECTION_MAIN, new JobProjectionMain(this));
-	RegisterJob(PROJECTION_TRANSFORM_PRESSURE,
-		    new JobProjectionTransformPressure(this));
+	      RegisterJob(PROJECTION_TRANSFORM_PRESSURE,
+		                new JobProjectionTransformPressure(this));
         RegisterJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
                     new JobProjectionCalculateBoundaryConditionPartOne(this));
         RegisterJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,

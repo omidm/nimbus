@@ -42,7 +42,6 @@
 #include "applications/physbam/smoke/physbam_utils.h"
 #include "applications/physbam/smoke/job_names.h"
 #include "applications/physbam/smoke/data_names.h"
-#include "applications/physbam/smoke/reg_def.h"
 #include "applications/physbam/smoke/smoke_example.h"
 #include "src/shared/dbg.h"
 #include "src/shared/nimbus.h"
@@ -136,14 +135,14 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
     for (int i = 0; i < calculate_dt_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
+      LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_DT, NULL);
+      LoadLogicalIdsInSet(this, &write, ph.map()["kRegY2W3Central"][i], APP_DT, NULL);
 
       nimbus::Parameter dt_params;
       std::string dt_str;
       SerializeParameter(frame, time, 0, global_region,
-                         kRegY2W3Central[i], &dt_str);
+                         ph.map()["kRegY2W3Central"][i], &dt_str);
       dt_params.set_ser_data(SerializedData(dt_str));
 
       after.clear();
@@ -155,13 +154,13 @@ void JobLoopIterationPartTwo::SpawnJobs(
                       calculate_dt_job_ids[i],
                       read, write, before, after,
                       dt_params, true,
-                      kRegY2W3Central[i]);
+                      ph.map()["kRegY2W3Central"][i]);
     }
 
     MarkEndOfStage();
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW3Central[0], APP_DT, NULL);
+    LoadLogicalIdsInSet(this, &read, ph.map()["kRegW3Central"][0], APP_DT, NULL);
     write.clear();
     nimbus::Parameter iter_params;
     std::string iter_str;
@@ -178,7 +177,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
                     job_ids[1],
                     read, write, before, after,
                     iter_params, false,
-                    kRegW3Central[0]);
+                    ph.map()["kRegW3Central"][0]);
  
     MarkEndOfStage();
 
@@ -189,8 +188,8 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
     if (kUseGlobalWrite) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_DENSITY, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D,
+      LoadLogicalIdsInSet(this, &read, ph.map()["kRegW3Outer"][0], APP_FACE_VEL, APP_DENSITY, NULL);
+      LoadLogicalIdsInSet(this, &read, ph.map()["kRegW1Outer"][0], APP_PSI_D,
                           APP_PSI_N, NULL);
       write.clear();
 
@@ -209,18 +208,18 @@ void JobLoopIterationPartTwo::SpawnJobs(
                       write_output_job_ids[0],
                       read, write, before, after,
                       temp_params, true,
-                      kRegW3Central[0]);
+                      ph.map()["kRegW3Central"][0]);
     } else {
       for (int i = 0; i < write_output_job_num; ++i) {
         read.clear();
-        LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_DENSITY, NULL);
-        LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D,
+        LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, APP_DENSITY, NULL);
+        LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W1Outer"][i], APP_PSI_D,
                             APP_PSI_N, NULL);
         write.clear();
 
         nimbus::Parameter temp_params;
         std::string temp_str;
-        SerializeParameter(frame, time, dt, i+1, global_region, kRegY2W3Central[i],
+        SerializeParameter(frame, time, dt, i+1, global_region, ph.map()["kRegY2W3Central"][i],
                            &temp_str);
         temp_params.set_ser_data(SerializedData(temp_str));
 
@@ -233,7 +232,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
                         write_output_job_ids[i],
                         read, write, before, after,
                         temp_params, true,
-                        kRegY2W3Central[i]);
+                        ph.map()["kRegY2W3Central"][i]);
       }
     }
 
@@ -260,7 +259,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
                     job_ids[0],
                     read, write, before, after,
                     frame_params, false,
-                    kRegW3Central[0]);
+                    ph.map()["kRegW3Central"][0]);
  
     MarkEndOfStage();
 

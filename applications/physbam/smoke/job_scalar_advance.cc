@@ -67,7 +67,6 @@ void JobScalarAdvance::Execute(nimbus::Parameter params,
 
   // get time, dt, frame from the parameters.
   InitConfig init_config;
-  init_config.use_cache = true;
   // Threading settings.
   init_config.use_threading = use_threading();
   init_config.core_quota = core_quota();

@@ -48,7 +48,6 @@
 #include "applications/physbam/smoke/smoke_example.h"
 #include "applications/physbam/smoke/job_names.h"
 #include "applications/physbam/smoke/data_names.h"
-#include "applications/physbam/smoke/reg_def.h"
 #include "src/data/physbam/physbam_data.h"
 #include "src/shared/dbg.h"
 #include "src/shared/nimbus.h"
@@ -81,7 +80,7 @@ namespace application {
         T time = example->Time_At_Frame(frame);
         delete example;
 
-        if (frame < kLastFrame) {
+        if (frame < (int)kLastFrame) {
           //Spawn the loop iteration job to start computing the frame.
           dbg(APP_LOG, "Loop frame is spawning loop iteration job for frame %i.\n", frame);
 
@@ -99,9 +98,9 @@ namespace application {
 
           for (int i = 0; i < calculate_dt_job_num; ++i) {
             read.clear();
-	    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
+	          LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, NULL);
             write.clear();
-            LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_DT, NULL);
+            LoadLogicalIdsInSet(this, &write, ph.map()["kRegY2W3Central"][i], APP_DT, NULL);
 
             before.clear();
             after.clear();
@@ -109,7 +108,7 @@ namespace application {
             nimbus::Parameter dt_params;
             std::string dt_str;
             SerializeParameter(frame, time, 0, global_region,
-                               kRegY2W3Central[i], &dt_str);
+                               ph.map()["kRegY2W3Central"][i], &dt_str);
             dt_params.set_ser_data(SerializedData(dt_str));
             SpawnComputeJob(SUBSTEP,
                             calculate_dt_job_ids[i],
@@ -123,7 +122,7 @@ namespace application {
           iter_params.set_ser_data(SerializedData(str));
 
           read.clear();
-          LoadLogicalIdsInSet(this, &read, kRegW3Central[0], APP_DT, NULL);
+          LoadLogicalIdsInSet(this, &read, ph.map()["kRegW3Central"][0], APP_DT, NULL);
           write.clear();
 
           before.clear();
