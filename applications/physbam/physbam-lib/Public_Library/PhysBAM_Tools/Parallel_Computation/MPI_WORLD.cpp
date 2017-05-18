@@ -96,17 +96,26 @@ Initialize(bool force_mpi)
 #ifdef WIN32
             FILE* ompi_info=_popen("ompi_info -version ompi full","r");
 #else
-            FILE* ompi_info=popen("ompi_info -version ompi full","r");
+            FILE* ompi_info_1=popen("ompi_info -version ompi full","r");
+            FILE* ompi_info_2=popen("ompi_info -version","r");
 #endif
-            if(!ompi_info) PHYSBAM_FATAL_ERROR("Open MPI version check failed: couldn't run ompi_info");
-            char version[21];
-            if(!Find_Version(ompi_info," Open MPI: %20s",version))
+            if(!ompi_info_1 && !ompi_info_2) PHYSBAM_FATAL_ERROR("Open MPI version check failed: couldn't run ompi_info");
+            char version_1[21];
+            bool success_1 = Find_Version(ompi_info_1," Open MPI: %20s",version_1);
+            char version_2[21];
+            bool success_2 = Find_Version(ompi_info_2," Open MPI v%20s",version_2);
+            if(!success_1 && !success_2) {
                 PHYSBAM_FATAL_ERROR("Open MPI version check failed: couldn't parse ompi_info output");
-            if(compiled_version!=version) PHYSBAM_FATAL_ERROR(STRING_UTILITIES::string_sprintf("Open MPI version check failed: compiled with %s, run with %s",compiled_version.c_str(),version));
+            } else if (success_1) {
+              if(compiled_version!=version_1) PHYSBAM_FATAL_ERROR(STRING_UTILITIES::string_sprintf("Open MPI version check failed: compiled with %s, run with %s",compiled_version.c_str(),version_1));
+            } else {
+              if(compiled_version!=version_2) PHYSBAM_FATAL_ERROR(STRING_UTILITIES::string_sprintf("Open MPI version check failed: compiled with %s, run with %s",compiled_version.c_str(),version_2));
+            }
 #ifdef WIN32
             _pclose(ompi_info);
 #else
-            pclose(ompi_info);
+            pclose(ompi_info_1);
+            pclose(ompi_info_2);
 #endif
         }}
 #else
