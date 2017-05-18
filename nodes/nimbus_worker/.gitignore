@@ -1,5 +1,6 @@
 nimbus_worker
 output*
+split_output*
 *.txt
 _db*
 *log*
