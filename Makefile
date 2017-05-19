@@ -58,9 +58,15 @@ test-lr: extern src nodes applications
 	scripts/test-lr-basic.sh
 	scripts/test-lr-ft.sh
 
-test-water: extern src nodes applications
+test-water: extern src nodes
 	scripts/test-water-basic.sh
 	scripts/test-water-ft.sh
 
-test: test-stencil test-lr test-water
+test-smoke: extern src nodes
+	scripts/test-smoke-basic.sh
+	scripts/test-smoke-ft.sh
+
+test-basics: test-stencil test-lr
+test-graphics: test-water test-smoke
+test: test-basics test-graphics
 
