@@ -130,6 +130,12 @@ void JobLoopIterationPartTwo::SpawnJobs(
       frame, time, dt);
 
   if (!done) {
+    StartTemplate("__MARK_STAT_loop_iteration_part_two");
+  } else {
+    StartTemplate("loop_iteration_part_two_end");
+  }
+
+  if (!done) {
 
     // Spawning loop iteration for next iteration.
 
@@ -181,6 +187,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
  
     MarkEndOfStage();
 
+    EndTemplate("__MARK_STAT_loop_iteration_part_two");
   } else {
 
     std::vector<nimbus::job_id_t> loop_job_id;
@@ -263,6 +270,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
  
     MarkEndOfStage();
 
+    EndTemplate("loop_iteration_part_two_end");
   }  // end loop "if (done)".
 
   // if (time == 0) {

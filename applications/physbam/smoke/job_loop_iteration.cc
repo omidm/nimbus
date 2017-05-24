@@ -162,6 +162,8 @@ namespace application {
     struct timeval start_time;
     gettimeofday(&start_time, NULL);
 
+    StartTemplate("loop_iteration");
+
     for (int i = 0; i < update_ghost_densities_job_num; ++i) {
       read.clear();
       LoadLdoIdsInSet( &read, ph.map()["kRegY2W3Outer"][i], APP_DENSITY, NULL);
@@ -293,6 +295,8 @@ namespace application {
  
 
     MarkEndOfStage();
+
+    EndTemplate("loop_iteration");
 
     // job_query.PrintTimeProfile();
     // {

@@ -131,6 +131,8 @@ void JobProjectionMain::SpawnJobs(
   GetNewJobID(&calculate_boundary_condition_part_two_job_ids,
               calculate_boundary_condition_part_two_job_num);
 
+  StartTemplate("projection_main");
+
   for (int index = 0;
        index < calculate_boundary_condition_part_one_job_num;
        ++index) {
@@ -320,6 +322,8 @@ void JobProjectionMain::SpawnJobs(
   
 
   MarkEndOfStage();
+
+  EndTemplate("projection_main");
 
   // if (time == 0) {
   //   dbg(APP_LOG, "Print job dependency figure.\n");
