@@ -98,9 +98,9 @@ namespace application {
 
           for (int i = 0; i < calculate_dt_job_num; ++i) {
             read.clear();
-	          LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, NULL);
+	          LoadLdoIdsInSet( &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, NULL);
             write.clear();
-            LoadLogicalIdsInSet(this, &write, ph.map()["kRegY2W3Central"][i], APP_DT, NULL);
+            LoadLdoIdsInSet( &write, ph.map()["kRegY2W3Central"][i], APP_DT, NULL);
 
             before.clear();
             after.clear();
@@ -122,7 +122,7 @@ namespace application {
           iter_params.set_ser_data(SerializedData(str));
 
           read.clear();
-          LoadLogicalIdsInSet(this, &read, ph.map()["kRegW3Central"][0], APP_DT, NULL);
+          LoadLdoIdsInSet( &read, ph.map()["kRegW3Central"][0], APP_DT, NULL);
           write.clear();
 
           before.clear();

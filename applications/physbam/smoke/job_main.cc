@@ -258,14 +258,14 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
    */
   for (int i = 0; i < init_job_num; ++i) {
     read.clear();
-    LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, APP_FACE_VEL_GHOST, 
+    LoadLdoIdsInSet( &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, APP_FACE_VEL_GHOST, 
 			APP_DENSITY, APP_DENSITY_GHOST, NULL);
-    LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W1Outer"][i], APP_PSI_D, APP_PSI_N, NULL);
+    LoadLdoIdsInSet( &read, ph.map()["kRegY2W1Outer"][i], APP_PSI_D, APP_PSI_N, NULL);
 
     write.clear();
-    LoadLogicalIdsInSet(this, &write, ph.map()["kRegY2W3CentralWGB"][i], APP_FACE_VEL, APP_FACE_VEL_GHOST, 
+    LoadLdoIdsInSet( &write, ph.map()["kRegY2W3CentralWGB"][i], APP_FACE_VEL, APP_FACE_VEL_GHOST, 
 			APP_DENSITY, APP_DENSITY_GHOST, NULL);
-    LoadLogicalIdsInSet(this, &write, ph.map()["kRegY2W1CentralWGB"][i],
+    LoadLdoIdsInSet( &write, ph.map()["kRegY2W1CentralWGB"][i],
                         APP_PRESSURE,APP_PSI_D, APP_PSI_N,  NULL);
 
     nimbus::Parameter init_params;
@@ -291,8 +291,8 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
 
   if (kUseGlobalWrite) {
     read.clear();
-    LoadLogicalIdsInSet(this, &read, ph.map()["kRegW3Outer"][0], APP_FACE_VEL, APP_DENSITY, NULL);
-    LoadLogicalIdsInSet(this, &read, ph.map()["kRegW1Outer"][0], APP_PSI_D,
+    LoadLdoIdsInSet( &read, ph.map()["kRegW3Outer"][0], APP_FACE_VEL, APP_DENSITY, NULL);
+    LoadLdoIdsInSet( &read, ph.map()["kRegW1Outer"][0], APP_PSI_D,
                         APP_PSI_N, NULL);
     write.clear();
 
@@ -315,8 +315,8 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
   } else {
     for (int i = 0; i < write_output_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, APP_DENSITY, NULL);
-      LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W1Outer"][i], APP_PSI_D,
+      LoadLdoIdsInSet( &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, APP_DENSITY, NULL);
+      LoadLdoIdsInSet( &read, ph.map()["kRegY2W1Outer"][i], APP_PSI_D,
                           APP_PSI_N, NULL);
       write.clear();
 

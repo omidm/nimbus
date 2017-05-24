@@ -164,10 +164,10 @@ namespace application {
 
     for (int i = 0; i < update_ghost_densities_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Outer"][i], APP_DENSITY, NULL);
+      LoadLdoIdsInSet( &read, ph.map()["kRegY2W3Outer"][i], APP_DENSITY, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, ph.map()["kRegY2W3CentralWGB"][i], APP_DENSITY_GHOST, NULL);
-      LoadLogicalIdsInSet(this, &write, ph.map()["kRegY2W3Central"][i], APP_DENSITY, NULL);
+      LoadLdoIdsInSet( &write, ph.map()["kRegY2W3CentralWGB"][i], APP_DENSITY_GHOST, NULL);
+      LoadLdoIdsInSet( &write, ph.map()["kRegY2W3Central"][i], APP_DENSITY, NULL);
 
       nimbus::Parameter update_ghost_densities_params;
       std::string update_ghost_densities_str;
@@ -190,9 +190,9 @@ namespace application {
 
     for (int i = 0; i < scalar_advance_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, APP_DENSITY, APP_DENSITY_GHOST, NULL);
+      LoadLdoIdsInSet( &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, APP_DENSITY, APP_DENSITY_GHOST, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, ph.map()["kRegY2W3Central"][i], APP_DENSITY, NULL);
+      LoadLdoIdsInSet( &write, ph.map()["kRegY2W3Central"][i], APP_DENSITY, NULL);
 
       nimbus::Parameter scalar_params;
       std::string scalar_str;
@@ -216,9 +216,9 @@ namespace application {
 
     for (int i = 0; i < update_ghost_velocities_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, NULL);
+      LoadLdoIdsInSet( &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, ph.map()["kRegY2W3CentralWGB"][i], APP_FACE_VEL_GHOST, NULL);
+      LoadLdoIdsInSet( &write, ph.map()["kRegY2W3CentralWGB"][i], APP_FACE_VEL_GHOST, NULL);
 
       nimbus::Parameter update_ghost_velocities_params;
       std::string update_ghost_velocities_str;
@@ -241,11 +241,11 @@ namespace application {
 
     for (int i = 0; i < convect_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL_GHOST, NULL);
-      LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Central"][i], APP_FACE_VEL, NULL);
-      LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W1Outer"][i], APP_PSI_D, APP_PSI_N, NULL);
+      LoadLdoIdsInSet( &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL_GHOST, NULL);
+      LoadLdoIdsInSet( &read, ph.map()["kRegY2W3Central"][i], APP_FACE_VEL, NULL);
+      LoadLdoIdsInSet( &read, ph.map()["kRegY2W1Outer"][i], APP_PSI_D, APP_PSI_N, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, ph.map()["kRegY2W3Central"][i], APP_FACE_VEL, NULL);
+      LoadLdoIdsInSet( &write, ph.map()["kRegY2W3Central"][i], APP_FACE_VEL, NULL);
 
       nimbus::Parameter convect_params;
       std::string convect_str;

@@ -135,9 +135,9 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
     for (int i = 0; i < calculate_dt_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, NULL);
+      LoadLdoIdsInSet( &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, ph.map()["kRegY2W3Central"][i], APP_DT, NULL);
+      LoadLdoIdsInSet( &write, ph.map()["kRegY2W3Central"][i], APP_DT, NULL);
 
       nimbus::Parameter dt_params;
       std::string dt_str;
@@ -160,7 +160,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
     MarkEndOfStage();
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, ph.map()["kRegW3Central"][0], APP_DT, NULL);
+    LoadLdoIdsInSet( &read, ph.map()["kRegW3Central"][0], APP_DT, NULL);
     write.clear();
     nimbus::Parameter iter_params;
     std::string iter_str;
@@ -188,8 +188,8 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
     if (kUseGlobalWrite) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, ph.map()["kRegW3Outer"][0], APP_FACE_VEL, APP_DENSITY, NULL);
-      LoadLogicalIdsInSet(this, &read, ph.map()["kRegW1Outer"][0], APP_PSI_D,
+      LoadLdoIdsInSet( &read, ph.map()["kRegW3Outer"][0], APP_FACE_VEL, APP_DENSITY, NULL);
+      LoadLdoIdsInSet( &read, ph.map()["kRegW1Outer"][0], APP_PSI_D,
                           APP_PSI_N, NULL);
       write.clear();
 
@@ -212,8 +212,8 @@ void JobLoopIterationPartTwo::SpawnJobs(
     } else {
       for (int i = 0; i < write_output_job_num; ++i) {
         read.clear();
-        LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, APP_DENSITY, NULL);
-        LoadLogicalIdsInSet(this, &read, ph.map()["kRegY2W1Outer"][i], APP_PSI_D,
+        LoadLdoIdsInSet( &read, ph.map()["kRegY2W3Outer"][i], APP_FACE_VEL, APP_DENSITY, NULL);
+        LoadLdoIdsInSet( &read, ph.map()["kRegY2W1Outer"][i], APP_PSI_D,
                             APP_PSI_N, NULL);
         write.clear();
 

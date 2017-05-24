@@ -156,11 +156,11 @@ void JobProjectionLoopIteration::Execute(
     // Projection transform_pressure.
     for (int index = 0; index < trans_job_num; ++index) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, ph.map()["kProjRegY2W3Central"][index],
+      LoadLdoIdsInSet( &read, ph.map()["kProjRegY2W3Central"][index],
                           APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                           APP_VECTOR_PRESSURE, APP_INDEX_M2C, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, ph.map()["kProjRegY2W3Central"][index],
+      LoadLdoIdsInSet( &write, ph.map()["kProjRegY2W3Central"][index],
                           APP_PRESSURE, NULL);
 
       after.clear();
@@ -180,14 +180,14 @@ void JobProjectionLoopIteration::Execute(
     // Projection wrapup.
     for (int index = 0; index < wrapup_job_num; ++index) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, ph.map()["kProjRegY2W3Outer"][index], APP_FACE_VEL,
+      LoadLdoIdsInSet( &read, ph.map()["kProjRegY2W3Outer"][index], APP_FACE_VEL,
                           NULL);
-      LoadLogicalIdsInSet(this, &read, ph.map()["kProjRegY2W1Outer"][index], APP_PSI_D, APP_PSI_N,
+      LoadLdoIdsInSet( &read, ph.map()["kProjRegY2W1Outer"][index], APP_PSI_D, APP_PSI_N,
                           APP_PRESSURE, NULL);
-      LoadLogicalIdsInSet(this, &read, ph.map()["kProjRegY2W1Central"][index], APP_U_INTERFACE, NULL);
+      LoadLdoIdsInSet( &read, ph.map()["kProjRegY2W1Central"][index], APP_U_INTERFACE, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, ph.map()["kProjRegY2W0Central"][index], APP_FACE_VEL, NULL);
-      LoadLogicalIdsInSet(this, &write, ph.map()["kProjRegY2W1CentralWGB"][index], APP_PRESSURE, NULL);
+      LoadLdoIdsInSet( &write, ph.map()["kProjRegY2W0Central"][index], APP_FACE_VEL, NULL);
+      LoadLdoIdsInSet( &write, ph.map()["kProjRegY2W1CentralWGB"][index], APP_PRESSURE, NULL);
 
       after.clear();
       before.clear();
@@ -280,14 +280,14 @@ void JobProjectionLoopIteration::Execute(
     // STEP_ONE.
     for (int index = 0; index < step_one_job_num; ++index) {
       read.clear();
-      LoadLogicalIdsInSet(
-          this, &read, ph.map()["kProjRegY2W0Central"][index],
+      LoadLdoIdsInSet(
+          &read, ph.map()["kProjRegY2W0Central"][index],
           APP_VECTOR_TEMP,
           APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
           APP_MATRIX_C, APP_VECTOR_B, APP_VECTOR_Z, NULL);
       write.clear();
-      LoadLogicalIdsInSet(
-          this, &write, ph.map()["kProjRegY2W0Central"][index],
+      LoadLdoIdsInSet(
+          &write, ph.map()["kProjRegY2W0Central"][index],
           APP_VECTOR_TEMP,
           APP_VECTOR_Z, APP_PROJECTION_LOCAL_RHO, NULL);
 
@@ -307,13 +307,13 @@ void JobProjectionLoopIteration::Execute(
 
     // REDUCE_RHO
     read.clear();
-    LoadLogicalIdsInSet(
-        this, &read, ph.map()["kRegW0Central"][0], APP_PROJECTION_LOCAL_N,
+    LoadLdoIdsInSet(
+        &read, ph.map()["kRegW0Central"][0], APP_PROJECTION_LOCAL_N,
         APP_PROJECTION_INTERIOR_N, APP_PROJECTION_LOCAL_RHO,
         APP_PROJECTION_GLOBAL_RHO, NULL);
     write.clear();
-    LoadLogicalIdsInSet(
-        this, &write, ph.map()["kRegW0Central"][0], APP_PROJECTION_LOCAL_RHO,
+    LoadLdoIdsInSet(
+        &write, ph.map()["kRegW0Central"][0], APP_PROJECTION_LOCAL_RHO,
         APP_PROJECTION_GLOBAL_RHO, APP_PROJECTION_GLOBAL_RHO_OLD,
         APP_PROJECTION_BETA, NULL);
 
@@ -334,16 +334,16 @@ void JobProjectionLoopIteration::Execute(
     // STEP_TWO
     for (int index = 0; index < step_two_job_num; ++index) {
       read.clear();
-      LoadLogicalIdsInSet(
-          this, &read, ph.map()["kRegW0Central"][0], APP_PROJECTION_BETA, NULL);
-      LoadLogicalIdsInSet(
-          this, &read, ph.map()["kProjRegY2W0Central"][index],
+      LoadLdoIdsInSet(
+          &read, ph.map()["kRegW0Central"][0], APP_PROJECTION_BETA, NULL);
+      LoadLdoIdsInSet(
+          &read, ph.map()["kProjRegY2W0Central"][index],
           APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
           APP_VECTOR_Z,
           APP_VECTOR_P_META_FORMAT, APP_INDEX_C2M,
           NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, ph.map()["kProjRegY2W0Central"][index],
+      LoadLdoIdsInSet( &write, ph.map()["kProjRegY2W0Central"][index],
                           APP_VECTOR_P_META_FORMAT,
                           NULL);
 
@@ -364,19 +364,19 @@ void JobProjectionLoopIteration::Execute(
     // STEP_THREE
     for (int index = 0; index < step_three_job_num; ++index) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, ph.map()["kProjRegY2W1Outer"][index],
+      LoadLdoIdsInSet( &read, ph.map()["kProjRegY2W1Outer"][index],
                           APP_VECTOR_P_META_FORMAT,
                           NULL);
-      LoadLogicalIdsInSet(
-          this, &read, ph.map()["kProjRegY2W0Central"][index],
+      LoadLdoIdsInSet(
+          &read, ph.map()["kProjRegY2W0Central"][index],
           APP_VECTOR_TEMP,
           APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
           APP_MATRIX_A,
           APP_INDEX_C2M,
           NULL);
       write.clear();
-      LoadLogicalIdsInSet(
-          this, &write, ph.map()["kProjRegY2W0Central"][index],
+      LoadLdoIdsInSet(
+          &write, ph.map()["kProjRegY2W0Central"][index],
           APP_VECTOR_TEMP,
           APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA, NULL);
 
@@ -396,15 +396,15 @@ void JobProjectionLoopIteration::Execute(
 
     // REDUCE_ALPHA
     read.clear();
-    LoadLogicalIdsInSet(
-        this, &read, ph.map()["kRegW0Central"][0], APP_PROJECTION_LOCAL_N,
+    LoadLdoIdsInSet(
+        &read, ph.map()["kRegW0Central"][0], APP_PROJECTION_LOCAL_N,
         APP_PROJECTION_INTERIOR_N, APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA,
         NULL);
-    LoadLogicalIdsInSet(
-        this, &read, ph.map()["kRegW0Central"][0], APP_PROJECTION_GLOBAL_RHO, NULL);
+    LoadLdoIdsInSet(
+        &read, ph.map()["kRegW0Central"][0], APP_PROJECTION_GLOBAL_RHO, NULL);
     write.clear();
-    LoadLogicalIdsInSet(
-        this, &write, ph.map()["kRegW0Central"][0], APP_PROJECTION_ALPHA, NULL);
+    LoadLdoIdsInSet(
+        &write, ph.map()["kRegW0Central"][0], APP_PROJECTION_ALPHA, NULL);
 
 
     after.clear();
@@ -424,17 +424,17 @@ void JobProjectionLoopIteration::Execute(
     // Only interior p is needed.
     for (int index = 0; index < step_four_job_num; ++index) {
       read.clear();
-      LoadLogicalIdsInSet(
-          this, &read, ph.map()["kProjRegY2W0Central"][index],
+      LoadLdoIdsInSet(
+          &read, ph.map()["kProjRegY2W0Central"][index],
           APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
           APP_VECTOR_PRESSURE,
           APP_VECTOR_P_META_FORMAT, APP_INDEX_C2M,
           APP_VECTOR_TEMP, APP_VECTOR_B, NULL);
-      LoadLogicalIdsInSet(
-          this, &read, ph.map()["kRegW0Central"][0], APP_PROJECTION_ALPHA, NULL);
+      LoadLdoIdsInSet(
+          &read, ph.map()["kRegW0Central"][0], APP_PROJECTION_ALPHA, NULL);
       write.clear();
-      LoadLogicalIdsInSet(
-          this, &write, ph.map()["kProjRegY2W0Central"][index], APP_VECTOR_B,
+      LoadLdoIdsInSet(
+          &write, ph.map()["kProjRegY2W0Central"][index], APP_VECTOR_B,
           APP_PROJECTION_LOCAL_RESIDUAL, APP_VECTOR_PRESSURE, NULL);
 
 
@@ -455,8 +455,8 @@ void JobProjectionLoopIteration::Execute(
     // NEXT_ITERATION
     // TODO(quhang), needs a clean way to deal with LOCAL_N and INTERIOR_N here.
     read.clear();
-    LoadLogicalIdsInSet(
-        this, &read, ph.map()["kRegW0Central"][0], APP_PROJECTION_LOCAL_RESIDUAL,
+    LoadLdoIdsInSet(
+        &read, ph.map()["kRegW0Central"][0], APP_PROJECTION_LOCAL_RESIDUAL,
         APP_PROJECTION_INTERIOR_N,
         APP_PROJECTION_GLOBAL_TOLERANCE, APP_PROJECTION_DESIRED_ITERATIONS,
         NULL);
