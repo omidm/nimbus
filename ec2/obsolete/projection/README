@@ -1,4 +1,0 @@
-September 3, 2014.
-Test the speedup of projection optimization. It is tested over EC2 c3.2xlarge.
-The result that Nimbus projection seems to take less time than PhysBAM is probably because PhysBAM runs floodfill algorithm, and its running time includes synchronization overhead.
-Both Nimbus and PhysBAM are configured to run 40 projection iterations at most. The faster convergence speed brought by floodfill algorithms is not decreasing running time.

@@ -1,5 +1,0 @@
-*.o
-*.so
-Build
-CMakeCache.txt
-CMakeFiles

@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-input=wiki.edited.metis
-outputprefix=../../../test/page_rank/input-wiki
-
-echo "Generating $1 partitions ..."
-gpmetis -minconn ${input} $1
-./graph_initialize --nodefile result/graph/nodes --edgefile result/graph/edges --partitions $1 --partitioner fromfile --partition_file ${input}.part.$1 --outdir ${outputprefix}-$1p

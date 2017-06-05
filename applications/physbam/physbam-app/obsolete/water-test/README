@@ -1,5 +1,0 @@
-In this simulation, I tried to rewrite parts of the simulation and test for its correctness, that is, bit-to-bit same result.
-
-The problem I tried to tackle:
-(1) particle_levelset_evolution buffers face velocities. It is certainly bad performance. I tried to remove it.
-(2) Make it possible to decide whether to allocate an array or not.

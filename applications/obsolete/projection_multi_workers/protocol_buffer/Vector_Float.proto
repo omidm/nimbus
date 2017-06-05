@@ -1,6 +1,0 @@
-package PhysBAM_Protocol;
-
-message Vector_Float {
-	optional int32 n = 1;
-	repeated float elem = 2;
-}
