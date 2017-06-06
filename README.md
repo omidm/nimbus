@@ -2,13 +2,13 @@
 # Nimbus Project
 
 Nimbus is a framework for fast cloud computing applications. It is developed
-bys a group of researchers at Stanford University. Nimbus supports jobs with
+by a group of researchers at Stanford University. Nimbus supports jobs with
 short tasks and hight task rate. The range of applications includes machine
 learning, graph processing and graphical simulations. Nimbus's control plane
 implements a novel abstraction, called **execution termplates** that allows
 Nimbus to scale out and provide orders of magnitude higher task throughput
 compared to counterpart frameworks. Nimbus introduces a simple geometric based
-interface and translation layer for automatic distribution of graphical
+interface and a translation layer for automatic distribution of graphical
 simulations in the cloud. For more information please refer to [Nimbus
 website](http://nimbus.stanford.edu).
 
@@ -47,7 +47,7 @@ at the root, issue:
 
 For complete building instructions and how to build and run graphical
 simulations with Nimbus please refer to the documentations,
-at [Building Nimbus](https://omidm.github.io/nimbus/building.html)
+at [Building Nimbus](https://omidm.github.io/nimbus/building.html).
 
 
 
