@@ -120,12 +120,12 @@ variables with those arguments in the current session:
 
 or preferably, permanently:
 
-    $ echo 'export CPATH=/usr/include/x86_64-linux-gnu' >> ~/.bashrc
-    $ echo 'export CPATH=/usr/include/x86_64-linux-gnu' >> ~/.profile
-    $ echo 'export CPATH=/usr/include/x86_64-linux-gnu' >> ~/.bash_profile
-    $ echo 'export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu' >> ~/.bashrc
-    $ echo 'export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu' >> ~/.profile
-    $ echo 'export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu' >> ~/.bash_profile
+    $ echo 'export CPATH=$CPATH:/usr/include/x86_64-linux-gnu' >> ~/.bashrc
+    $ echo 'export CPATH=$CPATH:/usr/include/x86_64-linux-gnu' >> ~/.profile
+    $ echo 'export CPATH=$CPATH:/usr/include/x86_64-linux-gnu' >> ~/.bash_profile
+    $ echo 'export LIBRARY_PATH=$LIBRARY_PATH:/usr/lib/x86_64-linux-gnu' >> ~/.bashrc
+    $ echo 'export LIBRARY_PATH=$LIBRARY_PATH:/usr/lib/x86_64-linux-gnu' >> ~/.profile
+    $ echo 'export LIBRARY_PATH=$LIBRARY_PATH:/usr/lib/x86_64-linux-gnu' >> ~/.bash_profile
     $ source ~/.profile
 
 The `install-gcc-4.5.3.sh` script updates the `~/.bashrc`, `~/.profile`, and
@@ -220,6 +220,47 @@ If you want to also install java compiler you need to update
      #include <ctype.h>
      #include <java-props.h>
      #define PROCESS_GCJ_PROPERTIES process_gcj_properties()
+
+
+## Add the library path for linker
+
+----------------------------------------------------------------------
+Libraries have been installed in:
+   /home/ubuntu/nimbus/extern/gcc-4.5/lib/../lib32
+
+If you ever happen to want to link against installed libraries
+in a given directory, LIBDIR, you must either use libtool, and
+specify the full pathname of the library, or use the `-LLIBDIR'
+flag during linking and do at least one of the following:
+   - add LIBDIR to the `LD_LIBRARY_PATH' environment variable
+     during execution
+   - add LIBDIR to the `LD_RUN_PATH' environment variable
+     during linking
+   - use the `-Wl,-rpath -Wl,LIBDIR' linker flag
+   - have your system administrator add LIBDIR to `/etc/ld.so.conf'
+
+See any operating system documentation about shared libraries for
+more information, such as the ld(1) and ld.so(8) manual pages.
+----------------------------------------------------------------------
+
+----------------------------------------------------------------------
+Libraries have been installed in:
+   /home/ubuntu/nimbus/extern/gcc-4.5/lib/../lib64
+
+If you ever happen to want to link against installed libraries
+in a given directory, LIBDIR, you must either use libtool, and
+specify the full pathname of the library, or use the `-LLIBDIR'
+flag during linking and do at least one of the following:
+   - add LIBDIR to the `LD_LIBRARY_PATH' environment variable
+     during execution
+   - add LIBDIR to the `LD_RUN_PATH' environment variable
+     during linking
+   - use the `-Wl,-rpath -Wl,LIBDIR' linker flag
+   - have your system administrator add LIBDIR to `/etc/ld.so.conf'
+
+See any operating system documentation about shared libraries for
+more information, such as the ld(1) and ld.so(8) manual pages.
+----------------------------------------------------------------------
 
 
 ## Change the gcc/g++ version with `alternatives`

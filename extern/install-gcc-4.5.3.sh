@@ -36,19 +36,17 @@ INSTALL_DIR="gcc-4.5"
 rm -rf ${SOURCE_DIR} && mkdir -p ${SOURCE_DIR}
 rm -rf ${OBJ_DIR} && mkdir -p ${OBJ_DIR}
 
-ABS=$(pwd)
-cd ${SOURCE_DIR}
-ABS_SOURCE_DIR=$(pwd)
-cd -
+# get the absolute path to the directory of the script
+ABS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ### Install gcc 4.5 from source
 ### configure
 tar -xvzf ${TAR_FILE} -C ${SOURCE_DIR} --strip-components=1
 cd ${OBJ_DIR}
-${ABS_SOURCE_DIR}/configure --prefix=${ABS}/${INSTALL_DIR} --program-suffix=-4.5 --enable-languages=c,c++ MAKEINFO=missing
+${ABS}/${SOURCE_DIR}/configure --prefix=${ABS}/${INSTALL_DIR} --program-suffix=-4.5 --enable-languages=c,c++ MAKEINFO=missing
 
 ### fix minor problems with the source file
-sed -i 's/struct siginfo/siginfo_t/g' ${ABS_SOURCE_DIR}/libgcc/../gcc/config/i386/linux-unwind.h
+sed -i 's/struct siginfo/siginfo_t/g' ${ABS}/${SOURCE_DIR}/libgcc/../gcc/config/i386/linux-unwind.h
 sudo apt-get install --yes libc6-dev-i386
 sudo ln -s /usr/lib/x86_64-linux-gnu /usr/lib64
 
@@ -60,9 +58,9 @@ cd -
 rm -rf ${SOURCE_DIR}
 rm -rf ${OBJ_DIR}
 
-### switch gcc/g++ version
-if ( ls /usr/bin/gcc-4.5 &> /dev/null ); then
-  echo "SUCCESS: gcc-4.5 was installed at /usr/bin/gcc-4.5"
+### give directives for switching gcc/g++ versions
+if ( ls ${ABS}/${INSTALL_DIR}/bin/gcc-4.5 &> /dev/null ); then
+  echo "SUCCESS: gcc-4.5 was installed at ${ABS}/${INSTALL_DIR}/bin/gcc-4.5"
   echo "*****************************************************************************"
   echo "**** NOTE: you need to either open a new shell or execute 'source ~/.profile'"
   echo "**** NOTE: use update-alternatives to switch between the compiler versions."
@@ -74,8 +72,8 @@ else
   echo "ERROR: gcc-4.5 was NOT installed!"
 fi
 
-if ( ls /usr/bin/g++-4.5 &> /dev/null ); then
-  echo "SUCCESS: g++-4.5 was installed at /usr/bin/g++-4.5"
+if ( ls ${ABS}/${INSTALL_DIR}/bin/g++-4.5 &> /dev/null ); then
+  echo "SUCCESS: g++-4.5 was installed at ${ABS}/${INSTALL_DIR}/bin/g++-4.5"
   echo "*****************************************************************************"
   echo "**** NOTE: you need to either open a new shell or execute 'source ~/.profile'"
   echo "**** NOTE: use update-alternatives to switch between the compiler versions."
