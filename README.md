@@ -3,7 +3,7 @@
 
 Nimbus is a framework for fast cloud computing applications. It is developed
 by a group of researchers at Stanford University. Nimbus supports jobs with
-short tasks and hight task rate. The range of applications includes machine
+short tasks and high task rate. The range of applications includes machine
 learning, graph processing and graphical simulations. Nimbus's control plane
 implements a novel abstraction, called **execution termplates** that allows
 Nimbus to scale out and provide orders of magnitude higher task throughput
